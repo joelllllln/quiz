@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gambling Risk Assessment</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .quiz-container, .dashboard-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-container {
+            display: none;
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .option {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .option.selected {
+            background-color: #607D8B;
+            color: white;
+        }
+        
+        button {
+            background-color: #673AB7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background-color: #5E35B1;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .risk-meter {
+            height: 40px;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .risk-level {
+            height: 100%;
+            transition: width 1s ease-in-out;
+            position: relative;
+            min-width: 120px; /* Ensure text always has space */
+        }
+        
+        .risk-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            white-space: nowrap; /* Prevent text wrapping */
+            width: 100%;
+            text-align: center;
+        }
+        
+        .result-section {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .low-risk {
+            background-color: #4CAF50;
+        }
+        
+        .moderate-risk {
+            background-color: #2196F3;
+        }
+        
+        .high-risk {
+            background-color: #9C27B0;
+        }
+        
+        .severe-risk {
+            background-color: #F44336;
+        }
+        
+        .category-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .category-card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-meter {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            margin-top: 30px;
+            height: 300px;
+        }
+        
+        .resources {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gambling Risk Assessment Quiz</h1>
+    <p style="text-align: center; color: #666;">Evaluate your gambling habits and receive personalized feedback</p>
+    
+    <!-- Quiz Container -->
+    <div id="quiz-container" class="quiz-container">
+        <div id="question-container"></div>
+        <div id="buttons">
+            <button id="back-btn" style="display: none;">Previous</button>
+            <button id="next-btn" disabled>Next</button>
+        </div>
+    </div>
+    
+    <!-- Results Dashboard -->
+    <div id="dashboard-container" class="dashboard-container">
+        <h2>Your Gambling Risk Assessment Results</h2>
+        
+        <div class="risk-meter">
+            <div id="risk-level" class="risk-level">
+                <div id="risk-text" class="risk-text"></div>
+            </div>
+        </div>
+        
+        <div id="result-section" class="result-section">
+            <h3 id="result-message"></h3>
+            <p id="result-explanation"></p>
+        </div>
+        
+        <div id="category-scores" class="category-scores"></div>
+        
+        <div class="chart-container">
+            <canvas id="risk-chart"></canvas>
+        </div>
+        
+        <div class="resources">
+            <h3>Helpful Resources</h3>
+            <ul>
+                <li><strong>National Problem Gambling Helpline:</strong> 1-800-522-4700</li>
+                <li><strong>Gamblers Anonymous:</strong> <a href="https://www.gamblersanonymous.org" target="_blank">www.gamblersanonymous.org</a></li>
+                <li><strong>National Council on Problem Gambling:</strong> <a href="https://www.ncpgambling.org" target="_blank">www.ncpgambling.org</a></li>
+            </ul>
+            
+            <h3>Recommendations Based on Your Results:</h3>
+            <ul id="recommendations"></ul>
+        </div>
+        
+        <button id="restart-btn">Take Assessment Again</button>
+    </div>
+
+    <!-- Load Chart.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <script>
+        // Quiz questions
+        const questions = [
+            {
+                text: "How often do you find yourself thinking about gambling?",
+                category: "Preoccupation",
+                options: [
+                    { text: "Never or rarely", value: 0 },
+                    { text: "Occasionally", value: 1 },
+                    { text: "Frequently", value: 2 },
+                    { text: "Almost all the time", value: 3 }
+                ]
+            },
+            {
+                text: "Do you need to gamble with increasing amounts of money to achieve the desired excitement?",
+                category: "Tolerance",
+                options: [
+                    { text: "No", value: 0 },
+                    { text: "Occasionally", value: 1 },
+                    { text: "Often", value: 2 },
+                    { text: "Almost always", value: 3 }
+                ]
+            },
+            {
+                text: "Have you tried to control, cut back, or stop gambling?",
+                category: "Loss of Control",
+                options: [
+                    { text: "Never gambled or no need to control", value: 0 },
+                    { text: "Never tried to control it", value: 1 },
+                    { text: "Yes, and I was successful", value: 0 },
+                    { text: "Yes, but I was unsuccessful", value: 3 }
+                ]
+            },
+            {
+                text: "Do you feel restless or irritable when attempting to cut down or stop gambling?",
+                category: "Withdrawal",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "Do you gamble as a way of escaping from problems or relieving feelings of helplessness, guilt, anxiety, or depression?",
+                category: "Escape",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "After losing money gambling, do you often return another day to get even ('chasing' your losses)?",
+                category: "Chasing",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "Have you lied to family members, therapist, or others to conceal the extent of your involvement with gambling?",
+                category: "Lying",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "Have you committed any illegal acts to finance gambling?",
+                category: "Illegal Acts",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Once", value: 2 },
+                    { text: "A few times", value: 3 },
+                    { text: "Frequently", value: 3 }
+                ]
+            },
+            {
+                text: "Have you jeopardized or lost a significant relationship, job, or opportunity because of gambling?",
+                category: "Risked Relationships",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Minor impacts but no major losses", value: 1 },
+                    { text: "Yes, once", value: 2 },
+                    { text: "Yes, multiple times", value: 3 }
+                ]
+            },
+            {
+                text: "Have you relied on others to provide money to relieve a desperate financial situation caused by gambling?",
+                category: "Bailout",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "In a typical month, how much money do you spend on gambling?",
+                category: "Financial Impact",
+                options: [
+                    { text: "None", value: 0 },
+                    { text: "Less than I spend on other entertainment", value: 1 },
+                    { text: "A significant portion of my disposable income", value: 2 },
+                    { text: "More than I can afford to lose", value: 3 }
+                ]
+            },
+            {
+                text: "How often do you gamble for longer than you initially planned?",
+                category: "Time Management",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Frequently", value: 3 }
+                ]
+            },
+            {
+                text: "Do you ever gamble when you should be doing something else important?",
+                category: "Neglect of Responsibilities",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Rarely", value: 1 },
+                    { text: "Sometimes", value: 2 },
+                    { text: "Often", value: 3 }
+                ]
+            },
+            {
+                text: "Have family members or friends expressed concern about your gambling?",
+                category: "Social Concerns",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Once or twice", value: 1 },
+                    { text: "Several times", value: 2 },
+                    { text: "Frequently", value: 3 }
+                ]
+            },
+            {
+                text: "How frequently do you feel guilt or remorse after gambling?",
+                category: "Emotional Impact",
+                options: [
+                    { text: "Never", value: 0 },
+                    { text: "Occasionally", value: 1 },
+                    { text: "Often", value: 2 },
+                    { text: "Almost always", value: 3 }
+                ]
+            }
+        ];
+
+        // Category groups
+        const categoryGroups = {
+            "Behavioral Patterns": ["Preoccupation", "Tolerance", "Loss of Control", "Withdrawal", "Chasing", "Time Management"],
+            "Financial Impact": ["Financial Impact", "Bailout"],
+            "Social & Emotional Impact": ["Escape", "Emotional Impact", "Social Concerns", "Lying", "Risked Relationships"],
+            "Consequences": ["Illegal Acts", "Neglect of Responsibilities"]
+        };
+
+        // Risk levels with new color scheme
+        const riskLevels = [
+            { name: "Low Risk", threshold: 25, color: "#4CAF50", message: "Your gambling behavior appears to be within normal recreational limits.", explanation: "Your responses suggest that gambling is not currently causing significant problems in your life." },
+            { name: "Moderate Risk", threshold: 50, color: "#2196F3", message: "You're showing some signs that might indicate gambling is becoming problematic.", explanation: "While you may not have a severe gambling problem, your responses indicate some behaviors that could develop into a more serious issue if left unchecked." },
+            { name: "High Risk", threshold: 75, color: "#9C27B0", message: "Your responses indicate a high risk of problematic gambling behavior.", explanation: "Your gambling patterns show several warning signs associated with gambling disorder. These behaviors are likely impacting your financial situation, relationships, and overall wellbeing." },
+            { name: "Severe Risk", threshold: 100, color: "#F44336", message: "Your responses suggest a severe risk of gambling addiction.", explanation: "Your gambling behaviors appear to be causing significant negative consequences in multiple areas of your life. Professional intervention is highly recommended." }
+        ];
+
+        // Recommendations
+        const recommendations = {
+            "Low Risk": [
+                "Continue to gamble responsibly by setting time and money limits",
+                "Be aware of signs that your gambling habits might be changing",
+                "Consider using responsible gambling tools offered by gambling providers"
+            ],
+            "Moderate Risk": [
+                "Set strict limits on how much time and money you spend gambling",
+                "Take regular breaks from gambling activities",
+                "Consider using self-exclusion tools for periods of time",
+                "Keep track of all gambling expenditures in a dedicated journal or app"
+            ],
+            "High Risk": [
+                "Consider speaking with a professional counselor who specializes in gambling addiction",
+                "Use self-exclusion programs offered by gambling operators",
+                "Attend a Gamblers Anonymous meeting to hear others' experiences",
+                "Consider financial counseling to address any gambling-related debt",
+                "Install gambling-blocking software on your devices"
+            ],
+            "Severe Risk": [
+                "Contact the National Problem Gambling Helpline at 1-800-522-4700",
+                "Seek professional treatment from a specialist in gambling addiction",
+                "Consider more intensive treatment options such as inpatient or intensive outpatient programs",
+                "Arrange for someone else to manage your finances temporarily",
+                "Attend regular Gamblers Anonymous meetings for ongoing support"
+            ]
+        };
+
+        // DOM Elements
+        const quizContainer = document.getElementById('quiz-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const questionContainer = document.getElementById('question-container');
+        const nextBtn = document.getElementById('next-btn');
+        const backBtn = document.getElementById('back-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Variables
+        let currentQuestion = 0;
+        let answers = [];
+
+        // Initialize quiz
+        document.addEventListener('DOMContentLoaded', startQuiz);
+
+        function startQuiz() {
+            currentQuestion = 0;
+            answers = [];
+            showQuestion(currentQuestion);
+            
+            // Set up event listeners
+            nextBtn.addEventListener('click', nextQuestion);
+            backBtn.addEventListener('click', previousQuestion);
+            restartBtn.addEventListener('click', function() {
+                dashboardContainer.style.display = 'none';
+                quizContainer.style.display = 'block';
+                startQuiz();
+            });
+        }
+
+        function showQuestion(index) {
+            const question = questions[index];
+            
+            // Update navigation buttons
+            backBtn.style.display = index > 0 ? 'inline-block' : 'none';
+            nextBtn.textContent = index === questions.length - 1 ? 'Submit' : 'Next';
+            nextBtn.disabled = answers[index] === undefined;
+            
+            // Create question HTML
+            let html = `
+                <h2>Question ${index + 1} of ${questions.length}</h2>
+                <div class="question">
+                    <p>${question.text}</p>
+                    <div class="options">
+            `;
+            
+            // Add options
+            question.options.forEach((option, i) => {
+                const isSelected = answers[index] === i;
+                html += `
+                    <div class="option ${isSelected ? 'selected' : ''}" data-index="${i}">
+                        ${option.text}
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+            
+            // Set HTML and add event listeners
+            questionContainer.innerHTML = html;
+            
+            // Add click handlers to options
+            const options = questionContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update selection
+                    const optionIndex = parseInt(this.getAttribute('data-index'));
+                    answers[currentQuestion] = optionIndex;
+                    
+                    // Update UI
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // Enable next button
+                    nextBtn.disabled = false;
+                });
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function calculateScores() {
+            const maxScore = questions.length * 3;
+            let totalScore = 0;
+            const categoryScores = {};
+            const groupScores = {};
+            
+            // Initialize category scores
+            Object.keys(categoryGroups).forEach(group => {
+                groupScores[group] = {
+                    score: 0,
+                    count: 0,
+                    maxPossible: 0
+                };
+            });
+            
+            // Calculate scores
+            questions.forEach((question, i) => {
+                if (answers[i] !== undefined) {
+                    const value = question.options[answers[i]].value;
+                    totalScore += value;
+                    
+                    // Find which group this category belongs to
+                    for (const [group, categories] of Object.entries(categoryGroups)) {
+                        if (categories.includes(question.category)) {
+                            groupScores[group].score += value;
+                            groupScores[group].count += 1;
+                            groupScores[group].maxPossible += 3;
+                            break;
+                        }
+                    }
+                }
+            });
+            
+            // Calculate percentages
+            Object.keys(groupScores).forEach(group => {
+                const gs = groupScores[group];
+                if (gs.maxPossible > 0) {
+                    gs.percentage = (gs.score / gs.maxPossible) * 100;
+                } else {
+                    gs.percentage = 0;
+                }
+            });
+            
+            return {
+                totalScore,
+                maxScore,
+                percentage: (totalScore / maxScore) * 100,
+                groupScores
+            };
+        }
+
+        function getRiskLevel(percentage) {
+            // Find the highest risk level threshold that's lower than the percentage
+            for (let i = riskLevels.length - 1; i >= 0; i--) {
+                if (percentage >= riskLevels[i].threshold) {
+                    return riskLevels[i];
+                }
+            }
+            return riskLevels[0];
+        }
+
+        function showResults() {
+            // Hide quiz, show dashboard
+            quizContainer.style.display = 'none';
+            dashboardContainer.style.display = 'block';
+            
+            // Calculate scores
+            const scores = calculateScores();
+            const riskLevel = getRiskLevel(scores.percentage);
+            
+            // Update risk meter
+            const riskLevelEl = document.getElementById('risk-level');
+            const riskTextEl = document.getElementById('risk-text');
+            
+            // Make sure the risk level bar is at least wide enough to show text
+            const widthPercentage = Math.max(scores.percentage, 30); // Ensure at least 30% width for readability
+            riskLevelEl.style.width = `${widthPercentage}%`;
+            riskLevelEl.style.backgroundColor = riskLevel.color;
+            riskTextEl.textContent = `${riskLevel.name} (${Math.round(scores.percentage)}%)`;
+            
+            // Update result section
+            const resultSection = document.getElementById('result-section');
+            const resultMessage = document.getElementById('result-message');
+            const resultExplanation = document.getElementById('result-explanation');
+            
+            resultSection.className = `result-section ${riskLevel.name.toLowerCase().replace(' ', '-')}`;
+            resultMessage.textContent = riskLevel.message;
+            resultExplanation.textContent = riskLevel.explanation;
+            
+            // Generate category scores
+            const categoryScoresEl = document.getElementById('category-scores');
+            categoryScoresEl.innerHTML = '';
+            
+            Object.entries(scores.groupScores).forEach(([group, data]) => {
+                const percentage = data.percentage;
+                const color = getRiskLevel(percentage).color;
+                
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <h3>${group}</h3>
+                    <div class="category-meter">
+                        <div class="category-level" style="width: ${percentage}%; background-color: ${color};"></div>
+                    </div>
+                    <div class="category-label">
+                        <span>Low</span>
+                        <span><strong>${Math.round(percentage)}%</strong></span>
+                        <span>High</span>
+                    </div>
+                `;
+                
+                categoryScoresEl.appendChild(card);
+            });
+            
+            // Generate recommendations
+            const recommendationsEl = document.getElementById('recommendations');
+            recommendationsEl.innerHTML = '';
+            
+            recommendations[riskLevel.name].forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsEl.appendChild(li);
+            });
+            
+            // Create chart
+            createChart(scores.groupScores);
+        }
+
+        function createChart(groupScores) {
+            const ctx = document.getElementById('risk-chart').getContext('2d');
+            
+            // Prepare data
+            const labels = Object.keys(groupScores);
+            const data = labels.map(label => Math.round(groupScores[label].percentage));
+            const backgroundColors = data.map(value => getRiskLevel(value).color);
+            
+            // Destroy existing chart if it exists
+            if (window.riskChart) {
+                window.riskChart.destroy();
+            }
+            
+            // Create chart
+            window.riskChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Risk Level (%)',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const riskLevel = getRiskLevel(value).name;
+                                    return [`Risk Level: ${value}%`, `Category: ${riskLevel}`];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Risk Level'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Categories'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
