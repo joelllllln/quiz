@@ -303,6 +303,48 @@
     };
   };
 
+  /* ================= radiusScatter — neighbours by RADIUS instead of count ================= */
+  TYPES.radiusScatter = function (cfg) {
+    return {
+      valText: function (v) { return 'r = ' + fmt(v, 2); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var plot = makePlot(cfg);
+        var pad = 26;
+        var rx = v / 10 * (plot.W - 2 * pad), ry = v / 10 * (plot.H - 2 * pad);
+        plot.svg.appendChild(sv('ellipse', {
+          cx: plot.sx(cfg.query.x), cy: plot.sy(cfg.query.y), rx: rx, ry: ry,
+          fill: C.query, 'fill-opacity': 0.08, stroke: C.query, 'stroke-width': 1.5, 'stroke-dasharray': '5 4'
+        }));
+        var inside = [];
+        cfg.points.forEach(function (p, i) {
+          var d = dist(cfg.query, p);
+          var isIn = d <= v + 1e-9;
+          if (isIn) {
+            inside.push(p);
+            plot.svg.appendChild(sv('line', {
+              x1: plot.sx(cfg.query.x), y1: plot.sy(cfg.query.y), x2: plot.sx(p.x), y2: plot.sy(p.y),
+              stroke: CLASS_COLORS[p.c], 'stroke-width': 2, opacity: 0.85
+            }));
+          }
+          drawPoint(plot, p, { dim: !isIn, ring: isIn });
+        });
+        drawQuery(plot, cfg.query, cfg.queryLabel);
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', legendHTML(cfg.classes));
+        if (!inside.length) {
+          ui.setReadout('<b style="color:' + C.bad + '">0 neighbours inside the circle — the model has NO answer here.</b>');
+        } else {
+          var votes = [0, 0]; inside.forEach(function (p) { votes[p.c]++; });
+          var win = votes[0] === votes[1] ? -1 : votes[0] > votes[1] ? 0 : 1;
+          ui.setReadout('Inside the circle: ' + dot(CLASS_COLORS[0]) + cfg.classes[0] + ' <b>' + votes[0] + '</b> vs ' + dot(CLASS_COLORS[1]) + cfg.classes[1] + ' <b>' + votes[1] + '</b> → ' +
+            (win < 0 ? '<b style="color:' + C.bad + '">🤝 TIE</b>' : 'verdict: <b style="color:' + CLASS_COLORS[win] + '">' + cfg.classes[win] + '</b>') +
+            ' <span class="small">(' + inside.length + ' voters — the count now varies by where you ask)</span>');
+        }
+      }
+    };
+  };
+
   /* ================= kCurve — train vs validation accuracy across every k ================= */
   TYPES.kCurve = function (cfg) {
     var kmax = cfg.kmax || cfg.train.length;
@@ -508,7 +550,7 @@
     var revealPanel = el('div', 'ws-reveal');
     root.appendChild(revealPanel);
 
-    var moves = 0, extremeHit = false, revealed = false;
+    var moves = 0, extremeHit = false, sawMin = false, sawMax = false, revealed = false;
     function isExtreme(v) {
       if (!cfg.extreme) return false;
       var at = cfg.extreme.at, step = +(cfg.knob.step || 1);
@@ -524,7 +566,11 @@
       if (zone) { insight.innerHTML = zone.text; insight.className = 'ws-insight tone-' + (zone.tone || 'info'); insight.style.display = ''; }
       else insight.style.display = 'none';
       if (isExtreme(v)) extremeHit = true;
-      if (!revealed && ((moves >= 3 && extremeHit) || moves >= 14) && cfg.reveal) revealBtn.style.display = 'inline-block';
+      var step = +(cfg.knob.step || 1);
+      if (v <= +cfg.knob.min + step * 0.6) sawMin = true;
+      if (v >= +cfg.knob.max - step * 0.6) sawMax = true;
+      var explored = extremeHit || (sawMin && sawMax);
+      if (!revealed && ((moves >= 3 && explored) || moves >= 14) && cfg.reveal) revealBtn.style.display = 'inline-block';
     }
     slider.addEventListener('input', function () { moves++; dragHint.style.display = 'none'; update(); });
     revealBtn.addEventListener('click', function () {
