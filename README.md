@@ -1,7 +1,7 @@
-# DataSense — learn data science by doing
+# DataSense — a field manual for practical machine learning
 
-An interactive multiple-choice learning app. Get a question wrong and instead of a lecture you get a hands-on widget: a tiny concrete world with ONE slider, live items and a live number, a surprising extreme, and the concept named only at the end.
+**Vol. 1: Supervised Classification.** 157 interactive exercises across k-Nearest Neighbours (90), Logistic Regression, Naive Bayes, Decision Trees, Support Vector Machines, Model Evaluation (precision, recall, F1, ROC-AUC, confusion matrix) and Performance Optimisation.
 
-**Topic 1: k-Nearest Neighbours** — 3 levels × 30 questions, every question with its own interactive lesson — 90 questions, 90 hands-on widgets.
+Miss a question and you get: the answer in plain English, a hands-on lab (one slider, live measurements, the concept named last), a two-question quick check, then a retake.
 
 Open `index.html` in a browser. No build, no dependencies.

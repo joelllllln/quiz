@@ -3,17 +3,30 @@
   'use strict';
   var app = document.getElementById('app');
   window.QUESTIONS = window.QUESTIONS || {};
-  var LEVELS = [
-    { key: 'easy', part: 'Part I', name: 'Foundations', blurb: 'Neighbours, votes and distance — the core moves.' },
-    { key: 'medium', part: 'Part II', name: 'Practice', blurb: 'Scaling, boundaries, tuning k, overfitting.' },
-    { key: 'hard', part: 'Part III', name: 'Advanced Study', blurb: 'High dimensions, complexity, weighting, edge cases.' }
+  var TOPICS = [
+    { key: 'knn', no: '01', name: 'k-Nearest Neighbours', desc: 'Classify by asking the most similar known examples to vote.',
+      levels: [{ qk: 'easy', part: 'Part I', name: 'Foundations' }, { qk: 'medium', part: 'Part II', name: 'Practice' }, { qk: 'hard', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'logreg', no: '02', name: 'Logistic Regression', desc: 'Turn a weighted score into an honest probability.',
+      levels: [{ qk: 'logreg1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'bayes', no: '03', name: 'Naive Bayes', desc: 'Multiply the evidence, respect the base rate.',
+      levels: [{ qk: 'bayes1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'trees', no: '04', name: 'Decision Trees', desc: 'Ask the best yes/no questions, one after another.',
+      levels: [{ qk: 'trees1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'svm', no: '05', name: 'Support Vector Machines', desc: 'Draw the widest possible street between the classes.',
+      levels: [{ qk: 'svm1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'metrics', no: '06', name: 'Model Evaluation', desc: 'Precision, recall, F1, ROC-AUC and the confusion matrix.',
+      levels: [{ qk: 'metrics1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'perf', no: '07', name: 'Performance Optimisation', desc: 'Tune honestly: validation, regularisation, thresholds, baselines.',
+      levels: [{ qk: 'perf1', part: 'Part I', name: 'Foundations' }] }
+  ];
+  var GROUPS = [
+    { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm'] },
+    { label: 'Measuring & tuning', keys: ['metrics', 'perf'] }
   ];
   var UPCOMING = [
-    { name: 'Linear Regression', desc: 'Fit the best straight line.' },
-    { name: 'Decision Trees', desc: 'Split your way to an answer.' },
-    { name: 'Model Evaluation', desc: 'Accuracy, precision, recall & friends.' },
+    { name: 'Regression', desc: 'Predicting quantities, done properly.' },
     { name: 'Clustering', desc: 'Find groups nobody labelled.' },
-    { name: 'Probability & Stats', desc: 'The maths under everything.' }
+    { name: 'Neural Networks', desc: 'Layers of learned features.' }
   ];
   var LETTERS = 'ABCDE';
   var S = {};
@@ -32,7 +45,15 @@
     kCurve: { q: 'In the lab, which curve should you trust when choosing k?', ok: 'The held-back data curve — it behaves like the future', no: ['The seen-data curve — it uses more information', 'Both equally; average the two curves'] },
     foldPick: { q: 'From the lab: why rotate the held-out slice and average?', ok: 'One single split can be lucky or unlucky; averaging removes the luck', no: ['It lets the model train on the test data safely', 'It makes each fold score higher'] },
     metricSwitch: { q: 'In the lab, nothing moved — so what flipped the nearest neighbour?', ok: 'Changing the distance rule (the metric) alone', no: ['Changing the value of k', 'Relabelling one of the points'] },
-    radiusScatter: { q: 'From the lab: what can a fixed radius do that fixed k never does?', ok: 'Come back with ZERO neighbours and no prediction at all', no: ['Include the same point twice', 'Produce negative distances'] }
+    radiusScatter: { q: 'From the lab: what can a fixed radius do that fixed k never does?', ok: 'Come back with ZERO neighbours and no prediction at all', no: ['Include the same point twice', 'Produce negative distances'] },
+    threshold: { q: 'In the lab, what happened when you flagged (nearly) everything?', ok: 'Every real positive got caught — but the false alarms exploded', no: ['The false alarms disappeared too', 'The number of caught positives fell'] },
+    rocCurve: { q: 'In the lab, what did moving the cutoff do on the ROC plot?', ok: 'Slid the model along its own curve — trading false alarms for catches', no: ['Bent the curve into a new shape', 'Changed the AUC number'] },
+    sigmoid: { q: 'In the lab, what did the S-curve output for every input?', ok: 'A probability between 0% and 100%', no: ['A class label directly', 'A distance to the boundary'] },
+    bayesOdds: { q: 'In the lab, how did each new piece of evidence act on the verdict?', ok: 'It MULTIPLIED the odds up or down', no: ['It added a fixed amount to a score', 'It replaced all the earlier evidence'] },
+    treeSplit: { q: 'In the lab, what made a split position "good"?', ok: 'It left the two sides as pure as possible', no: ['It put equal counts on both sides', 'It sat exactly at the middle of the axis'] },
+    treeDepth: { q: 'In the lab, what did growing the tree deeper do?', ok: 'Chased every training point — right up to memorising noise', no: ['Made the map smoother and simpler', 'Lowered the training accuracy'] },
+    marginSVM: { q: 'In the lab, which boundary position was best?', ok: 'The one giving the widest street to the nearest points', no: ['The one hugging the bigger class', 'Any position — they all behave the same'] },
+    curveStatic: { q: 'In the lab, how do you pick the best setting from curves like these?', ok: 'Take the setting where the held-back/validation curve peaks', no: ['Take the setting where the training curve peaks', 'Always take the largest setting'] }
   };
 
   function h(html) { var d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
@@ -41,7 +62,7 @@
     for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
     return a;
   }
-  function bestKey(lv) { return 'ds_best_knn_' + lv; }
+  function bestKey(qk) { return (qk === 'easy' || qk === 'medium' || qk === 'hard') ? 'ds_best_knn_' + qk : 'ds_best_' + qk; }
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
   function rememberHTML(q) {
@@ -52,38 +73,48 @@
   }
 
   /* ---------------- contents page ---------------- */
+  function totalExercises() {
+    var n = 0;
+    TOPICS.forEach(function (t) { t.levels.forEach(function (L) { n += (QUESTIONS[L.qk] || []).length; }); });
+    return n;
+  }
   function home() {
     app.innerHTML = '';
     app.appendChild(h(
       '<header class="masthead">' +
         '<div class="mast-rules"></div>' +
-        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Nº 1 · k-NN</span></div>' +
+        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Vol. 1 · Supervised Classification</span></div>' +
         '<h1>DataSense</h1>' +
-        '<p class="mast-sub">Ninety exercises on <b>k-Nearest Neighbours</b>. Miss one and you don\'t get a lecture — you get a lab bench, a quick check, and a second attempt.</p>' +
+        '<p class="mast-sub"><b>Supervised classification</b>, learned by doing: ' + totalExercises() + ' exercises across five algorithms, the metrics that judge them, and the craft of tuning. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
         '<div class="mast-foot">Multiple choice · answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>'));
 
-    var topic = h('<section class="topic">' +
-      '<div class="topic-head"><h3>k-Nearest Neighbours</h3><span class="t-index">Topic 01 · 90 exercises</span></div>' +
-      '<p class="t-desc">Classify by asking the most similar known examples to vote.</p>' +
-      '<div class="toc"></div></section>');
-    var toc = topic.querySelector('.toc');
-    LEVELS.forEach(function (L) {
-      var qs = QUESTIONS[L.key] || [];
-      var best = localStorage.getItem(bestKey(L.key));
-      var meta = qs.length ? (best != null ? 'best ' + best + '/' + qs.length : qs.length + ' exercises') : 'in preparation';
-      var row = h('<button class="toc-row">' +
-        '<span class="toc-part">' + L.part + '</span>' +
-        '<span class="toc-name">' + L.name + '</span>' +
-        '<span class="toc-dots"></span>' +
-        '<span class="toc-meta">' + meta + '</span>' +
-        '<span class="toc-go" aria-hidden="true">→</span></button>');
-      row.title = L.blurb;
-      if (!qs.length) row.disabled = true;
-      else row.onclick = function () { start(L.key); };
-      toc.appendChild(row);
+    GROUPS.forEach(function (g) {
+      app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
+      g.keys.forEach(function (tk) {
+        var T = null; TOPICS.forEach(function (t) { if (t.key === tk) T = t; });
+        var total = 0; T.levels.forEach(function (L) { total += (QUESTIONS[L.qk] || []).length; });
+        var topic = h('<section class="topic">' +
+          '<div class="topic-head"><h3>' + T.name + '</h3><span class="t-index">Topic ' + T.no + ' · ' + total + ' exercises</span></div>' +
+          '<p class="t-desc">' + T.desc + '</p><div class="toc"></div></section>');
+        var toc = topic.querySelector('.toc');
+        T.levels.forEach(function (L) {
+          var qs = QUESTIONS[L.qk] || [];
+          var best = localStorage.getItem(bestKey(L.qk));
+          var meta = qs.length ? (best != null ? 'best ' + best + '/' + qs.length : qs.length + ' exercises') : 'in preparation';
+          var row = h('<button class="toc-row" data-qk="' + L.qk + '">' +
+            '<span class="toc-part">' + L.part + '</span>' +
+            '<span class="toc-name">' + L.name + '</span>' +
+            '<span class="toc-dots"></span>' +
+            '<span class="toc-meta">' + meta + '</span>' +
+            '<span class="toc-go" aria-hidden="true">→</span></button>');
+          if (!qs.length) row.disabled = true;
+          else row.onclick = function () { start(T, L); };
+          toc.appendChild(row);
+        });
+        app.appendChild(topic);
+      });
     });
-    app.appendChild(topic);
 
     app.appendChild(h('<div class="sec-label">Forthcoming volumes</div>'));
     var grid = h('<div class="locked-grid"></div>');
@@ -95,15 +126,14 @@
   }
 
   /* ---------------- exercise ---------------- */
-  function start(levelKey) {
-    S = { level: levelKey, qs: QUESTIONS[levelKey], i: 0, correct: 0, results: [] };
+  function start(topic, level) {
+    S = { topic: topic, level: level, qs: QUESTIONS[level.qk], i: 0, correct: 0, results: [] };
     question(false);
   }
-  function levelOf(k) { for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].key === k) return LEVELS[i]; return LEVELS[0]; }
 
   function question(isRetry) {
     var q = S.qs[S.i];
-    var L = levelOf(S.level);
+    var L = S.level;
     app.innerHTML = '';
     var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
       '<div class="ruler" role="progressbar" aria-valuemin="0" aria-valuemax="' + S.qs.length + '" aria-valuenow="' + S.i + '"><div style="width:' + (100 * S.i / S.qs.length) + '%"></div></div>' +
@@ -111,7 +141,7 @@
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
 
-    var card = h('<article class="qcard"><div class="q-eyebrow">§ k-Nearest Neighbours · ' + L.part + ' — ' + L.name +
+    var card = h('<article class="qcard"><div class="q-eyebrow">§ ' + S.topic.name + ' · ' + L.part + ' — ' + L.name +
       (isRetry ? ' · <span class="retry-note">second attempt</span>' : '') + '</div>' +
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
     card.querySelector('.qtext').textContent = q.q;
@@ -257,9 +287,9 @@
   /* ---------------- report card ---------------- */
   function done() {
     var n = S.qs.length, c = S.correct;
-    var L = levelOf(S.level);
-    var prev = +(localStorage.getItem(bestKey(S.level)) || -1);
-    if (c > prev) localStorage.setItem(bestKey(S.level), c);
+    var L = S.level;
+    var prev = +(localStorage.getItem(bestKey(L.qk)) || -1);
+    if (c > prev) localStorage.setItem(bestKey(L.qk), c);
     var pct = c / n;
     var msg = pct === 1 ? 'A perfect paper. This level is yours.' :
       pct >= 0.8 ? 'Strong work — the marked squares below are your reading list.' :
@@ -267,13 +297,13 @@
       'This is how the manual is meant to be used: each miss taught you something a lecture couldn\'t.';
     app.innerHTML = '';
     var card = h('<div class="result-card">' +
-      '<div class="r-eyebrow">Report · ' + L.part + ' — ' + L.name + ' · k-Nearest Neighbours</div>' +
+      '<div class="r-eyebrow">Report · ' + L.part + ' — ' + L.name + ' · ' + S.topic.name + '</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
       '<p class="r-msg">' + msg + ' <span class="small">(first attempts only)</span></p>' +
       (c > prev && prev >= 0 ? '<div class="r-best">New personal best — previously ' + prev + '</div>' : '') +
       '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
       '<div class="next-row" style="justify-content:center"><button class="btn">Sit it again</button><button class="btn ghost">Contents</button></div></div>');
-    card.querySelector('.btn').onclick = function () { start(S.level); };
+    card.querySelector('.btn').onclick = function () { start(S.topic, S.level); };
     card.querySelector('.btn.ghost').onclick = home;
     app.appendChild(card);
   }

@@ -119,6 +119,21 @@ input[type=range]{accent-color:var(--cobalt)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(31,41,51,.18)}
 .btn.ghost{background:var(--sheet);color:var(--ink);border:1.5px solid var(--ink)}
 
+/* ---------- confusion matrix + odds chips ---------- */
+.cm{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px;margin-top:12px;max-width:420px}
+.cm-cell{border:1px solid var(--rule);border-radius:2px;padding:6px 8px;text-align:center;font-variant-numeric:tabular-nums;font-weight:700;background:var(--sheet)}
+.cm-cell span{display:block;font-family:var(--mono);font-size:.6rem;font-weight:400;color:var(--ink-3);letter-spacing:.04em;margin-top:1px}
+.cm-head{border:none;background:none;font-family:var(--mono);font-size:.64rem;font-weight:400;color:var(--ink-2);text-align:right;align-self:center}
+.cm-cell.cm-head{text-align:center}
+.cm-tp{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.cm-fn{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.cm-fp{background:#FDF3E7;border-color:var(--c1);color:#a34a12}
+.oddsrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0 12px}
+.odds-chip{font-family:var(--mono);font-size:.78rem;border:1.5px solid var(--ink);border-radius:2px;padding:5px 10px;background:var(--sheet)}
+.odds-prior{border-style:dashed;color:var(--ink-2)}
+.odds-up{border-color:var(--c1);color:#a34a12;background:#FDF3E7}
+.odds-down{border-color:var(--c0);color:var(--c0);background:var(--cobalt-soft)}
+
 /* ---------- question exhibit ---------- */
 .qfig{margin:0 0 20px}
 .qfig-stage{padding:10px}
@@ -238,6 +253,12 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_easy.js"></script>
 <script src="data_medium.js"></script>
 <script src="data_hard.js"></script>
+<script src="data_logreg.js"></script>
+<script src="data_bayes.js"></script>
+<script src="data_trees.js"></script>
+<script src="data_svm.js"></script>
+<script src="data_metrics.js"></script>
+<script src="data_perf.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

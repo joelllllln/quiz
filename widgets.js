@@ -518,6 +518,309 @@
     };
   };
 
+  /* ================= threshold — flag items above a cutoff; live confusion counts & metrics ================= */
+  TYPES.threshold = function (cfg) {
+    // items: [{s: score 0..10, c: 1 = actually positive}] ; knob = cutoff, flag if s >= cutoff
+    return {
+      valText: function (v) { return 'cutoff ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var W = 340, H = 118, pad = 20;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function sx(x) { return pad + x / 10 * (W - 2 * pad); }
+        svg.appendChild(sv('rect', { x: sx(v), y: 8, width: W - pad - sx(v) + 6, height: H - 34, fill: C.c1, opacity: 0.08 }));
+        svg.appendChild(sv('line', { x1: pad - 6, y1: H - 26, x2: W - pad + 6, y2: H - 26, stroke: C.line, 'stroke-width': 1 }));
+        svg.appendChild(sv('line', { x1: sx(v), y1: 6, x2: sx(v), y2: H - 22, stroke: C.ink, 'stroke-width': 2, 'stroke-dasharray': '5 3' }));
+        var lab = sv('text', { x: sx(v), y: H - 8, 'font-size': 10, 'text-anchor': 'middle', fill: C.ink2 });
+        lab.textContent = (cfg.axis || 'score') + ' ≥ ' + fmt(v, 1) + ' → flag'; svg.appendChild(lab);
+        var stacks = {}, tp = 0, fp = 0, fn = 0, tn = 0;
+        cfg.items.forEach(function (it) {
+          var key = Math.round(it.s * 2);
+          stacks[key] = (stacks[key] || 0) + 1;
+          var cy = H - 40 - (stacks[key] - 1) * 17;
+          var flagged = it.s >= v - 1e-9;
+          if (flagged && it.c === 1) tp++;
+          else if (flagged && it.c === 0) fp++;
+          else if (!flagged && it.c === 1) fn++;
+          else tn++;
+          svg.appendChild(sv('circle', { cx: sx(it.s), cy: cy, r: 7, fill: CLASS_COLORS[it.c === 1 ? 1 : 0], opacity: flagged || it.c === 1 ? 1 : 0.45, stroke: C.ink, 'stroke-width': flagged ? 1.6 : 0.6 }));
+          if (!flagged && it.c === 1) { // the loud miss
+            var x = sv('text', { x: sx(it.s), y: cy - 11, 'font-size': 12, 'font-weight': 700, 'text-anchor': 'middle', fill: C.bad });
+            x.textContent = '✗'; svg.appendChild(x);
+          }
+        });
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c1 + '"></span>really ' + cfg.posName + '</span><span><span class="sw" style="background:' + C.c0 + '"></span>really ' + cfg.negName + '</span><span>shaded = flagged as ' + cfg.posName + ' · ✗ = missed</span></div>');
+        var grid = '<div class="cm"><div class="cm-cell cm-head"></div><div class="cm-cell cm-head">flagged</div><div class="cm-cell cm-head">not flagged</div>' +
+          '<div class="cm-cell cm-head">really ' + cfg.posName + '</div><div class="cm-cell cm-tp">' + tp + '<span>caught (TP)</span></div><div class="cm-cell cm-fn">' + fn + '<span>missed (FN)</span></div>' +
+          '<div class="cm-cell cm-head">really ' + cfg.negName + '</div><div class="cm-cell cm-fp">' + fp + '<span>false alarm (FP)</span></div><div class="cm-cell cm-tn">' + tn + '<span>correct pass (TN)</span></div></div>';
+        var prec = tp + fp ? tp / (tp + fp) : null, rec = tp + fn ? tp / (tp + fn) : null;
+        var f1 = (prec != null && rec != null && prec + rec > 0) ? 2 * prec * rec / (prec + rec) : null;
+        var acc = (tp + tn) / cfg.items.length;
+        var M = { precision: [prec, 'precision (of flagged, how many real)'], recall: [rec, 'recall (of real ' + cfg.posName + ', how many caught)'], f1: [f1, 'F1'], accuracy: [acc, 'accuracy'] };
+        var out = (cfg.show || ['precision', 'recall']).map(function (m) {
+          var pair = M[m];
+          return pair[1] + ': <b style="font-size:1.1em">' + (pair[0] == null ? '—' : Math.round(pair[0] * 100) + '%') + '</b>';
+        }).join(' · ');
+        ui.setReadout(out);
+        stage.insertAdjacentHTML('beforeend', grid);
+      }
+    };
+  };
+
+  /* ================= rocCurve — sweep the threshold, slide along the ROC ================= */
+  TYPES.rocCurve = function (cfg) {
+    var P = cfg.items.filter(function (i) { return i.c === 1; }).length;
+    var N = cfg.items.length - P;
+    function rates(t) {
+      var tp = 0, fp = 0;
+      cfg.items.forEach(function (i) { if (i.s >= t - 1e-9) { if (i.c === 1) tp++; else fp++; } });
+      return { tpr: P ? tp / P : 0, fpr: N ? fp / N : 0 };
+    }
+    var pts = [];
+    for (var t = 10.5; t >= -0.5; t -= 0.25) { var r = rates(t); pts.push([r.fpr, r.tpr]); }
+    var auc = 0;
+    for (var i = 1; i < pts.length; i++) auc += (pts[i][0] - pts[i - 1][0]) * (pts[i][1] + pts[i - 1][1]) / 2;
+    return {
+      valText: function (v) { return 'cutoff ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var W = 300, H = 260, pad = 36;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function px(x) { return pad + x * (W - pad - 14); }
+        function py(y) { return H - pad - y * (H - pad - 14); }
+        svg.appendChild(sv('rect', { x: px(0), y: py(1), width: px(1) - px(0), height: py(0) - py(1), fill: 'none', stroke: C.line }));
+        svg.appendChild(sv('line', { x1: px(0), y1: py(0), x2: px(1), y2: py(1), stroke: C.line, 'stroke-width': 1, 'stroke-dasharray': '4 4' }));
+        var d = '';
+        pts.forEach(function (p) { d += (d ? ' L' : 'M') + px(p[0]) + ' ' + py(p[1]); });
+        svg.appendChild(sv('path', { d: d, fill: 'none', stroke: C.query, 'stroke-width': 2.2 }));
+        var cur = rates(v);
+        svg.appendChild(sv('circle', { cx: px(cur.fpr), cy: py(cur.tpr), r: 6.5, fill: C.query, stroke: C.ink, 'stroke-width': 1.5 }));
+        var xt = sv('text', { x: (px(0) + px(1)) / 2, y: H - 8, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink3 }); xt.textContent = 'false-alarm rate (FPR)'; svg.appendChild(xt);
+        var yt = sv('text', { x: 12, y: (py(0) + py(1)) / 2, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink3, transform: 'rotate(-90 12 ' + (py(0) + py(1)) / 2 + ')' }); yt.textContent = 'catch rate (TPR)'; svg.appendChild(yt);
+        var at = sv('text', { x: px(0.62), y: py(0.16), 'font-size': 11, fill: C.ink2 }); at.textContent = 'AUC = ' + fmt(auc, 2); svg.appendChild(at);
+        stage.appendChild(svg);
+        ui.setReadout('At this cutoff: catches <b>' + Math.round(cur.tpr * 100) + '%</b> of real ' + (cfg.posName || 'positives') + ' · false-alarms on <b>' + Math.round(cur.fpr * 100) + '%</b> of ' + (cfg.negName || 'negatives') + ' — AUC stays <b>' + fmt(auc, 2) + '</b>');
+      }
+    };
+  };
+
+  /* ================= sigmoid — scores in, probabilities out ================= */
+  TYPES.sigmoid = function (cfg) {
+    return {
+      valText: function (v) { return 'w = ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var W = 340, H = 230, pad = 30;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function sx(x) { return pad + x / 10 * (W - 2 * pad); }
+        function sy(p) { return H - pad - p * (H - 2 * pad); }
+        svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad, fill: 'none', stroke: C.line, rx: 2 }));
+        [0, 0.5, 1].forEach(function (g) {
+          svg.appendChild(sv('line', { x1: pad - 4, y1: sy(g), x2: W - pad + 4, y2: sy(g), stroke: C.line, 'stroke-width': 0.7 }));
+          var t = sv('text', { x: pad - 8, y: sy(g) + 3, 'font-size': 9, 'text-anchor': 'end', fill: C.ink3 }); t.textContent = Math.round(g * 100) + '%'; svg.appendChild(t);
+        });
+        function prob(x) { return 1 / (1 + Math.exp(-v * (x - cfg.b))); }
+        var d = '';
+        for (var x = 0; x <= 10.001; x += 0.1) d += (d ? ' L' : 'M') + sx(x) + ' ' + sy(prob(x));
+        svg.appendChild(sv('path', { d: d, fill: 'none', stroke: C.query, 'stroke-width': 2.2 }));
+        (cfg.points || []).forEach(function (p, i) {
+          svg.appendChild(sv('circle', { cx: sx(p.x), cy: sy(p.c) + (p.c ? 8 : -8) * ((i % 3) * 0.5), r: 6, fill: CLASS_COLORS[p.c], stroke: C.ink, 'stroke-width': 0.8, opacity: 0.9 }));
+        });
+        if (cfg.qx != null) {
+          svg.appendChild(sv('line', { x1: sx(cfg.qx), y1: sy(0), x2: sx(cfg.qx), y2: sy(1), stroke: C.ink3, 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
+          svg.appendChild(sv('circle', { cx: sx(cfg.qx), cy: sy(prob(cfg.qx)), r: 6, fill: C.query, stroke: C.ink, 'stroke-width': 1.5 }));
+        }
+        if (cfg.xlab) { var xl = sv('text', { x: W / 2, y: H - 8, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink3 }); xl.textContent = cfg.xlab; svg.appendChild(xl); }
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + CLASS_COLORS[0] + '"></span>' + cfg.classes[0] + ' (bottom)</span><span><span class="sw" style="background:' + CLASS_COLORS[1] + '"></span>' + cfg.classes[1] + ' (top)</span><span><span class="sw" style="background:' + C.query + '"></span>the model\'s curve</span></div>');
+        var p = prob(cfg.qx == null ? cfg.b : cfg.qx);
+        ui.setReadout('Model output at the dashed line: <b style="font-size:1.15em;color:' + C.query + '">' + Math.round(p * 100) + '%</b> chance of "' + cfg.classes[1] + '" — a probability, never just a label.');
+      }
+    };
+  };
+
+  /* ================= bayesOdds — evidence multiplies the odds ================= */
+  TYPES.bayesOdds = function (cfg) {
+    return {
+      valText: function (v) { return Math.round(v) + ' of ' + cfg.features.length; },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var n = Math.round(v);
+        var odds = cfg.prior[0] / cfg.prior[1];
+        var html = '<div class="oddsrow"><span class="odds-chip odds-prior">start ' + cfg.prior[0] + ' : ' + cfg.prior[1] + '</span>';
+        for (var i = 0; i < n; i++) {
+          var f = cfg.features[i];
+          odds *= f.lr;
+          html += '<span class="odds-chip ' + (f.lr > 1 ? 'odds-up' : 'odds-down') + '">' + f.name + ' ×' + fmt(f.lr, 2) + '</span>';
+        }
+        html += '</div>';
+        var p = odds / (1 + odds);
+        html += '<div class="hbar-row"><span class="hbar-name">P(' + cfg.posName + ')</span><div class="hbar-track"><div class="hbar-fill" style="width:' + Math.max(0.5, p * 100) + '%;background:' + C.c1 + '"></div></div><span class="hbar-val"><b>' + (p < 0.001 ? '≈0' : fmt(p * 100, p > 0.99 ? 2 : 1)) + '%</b></span></div>';
+        stage.innerHTML = html;
+        ui.setReadout('Odds so far: <b>' + (odds >= 1 ? fmt(odds, 2) + ' : 1' : '1 : ' + fmt(1 / (odds || 1e-12), odds === 0 ? 0 : 2)) + '</b> → P(' + cfg.posName + ') = <b style="font-size:1.15em">' + (p < 0.001 ? '≈0' : fmt(p * 100, 1) + '%') + '</b>');
+      }
+    };
+  };
+
+  /* ================= treeSplit — slide one yes/no question along an axis ================= */
+  TYPES.treeSplit = function (cfg) {
+    function gini(a, b) { var n = a + b; if (!n) return 0; var pa = a / n; return 2 * pa * (1 - pa); }
+    return {
+      valText: function (v) { return (cfg.feat || 'x') + ' < ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var W = 340, H = 110, pad = 20;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function sx(x) { return pad + x / 10 * (W - 2 * pad); }
+        var L = [0, 0], R = [0, 0];
+        cfg.items.forEach(function (it) { (it.x < v ? L : R)[it.c]++; });
+        var lMaj = L[0] >= L[1] ? 0 : 1, rMaj = R[0] >= R[1] ? 0 : 1;
+        svg.appendChild(sv('rect', { x: pad - 6, y: 8, width: sx(v) - pad + 6, height: H - 40, fill: CLASS_COLORS[lMaj], opacity: 0.1 }));
+        svg.appendChild(sv('rect', { x: sx(v), y: 8, width: W - pad - sx(v) + 6, height: H - 40, fill: CLASS_COLORS[rMaj], opacity: 0.1 }));
+        svg.appendChild(sv('line', { x1: sx(v), y1: 4, x2: sx(v), y2: H - 28, stroke: C.ink, 'stroke-width': 2, 'stroke-dasharray': '5 3' }));
+        var stacks = {};
+        cfg.items.forEach(function (it) {
+          var key = Math.round(it.x * 2); stacks[key] = (stacks[key] || 0) + 1;
+          svg.appendChild(sv('circle', { cx: sx(it.x), cy: H - 44 - (stacks[key] - 1) * 16, r: 7, fill: CLASS_COLORS[it.c], stroke: C.ink, 'stroke-width': 0.8 }));
+        });
+        var lab = sv('text', { x: sx(v), y: H - 12, 'font-size': 10, 'text-anchor': 'middle', fill: C.ink2 });
+        lab.textContent = 'is ' + (cfg.feat || 'x') + ' < ' + fmt(v, 1) + ' ?'; svg.appendChild(lab);
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + CLASS_COLORS[0] + '"></span>' + cfg.classes[0] + '</span><span><span class="sw" style="background:' + CLASS_COLORS[1] + '"></span>' + cfg.classes[1] + '</span></div>');
+        var n = cfg.items.length, nL = L[0] + L[1], nR = R[0] + R[1];
+        var g = (nL / n) * gini(L[0], L[1]) + (nR / n) * gini(R[0], R[1]);
+        var correct = Math.max(L[0], L[1]) + Math.max(R[0], R[1]);
+        ui.setReadout('Left side says <b style="color:' + CLASS_COLORS[lMaj] + '">' + cfg.classes[lMaj] + '</b> (' + Math.max(L[0], L[1]) + '/' + (nL || 0) + ') · right says <b style="color:' + CLASS_COLORS[rMaj] + '">' + cfg.classes[rMaj] + '</b> (' + Math.max(R[0], R[1]) + '/' + (nR || 0) + ') → accuracy <b>' + Math.round(100 * correct / n) + '%</b> · impurity <b>' + fmt(g, 2) + '</b> (lower = purer)');
+      }
+    };
+  };
+
+  /* ================= treeDepth — a real tiny CART tree, depth on a knob ================= */
+  TYPES.treeDepth = function (cfg) {
+    function gini(counts) { var n = counts[0] + counts[1]; if (!n) return 0; var p = counts[0] / n; return 2 * p * (1 - p); }
+    function best(pts) {
+      var base = [0, 0]; pts.forEach(function (p) { base[p.c]++; });
+      var bg = gini(base), win = null;
+      ['x', 'y'].forEach(function (ax) {
+        var vals = pts.map(function (p) { return p[ax]; }).sort(function (a, b) { return a - b; });
+        for (var i = 1; i < vals.length; i++) {
+          var t = (vals[i - 1] + vals[i]) / 2;
+          if (t === vals[i - 1]) continue;
+          var L = [0, 0], R = [0, 0];
+          pts.forEach(function (p) { (p[ax] < t ? L : R)[p.c]++; });
+          var nl = L[0] + L[1], nr = R[0] + R[1];
+          if (!nl || !nr) continue;
+          var g = (nl / pts.length) * gini(L) + (nr / pts.length) * gini(R);
+          if (g < bg - 1e-9 && (!win || g < win.g)) win = { ax: ax, t: t, g: g };
+        }
+      });
+      return win;
+    }
+    function grow(pts, depth) {
+      var counts = [0, 0]; pts.forEach(function (p) { counts[p.c]++; });
+      if (depth <= 0 || !counts[0] || !counts[1]) return { leaf: counts[0] >= counts[1] ? 0 : 1 };
+      var sp = best(pts);
+      if (!sp) return { leaf: counts[0] >= counts[1] ? 0 : 1 };
+      return {
+        ax: sp.ax, t: sp.t,
+        L: grow(pts.filter(function (p) { return p[sp.ax] < sp.t; }), depth - 1),
+        R: grow(pts.filter(function (p) { return p[sp.ax] >= sp.t; }), depth - 1)
+      };
+    }
+    function classify(node, p) { while (node.leaf == null) node = p[node.ax] < node.t ? node.L : node.R; return node.leaf; }
+    function leaves(node) { return node.leaf != null ? 1 : leaves(node.L) + leaves(node.R); }
+    return {
+      valText: function (v) { return 'depth ' + Math.round(v); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var tree = grow(cfg.points, Math.round(v));
+        var plot = makePlot(cfg);
+        var GX = 26, GY = 19, cw = (plot.W - 52) / GX, ch = (plot.H - 48) / GY;
+        for (var gy = 0; gy < GY; gy++) for (var gx = 0; gx < GX; gx++) {
+          var c = classify(tree, { x: (gx + 0.5) * 10 / GX, y: (gy + 0.5) * 10 / GY });
+          plot.svg.appendChild(sv('rect', { x: plot.sx(gx * 10 / GX), y: plot.sy((gy + 1) * 10 / GY), width: cw + 0.5, height: ch + 0.5, fill: CLASS_COLORS[c], opacity: 0.16 }));
+        }
+        cfg.points.forEach(function (p) { drawPoint(plot, p, { ring: true }); });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', legendHTML(cfg.classes).replace("the new one (unlabelled)", 'shaded = the tree\'s prediction'));
+        var ok = 0; cfg.points.forEach(function (p) { if (classify(tree, p) === p.c) ok++; });
+        ui.setReadout('Depth <b>' + Math.round(v) + '</b>: <b>' + leaves(tree) + '</b> leaf regions · fits <b>' + Math.round(100 * ok / cfg.points.length) + '%</b> of the training points');
+      }
+    };
+  };
+
+  /* ================= marginSVM — slide the boundary, watch the street ================= */
+  TYPES.marginSVM = function (cfg) {
+    return {
+      valText: function (v) { return 'position ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var plot = makePlot(cfg);
+        var minL = Infinity, minR = Infinity, bad = false;
+        cfg.points.forEach(function (p) {
+          if (p.c === 0) { if (p.x >= v) bad = true; minL = Math.min(minL, v - p.x); }
+          else { if (p.x < v) bad = true; minR = Math.min(minR, p.x - v); }
+        });
+        var m = Math.max(0, Math.min(minL, minR));
+        if (!bad && m > 0) {
+          plot.svg.appendChild(sv('rect', { x: plot.sx(v - m), y: 10, width: plot.sx(v + m) - plot.sx(v - m), height: plot.sy(0) - 14, fill: C.query, opacity: 0.07 }));
+          [v - m, v + m].forEach(function (e) {
+            plot.svg.appendChild(sv('line', { x1: plot.sx(e), y1: 10, x2: plot.sx(e), y2: plot.sy(0) - 4, stroke: C.query, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
+          });
+        }
+        plot.svg.appendChild(sv('line', { x1: plot.sx(v), y1: 8, x2: plot.sx(v), y2: plot.sy(0) - 2, stroke: bad ? C.bad : C.ink, 'stroke-width': 2.4 }));
+        cfg.points.forEach(function (p) {
+          var isSV = !bad && Math.abs((p.c === 0 ? v - p.x : p.x - v) - m) < 0.15;
+          drawPoint(plot, p, { ring: isSV });
+          if (isSV) {
+            var t = sv('text', { x: plot.sx(p.x), y: plot.sy(p.y) - 13, 'font-size': 9.5, 'text-anchor': 'middle', fill: C.query });
+            t.textContent = 'support'; plot.svg.appendChild(t);
+          }
+        });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', legendHTML(cfg.classes).replace("the new one (unlabelled)", 'dashes = the street\'s kerbs'));
+        ui.setReadout(bad ? '<b style="color:' + C.bad + '">The boundary has crashed into a ' + cfg.classes[0] + '/' + cfg.classes[1] + ' point — points are on the wrong side.</b>'
+          : 'Street width: <b style="font-size:1.15em;color:' + C.query + '">' + fmt(2 * m, 2) + '</b> — set by the ringed points only.');
+      }
+    };
+  };
+
+  /* ================= curveStatic — pick a setting, read the curves ================= */
+  TYPES.curveStatic = function (cfg) {
+    var COLS = [C.c0, C.query, C.good, C.c1];
+    var ymin = Infinity, ymax = -Infinity;
+    cfg.series.forEach(function (s) { s.ys.forEach(function (y) { ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }); });
+    var padY = (ymax - ymin) * 0.12 || 1; ymin -= padY; ymax += padY;
+    return {
+      valText: function (v) { var i = Math.round(v); return (cfg.labels ? cfg.labels[i] : cfg.xs[i]) + (cfg.unit ? ' ' + cfg.unit : ''); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var idx = Math.round(v);
+        var W = 340, H = 230, pad = 36;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function px(i) { return pad + i / (cfg.xs.length - 1) * (W - pad - 16); }
+        function py(y) { return H - pad - (y - ymin) / (ymax - ymin) * (H - pad - 16); }
+        svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - pad - 2, height: H - pad, fill: 'none', stroke: C.line, rx: 2 }));
+        cfg.series.forEach(function (s, si) {
+          var d = '';
+          s.ys.forEach(function (y, i) { d += (d ? ' L' : 'M') + px(i) + ' ' + py(y); });
+          svg.appendChild(sv('path', { d: d, fill: 'none', stroke: COLS[si], 'stroke-width': 2.2 }));
+          svg.appendChild(sv('circle', { cx: px(idx), cy: py(s.ys[idx]), r: 5.5, fill: COLS[si], stroke: C.ink, 'stroke-width': 1.2 }));
+        });
+        svg.appendChild(sv('line', { x1: px(idx), y1: py(ymin), x2: px(idx), y2: 10, stroke: C.ink3, 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
+        if (cfg.xlab) { var xl = sv('text', { x: (pad + W) / 2 - 8, y: H - 10, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink3 }); xl.textContent = cfg.xlab; svg.appendChild(xl); }
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend">' + cfg.series.map(function (s, si) {
+          return '<span><span class="sw" style="background:' + COLS[si] + '"></span>' + s.name + '</span>';
+        }).join('') + '</div>');
+        ui.setReadout(cfg.series.map(function (s, si) {
+          return s.name + ': <b style="color:' + COLS[si] + '">' + fmt(s.ys[idx], cfg.dec == null ? 1 : cfg.dec) + (cfg.yunit || '') + '</b>';
+        }).join(' · '));
+      }
+    };
+  };
+
   /* ================= static figure: render a widget's stage at a fixed value (for question exhibits) ================= */
   window.renderFigure = function (container, cfg, at, caption) {
     var maker = TYPES[cfg.type];
