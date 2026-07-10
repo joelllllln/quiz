@@ -1,13 +1,13 @@
 /* KNN — Level 2: Practitioner. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).medium = [
   {
-    "q": "In KNN, moving from a large k to a small k generally trades…",
+    "q": "You move k from large to small: the model reacts more to individual points, less to the crowd. In bias–variance terms, you traded…",
     "choices": [
-      "Lower variance for higher variance — predictions react more to individual points",
-      "Higher variance for lower variance — predictions settle down and become more stable",
-      "More smoothing for less noise-sensitivity, since fewer voters need less averaging",
-      "Robustness to outliers for sensitivity to feature scaling",
-      "A global view of the data for a less faithful local one"
+      "Stability for twitchiness",
+      "Twitchiness for stability",
+      "Bias for speed",
+      "Accuracy for memory",
+      "Locality for smoothness"
     ],
     "explain": "Small k = flexible, twitchy, sensitive to single points (high variance). Large k = rigid and stable but potentially too crude (high bias). k is the dial between them.",
     "simple": "Small k = the decision hangs on one or two points, so predictions jump around (twitchy = high variance). Big k = steady but crude (stubborn = high bias). k is the dial between the two.",
@@ -48,13 +48,13 @@
     }
   },
   {
-    "q": "What's the standard, defensible way to choose the value of k?",
+    "q": "k is a hyperparameter — the training data can't learn it for you, and training accuracy would just say 'k = 1 forever'. The defensible way to choose it is by…",
     "choices": [
-      "Try several k values and pick the one that scores best on held-out validation data",
-      "Pick the k with the best training accuracy, since that uses every example",
-      "Use k = √n — it's derived from the data size, so no testing is needed",
-      "Start at k = 1 and stop the moment training accuracy first drops",
-      "Pick the largest odd k your runtime budget allows — more voters, more stability"
+      "Best score on held-out data",
+      "Best score on training data",
+      "Always √n, no testing needed",
+      "k = 1 until accuracy drops",
+      "The largest affordable odd k"
     ],
     "explain": "k is a hyperparameter: sweep it, score each candidate on data the model didn't train on, and keep the winner. Training accuracy would always point to k=1.",
     "simple": "Try k = 1, 2, 3… and score each one on examples the model never saw. Keep whichever k scores best there. Training-data scores are useless for this — they'd say k = 1 forever.",
@@ -104,13 +104,13 @@
     }
   },
   {
-    "q": "Standardising a feature (z-scores) before KNN means replacing each value x with…",
+    "q": "Standardising a feature (turning it into z-scores) replaces each value x with which formula?",
     "choices": [
-      "(x − mean) / standard deviation, giving mean 0 and spread 1",
-      "(x − min) / (max − min), giving values from 0 to 1",
-      "x / mean, so a typical value becomes exactly 1",
-      "(x − mean)², removing the sign so spreads are comparable",
-      "rank(x) / n, replacing each value with its percentile"
+      "(x − mean) ÷ standard deviation",
+      "(x − min) ÷ (max − min)",
+      "x ÷ mean",
+      "(x − mean)²",
+      "rank(x) ÷ n"
     ],
     "explain": "z = (x − μ) / σ recentres each feature at 0 and rescales its spread to 1, so all features contribute comparably to distances.",
     "simple": "A z-score asks 'how many typical steps from average is this value?' Subtract the mean, divide by the usual spread. Afterwards every feature speaks the same language: 'typical steps'.",
@@ -138,13 +138,13 @@
     }
   },
   {
-    "q": "A dataset accidentally contains commute distance twice: once in km and once in minutes (nearly perfectly correlated). What does this do to KNN?",
+    "q": "Commute distance accidentally appears in the data TWICE — once in km, once in minutes, almost perfectly correlated. Inside KNN's distance, commute now…",
     "choices": [
-      "Commute effectively counts twice in the distance, biasing neighbours toward commute-similarity",
-      "Nothing — the copies carry the same information, so distances are unchanged",
-      "The copies disagree slightly, adding noise that blurs all neighbours equally",
-      "Commute's influence halves, since each copy carries half the signal",
-      "KNN keeps whichever copy has less variance and ignores the other"
+      "Counts double",
+      "Counts half",
+      "Cancels itself out",
+      "Gets deduplicated automatically",
+      "Adds noise but no bias"
     ],
     "explain": "Distance just sums feature differences. Two near-copies of the same signal = that signal gets two votes. KNN has no notion of \"redundant columns\".",
     "simple": "If commute appears twice, its gap gets added into the distance twice — one opinion counted double. KNN can't tell it's the same information wearing two hats.",
@@ -172,13 +172,13 @@
     }
   },
   {
-    "q": "A dataset has 90% \"normal\" and 10% \"fraud\" examples. As k grows large, what happens to KNN's fraud predictions?",
+    "q": "The data is 90% 'normal' and 10% 'fraud'. As k grows large, what happens to fraud predictions — even for points deep inside the fraud cluster?",
     "choices": [
-      "Fraud predictions fade away — big neighbourhoods are dominated by the majority class",
-      "Fraud predictions increase — fraud clusters are denser, so they dominate big votes",
-      "Nothing — the vote is local, so global class frequencies can't reach it",
-      "Fraud recall improves while precision falls, netting out to no change",
-      "Predictions for fraud stabilise, since more voters means less noise"
+      "They fade away",
+      "They increase",
+      "They stay local and unchanged",
+      "They only get more confident",
+      "Precision and recall swap"
     ],
     "explain": "A big neighbourhood around ANY point contains mostly majority-class examples, so minority votes get swamped. Imbalance + large k = the minority class disappears.",
     "simple": "A big neighbourhood around ANY point fills up with the common class, because there's simply more of it. So the rare class loses big votes even on its home turf.",
@@ -219,13 +219,13 @@
     }
   },
   {
-    "q": "Which KNN variant keeps large k from drowning out a tight local cluster of the correct class?",
+    "q": "You want the safety of a big k without letting far-away voters drown a tight, correct local cluster. Which variant does exactly that?",
     "choices": [
-      "Distance-weighted voting — far neighbours count for little, so extra distant voters barely matter",
-      "A larger training set — more data automatically dilutes the majority's advantage",
-      "Standardising the features, which shrinks the cluster's internal distances",
-      "Switching to Manhattan distance, which favours tight local clusters",
-      "Using an even k, so the tight cluster can at least force a tie"
+      "Distance-weighted voting",
+      "A larger training set",
+      "Manhattan distance",
+      "Standardised features",
+      "An even k"
     ],
     "explain": "With weights like 1/d, the far-away voters you accidentally included carry almost no weight, so growing k stops being destructive.",
     "simple": "With weights like 1-over-distance, far neighbours barely count for anything. So accidentally including a bunch of far voters (a too-big k) can no longer flip the answer.",
@@ -257,13 +257,13 @@
     }
   },
   {
-    "q": "Two points differ hugely on ONE feature and little on the rest. Compared with Manhattan, Euclidean distance…",
+    "q": "Two points differ hugely on ONE feature and barely on the rest. Compared with Manhattan, how does Euclidean treat that one big gap?",
     "choices": [
-      "Emphasises that one big gap more, because differences are squared before summing",
-      "Downplays the big gap, because the square root compresses large totals",
-      "Treats all gaps identically — both metrics sum the same differences",
-      "Ignores the smaller gaps entirely, using only the largest one",
-      "Splits the big gap evenly across the features before summing"
+      "Amplifies it — gaps are squared",
+      "Dampens it — the root compresses",
+      "Identically to Manhattan",
+      "Ignores it entirely",
+      "Averages it across features"
     ],
     "explain": "Squaring amplifies large differences: a gap of 8 contributes 64 to Euclidean's sum while a gap of 1 contributes just 1. L2 is dominated by its largest coordinate gap.",
     "simple": "Euclidean squares each gap first: a gap of 8 becomes 64 while a gap of 1 stays 1. Squaring makes big gaps enormous, so one huge gap ends up running the whole show.",
@@ -287,13 +287,13 @@
     }
   },
   {
-    "q": "As the number of features (dimensions) grows very large, what happens to distances between random points?",
+    "q": "Keep adding dimensions and the distances between random points concentrate around one value. 'The nearest neighbour' becomes…",
     "choices": [
-      "Nearest and farthest neighbours end up almost equally far, making \"nearest\" nearly meaningless",
-      "Distances shrink toward zero as the coordinates crowd together",
-      "Nearest neighbours become easier to spot — more features, more evidence",
-      "Distances stay the same but take exponentially longer to compute",
-      "Points separate into distinct clusters, one per dimension"
+      "Barely nearer than the farthest",
+      "Sharper and more reliable",
+      "Always the same point",
+      "Undefined below k points",
+      "Negative in some dimensions"
     ],
     "explain": "In high dimensions, distances concentrate: everyone is roughly the same distance from everyone. KNN's core signal — \"this one is clearly closest\" — dissolves.",
     "simple": "Add enough dimensions and everyone becomes roughly the same distance from everyone — like a huge dark warehouse where every shelf feels 'kind of far'. 'Nearest' stops meaning anything.",
@@ -315,13 +315,13 @@
     }
   },
   {
-    "q": "You add 20 random, irrelevant columns to a dataset where 2 features genuinely predict the label. What happens to KNN?",
+    "q": "Two features genuinely predict the label. You add 20 columns of random junk. KNN's accuracy…",
     "choices": [
-      "Accuracy drops — random differences in junk features drown the true similarity signal",
-      "Accuracy rises slightly — even random features occasionally correlate with the label",
-      "Nothing — the vote ignores features that don't separate the classes",
-      "Accuracy is unchanged, but it varies more from run to run",
-      "Only speed suffers; the neighbour ranking stays identical"
+      "Drops — junk noise drowns the signal",
+      "Rises — more information helps",
+      "Holds — junk gets outvoted",
+      "Holds, but queries slow down",
+      "Drops only when k is even"
     ],
     "explain": "Every feature contributes to the distance, junk included. Columns of noise add random distance between genuinely similar points until true neighbours stop being nearest.",
     "simple": "Junk columns add random amounts to every distance. With enough random noise, the truly-similar points stop being the closest ones — the real signal drowns.",
@@ -343,13 +343,13 @@
     }
   },
   {
-    "q": "Why is vanilla KNN often a poor choice inside a system that must respond in milliseconds?",
+    "q": "An online checkout needs its fraud answer inside 50 ms. Why is vanilla KNN a poor fit for that job?",
     "choices": [
-      "Its work happens at query time — scanning all stored examples for every single request",
-      "Its accuracy degrades when queries arrive too quickly in sequence",
-      "It must reload the training set from disk for every request",
-      "Its distance sums can't be parallelised, so extra hardware doesn't help",
-      "It retrains whenever a new example arrives, blocking requests"
+      "It pays its whole cost per query",
+      "It needs days of training first",
+      "Its scan cannot be parallelised",
+      "It needs a GPU per request",
+      "Its accuracy decays under load"
     ],
     "explain": "KNN defers all computation to prediction time. A model that must answer NOW is exactly the wrong place for an algorithm whose cost is paid per-query.",
     "simple": "KNN does its heavy lifting when you ASK it something: it scans all stored examples per question. A checkout that needs an answer in milliseconds can't sit through that scan.",
@@ -371,13 +371,13 @@
     }
   },
   {
-    "q": "How does KNN's memory usage compare to a linear model's once both are deployed?",
+    "q": "Once deployed, a linear model ships as a handful of coefficients. To keep working, KNN must ship…",
     "choices": [
-      "KNN must keep the entire training set in memory; the linear model keeps only a few numbers",
-      "They're similar — both must retain enough to reconstruct the training data",
-      "KNN stores only the boundary points; the linear model must keep them all",
-      "KNN keeps k copies of the dataset, one per neighbour consulted",
-      "The linear model grows with the data; KNN's memory is fixed by k"
+      "Its whole training set",
+      "Only k and the metric",
+      "One centroid per class",
+      "Its boundary equation",
+      "A 1% compressed sketch"
     ],
     "explain": "KNN's \"model\" IS the dataset — deleting it deletes the model. A trained linear model is a handful of coefficients; the data can be archived.",
     "simple": "KNN's model IS the whole dataset, so deploying it means shipping the whole dataset. The linear model ships a handful of numbers and travels light.",
@@ -399,13 +399,13 @@
     }
   },
   {
-    "q": "How do k-d trees and ball trees make KNN prediction faster?",
+    "q": "k-d trees and ball trees make exact neighbour search dramatically faster in low dimensions. What is the trick?",
     "choices": [
-      "They pre-organise points by region so most of the dataset never needs a distance check",
-      "They compress each point to a single number, making distance one subtraction",
-      "They precompute answers for a grid of likely queries and interpolate",
-      "They sample a random subset of points per query and vote on that",
-      "They sort points once by distance to the origin and binary-search it"
+      "Skip regions that provably can't win",
+      "Delete redundant training points",
+      "Cache answers for popular queries",
+      "Lower k automatically for big data",
+      "Sort the points once by size"
     ],
     "explain": "A spatial index partitions space (like a postcode system): the search descends to the query's region and safely skips far-away branches, doing ~log(n) work instead of n.",
     "simple": "It's the postcode trick: check your local area first instead of measuring the distance to every shop in the country. The tree safely skips whole regions that can't possibly win.",
@@ -428,13 +428,13 @@
     }
   },
   {
-    "q": "A validation curve over k typically looks like…",
+    "q": "Sweep k from 1 to n and plot the VALIDATION accuracy at each value. The typical shape is…",
     "choices": [
-      "Poor at tiny k (noise), best somewhere in the middle, collapsing again at huge k",
-      "Steadily improving as k grows — more voters, more stability, best at k = n",
-      "Steadily worsening as k grows — locality is everything, so k = 1 wins",
-      "Flat in the middle with sharp peaks at both k = 1 and k = n",
-      "Sawtooth-shaped — odd k scores high, even k scores low"
+      "Rise, plateau, then cliff",
+      "A steady climb toward k = n",
+      "A steady fall from k = 1",
+      "Flat — k barely matters",
+      "A sawtooth by odd/even k"
     ],
     "explain": "Tiny k memorises noise, huge k blurs into the majority class; validation accuracy usually peaks at a moderate k between the two failure modes.",
     "simple": "Tiny k copies noise (bad). Huge k averages everything into mush (bad). In between sits a comfortable plateau (good). The curve is a hill with a cliff at each end.",
@@ -484,13 +484,13 @@
     }
   },
   {
-    "q": "A KNN model scores 100% on training data but 70% on validation data. What's the diagnosis?",
+    "q": "Training score 100%, validation score 70%. Name the diagnosis — and the direction of the cure.",
     "choices": [
-      "Overfitting — it memorised the training set, including its noise, instead of the general pattern",
-      "Underfitting — the model is too crude, so it leans on memorised examples",
-      "Data leakage — some validation rows must also sit in the training set",
-      "Class imbalance — the majority class inflates only the training score",
-      "A normal gap — training always runs about 30 points above validation"
+      "Overfitting — raise k",
+      "Underfitting — lower k",
+      "Leakage — reshuffle the split",
+      "Imbalance — resample classes",
+      "Healthy — ship it"
     ],
     "explain": "A big train-validation gap is overfitting's signature. For KNN it screams \"k too small\" — likely k=1, where training score is 100% by construction.",
     "simple": "100% on questions it memorised, 70% on new ones = it memorised rather than learned. The GAP between the two numbers is the tell. A bigger k forces it to generalise.",
@@ -545,13 +545,13 @@
     }
   },
   {
-    "q": "A KNN model scores 65% on training data AND 64% on validation data (both poor). The likely problem is…",
+    "q": "Training score 65%, validation score 64% — both poor, no gap. Name the diagnosis — and the direction of the cure.",
     "choices": [
-      "Underfitting — the model is too smooth/crude to capture real structure, e.g. k is far too large",
-      "Overfitting — memorised noise is capping both scores",
-      "A too-small k reacting to noise in both datasets at once",
-      "Label leakage deflating the two scores equally",
-      "Nothing — matching scores mean the model is well-tuned"
+      "Underfitting — lower k",
+      "Overfitting — raise k",
+      "Leakage — reshuffle the split",
+      "Optimal — stop tuning",
+      "Imbalance — resample classes"
     ],
     "explain": "Both-scores-low with no gap means the model can't even fit what it saw: too much smoothing. In KNN that's an oversized k erasing real structure.",
     "simple": "When even the training score is bad, the model is too blunt to draw what's really there — like painting a portrait with a broom. Shrink k so it can express detail again.",
@@ -594,13 +594,13 @@
     }
   },
   {
-    "q": "Why use 5-fold cross-validation instead of a single train/validation split when evaluating a KNN model?",
+    "q": "Instead of one train/validation split, you rotate the held-out slice five times and average the five scores. What does that buy you?",
     "choices": [
-      "One split can be lucky or unlucky; averaging over several rotations gives a more reliable score",
-      "It gives the model five times more training data overall",
-      "It guarantees every class appears in each training portion",
-      "It lets you tune k and report on the same data without bias",
-      "Five small validations are faster to run than one large one"
+      "A score that doesn't depend on luck",
+      "Five times more training data",
+      "Bias-free tuning on the test data",
+      "A guaranteed accuracy boost",
+      "Stratified classes for free"
     ],
     "explain": "A single split is one roll of the dice — which points landed in validation? K-fold rotates the held-out slice and averages, shrinking the luck factor.",
     "simple": "One split might hide the easy examples (lucky score) or the hard ones (cruel score). Rotate which slice is hidden, score each rotation, and average — the luck cancels out.",
@@ -626,13 +626,13 @@
     }
   },
   {
-    "q": "A dataset file is sorted by class (all spam first, then all normal). You split off the first 20% as a validation set without shuffling. What happens?",
+    "q": "The data file is sorted by class, and you slice the first 20% off as a validation set without shuffling. What have you actually built?",
     "choices": [
-      "The validation set is nearly all one class, making scores misleading garbage",
-      "Nothing — random assignment inside the split repairs the ordering",
-      "Scores improve — each class gets learned without interference",
-      "It's fine as long as the TEST portion gets shuffled afterwards",
-      "Training halts with an error because one side is missing a class"
+      "A one-class, useless validation set",
+      "A perfectly stratified split",
+      "A slightly pessimistic split",
+      "A faster but equivalent split",
+      "Nothing — the split won't run"
     ],
     "explain": "Slicing a sorted file gives a validation set full of one class and a training set starved of it. Shuffle (and ideally stratify) before splitting.",
     "simple": "Slice the top off a file sorted by class and your validation set is all one class — while the training set barely contains that class at all. Shuffle first, so every slice looks like the real mix.",
@@ -659,13 +659,13 @@
     }
   },
   {
-    "q": "Two training points sit at exactly the same distance from a query, but only one slot remains among the k nearest. What do implementations typically do?",
+    "q": "Two training points sit at EXACTLY the same distance from the query, but only one neighbour slot remains. Typical implementations…",
     "choices": [
-      "Apply an arbitrary tie-break, such as whichever point appears first in the data",
-      "Include both points, quietly using k + 1 voters for that query",
-      "Average the two points into one synthetic neighbour",
-      "Re-measure both with a second metric as the tie-breaker",
-      "Give the two tied points half a vote each"
+      "Pick arbitrarily (e.g. file order)",
+      "Include both, using k + 1",
+      "Average the two into one point",
+      "Re-measure with a second metric",
+      "Give each half a vote"
     ],
     "explain": "Something must break the tie, and it's usually as mundane as data order. Harmless — but it means the \"k nearest\" set isn't always uniquely defined.",
     "simple": "Two points tied exactly for the last seat — something has to choose, so libraries just take whichever appears first in the file. Harmless, but good to know the choice is arbitrary.",
@@ -700,13 +700,13 @@
     }
   },
   {
-    "q": "A query point lands far away from ALL training data. What does plain KNN do?",
+    "q": "A query lands miles away from every training point — nothing in the data resembles it. Plain KNN…",
     "choices": [
-      "Confidently predicts from the k least-far points anyway — it has no notion of \"too far to say\"",
-      "Returns the majority class of the whole dataset as a safe default",
-      "Falls back to k = 1, since all the points are far anyway",
-      "Widens k automatically until it finds confident neighbours",
-      "Attaches a low-confidence warning to the prediction"
+      "Answers confidently anyway",
+      "Returns 'unknown'",
+      "Raises an out-of-range error",
+      "Averages all the classes",
+      "Widens k until it feels sure"
     ],
     "explain": "KNN always finds SOME k nearest points — even if they're all miles away — and votes as confidently as ever. Distance-to-neighbours isn't checked unless you add that check yourself.",
     "simple": "KNN always finds SOME k nearest points — even if they're miles away — and votes with full confidence. It has no built-in way to say 'this is nothing like anything I've seen'.",
@@ -745,13 +745,13 @@
     }
   },
   {
-    "q": "In KNN regression with small k, what does a single wildly incorrect target value in the training data do?",
+    "q": "KNN regression with a small k, and one stored value is a wild typo (£900 where £90 belongs). Queries landing near the typo get…",
     "choices": [
-      "It badly distorts predictions for queries near it, since it dominates small averages",
-      "Nothing serious — averaging exists precisely to absorb single outliers",
-      "It shifts every prediction in the dataset by the same small amount",
-      "It's excluded automatically once its value looks inconsistent with neighbours",
-      "It only affects k = 1; any amount of averaging removes it"
+      "Predictions dragged toward it",
+      "Averages that absorb it harmlessly",
+      "The typo automatically excluded",
+      "A small uniform shift everywhere",
+      "Slower but unchanged answers"
     ],
     "explain": "An average over 1–2 values has no protection: if one is a typo (£3,000,000 instead of £300,000), nearby predictions inherit the madness.",
     "simple": "An average over one or two values has no protection: if one of them is a typo, your prediction basically IS the typo. More values dilute it; a median simply ignores it.",
@@ -790,13 +790,13 @@
     }
   },
   {
-    "q": "With k = 5, a KNN classifier's neighbours vote 4 spam vs 1 normal. Beyond the label, what useful extra number can this give you?",
+    "q": "k = 5 and the neighbours vote 4 spam, 1 normal. Beyond the label 'spam', the fraction 4/5 hands you a free…",
     "choices": [
-      "A confidence-like score: 4/5 = 80% of neighbours say spam",
-      "The exact, calibrated probability that the email is spam",
-      "The model's expected error rate on similar emails",
-      "A margin score that's only meaningful when compared across k values",
-      "The overall proportion of spam in the entire training set"
+      "Rough confidence score",
+      "Calibrated true probability",
+      "Estimate of the model's error rate",
+      "Recommendation for the next k",
+      "Estimate of the training spam rate"
     ],
     "explain": "The vote fraction (4/5) acts as a rough confidence estimate — that's exactly what predict_proba returns for KNN. Useful, though not a calibrated true probability.",
     "simple": "4 of 5 neighbours said spam → you can report '80% of similar cases were spam'. It's not a guarantee, but it's far more useful than a bare label with no hint of doubt.",
@@ -834,13 +834,13 @@
     }
   },
   {
-    "q": "To use a category like colour ∈ {red, green, blue} in KNN, the standard approach is to…",
+    "q": "You need a colour column — {red, green, blue} — inside KNN's distance. The standard encoding is…",
     "choices": [
-      "One-hot encode it: one 0/1 column per colour, so different colours sit at equal distances",
-      "Number them 1, 2, 3 and use the column directly — the maths works the same",
-      "Replace each colour with how often it appears in the data",
-      "Count character overlap between the category strings as similarity",
-      "Drop the column — nominal categories can't enter a distance"
+      "One 0/1 column per colour",
+      "red=1, green=2, blue=3",
+      "Each colour's frequency",
+      "Character-overlap similarity",
+      "Dropping the column"
     ],
     "explain": "Numbering categories invents a fake ordering (it makes red \"closer\" to green than to blue). One-hot encoding gives every pair of different colours the same distance.",
     "simple": "Numbering colours (red=1, green=2, blue=3) invents a lie: it makes red 'closer' to green than to blue. One-hot gives each colour its own yes/no column, so all colours are equally different.",
@@ -864,13 +864,13 @@
     }
   },
   {
-    "q": "Switching KNN from Euclidean to Manhattan distance (same data, same k) can change predictions because…",
+    "q": "Same data, same k — you only switch the metric from Euclidean to Manhattan. Predictions can genuinely change, because…",
     "choices": [
-      "The ranking of who counts as \"nearest\" can genuinely change between metrics",
-      "It can't — metrics rescale the distance values but rank neighbours identically",
-      "Manhattan ignores diagonal neighbours entirely, removing them from votes",
-      "Euclidean requires standardised features and Manhattan doesn't",
-      "They agree on the single nearest neighbour but diverge beyond k = 3"
+      "'Nearest' itself can change",
+      "They can't — the rankings match",
+      "Diagonal neighbours get excluded",
+      "Manhattan requires rescaling first",
+      "Ties start breaking alphabetically"
     ],
     "explain": "Metrics disagree about diagonal vs axis-aligned gaps, so point A can be nearer under L2 while point B is nearer under L1 — flipping the 1-NN prediction entirely.",
     "simple": "The straight-line ruler and the street-grid ruler can honestly disagree about who's closest — diagonal shortcuts are cheap for one and pricey for the other. Different ruler → different neighbour → different answer.",
@@ -907,13 +907,13 @@
     }
   },
   {
-    "q": "Your KNN model improved after you DELETED five features. What's the most likely explanation?",
+    "q": "You DELETE five features and KNN's accuracy goes UP. Most likely, those five features were…",
     "choices": [
-      "The deleted features were noise or irrelevant, and they had been distorting the distances",
-      "Any deletion helps — fewer features always mean cleaner distances",
-      "The model had been overfitting those features' noise, but only at k = 1",
-      "Coincidence — deleting features cannot change who the neighbours are",
-      "They were redundant copies, and dropping copies always lifts accuracy"
+      "Noise distorting the distances",
+      "Redundant but harmless copies",
+      "Secretly leaking the label",
+      "Merely slow to compute",
+      "The most predictive ones"
     ],
     "explain": "For distance-based models, an irrelevant feature isn't neutral — it actively injects noise into every distance. Removing it purifies the similarity signal.",
     "simple": "Deleting junk columns removes random noise from every distance, so the genuinely-similar points become the closest ones again. Less garbage in, better neighbours out.",
@@ -935,13 +935,13 @@
     }
   },
   {
-    "q": "For KNN on heavily imbalanced data (rare disease detection), which combination most directly protects the minority class?",
+    "q": "Rare-disease screening with KNN: the minority class keeps getting outvoted. Which pairing most directly protects it?",
     "choices": [
-      "Distance-weighted votes and/or resampling the training data toward balance",
-      "A much larger k, so the rare class can gather more voters per query",
-      "Switching the metric from Euclidean to Manhattan",
-      "Removing the rare class's outliers so its cluster tightens",
-      "Lowering the decision threshold on the majority class's vote count"
+      "Distance weights + resampling",
+      "Bigger k + raw features",
+      "Manhattan distance + odd k",
+      "Fewer features + bigger k",
+      "Deduplication + a smaller n"
     ],
     "explain": "Weighted votes stop distant majority neighbours from swamping close minority ones; over/under-sampling fixes the headcount problem at its source. Large k does the opposite.",
     "simple": "Two fixes for the same disease: give close matches louder voices (distance weights), or fix the headcount itself (resample until the classes arrive balanced). Both stop 'rare' meaning 'automatically outvoted'.",
@@ -972,13 +972,13 @@
     }
   },
   {
-    "q": "What is the Euclidean distance between the points (1, 2) and (4, 6)?",
+    "q": "Compute it by hand: the EUCLIDEAN distance between (1, 2) and (4, 6) is…",
     "choices": [
-      "5 — from √(3² + 4²)",
-      "7 — from 3 + 4",
-      "25 — from 3² + 4²",
-      "3.5 — the average of the gaps",
-      "12 — from 3 × 4"
+      "5",
+      "7",
+      "25",
+      "3.5",
+      "12"
     ],
     "explain": "Gaps are 3 and 4; Euclidean squares, sums, and roots them: √(9 + 16) = √25 = 5. (7 would be the Manhattan distance.)",
     "simple": "The gaps are 3 and 4. Square them (9 and 16), add (25), take the square root: 5. It's the school triangle rule — Pythagoras — doing all the work.",
@@ -1002,13 +1002,13 @@
     }
   },
   {
-    "q": "What is the Manhattan distance between the points (2, 3) and (6, 8)?",
+    "q": "Compute it by hand: the MANHATTAN distance between (2, 3) and (6, 8) is…",
     "choices": [
-      "9 — from |6−2| + |8−3|",
-      "6.4 — from √(4² + 5²)",
-      "20 — from 4 × 5",
-      "4.5 — the average of the gaps",
-      "41 — from 4² + 5²"
+      "9",
+      "6.4",
+      "20",
+      "4.5",
+      "41"
     ],
     "explain": "Manhattan adds absolute gaps: |6−2| + |8−3| = 4 + 5 = 9. (6.4 is the Euclidean answer.)",
     "simple": "Just add the gaps: |6−2| = 4 and |8−3| = 5, so 4 + 5 = 9. No squaring, no square roots — taxi maths.",
@@ -1032,13 +1032,13 @@
     }
   },
   {
-    "q": "In a correct KNN pipeline, when does feature scaling happen relative to distance computation?",
+    "q": "In a correctly built KNN pipeline, when does feature scaling happen, relative to computing any distances?",
     "choices": [
-      "Scaling first, always — distances are only meaningful on scaled features",
-      "Distances first — scaling is then applied to the distance values themselves",
-      "Either order works — scaling and distance computation commute",
-      "Scale only the training data; the query must stay in raw units",
-      "Scale only the query point to match the training data's range"
+      "Before — always",
+      "After, applied to the distances",
+      "Either — the two steps commute",
+      "Only on the training rows",
+      "Only on the query point"
     ],
     "explain": "Distance is computed FROM feature values, so any repair to those values must happen first. Scaling distances after the fact can't undo a wrong neighbour ranking.",
     "simple": "Distances are computed FROM the feature values, so any repair to the values must happen first. You can't unsalt a soup after serving it — fix upstream, then measure.",
@@ -1066,13 +1066,13 @@
     }
   },
   {
-    "q": "For which situation is KNN a particularly GOOD fit?",
+    "q": "Every algorithm has a home turf. Where does KNN genuinely shine?",
     "choices": [
-      "A small, well-scaled dataset with a complex, curvy class boundary and no strict latency needs",
-      "A huge dataset with millions of rows, where its zero training time shines",
-      "High-dimensional text data with thousands of sparse features",
-      "A regulated setting that needs one auditable global formula",
-      "A streaming system that must answer in single-digit milliseconds"
+      "Small clean data, curvy boundary",
+      "Billions of rows, hot queries",
+      "Thousands of sparse text features",
+      "A regulator-ready global formula",
+      "A 256 KB microcontroller"
     ],
     "explain": "KNN's strengths: no training, no assumed formula, and boundaries as curvy as the data itself. Its weaknesses (cost, memory, high dimensions) are absent in small, low-dimensional problems.",
     "simple": "KNN is happiest with: small data (scanning stays fast), a few meaningful features (distances stay honest), curvy class boundaries (no formula to constrain it), and no rush at answer time.",
@@ -1117,13 +1117,13 @@
     }
   },
   {
-    "q": "Your KNN model reports 90% accuracy on data that is 90% \"normal\" and 10% \"fraud\". Why hold the applause?",
+    "q": "Your KNN reports 90% accuracy on data that is 90% 'normal' and 10% 'fraud'. Before celebrating, you should compare that score against…",
     "choices": [
-      "A model that always predicts \"normal\" scores 90% too — you may have learned nothing",
-      "90% is strong evidence the model has found real fraud structure",
-      "Accuracy above 85% beats any baseline on any dataset",
-      "The real concern is overfitting — 90% is suspiciously high for fraud",
-      "Fraud is too rare to move accuracy either way, so the score is neutral"
+      "The always-'normal' baseline",
+      "A fair coin flip (50%)",
+      "A human expert's accuracy",
+      "Its own training accuracy",
+      "Last year's model"
     ],
     "explain": "Accuracy is judged against the majority-class baseline. On 90/10 data, 90% is the score of the laziest possible model; the interesting question is performance on the 10%.",
     "simple": "If 90% of the data is 'normal', a rock that always says 'normal' also scores 90%. The real test is beating that do-nothing baseline — not the raw score.",

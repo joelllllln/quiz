@@ -1,13 +1,13 @@
 /* KNN — Level 1: Foundations. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).easy = [
   {
-    "q": "A new, unlabelled data point arrives. What does k-Nearest Neighbours actually do to decide its label?",
+    "q": "A new, unlabelled data point arrives. KNN measures its distance to every labelled example and keeps the k closest. What does it do with them to pick a label?",
     "choices": [
-      "Finds the k closest labelled points and lets them vote",
-      "Measures the distance to each class's centre point and picks the closer centre",
-      "Learns a boundary line between the classes during training, then checks which side the point falls on",
-      "Compares the new point against one stored 'typical example' of each class",
-      "Assigns the label of the densest region the point lands in, ignoring individual examples"
+      "Lets their labels vote",
+      "Averages their coordinates",
+      "Fits a line through them",
+      "Compares them to each class centre",
+      "Ranks them by typicality"
     ],
     "explain": "KNN has no equation and no rules — it simply looks up the k most similar known examples and takes a vote among their labels.",
     "simple": "Imagine the new point asking its closest neighbours 'what are you?' and going with whatever most of them say. That's the whole algorithm — no formulas, no training. Just look at who's nearby and copy the majority.",
@@ -45,13 +45,13 @@
     }
   },
   {
-    "q": "With k = 3, the three nearest neighbours of a new fruit are labelled: apple, apple, lemon. What does KNN predict?",
+    "q": "k = 3, and the three nearest neighbours of a mystery fruit are labelled apple, apple, lemon. What does KNN predict?",
     "choices": [
-      "Apple — two votes beat one",
-      "Lemon — the single closest neighbour carries the deciding vote",
-      "Apple, but only if it also wins at k = 5; otherwise there's no verdict",
-      "It depends on the exact distances — a winner needs distance-weighted votes",
-      "Lemon — when votes split, the rarer class wins to keep the classes balanced"
+      "Apple",
+      "Lemon",
+      "A tie — no prediction",
+      "Half apple, half lemon",
+      "Whichever fruit is commoner overall"
     ],
     "explain": "Classification KNN is a simple show of hands among the k nearest: apple 2, lemon 1 → apple.",
     "simple": "Three neighbours voted: apple, apple, lemon. Two hands beat one hand, so the answer is apple. It's literally just counting.",
@@ -89,13 +89,13 @@
     }
   },
   {
-    "q": "In KNN, which points count as the \"nearest\" neighbours of a new point?",
+    "q": "KNN has measured the distance from a new point to every stored example. Which examples count as its 'nearest neighbours'?",
     "choices": [
-      "The ones with the smallest distance to the new point",
-      "The ones inside a fixed radius that KNN sets automatically",
-      "The k points closest to the centre of their own class",
-      "The ones whose distance is closest to the average distance",
-      "The k most typical examples of the majority class"
+      "Those with the smallest distances",
+      "Those inside an automatic radius",
+      "Those closest to their class centre",
+      "Those with the most average distances",
+      "The most typical majority-class points"
     ],
     "explain": "\"Near\" is measured with a distance function (Euclidean by default): smaller distance = more similar = nearer.",
     "simple": "'Nearest' just means the smallest distance number — like picking the shop closest to your house. KNN measures the distance to everyone, then keeps the smallest ones.",
@@ -133,13 +133,13 @@
     }
   },
   {
-    "q": "With k = 1, how does KNN label a new point?",
+    "q": "With k = 1, KNN finds the single closest training point to the new arrival. What happens next?",
     "choices": [
-      "It copies the label of the single closest training point",
-      "It averages the labels of the three closest points, since one is never enough",
-      "It uses the closest point only if it's within a safety distance; otherwise it abstains",
-      "It compares the closest point of each class and reports how torn it is",
-      "It copies the closest point's label but flips it if that point looks like an outlier"
+      "Its label is copied — done",
+      "Two runners-up double-check it",
+      "It abstains if the point is far",
+      "A tie is declared",
+      "Its label is flipped if it's an outlier"
     ],
     "explain": "k = 1 means one voter: whatever the single nearest neighbour is, that's your answer — fast, simple, and fragile.",
     "simple": "With k = 1 you're asking exactly one neighbour and copying their answer, full stop. Whatever the single closest point is labelled, that's the prediction.",
@@ -177,13 +177,13 @@
     }
   },
   {
-    "q": "What does KNN actually do during its \"training\" phase?",
+    "q": "During 'training', many models learn weights or rules from the data. What does KNN actually do with the training examples at training time?",
     "choices": [
-      "Almost nothing — it just stores the training examples for later",
-      "It computes and caches the distance between every pair of training points",
-      "It learns one weight per feature so distances are ready instantly later",
-      "It groups the examples into clusters so future lookups are faster",
-      "It discards duplicates and keeps one prototype per class"
+      "Just stores them",
+      "Caches all pairwise distances",
+      "Learns one weight per feature",
+      "Clusters them for fast lookup",
+      "Keeps one prototype per class"
     ],
     "explain": "KNN is a \"lazy\" learner: training = memorise the data. All the real work (distance computing, voting) happens at prediction time.",
     "simple": "KNN doesn't study — it just saves all the examples, like stuffing every past paper into a drawer. All the actual thinking happens later, when a question arrives.",
@@ -205,13 +205,13 @@
     }
   },
   {
-    "q": "Why does basic KNN get slower at making predictions as the training set grows?",
+    "q": "As the training set grows, plain KNN's predictions get slower and slower. What is every single prediction forced to do?",
     "choices": [
-      "Each prediction must measure the distance to every stored training point",
-      "The value of k has to grow with the dataset, and bigger votes are slower",
-      "The stored examples must be re-sorted after every prediction",
-      "It re-fits its parameters on the full dataset before each answer",
-      "More data forces more features, and each feature slows the maths"
+      "Measure distance to every stored point",
+      "Re-sort the whole dataset",
+      "Re-fit its parameters",
+      "Grow k to match the data",
+      "Recompute the class centres"
     ],
     "explain": "To find the k nearest, plain KNN computes the distance from the query to all n stored points — so prediction cost grows with n.",
     "simple": "To find the closest points it has to check the distance to EVERY stored point, one by one, every time you ask. More stored points = more checking = slower answers.",
@@ -233,13 +233,13 @@
     }
   },
   {
-    "q": "Euclidean distance between two points is best described as…",
+    "q": "Two points sit on a map. The EUCLIDEAN distance between them is best described as…",
     "choices": [
-      "The length of the straight line connecting them",
-      "The sum of the differences along each axis",
-      "The largest single difference across the features",
-      "The number of grid steps separating the points",
-      "The average of the horizontal and vertical gaps"
+      "The straight-line length",
+      "The sum of the axis gaps",
+      "The largest single axis gap",
+      "The count of grid steps",
+      "The average axis gap"
     ],
     "explain": "Euclidean distance is ruler distance: the straight-line length, √(Δx² + Δy²) in 2-D.",
     "simple": "Euclidean distance is ruler distance: lay a ruler between the two points and read the straight-line length. That's the whole idea.",
@@ -263,13 +263,13 @@
     }
   },
   {
-    "q": "Manhattan distance between two points is computed as…",
+    "q": "Two points sit on a street grid. The MANHATTAN distance between them is computed by…",
     "choices": [
-      "The sum of the absolute differences along each feature",
-      "The square root of the sum of squared differences",
-      "The straight-line length between the points",
-      "The largest absolute difference across the features",
-      "The sum of the squared differences, without the square root"
+      "Adding the absolute axis gaps",
+      "Square-rooting the squared gaps",
+      "Taking the straight-line length",
+      "Taking the largest gap only",
+      "Multiplying the gaps together"
     ],
     "explain": "Manhattan (city-block) distance adds up |Δx| + |Δy| — the path a taxi must drive on a street grid, no diagonals allowed.",
     "simple": "Manhattan distance is taxi distance: you can't drive through buildings, so you add the blocks across plus the blocks up. Add the gap in each direction — done.",
@@ -293,13 +293,13 @@
     }
   },
   {
-    "q": "When classifying into two classes, why is an odd value of k (like 3 or 5) usually preferred?",
+    "q": "When classifying into two classes, practitioners usually pick an odd k (3, 5, 7…). What does an odd k guarantee?",
     "choices": [
-      "An odd number of voters can never split evenly, so there's always a winner",
-      "Odd k gives slightly higher accuracy on average across datasets",
-      "Odd k keeps the neighbourhood symmetric around the query point",
-      "Even k double-counts the closest neighbour, which biases the vote",
-      "Odd k guarantees each class gets at least one vote"
+      "The vote can never tie",
+      "Higher accuracy on average",
+      "A symmetric neighbourhood",
+      "At least one vote per class",
+      "Faster distance sums"
     ],
     "explain": "With two classes and even k, the vote can tie (2–2, 3–3…) and the answer becomes arbitrary. Odd k makes a tie impossible.",
     "simple": "With 3 voters you can get 2–1 but never a draw. With 4 voters you can get 2–2 — and then nobody wins. Odd numbers guarantee a winner.",
@@ -337,13 +337,13 @@
     }
   },
   {
-    "q": "If k is set equal to the total number of training points, what will KNN predict for ANY new point?",
+    "q": "You set k equal to the entire training set, so every stored point votes on every prediction. Wherever the new point lands, KNN now predicts…",
     "choices": [
-      "Always the most common class in the training set, wherever the point is",
-      "The class of whichever single point is closest, since ties fall back to 1-NN",
-      "A coin flip — with everyone voting, the signals cancel out",
-      "The class whose points are most tightly packed together",
-      "The class of the data's centre-most point"
+      "The overall majority class",
+      "The nearest point's class",
+      "The densest cluster's class",
+      "A random class each time",
+      "The centre-most point's class"
     ],
     "explain": "With k = n, every training point votes every time, so position stops mattering — the overall majority class wins everywhere.",
     "simple": "If everyone votes, position stops mattering — the biggest group wins every time, everywhere. It's like deciding what one person likes by polling the entire country.",
@@ -383,13 +383,13 @@
     }
   },
   {
-    "q": "One training point has an incorrect (mislabeled) class, and a new point lands right next to it. Which setting is most likely to give the wrong prediction?",
+    "q": "One training point is mislabeled, and a new point lands right next to it. Which setting of k is most likely to inherit the mistake?",
     "choices": [
-      "k = 1 — the single bad neighbour decides everything",
-      "k = 5 — a larger jury includes the bad point plus more room for error",
-      "k = 3 — odd values amplify single mislabeled points",
-      "Any k — one bad label spoils every vote it joins",
-      "k = 7 — nearby honest points get outvoted by the bad one"
+      "k = 1",
+      "k = 3",
+      "k = 5",
+      "k = 7",
+      "All k equally"
     ],
     "explain": "With k = 1 the mislabeled point IS the whole vote. A larger k lets its correct neighbours outvote it.",
     "simple": "At k = 1, one bad label IS the entire decision — there's nobody to overrule it. Ask a few more neighbours and the honest ones outvote the mistake.",
@@ -428,13 +428,13 @@
     }
   },
   {
-    "q": "A dataset has age (18–70) and salary (£20,000–£90,000). Using raw values, why does KNN behave badly?",
+    "q": "A dataset mixes age (18–70) and salary (£20,000–£90,000), both used raw. When KNN computes distances, what actually happens?",
     "choices": [
-      "Salary's huge numbers dominate the distance, so age barely matters",
-      "Age dominates the distance, because smaller numbers are measured more precisely",
-      "The two features roughly cancel out, so neither drives the neighbours",
-      "The ranking becomes unstable and effectively random",
-      "It behaves fine — the voting step corrects for unit differences"
+      "Salary drowns out age",
+      "Age drowns out salary",
+      "The two roughly cancel out",
+      "The ranking turns random",
+      "Nothing — the vote rebalances it"
     ],
     "explain": "Distance adds raw differences: a £10,000 salary gap contributes ~10,000 while a 30-year age gap contributes 30. Salary drowns age unless you rescale.",
     "simple": "Distance just adds up number gaps. A salary gap is in the thousands; an age gap is maybe 30. So salary shouts and age whispers — until you shrink them onto the same scale.",
@@ -462,13 +462,13 @@
     }
   },
   {
-    "q": "You record commute distance in metres, then switch the same column to kilometres (÷1000) without rescaling anything else. What happens to unscaled KNN?",
+    "q": "You convert one column from metres to kilometres (÷1000) and change nothing else. For unscaled KNN, what can this alone do?",
     "choices": [
-      "The nearest neighbours can completely change, so predictions change too",
-      "Nothing — distances rescale together, so the ranking is preserved",
-      "Predictions only change if the labels are rescaled too",
-      "Only the distance values change; who counts as nearest stays fixed",
-      "KNN standardises internally, so recorded units never matter"
+      "Change who counts as nearest",
+      "Nothing — the ranking is preserved",
+      "Only shrink the distance values",
+      "At most break exact ties differently",
+      "Slow the maths, nothing else"
     ],
     "explain": "Raw distances depend on units. Shrinking one feature ×1000 shrinks its influence ×1000, which can reshuffle who counts as \"nearest\".",
     "simple": "Change metres to kilometres and those numbers shrink 1000×, while other features stay put — so a different person can suddenly be 'closest'. Same world, different ruler, different answer.",
@@ -496,13 +496,13 @@
     }
   },
   {
-    "q": "How does KNN predict in a regression problem (predicting a number, like a price)?",
+    "q": "KNN regression must output a number — a price, say — from the k nearest neighbours' values. How does it combine them?",
     "choices": [
-      "It averages the values of the k nearest neighbours",
-      "It takes the most common value among the k neighbours",
-      "It fits a small trend line through the k neighbours and reads the value off",
-      "It returns the nearest neighbour's value, adjusted by the average gap",
-      "It weights each neighbour's value by how common values like it are"
+      "Averages them",
+      "Votes on them",
+      "Fits a trend line through them",
+      "Copies the nearest, adjusted",
+      "Takes the most common value"
     ],
     "explain": "For numeric targets there's nothing to \"vote\" on — KNN outputs the mean (sometimes median) of the k nearest values.",
     "simple": "When predicting a number, the neighbours can't 'vote' — so you average them. Three similar flats sold for about £150k, £160k, £170k? Guess around £160k.",
@@ -542,13 +542,13 @@
     }
   },
   {
-    "q": "In KNN regression, what happens to predictions as k approaches the size of the whole training set?",
+    "q": "In KNN regression you crank k up to the size of the whole dataset. Every prediction now becomes…",
     "choices": [
-      "Every prediction approaches the overall average of all training values",
-      "Predictions get steadily more accurate as more values join each average",
-      "Predictions drift toward the median of the data instead of the mean",
-      "The prediction line straightens into the data's overall upward trend",
-      "Predictions snap back to following the single nearest neighbour"
+      "The global average",
+      "Perfectly accurate",
+      "The global median",
+      "Zero",
+      "The nearest value again"
     ],
     "explain": "Averaging over everyone gives the same number everywhere: the global mean. The prediction curve flattens into a horizontal line.",
     "simple": "Averaging EVERYONE gives one number: the overall average — the same answer for every question. That's why the prediction line goes completely flat.",
@@ -587,13 +587,13 @@
     }
   },
   {
-    "q": "Before KNN can classify anything, what must its stored training examples have?",
+    "q": "Before KNN can classify anything at all, the stored training examples must come with one crucial thing. Which?",
     "choices": [
-      "Known labels — each stored example must already be classified",
-      "A balanced number of examples from every class",
-      "At least ten rows per neighbour consulted, so each vote is stable",
-      "Features that are already on the same scale",
-      "A separate unlabelled pool for the algorithm to practise on"
+      "Human-provided labels",
+      "Balanced classes",
+      "At least 1,000 rows",
+      "Pre-scaled features",
+      "An unlabelled practice pool"
     ],
     "explain": "KNN is supervised: the vote only works because each neighbour brings a known label with it. Unlabelled neighbours would have nothing to vote with.",
     "simple": "KNN's only knowledge is the labels humans attached earlier. No labels = the neighbours have nothing to say — like asking directions from people who don't know the area either.",
@@ -631,13 +631,13 @@
     }
   },
   {
-    "q": "How does the decision boundary of KNN typically change as k gets smaller?",
+    "q": "Watch KNN's decision boundary as k shrinks toward 1. The border between the classes becomes…",
     "choices": [
-      "It becomes more jagged and wiggly, bending around individual points",
-      "It becomes smoother and closer to a straight line",
-      "It keeps its shape but shifts toward the smaller class",
-      "It splits into exactly k separate borders",
-      "It hugs the centre of each class more tightly"
+      "More jagged and wiggly",
+      "Smoother and straighter",
+      "A perfect circle",
+      "Fixed — k doesn't affect it",
+      "Biased toward the smaller class"
     ],
     "explain": "Small k lets single points carve out their own little territories, so the border between classes wiggles around individuals. Larger k smooths it out.",
     "simple": "Small k lets every single point grab its own patch of the map, so the border wiggles around individuals. Bigger k smooths those wiggles away.",
@@ -678,13 +678,13 @@
     }
   },
   {
-    "q": "You evaluate 1-NN on the SAME data it was trained on and get 100% accuracy. What's going on?",
+    "q": "You score 1-NN on the exact data it trained on and get a perfect 100%. Why is that score meaningless?",
     "choices": [
-      "Each point's nearest neighbour is itself, so the score is meaningless",
-      "The dataset is unusually clean, so the score is genuine",
-      "1-NN interpolates smoothly, and smooth models ace their training data",
-      "The classes must be perfectly separable for that to happen",
-      "The distance metric happens to fit this data perfectly"
+      "Each point's nearest neighbour is itself",
+      "The data must be noise-free",
+      "Smooth models always ace training",
+      "It only proves the classes separate",
+      "The metric happens to fit perfectly"
     ],
     "explain": "Asked about a training point, 1-NN finds that exact point at distance 0 and copies its own label — a perfect score by cheating, saying nothing about new data.",
     "simple": "Ask 'who's closest to this point?' when the point is already IN the data — the answer is itself, at distance zero. Of course it gets its own label right. It's an open-book exam.",
@@ -729,13 +729,13 @@
     }
   },
   {
-    "q": "What's the standard way to get an honest estimate of how well a KNN model will do on future data?",
+    "q": "You want an honest estimate of how your KNN model will handle future, unseen cases. What's the standard move?",
     "choices": [
-      "Hold back some labelled data during training and score the model on it",
-      "Score it on the training data, but subtract a standard 10% penalty",
-      "Average the model's own confidence scores across its predictions",
-      "Score it on the training data using a larger k than you'll deploy",
-      "Confirm the training accuracy clears the majority-class baseline"
+      "Score it on held-out data",
+      "Score training data, minus 10%",
+      "Average its confidence scores",
+      "Beat the baseline on training data",
+      "Score training data with larger k"
     ],
     "explain": "A held-out test set simulates the future: labelled examples the model has never seen. Its score there is an honest preview of real-world performance.",
     "simple": "Hide some labelled examples in a drawer, build the model without them, then test on them. The model never saw them, so its score there is an honest preview of the real world.",
@@ -780,13 +780,13 @@
     }
   },
   {
-    "q": "What's the difference between what KNN outputs for classification versus regression?",
+    "q": "Same neighbours, two tasks: classification outputs a category, regression outputs a number. What differs in the final step?",
     "choices": [
-      "Classification outputs a category from a vote; regression outputs a number from an average",
-      "Classification uses Euclidean distance; regression must use Manhattan",
-      "Classification needs odd k; regression needs even k",
-      "Regression consults more neighbours than classification on the same data",
-      "Classification averages the labels; regression takes a majority vote"
+      "Vote for classes, average for numbers",
+      "Different distance metrics",
+      "Odd k versus even k",
+      "More neighbours for regression",
+      "Average for classes, vote for numbers"
     ],
     "explain": "Same neighbour-finding, different combiner: categories get voted on, numbers get averaged.",
     "simple": "If the answer is a WORD (spam / not spam), the neighbours vote. If the answer is a NUMBER (price, minutes), the neighbours get averaged. Same neighbours, different final step.",
@@ -825,13 +825,13 @@
     }
   },
   {
-    "q": "Why can't KNN work directly on raw text categories like \"rock\", \"jazz\", \"pop\"?",
+    "q": "You feed KNN raw text categories like 'rock', 'jazz', 'pop'. Why does it fail before it can even start?",
     "choices": [
-      "Distance needs numbers — you must first encode categories numerically",
-      "It can, as long as the category strings are the same length",
-      "It can — most libraries hash text into a distance automatically",
-      "Categories work directly if you order them alphabetically first",
-      "Text only breaks Euclidean distance; Manhattan handles it natively"
+      "You can't do arithmetic on words",
+      "The strings differ in length",
+      "Text must be sorted alphabetically",
+      "Only Manhattan handles text",
+      "Hashing wasn't enabled"
     ],
     "explain": "KNN's core operation is arithmetic on feature values (subtract, square, add). \"rock − jazz\" means nothing until you represent each item as numbers.",
     "simple": "You can't subtract 'jazz' from 'rock'. Distance is arithmetic, and arithmetic needs numbers — so first describe each item with numbers, and then distances exist.",
@@ -855,13 +855,13 @@
     }
   },
   {
-    "q": "In distance-weighted KNN, how is the neighbours' vote changed?",
+    "q": "In distance-weighted KNN the k neighbours still vote — but the votes are no longer equal. Who speaks loudest?",
     "choices": [
-      "Closer neighbours get more influence; distant ones get less",
-      "Each neighbour's vote is weighted by how common its class is",
-      "The k neighbours split a single vote equally, keeping totals fair",
-      "More recently added training points get more influence",
-      "Distant neighbours get extra influence, adding diversity to the vote"
+      "The closest neighbours",
+      "The most common class",
+      "The most recent points",
+      "The farthest neighbours",
+      "The most typical points"
     ],
     "explain": "Weighted KNN scales each vote by closeness (often 1/distance): a next-door neighbour speaks louder than one at the edge of the neighbourhood.",
     "simple": "Instead of every neighbour getting one equal vote, closer neighbours get louder voices. A next-door twin counts for more than a vague acquaintance.",
@@ -891,13 +891,13 @@
     }
   },
   {
-    "q": "k = 4 produces a 2–2 tie between two classes. Which is a principled way to break it?",
+    "q": "k = 4 and the vote splits 2–2. One principled tie-break uses information you already computed. Which?",
     "choices": [
-      "Weight the votes by distance so the closer pair wins",
-      "Declare the overall majority class of the training set the winner",
-      "Pick whichever tied class appears first in the training file",
-      "Report both classes at 50% confidence and let the caller decide",
-      "Flip a fair coin — with two classes it's unbiased either way"
+      "Weight the votes by closeness",
+      "Take the overall majority class",
+      "Take the first class in the file",
+      "Report both classes",
+      "Flip a fair coin"
     ],
     "explain": "A tie in headcount usually isn't a tie in evidence: weighting by distance lets the closer neighbours settle it meaningfully rather than arbitrarily.",
     "simple": "2–2 is a tie in HANDS, but not in evidence: the closer pair look more like your point. Let closeness carry weight and the tie breaks itself — sensibly, not randomly.",
@@ -926,13 +926,13 @@
     }
   },
   {
-    "q": "A training set contains 6 examples. What's the largest value k can meaningfully take?",
+    "q": "Your training set holds exactly 6 examples. What is the largest k that means anything?",
     "choices": [
-      "6 — you can't consult more neighbours than exist",
-      "5 — the query point itself always occupies one slot",
-      "7 — k may exceed n by one to prevent ties",
-      "3 — k must never pass half the dataset",
-      "12 — with replacement, each neighbour can vote twice"
+      "6",
+      "5",
+      "7",
+      "3",
+      "12"
     ],
     "explain": "Neighbours are real stored examples: with 6 points, \"the 7 nearest\" doesn't exist. k ranges from 1 to n.",
     "simple": "Neighbours are real stored examples. If you only have 6, 'the 7 nearest' doesn't exist — like inviting 7 friends when you only know 6 people.",
@@ -966,13 +966,13 @@
     }
   },
   {
-    "q": "After training, a linear model keeps a small equation and can throw the data away. What does KNN keep?",
+    "q": "A trained linear model keeps a small formula and can throw its data away. What must KNN keep in order to remain a model at all?",
     "choices": [
-      "The entire training dataset — that IS the model",
-      "A compressed summary: one average point per class",
-      "The precomputed k nearest neighbours of every training point",
-      "A small distance table plus the value of k",
-      "The boundary it derived from the examples during training"
+      "The entire training set",
+      "One average point per class",
+      "A distance table plus k",
+      "Its learned boundary",
+      "Each point's precomputed neighbours"
     ],
     "explain": "KNN never distils the data into parameters. Its \"model\" is the memorised dataset itself, consulted from scratch at every prediction.",
     "simple": "A linear model boils the data down to a little formula and can bin the data afterwards. KNN has no formula — the saved examples ARE the model. Delete them and nothing is left.",
@@ -994,13 +994,13 @@
     }
   },
   {
-    "q": "A fitness app uses daily steps (0–20,000) and sleep hours (0–12) in KNN. What should you do before computing distances?",
+    "q": "A fitness app feeds daily steps (0–20,000) and sleep hours (0–12) into KNN. Before any distances are computed, you should…",
     "choices": [
-      "Rescale both features to a comparable range, e.g. 0–1",
-      "Log-transform sleep so both features grow at the same rate",
-      "Drop whichever feature correlates less with the label",
-      "Nothing — the voting stage rebalances uneven features",
-      "Weight steps down by a factor of k to compensate"
+      "Rescale both to a shared range",
+      "Log-transform sleep",
+      "Drop the weaker feature",
+      "Do nothing — it self-corrects",
+      "Multiply steps by k"
     ],
     "explain": "Normalising (min-max to 0–1) or standardising (z-scores) puts steps and sleep on equal footing so both genuinely influence who counts as similar.",
     "simple": "Squash both features onto the same 0-to-1 scale, so a 'big' step difference and a 'big' sleep difference count about the same. Now both features get a fair say.",
@@ -1028,13 +1028,13 @@
     }
   },
   {
-    "q": "The data genuinely contains a small pocket of one class inside the other's region. What does a very large k do to that pocket?",
+    "q": "The data genuinely contains a small pocket of one class inside the other's territory. What does a very large k do to that pocket?",
     "choices": [
-      "Smooths right over it — the pocket gets outvoted and vanishes from predictions",
-      "Preserves it — large k averages over noise but keeps real structure",
-      "Shrinks it slightly but never removes it while its points remain",
-      "Expands it, since its points win every nearby vote",
-      "Blurs its edges while keeping its centre correctly labelled"
+      "Votes it out of existence",
+      "Preserves it — smoothing keeps structure",
+      "Shrinks it but keeps it",
+      "Expands it",
+      "Moves it toward the map's edge"
     ],
     "explain": "A large k asks so many (mostly outside) neighbours that the pocket's few residents are always outvoted: real structure gets blurred away. That's underfitting.",
     "simple": "A giant k means a giant crowd votes on every spot — and a small real cluster always gets outvoted by the crowd around it. The map paints straight over it.",
@@ -1076,13 +1076,13 @@
     }
   },
   {
-    "q": "Which everyday assumption is KNN quietly betting everything on?",
+    "q": "Every algorithm quietly bets on something being true about the world. KNN's entire bet is that…",
     "choices": [
-      "Things that are similar tend to belong to the same category",
-      "Every feature contributes equally to real-world similarity",
-      "Most datasets contain more signal than noise",
-      "The labels in the training data are essentially correct",
-      "The classes appear in roughly equal numbers"
+      "Similar things share labels",
+      "Features are equally important",
+      "Data is mostly signal",
+      "Labels are mostly correct",
+      "Classes are balanced"
     ],
     "explain": "\"Birds of a feather flock together\": KNN assumes closeness in feature space implies sameness of label. When that's false, KNN fails.",
     "simple": "KNN's one big bet: things that look similar usually ARE similar — birds of a feather. When that's true of your data, it works; when it isn't, no k can save it.",
@@ -1120,13 +1120,13 @@
     }
   },
   {
-    "q": "Put KNN's prediction steps in the right order.",
+    "q": "Put KNN's three prediction steps in the correct order.",
     "choices": [
-      "Measure distance to every stored point → keep the k smallest → combine their labels",
-      "Keep the k most recent points → measure their distances → combine labels",
-      "Measure distance to each class centre → pick the closer centre → assign its label",
-      "Pick k points spread evenly across the data → measure → vote",
-      "Measure all distances → discard outliers → average what remains"
+      "Measure all → keep k nearest → combine",
+      "Keep k nearest → measure → combine",
+      "Vote → keep winners → measure",
+      "Sample k at random → measure → vote",
+      "Measure all → drop outliers → average"
     ],
     "explain": "Rank ALL stored points by distance first — only then can you know which k are nearest. The vote (or average) is always the final step.",
     "simple": "The recipe: measure the distance to everyone → keep the k smallest → let those labels vote (or average, for numbers). Three steps, always in that order.",
@@ -1164,13 +1164,13 @@
     }
   },
   {
-    "q": "Which of these tasks would use KNN classification (rather than KNN regression)?",
+    "q": "Four of these tasks predict a quantity. Which one is a KNN CLASSIFICATION task instead?",
     "choices": [
-      "Deciding whether a loan application is approved or rejected",
-      "Predicting tomorrow's temperature in °C",
+      "Approving or rejecting a loan",
+      "Predicting tomorrow's temperature",
       "Estimating a house's sale price",
-      "Predicting how many minutes a delivery will take",
-      "Estimating a student's exam percentage"
+      "Predicting delivery minutes",
+      "Estimating an exam percentage"
     ],
     "explain": "Approve/reject is a choice between categories → classification (vote). All the others predict a quantity → regression (average).",
     "simple": "'Approve or reject?' has two possible answers — you're picking a CATEGORY, so it's classification. Temperature, price, minutes are NUMBERS — those are regression.",
