@@ -293,8 +293,113 @@
         var html = '<div class="small" style="margin-bottom:6px">' + (cfg.storeLabel || 'What "training" stores') + ': <span style="letter-spacing:1px">' + stack + '</span> <b>' + comma(n) + '</b> ' + (cfg.itemName || 'examples') + ', kept forever</div>' +
           '<div class="hbar-row"><span class="hbar-name">time to "train"</span><div class="hbar-track"><div class="hbar-fill" style="width:1.2%;background:' + C.good + '"></div></div><span class="hbar-val">~instant</span></div>' +
           '<div class="hbar-row"><span class="hbar-name">time to answer ONE question</span><div class="hbar-track"><div class="hbar-fill" style="width:' + predW + '%;background:' + C.c1 + '"></div></div><span class="hbar-val">' + comma(n) + ' checks</span></div>';
+        if (cfg.indexed) {
+          var logChecks = Math.max(1, Math.round(Math.log2(n)));
+          html += '<div class="hbar-row"><span class="hbar-name">…with a smart index</span><div class="hbar-track"><div class="hbar-fill" style="width:' + Math.max(0.8, 100 * logChecks / max) + '%;background:' + C.good + '"></div></div><span class="hbar-val">~' + logChecks + ' checks</span></div>';
+        }
         stage.innerHTML = html;
         ui.setReadout('To answer a single new question it must measure the distance to <b>every one</b> of the ' + comma(n) + ' stored ' + (cfg.itemName || 'examples') + ' — <b>' + comma(n) + '</b> distance checks.');
+      }
+    };
+  };
+
+  /* ================= kCurve — train vs validation accuracy across every k ================= */
+  TYPES.kCurve = function (cfg) {
+    var kmax = cfg.kmax || cfg.train.length;
+    var curves = { tr: [], va: [] };
+    for (var k = 1; k <= kmax; k++) {
+      var t = 0; cfg.train.forEach(function (p) {
+        var v = voteCount(neighboursOf(p, cfg.train), k);
+        if ((v[0] >= v[1] ? 0 : 1) === p.c) t++;
+      });
+      var a = 0; cfg.val.forEach(function (p) {
+        var v = voteCount(neighboursOf(p, cfg.train), k);
+        if ((v[0] >= v[1] ? 0 : 1) === p.c) a++;
+      });
+      curves.tr.push(t / cfg.train.length); curves.va.push(a / cfg.val.length);
+    }
+    return {
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var k = Math.round(v);
+        var W = 340, H = 230, pad = 34;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function sx(kk) { return pad + (kk - 1) / (kmax - 1) * (W - 2 * pad); }
+        function sy(acc) { return H - pad - acc * (H - 2 * pad - 10); }
+        svg.appendChild(sv('rect', { x: pad - 10, y: 6, width: W - 2 * pad + 20, height: H - pad + 2, fill: 'none', stroke: C.line, rx: 8 }));
+        [0, 0.5, 1].forEach(function (g) {
+          svg.appendChild(sv('line', { x1: pad - 4, y1: sy(g), x2: W - pad + 4, y2: sy(g), stroke: C.line, 'stroke-width': 0.7 }));
+          var t = sv('text', { x: pad - 8, y: sy(g) + 3, 'font-size': 9, 'text-anchor': 'end', fill: C.ink3 }); t.textContent = Math.round(g * 100) + '%'; svg.appendChild(t);
+        });
+        var xt = sv('text', { x: W / 2, y: H - 8, 'font-size': 11, 'text-anchor': 'middle', fill: C.ink3 }); xt.textContent = 'k (neighbours asked)'; svg.appendChild(xt);
+        [['tr', C.c0], ['va', C.query]].forEach(function (pair) {
+          var d = '';
+          curves[pair[0]].forEach(function (acc, i) { d += (d ? ' L' : 'M') + sx(i + 1) + ' ' + sy(acc); });
+          svg.appendChild(sv('path', { d: d, fill: 'none', stroke: pair[1], 'stroke-width': 2 }));
+        });
+        svg.appendChild(sv('line', { x1: sx(k), y1: sy(0), x2: sx(k), y2: sy(1.04), stroke: C.ink3, 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
+        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.tr[k - 1]), r: 5, fill: C.c0, stroke: '#fff', 'stroke-width': 1.5 }));
+        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.va[k - 1]), r: 5, fill: C.query, stroke: '#fff', 'stroke-width': 1.5 }));
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c0 + '"></span>score on data it has seen</span><span><span class="sw" style="background:' + C.query + '"></span>score on held-back data</span></div>');
+        ui.setReadout('At k = <b>' + k + '</b>: seen data <b style="color:' + C.c0 + '">' + Math.round(100 * curves.tr[k - 1]) + '%</b> · held-back data <b style="color:' + C.query + '">' + Math.round(100 * curves.va[k - 1]) + '%</b>');
+      }
+    };
+  };
+
+  /* ================= metricSwitch — the NEAREST NEIGHBOUR ITSELF changes with the metric ================= */
+  TYPES.metricSwitch = function (cfg) {
+    return {
+      valText: function (v) { return v <= 1.02 ? 'city-block' : v >= 1.98 ? 'straight-line' : 'p = ' + fmt(v, 2); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var plot = makePlot(cfg);
+        var ds = cfg.points.map(function (p, i) { return { p: p, i: i, d: minkowski(cfg.query, p, v) }; })
+          .sort(function (a, b) { return a.d - b.d; });
+        var nearest = ds[0];
+        ds.forEach(function (n, rank) {
+          plot.svg.appendChild(sv('line', {
+            x1: plot.sx(cfg.query.x), y1: plot.sy(cfg.query.y), x2: plot.sx(n.p.x), y2: plot.sy(n.p.y),
+            stroke: rank === 0 ? CLASS_COLORS[n.p.c] : C.line, 'stroke-width': rank === 0 ? 3 : 1.2
+          }));
+          var mx = (plot.sx(cfg.query.x) + plot.sx(n.p.x)) / 2, my = (plot.sy(cfg.query.y) + plot.sy(n.p.y)) / 2;
+          var t = sv('text', { x: mx, y: my - 5, 'font-size': 10.5, fill: rank === 0 ? '#fff' : C.ink2, 'text-anchor': 'middle', 'font-weight': rank === 0 ? 700 : 400 });
+          t.textContent = fmt(n.d, 2); plot.svg.appendChild(t);
+        });
+        cfg.points.forEach(function (p, i) {
+          drawPoint(plot, p, { ring: i === nearest.i, dim: i !== nearest.i });
+          if (p.name) { var t = sv('text', { x: plot.sx(p.x), y: plot.sy(p.y) - 13, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink2 }); t.textContent = p.name; plot.svg.appendChild(t); }
+        });
+        drawQuery(plot, cfg.query, cfg.queryLabel);
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', legendHTML(cfg.classes));
+        ui.setReadout('Nearest neighbour under this ruler: <b style="color:' + CLASS_COLORS[nearest.p.c] + '">' + (nearest.p.name || 'point ' + (nearest.i + 1)) + '</b> → 1-NN prediction: <b style="color:' + CLASS_COLORS[nearest.p.c] + '">' + cfg.classes[nearest.p.c] + '</b>');
+      }
+    };
+  };
+
+  /* ================= foldPick — one lucky split vs the average of many ================= */
+  TYPES.foldPick = function (cfg) {
+    var n = cfg.folds.length;
+    return {
+      valText: function (v) { var i = Math.round(v); return i > n ? 'average all' : 'fold ' + i; },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var idx = Math.round(v);
+        var mean = cfg.folds.reduce(function (s, f) { return s + f.acc; }, 0) / n;
+        var lo = Math.min.apply(null, cfg.folds.map(function (f) { return f.acc; }));
+        var hi = Math.max.apply(null, cfg.folds.map(function (f) { return f.acc; }));
+        var html = '<div class="small" style="margin-bottom:8px">' + (cfg.blurb || 'Same model, same data — the only thing changing is WHICH slice is held back for scoring:') + '</div>';
+        cfg.folds.forEach(function (f, i) {
+          var active = idx === i + 1, avgMode = idx > n;
+          html += '<div class="hbar-row" style="opacity:' + (active || avgMode ? 1 : 0.4) + '"><span class="hbar-name">' + f.name + '</span>' +
+            '<div class="hbar-track"><div class="hbar-fill" style="width:' + f.acc + '%;background:' + (active ? C.query : C.c0) + '"></div></div>' +
+            '<span class="hbar-val"><b>' + f.acc + '%</b></span></div>';
+        });
+        if (idx > n) html += '<div class="hbar-row"><span class="hbar-name"><b>average</b></span><div class="hbar-track"><div class="hbar-fill" style="width:' + mean + '%;background:' + C.good + '"></div></div><span class="hbar-val"><b>' + fmt(mean, 1) + '%</b></span></div>';
+        stage.innerHTML = html;
+        if (idx > n) ui.setReadout('Average across all ' + n + ' hold-outs: <b style="color:' + C.good + '">' + fmt(mean, 1) + '%</b> — one stable, honest number.');
+        else ui.setReadout('Scoring on ' + cfg.folds[idx - 1].name + ' alone: <b style="color:' + C.query + '">' + cfg.folds[idx - 1].acc + '%</b>. Depending on your split you\'d report anywhere from <b>' + lo + '%</b> to <b>' + hi + '%</b>.');
       }
     };
   };
