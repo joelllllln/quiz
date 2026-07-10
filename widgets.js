@@ -821,6 +821,124 @@
     };
   };
 
+  /* ================= boostFit — 1-D gradient boosting with stumps, round by round ================= */
+  TYPES.boostFit = function (cfg) {
+    var lr = cfg.lr == null ? 0.5 : cfg.lr;
+    var pts = cfg.points, n = pts.length;
+    var base = 0; pts.forEach(function (p) { base += p.y; }); base /= n;
+    // precompute stumps sequentially on residuals
+    var stumps = [], F = pts.map(function () { return base; });
+    var maxR = cfg.maxRounds || 10;
+    for (var r = 0; r < maxR; r++) {
+      var res = pts.map(function (p, i) { return p.y - F[i]; });
+      var bestS = null;
+      var xs = pts.map(function (p) { return p.x; }).sort(function (a, b) { return a - b; });
+      for (var i = 1; i < n; i++) {
+        var t = (xs[i - 1] + xs[i]) / 2;
+        if (t === xs[i - 1]) continue;
+        var sl = 0, nl = 0, sr = 0, nr = 0;
+        pts.forEach(function (p, j) { if (p.x < t) { sl += res[j]; nl++; } else { sr += res[j]; nr++; } });
+        if (!nl || !nr) continue;
+        var ml = sl / nl, mr = sr / nr, sse = 0;
+        pts.forEach(function (p, j) { var e = res[j] - (p.x < t ? ml : mr); sse += e * e; });
+        if (!bestS || sse < bestS.sse) bestS = { t: t, ml: ml, mr: mr, sse: sse };
+      }
+      if (!bestS) break;
+      stumps.push(bestS);
+      F = F.map(function (f, j) { return f + lr * (pts[j].x < bestS.t ? bestS.ml : bestS.mr); });
+    }
+    function predict(x, rounds) {
+      var v = base;
+      for (var i = 0; i < Math.min(rounds, stumps.length); i++) v += lr * (x < stumps[i].t ? stumps[i].ml : stumps[i].mr);
+      return v;
+    }
+    var ys = pts.map(function (p) { return p.y; });
+    var ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+    var padY = (ymax - ymin) * 0.18 || 1; ymin -= padY; ymax += padY;
+    return {
+      valText: function (v) { var r = Math.round(v); return r === 0 ? 'just the mean' : r + (r === 1 ? ' round' : ' rounds'); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var rounds = Math.round(v);
+        var W = 340, H = 230, pad = 30;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function sx(x) { return pad + x / 10 * (W - 2 * pad); }
+        function sy(y) { return H - pad - (y - ymin) / (ymax - ymin) * (H - 2 * pad); }
+        svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad - 2, fill: 'none', stroke: C.line, rx: 2 }));
+        var d = '';
+        for (var x = 0; x <= 10.001; x += 0.06) d += (d ? ' L' : 'M') + sx(x) + ' ' + sy(predict(x, rounds));
+        svg.appendChild(sv('path', { d: d, fill: 'none', stroke: C.query, 'stroke-width': 2.2 }));
+        pts.forEach(function (p) {
+          svg.appendChild(sv('line', { x1: sx(p.x), y1: sy(p.y), x2: sx(p.x), y2: sy(predict(p.x, rounds)), stroke: C.bad, 'stroke-width': 1, opacity: 0.5 }));
+          svg.appendChild(sv('circle', { cx: sx(p.x), cy: sy(p.y), r: 6, fill: C.c0, stroke: C.ink, 'stroke-width': 0.8 }));
+        });
+        if (cfg.xlab) { var xl = sv('text', { x: W / 2, y: H - 8, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink3 }); xl.textContent = cfg.xlab; svg.appendChild(xl); }
+        stage.appendChild(svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c0 + '"></span>' + (cfg.itemName || 'data') + '</span><span><span class="sw" style="background:' + C.query + '"></span>ensemble so far</span><span><span class="sw" style="background:' + C.bad + '"></span>remaining errors</span></div>');
+        var mae = 0; pts.forEach(function (p) { mae += Math.abs(p.y - predict(p.x, rounds)); }); mae /= n;
+        ui.setReadout('After <b>' + rounds + '</b> round' + (rounds === 1 ? '' : 's') + ': average miss <b style="font-size:1.15em;color:' + C.query + '">' + fmt(mae, 2) + '</b>' + (cfg.yunit ? ' ' + cfg.yunit : '') + ' — each red stalk is an error the NEXT round will target.');
+      }
+    };
+  };
+
+  /* ================= forestMap — a random forest grows tree by tree ================= */
+  TYPES.forestMap = function (cfg) {
+    function gini2(c) { var t = c[0] + c[1]; if (!t) return 0; var p = c[0] / t; return 2 * p * (1 - p); }
+    function bestSplit(pts) {
+      var basec = [0, 0]; pts.forEach(function (p) { basec[p.c]++; });
+      var bg = gini2(basec), win = null;
+      ['x', 'y'].forEach(function (ax) {
+        var vals = pts.map(function (p) { return p[ax]; }).sort(function (a, b) { return a - b; });
+        for (var i = 1; i < vals.length; i++) {
+          var t = (vals[i - 1] + vals[i]) / 2;
+          if (t === vals[i - 1]) continue;
+          var L = [0, 0], R = [0, 0];
+          pts.forEach(function (p) { (p[ax] < t ? L : R)[p.c]++; });
+          if (!(L[0] + L[1]) || !(R[0] + R[1])) continue;
+          var g = ((L[0] + L[1]) / pts.length) * gini2(L) + ((R[0] + R[1]) / pts.length) * gini2(R);
+          if (g < bg - 1e-9 && (!win || g < win.g)) win = { ax: ax, t: t, g: g };
+        }
+      });
+      return win;
+    }
+    function grow(pts, depth) {
+      var c = [0, 0]; pts.forEach(function (p) { c[p.c]++; });
+      if (depth <= 0 || !c[0] || !c[1]) return { leaf: c[0] >= c[1] ? 0 : 1 };
+      var sp = bestSplit(pts);
+      if (!sp) return { leaf: c[0] >= c[1] ? 0 : 1 };
+      return { ax: sp.ax, t: sp.t, L: grow(pts.filter(function (p) { return p[sp.ax] < sp.t; }), depth - 1), R: grow(pts.filter(function (p) { return p[sp.ax] >= sp.t; }), depth - 1) };
+    }
+    function cls(node, p) { while (node.leaf == null) node = p[node.ax] < node.t ? node.L : node.R; return node.leaf; }
+    var rnd = seeded(cfg.seed || 11);
+    var maxT = cfg.maxTrees || 25, trees = [];
+    for (var t = 0; t < maxT; t++) {
+      var boot = [];
+      for (var i = 0; i < cfg.points.length; i++) boot.push(cfg.points[Math.floor(rnd() * cfg.points.length)]);
+      trees.push(grow(boot, cfg.depth || 3));
+    }
+    function vote(p, nT) { var s = 0; for (var i = 0; i < nT; i++) s += cls(trees[i], p); return s / nT; }
+    return {
+      valText: function (v) { var r = Math.round(v); return r + (r === 1 ? ' tree' : ' trees'); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var nT = Math.max(1, Math.round(v));
+        var plot = makePlot(cfg);
+        var GX = 26, GY = 19, cw = (plot.W - 52) / GX, ch = (plot.H - 48) / GY;
+        for (var gy = 0; gy < GY; gy++) for (var gx = 0; gx < GX; gx++) {
+          var pr = vote({ x: (gx + 0.5) * 10 / GX, y: (gy + 0.5) * 10 / GY }, nT);
+          var c = pr >= 0.5 ? 1 : 0;
+          plot.svg.appendChild(sv('rect', { x: plot.sx(gx * 10 / GX), y: plot.sy((gy + 1) * 10 / GY), width: cw + 0.5, height: ch + 0.5, fill: CLASS_COLORS[c], opacity: 0.05 + 0.3 * Math.abs(pr - 0.5) * 2 }));
+        }
+        cfg.points.forEach(function (p) { drawPoint(plot, p, { ring: true }); });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', legendHTML(cfg.classes).replace("the new one (unlabelled)", 'stronger shade = more trees agree'));
+        var ok = 0;
+        cfg.points.forEach(function (p) { if ((vote(p, nT) >= 0.5 ? 1 : 0) === p.c) ok++; });
+        ui.setReadout('Committee of <b>' + nT + '</b>: fits <b>' + Math.round(100 * ok / cfg.points.length) + '%</b> of the training points — watch the map calm down as trees join.');
+      }
+    };
+  };
+
   /* ================= static figure: render a widget's stage at a fixed value (for question exhibits) ================= */
   window.renderFigure = function (container, cfg, at, caption) {
     var maker = TYPES[cfg.type];

@@ -13,15 +13,19 @@
     { key: 'trees', no: '04', name: 'Decision Trees', desc: 'Ask the best yes/no questions, one after another.',
       levels: [{ qk: 'trees1', part: 'Part I', name: 'Foundations' }] },
     { key: 'svm', no: '05', name: 'Support Vector Machines', desc: 'Draw the widest possible street between the classes.',
-      levels: [{ qk: 'svm1', part: 'Part I', name: 'Foundations' }] },
-    { key: 'metrics', no: '06', name: 'Model Evaluation', desc: 'Precision, recall, F1, ROC-AUC and the confusion matrix.',
+      levels: [{ qk: 'svm1', part: 'Part I', name: 'Foundations' }, { qk: 'svm2', part: 'Part II', name: 'Practice' }] },
+    { key: 'ensembles', no: '06', name: 'Ensemble Methods', desc: 'Bagging, random forests, boosting, gradient boosting, XGBoost, stacking.',
+      levels: [{ qk: 'ens1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'metrics', no: '07', name: 'Model Evaluation', desc: 'Precision, recall, F1, ROC-AUC and the confusion matrix.',
       levels: [{ qk: 'metrics1', part: 'Part I', name: 'Foundations' }] },
-    { key: 'perf', no: '07', name: 'Performance Optimisation', desc: 'Tune honestly: validation, regularisation, thresholds, baselines.',
-      levels: [{ qk: 'perf1', part: 'Part I', name: 'Foundations' }] }
+    { key: 'perf', no: '08', name: 'Performance Optimisation', desc: 'Tune honestly: validation, regularisation, thresholds, baselines.',
+      levels: [{ qk: 'perf1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'sklearn', no: '09', name: 'Advanced Scikit-learn', desc: 'Pipelines, search, calibration, importances — the library, used properly.',
+      levels: [{ qk: 'skl1', part: 'Part I', name: 'Foundations' }] }
   ];
   var GROUPS = [
-    { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm'] },
-    { label: 'Measuring & tuning', keys: ['metrics', 'perf'] }
+    { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm', 'ensembles'] },
+    { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] }
   ];
   var UPCOMING = [
     { name: 'Regression', desc: 'Predicting quantities, done properly.' },
@@ -53,7 +57,9 @@
     treeSplit: { q: 'In the lab, what made a split position "good"?', ok: 'It left the two sides as pure as possible', no: ['It put equal counts on both sides', 'It sat exactly at the middle of the axis'] },
     treeDepth: { q: 'In the lab, what did growing the tree deeper do?', ok: 'Chased every training point — right up to memorising noise', no: ['Made the map smoother and simpler', 'Lowered the training accuracy'] },
     marginSVM: { q: 'In the lab, which boundary position was best?', ok: 'The one giving the widest street to the nearest points', no: ['The one hugging the bigger class', 'Any position — they all behave the same'] },
-    curveStatic: { q: 'In the lab, how do you pick the best setting from curves like these?', ok: 'Take the setting where the held-back/validation curve peaks', no: ['Take the setting where the training curve peaks', 'Always take the largest setting'] }
+    curveStatic: { q: 'In the lab, how do you pick the best setting from curves like these?', ok: 'Take the setting where the held-back/validation curve peaks', no: ['Take the setting where the training curve peaks', 'Always take the largest setting'] },
+    boostFit: { q: 'In the lab, what did each new boosting round aim at?', ok: 'The errors the ensemble was still making', no: ['A fresh random sample of the data', 'The points it already predicted well'] },
+    forestMap: { q: 'In the lab, what happened to the map as trees joined the committee?', ok: 'It steadied — individual trees\' quirks averaged away', no: ['It got more jagged with every tree', 'It stopped fitting the training points'] }
   };
 
   function h(html) { var d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
