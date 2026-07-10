@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FBFBF7">
 <title>DataSense — A Field Manual for Practical Machine Learning</title>
 <link rel="stylesheet" href="fonts.css">
 <style>
@@ -33,6 +34,11 @@ body{
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:focus-visible,a:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
 input[type=range]{accent-color:var(--cobalt)}
+.ws-knobrow input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:34px;cursor:pointer}
+.ws-knobrow input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--rule);border-radius:2px}
+.ws-knobrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:3px;background:var(--cobalt);border:2px solid var(--ink);margin-top:-10px;box-shadow:2px 2px 0 rgba(31,41,51,.2)}
+.ws-knobrow input[type=range]::-moz-range-track{height:4px;background:var(--rule);border-radius:2px}
+.ws-knobrow input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:3px;background:var(--cobalt);border:2px solid var(--ink)}
 .mono{font-family:var(--mono)}
 .small{font-size:.85rem;color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -167,7 +173,7 @@ input[type=range]{accent-color:var(--cobalt)}
   linear-gradient(90deg,var(--grid) 1px,transparent 1px),
   var(--sheet);
   background-size:24px 24px}
-.ws-stage svg{display:block;margin:0 auto;max-width:100%}
+.ws-stage svg{display:block;margin:0 auto;max-width:100%;height:auto}
 .ws-knobrow{display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap}
 .ws-knoblab{font-family:var(--mono);font-size:.78rem;font-weight:600;letter-spacing:.02em;white-space:nowrap}
 .ws-knobrow input[type=range]{flex:1;min-width:140px;height:22px}
@@ -197,7 +203,28 @@ input[type=range]{accent-color:var(--cobalt)}
 .hbar-fill{height:100%;display:flex}
 .hbar-val{min-width:84px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.75rem;color:var(--ink-2);white-space:nowrap}
 .nearest-tag{font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--green);margin-left:6px;letter-spacing:.06em}
-@media(max-width:560px){.hbar-name{width:84px}}
+@media(max-width:560px){
+  #app{padding:24px 14px 72px}
+  .mast-eyebrow{font-size:.62rem;letter-spacing:.1em}
+  .toc-dots{display:none}
+  .toc-part{min-width:52px;font-size:.7rem}
+  .toc-name{flex:1;font-size:1rem}
+  .toc-meta{font-size:.7rem}
+  .exbar{row-gap:10px}
+  .exbar .ruler{order:3;flex-basis:100%}
+  .exbar .exmeta{margin-left:auto}
+  .qtext{font-size:1.25rem}
+  .ws-body{padding:14px 12px 16px}
+  .ws-stage{padding:8px}
+  .ws-stage svg{width:100%}
+  .ws-knobrow{gap:10px}
+  .ws-knobval{min-width:56px;font-size:.88rem}
+  .hbar-name{width:84px}
+  .hbar-val{min-width:60px;font-size:.7rem}
+  .legend{gap:10px}
+  .plain .p-answer{font-size:1rem}
+  .score-big{font-size:3rem}
+}
 </style>
 </head>
 <body>
