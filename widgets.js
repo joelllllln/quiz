@@ -943,6 +943,228 @@
     };
   };
 
+  /* ================= kmeansStep — watch k-means run, one step at a time ================= */
+  TYPES.kmeansStep = function (cfg) {
+    var K = cfg.k || 3, rnd = seeded(cfg.seed || 5);
+    var COLS = [C.c0, C.c1, C.query, C.good];
+    // init: pick K distinct points as starting centroids
+    var idx = [], pool = cfg.points.map(function (_, i) { return i; });
+    while (idx.length < K) idx.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+    var states = [];
+    var cents = idx.map(function (i) { return { x: cfg.points[i].x, y: cfg.points[i].y }; });
+    for (var it = 0; it <= (cfg.maxIter || 8); it++) {
+      var assign = cfg.points.map(function (p) {
+        var best = 0, bd = Infinity;
+        cents.forEach(function (c, ci) { var d = (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y); if (d < bd) { bd = d; best = ci; } });
+        return best;
+      });
+      var inertia = 0;
+      cfg.points.forEach(function (p, i) { var c = cents[assign[i]]; inertia += (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y); });
+      states.push({ cents: cents.map(function (c) { return { x: c.x, y: c.y }; }), assign: assign, inertia: inertia });
+      // update step
+      var next = cents.map(function (c, ci) {
+        var sx = 0, sy = 0, n = 0;
+        cfg.points.forEach(function (p, i) { if (assign[i] === ci) { sx += p.x; sy += p.y; n++; } });
+        return n ? { x: sx / n, y: sy / n } : { x: c.x, y: c.y };
+      });
+      cents = next;
+    }
+    return {
+      valText: function (v) { var s = Math.round(v); return s === 0 ? 'start (random)' : 'step ' + s; },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var st = states[Math.min(Math.round(v), states.length - 1)];
+        var plot = makePlot(cfg);
+        cfg.points.forEach(function (p, i) {
+          plot.svg.appendChild(sv('circle', { cx: plot.sx(p.x), cy: plot.sy(p.y), r: 6.5, fill: COLS[st.assign[i] % COLS.length], stroke: 'rgba(31,41,51,.4)', 'stroke-width': 1 }));
+        });
+        st.cents.forEach(function (c, ci) {
+          var cx = plot.sx(c.x), cy = plot.sy(c.y);
+          plot.svg.appendChild(sv('rect', { x: cx - 8, y: cy - 8, width: 16, height: 16, fill: COLS[ci % COLS.length], stroke: C.ink, 'stroke-width': 2, transform: 'rotate(45 ' + cx + ' ' + cy + ')', rx: 3 }));
+        });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span>diamonds = cluster centres · dots take their nearest centre\'s colour</span></div>');
+        var conv = Math.round(v) > 0 && Math.abs(states[Math.min(Math.round(v), states.length - 1)].inertia - states[Math.min(Math.round(v) - 1, states.length - 1)].inertia) < 1e-6;
+        ui.setReadout('Total scatter around centres (inertia): <b style="font-size:1.15em;color:' + C.query + '">' + fmt(st.inertia, 1) + '</b>' + (conv ? ' — <b style="color:' + C.good + '">converged: nothing moves any more</b>' : ' — each step must reduce this'));
+      }
+    };
+  };
+
+  /* ================= dbscanScan — grow the radius, watch density clusters form ================= */
+  TYPES.dbscanScan = function (cfg) {
+    var minPts = cfg.minPts || 3;
+    var COLS = [C.c0, C.c1, C.query, C.good, '#b8860b'];
+    function run(eps) {
+      var n = cfg.points.length, labels = new Array(n).fill(-2); // -2 unvisited, -1 noise
+      function nb(i) {
+        var out = [];
+        for (var j = 0; j < n; j++) if (Math.hypot(cfg.points[i].x - cfg.points[j].x, cfg.points[i].y - cfg.points[j].y) <= eps) out.push(j);
+        return out;
+      }
+      var cid = 0;
+      for (var i = 0; i < n; i++) {
+        if (labels[i] !== -2) continue;
+        var N = nb(i);
+        if (N.length < minPts) { labels[i] = -1; continue; }
+        labels[i] = cid;
+        var queue = N.slice();
+        while (queue.length) {
+          var q = queue.shift();
+          if (labels[q] === -1) labels[q] = cid;
+          if (labels[q] !== -2) continue;
+          labels[q] = cid;
+          var Nq = nb(q);
+          if (Nq.length >= minPts) queue = queue.concat(Nq);
+        }
+        cid++;
+      }
+      return { labels: labels, clusters: cid };
+    }
+    return {
+      valText: function (v) { return 'radius ' + fmt(v, 2); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var res = run(v);
+        var plot = makePlot(cfg);
+        // show the reach circle on one reference point
+        var ref = cfg.points[cfg.showEpsAt || 0];
+        var pad = 26;
+        plot.svg.appendChild(sv('ellipse', {
+          cx: plot.sx(ref.x), cy: plot.sy(ref.y),
+          rx: v / 10 * (plot.W - 2 * pad), ry: v / 10 * (plot.H - 2 * pad),
+          fill: C.query, 'fill-opacity': 0.05, stroke: C.query, 'stroke-width': 1, 'stroke-dasharray': '4 3'
+        }));
+        var noise = 0;
+        cfg.points.forEach(function (p, i) {
+          var L = res.labels[i];
+          if (L < 0) {
+            noise++;
+            plot.svg.appendChild(sv('circle', { cx: plot.sx(p.x), cy: plot.sy(p.y), r: 5, fill: 'none', stroke: C.ink3, 'stroke-width': 1.6 }));
+          } else {
+            plot.svg.appendChild(sv('circle', { cx: plot.sx(p.x), cy: plot.sy(p.y), r: 6.5, fill: COLS[L % COLS.length], stroke: 'rgba(31,41,51,.4)', 'stroke-width': 1 }));
+          }
+        });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span>hollow rings = noise (belongs to no cluster) · dashed circle = the reach radius, drawn on one point</span></div>');
+        ui.setReadout('Found <b style="font-size:1.15em;color:' + C.query + '">' + res.clusters + '</b> cluster' + (res.clusters === 1 ? '' : 's') + ' · <b>' + noise + '</b> noise point' + (noise === 1 ? '' : 's') + ' — nobody chose those numbers; the density did.');
+      }
+    };
+  };
+
+  /* ================= pcaSpin — hunt the direction of maximum spread by hand ================= */
+  TYPES.pcaSpin = function (cfg) {
+    var mx = 0, my = 0;
+    cfg.points.forEach(function (p) { mx += p.x; my += p.y; });
+    mx /= cfg.points.length; my /= cfg.points.length;
+    var totalVar = 0;
+    cfg.points.forEach(function (p) { totalVar += (p.x - mx) * (p.x - mx) + (p.y - my) * (p.y - my); });
+    totalVar /= cfg.points.length;
+    return {
+      valText: function (v) { return Math.round(v) + '°'; },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var a = v * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a);
+        var plot = makePlot(cfg);
+        // the candidate axis through the mean
+        var L = 6.5;
+        plot.svg.appendChild(sv('line', {
+          x1: plot.sx(mx - L * ux), y1: plot.sy(my - L * uy), x2: plot.sx(mx + L * ux), y2: plot.sy(my + L * uy),
+          stroke: C.query, 'stroke-width': 2.5
+        }));
+        var varSum = 0;
+        cfg.points.forEach(function (p) {
+          var t = (p.x - mx) * ux + (p.y - my) * uy;
+          varSum += t * t;
+          var px = mx + t * ux, py = my + t * uy;
+          plot.svg.appendChild(sv('line', { x1: plot.sx(p.x), y1: plot.sy(p.y), x2: plot.sx(px), y2: plot.sy(py), stroke: C.ink3, 'stroke-width': 0.7, opacity: 0.6 }));
+          plot.svg.appendChild(sv('circle', { cx: plot.sx(p.x), cy: plot.sy(p.y), r: 5.5, fill: C.c0, stroke: 'rgba(31,41,51,.4)', 'stroke-width': 1 }));
+          plot.svg.appendChild(sv('circle', { cx: plot.sx(px), cy: plot.sy(py), r: 3.5, fill: C.query, stroke: C.ink, 'stroke-width': 0.6 }));
+        });
+        stage.appendChild(plot.svg);
+        stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c0 + '"></span>original points</span><span><span class="sw" style="background:' + C.query + '"></span>their shadows on your axis</span></div>');
+        var pct = Math.round(100 * (varSum / cfg.points.length) / totalVar);
+        ui.setReadout('Your axis keeps <b style="font-size:1.2em;color:' + C.query + '">' + pct + '%</b> of the cloud\'s total spread. Hunt the angle that keeps the most.');
+      }
+    };
+  };
+
+  /* ================= dendro — a real dendrogram with a sliding cut ================= */
+  TYPES.dendro = function (cfg) {
+    // items: [{name, x}] 1-D positions; complete-linkage agglomerative
+    var items = cfg.items;
+    var clusters = items.map(function (it, i) { return { members: [i], height: 0, node: { leaf: i } } });
+    var merges = [];
+    function dist(A, B) {
+      var best = cfg.linkage === 'single' ? Infinity : -Infinity;
+      A.members.forEach(function (i) {
+        B.members.forEach(function (j) {
+          var d = Math.abs(items[i].x - items[j].x);
+          if (cfg.linkage === 'single') { if (d < best) best = d; } else { if (d > best) best = d; }
+        });
+      });
+      return best;
+    }
+    while (clusters.length > 1) {
+      var bi = 0, bj = 1, bd = Infinity;
+      for (var i = 0; i < clusters.length; i++) for (var j = i + 1; j < clusters.length; j++) {
+        var d = dist(clusters[i], clusters[j]);
+        if (d < bd) { bd = d; bi = i; bj = j; }
+      }
+      var A = clusters[bi], B = clusters[bj];
+      var merged = { members: A.members.concat(B.members), height: bd, node: { L: A.node, R: B.node, h: bd } };
+      clusters = clusters.filter(function (_, k) { return k !== bi && k !== bj; });
+      clusters.push(merged);
+      merges.push(bd);
+    }
+    var root = clusters[0].node, maxH = merges[merges.length - 1] * 1.15;
+    var order = [];
+    (function walk(n) { if (n.leaf != null) order.push(n.leaf); else { walk(n.L); walk(n.R); } })(root);
+    var leafPos = {}; order.forEach(function (leaf, i) { leafPos[leaf] = i; });
+    var COLS = [C.c0, C.c1, C.query, C.good, '#b8860b', C.bad];
+    return {
+      valText: function (v) { return 'cut at ' + fmt(v, 1); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var W = 340, H = 250, padL = 14, padB = 40, padT = 12;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        function lx(i) { return padL + 14 + i / (items.length - 1) * (W - 2 * padL - 28); }
+        function hy(h) { return H - padB - h / maxH * (H - padB - padT); }
+        // clusters at cut height v
+        var groups = [];
+        (function collect(n) {
+          var h = n.h || 0;
+          if (n.leaf != null || h <= v) { var m = []; (function g(x) { if (x.leaf != null) m.push(x.leaf); else { g(x.L); g(x.R); } })(n); groups.push(m); }
+          else { collect(n.L); collect(n.R); }
+        })(root);
+        var colorOf = {};
+        groups.forEach(function (g, gi) { g.forEach(function (leaf) { colorOf[leaf] = groups.length <= COLS.length ? COLS[gi] : C.ink3; }); });
+        // draw tree
+        (function draw(n) {
+          if (n.leaf != null) return { x: lx(leafPos[n.leaf]), h: 0 };
+          var L = draw(n.L), R = draw(n.R);
+          var y = hy(n.h);
+          var col = n.h <= v ? (colorOf[(function f(x) { return x.leaf != null ? x.leaf : f(x.L); })(n)] || C.ink3) : C.ink3;
+          svg.appendChild(sv('line', { x1: L.x, y1: hy(L.h), x2: L.x, y2: y, stroke: col, 'stroke-width': 2 }));
+          svg.appendChild(sv('line', { x1: R.x, y1: hy(R.h), x2: R.x, y2: y, stroke: col, 'stroke-width': 2 }));
+          svg.appendChild(sv('line', { x1: L.x, y1: y, x2: R.x, y2: y, stroke: col, 'stroke-width': 2 }));
+          return { x: (L.x + R.x) / 2, h: n.h };
+        })(root);
+        // cut line
+        svg.appendChild(sv('line', { x1: padL, y1: hy(v), x2: W - padL, y2: hy(v), stroke: C.bad, 'stroke-width': 1.6, 'stroke-dasharray': '6 4' }));
+        var ct = sv('text', { x: W - padL, y: hy(v) - 5, 'font-size': 10, 'text-anchor': 'end', fill: C.bad }); ct.textContent = 'your cut'; svg.appendChild(ct);
+        // leaves
+        items.forEach(function (it, i) {
+          var x = lx(leafPos[i]);
+          svg.appendChild(sv('circle', { cx: x, cy: H - padB + 10, r: 6, fill: colorOf[i] || C.ink3, stroke: C.ink, 'stroke-width': 0.8 }));
+          var t = sv('text', { x: x, y: H - padB + 30, 'font-size': 9, 'text-anchor': 'middle', fill: C.ink2 });
+          t.textContent = it.name; svg.appendChild(t);
+        });
+        stage.appendChild(svg);
+        ui.setReadout('Cutting here yields <b style="font-size:1.15em;color:' + C.query + '">' + groups.length + '</b> cluster' + (groups.length === 1 ? '' : 's') + ' — slide the cut, re-read the tree. No k was ever chosen in advance.');
+      }
+    };
+  };
+
   /* ================= static figure: render a widget's stage at a fixed value (for question exhibits) ================= */
   window.renderFigure = function (container, cfg, at, caption) {
     var maker = TYPES[cfg.type];

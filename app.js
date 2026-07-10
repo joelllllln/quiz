@@ -21,15 +21,19 @@
     { key: 'perf', no: '08', name: 'Performance Optimisation', desc: 'Tune honestly: validation, regularisation, thresholds, baselines.',
       levels: [{ qk: 'perf1', part: 'Part I', name: 'Foundations' }] },
     { key: 'sklearn', no: '09', name: 'Advanced Scikit-learn', desc: 'Pipelines, search, calibration, importances — the library, used properly.',
-      levels: [{ qk: 'skl1', part: 'Part I', name: 'Foundations' }] }
+      levels: [{ qk: 'skl1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'clustering', no: '10', name: 'Clustering', desc: 'K-Means, hierarchical clustering and DBSCAN — find groups nobody labelled.',
+      levels: [{ qk: 'clust1', part: 'Part I', name: 'Foundations' }] },
+    { key: 'dimred', no: '11', name: 'Dimensionality Reduction', desc: 'PCA, t-SNE and the craft of losing dimensions without losing the story.',
+      levels: [{ qk: 'dimred1', part: 'Part I', name: 'Foundations' }] }
   ];
   var GROUPS = [
     { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm', 'ensembles'] },
-    { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] }
+    { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
+    { label: 'Unsupervised learning', keys: ['clustering', 'dimred'] }
   ];
   var UPCOMING = [
     { name: 'Regression', desc: 'Predicting quantities, done properly.' },
-    { name: 'Clustering', desc: 'Find groups nobody labelled.' },
     { name: 'Neural Networks', desc: 'Layers of learned features.' }
   ];
   var LETTERS = 'ABCDE';
@@ -59,7 +63,11 @@
     marginSVM: { q: 'In the lab, which boundary position was best?', ok: 'The one giving the widest street to the nearest points', no: ['The one hugging the bigger class', 'Any position — they all behave the same'] },
     curveStatic: { q: 'In the lab, how do you pick the best setting from curves like these?', ok: 'Take the setting where the held-back/validation curve peaks', no: ['Take the setting where the training curve peaks', 'Always take the largest setting'] },
     boostFit: { q: 'In the lab, what did each new boosting round aim at?', ok: 'The errors the ensemble was still making', no: ['A fresh random sample of the data', 'The points it already predicted well'] },
-    forestMap: { q: 'In the lab, what happened to the map as trees joined the committee?', ok: 'It steadied — individual trees\' quirks averaged away', no: ['It got more jagged with every tree', 'It stopped fitting the training points'] }
+    forestMap: { q: 'In the lab, what happened to the map as trees joined the committee?', ok: 'It steadied — individual trees\' quirks averaged away', no: ['It got more jagged with every tree', 'It stopped fitting the training points'] },
+    kmeansStep: { q: 'In the lab, what did each k-means step consist of?', ok: 'Points join their nearest centre, then each centre moves to its group\'s middle', no: ['Centres move toward the densest single point', 'Points swap colours at random until stable'] },
+    dbscanScan: { q: 'In the lab, where did the number of clusters come from?', ok: 'It emerged from the density and the radius — nobody typed a k', no: ['It was fixed at three in advance', 'One cluster per noise point'] },
+    pcaSpin: { q: 'In the lab, what made one axis angle better than another?', ok: 'It kept more of the cloud\'s spread when points were flattened onto it', no: ['It passed through more points exactly', 'It was closer to horizontal'] },
+    dendro: { q: 'In the lab, what did sliding the cut line up and down change?', ok: 'How many clusters the same tree yields — the tree itself never changed', no: ['The order of the merges', 'The distances between the items'] }
   };
 
   function h(html) { var d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
@@ -89,9 +97,9 @@
     app.appendChild(h(
       '<header class="masthead">' +
         '<div class="mast-rules"></div>' +
-        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Vol. 1 · Supervised Classification</span></div>' +
+        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Vols. 1–2 · Supervised & Unsupervised</span></div>' +
         '<h1>DataSense</h1>' +
-        '<p class="mast-sub"><b>Supervised classification</b>, learned by doing: ' + totalExercises() + ' exercises across five algorithms, the metrics that judge them, and the craft of tuning. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
+        '<p class="mast-sub"><b>Machine learning</b>, learned by doing: ' + totalExercises() + ' exercises across supervised classification, clustering and dimensionality reduction. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
         '<div class="mast-foot">Multiple choice · answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>'));
 
