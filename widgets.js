@@ -559,6 +559,10 @@
         var acc = (tp + tn) / cfg.items.length;
         var M = { precision: [prec, 'precision (of flagged, how many real)'], recall: [rec, 'recall (of real ' + cfg.posName + ', how many caught)'], f1: [f1, 'F1'], accuracy: [acc, 'accuracy'] };
         var out = (cfg.show || ['precision', 'recall']).map(function (m) {
+          if (m === 'cost' && cfg.costs) {
+            var cost = fp * cfg.costs.fp + fn * cfg.costs.fn;
+            return 'cost of mistakes (' + fn + ' missed × £' + comma(cfg.costs.fn) + ' + ' + fp + ' alarms × £' + comma(cfg.costs.fp) + '): <b style="font-size:1.1em;color:' + C.bad + '">£' + comma(cost) + '</b>';
+          }
           var pair = M[m];
           return pair[1] + ': <b style="font-size:1.1em">' + (pair[0] == null ? '—' : Math.round(pair[0] * 100) + '%') + '</b>';
         }).join(' · ');

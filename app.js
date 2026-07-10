@@ -17,7 +17,7 @@
     { key: 'ensembles', no: '06', name: 'Ensemble Methods', desc: 'Bagging, random forests, boosting, gradient boosting, XGBoost, stacking.',
       levels: [{ qk: 'ens1', part: 'Part I', name: 'Foundations' }] },
     { key: 'metrics', no: '07', name: 'Model Evaluation', desc: 'Precision, recall, F1, ROC-AUC and the confusion matrix.',
-      levels: [{ qk: 'metrics1', part: 'Part I', name: 'Foundations' }] },
+      levels: [{ qk: 'metrics1', part: 'Part I', name: 'Foundations' }, { qk: 'metrics2', part: 'Part II', name: 'Pragmatic Practice' }] },
     { key: 'perf', no: '08', name: 'Performance Optimisation', desc: 'Tune honestly: validation, regularisation, thresholds, baselines.',
       levels: [{ qk: 'perf1', part: 'Part I', name: 'Foundations' }] },
     { key: 'sklearn', no: '09', name: 'Advanced Scikit-learn', desc: 'Pipelines, search, calibration, importances — the library, used properly.',
