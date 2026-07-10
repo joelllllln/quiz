@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var SVGNS = 'http://www.w3.org/2000/svg';
-  var C = { c0: '#3987e5', c1: '#c98500', query: '#9085e9', good: '#1baf7a', bad: '#e66767', ink2: '#9aa5b8', ink3: '#6b7689', line: '#2c3a55', bg: '#10151f' };
+  var C = { c0: '#2a78d6', c1: '#eb6834', query: '#4a3aa7', good: '#008300', bad: '#d6402b', ink: '#1f2933', ink2: '#5b6b7b', ink3: '#8595a6', line: '#d8dee4', bg: '#ffffff' };
   var CLASS_COLORS = [C.c0, C.c1];
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -39,7 +39,7 @@
     function sx(x) { return pad + x / 10 * (W - 2 * pad); }
     function sy(y) { return H - pad + 4 - y / 10 * (H - 2 * pad); }
     // recessive frame + axis labels
-    svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad - 2 + 4, fill: 'none', stroke: C.line, rx: 8 }));
+    svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad - 2 + 4, fill: 'none', stroke: C.line, rx: 2 }));
     if (cfg.xlab) { var xl = sv('text', { x: W / 2, y: H - 5, fill: C.ink3, 'font-size': 11, 'text-anchor': 'middle' }); xl.textContent = cfg.xlab; svg.appendChild(xl); }
     if (cfg.ylab) { var yl = sv('text', { x: 10, y: H / 2, fill: C.ink3, 'font-size': 11, 'text-anchor': 'middle', transform: 'rotate(-90 10 ' + H / 2 + ')' }); yl.textContent = cfg.ylab; svg.appendChild(yl); }
     return { svg: svg, sx: sx, sy: sy, W: W, H: H };
@@ -54,15 +54,15 @@
     }
     g.appendChild(sv('circle', {
       cx: cx, cy: cy, r: opts.r || 7,
-      fill: CLASS_COLORS[p.c], opacity: opts.dim ? 0.35 : 1,
-      stroke: opts.ring ? '#fff' : C.bg, 'stroke-width': opts.ring ? 2 : 1.5
+      fill: CLASS_COLORS[p.c], opacity: opts.dim ? 0.3 : 1,
+      stroke: opts.ring ? C.ink : 'rgba(31,41,51,.35)', 'stroke-width': opts.ring ? 2 : 1
     }));
     plot.svg.appendChild(g);
   }
   function drawQuery(plot, q, label) {
     var cx = plot.sx(q.x), cy = plot.sy(q.y);
-    plot.svg.appendChild(sv('rect', { x: cx - 8, y: cy - 8, width: 16, height: 16, fill: C.query, stroke: '#fff', 'stroke-width': 2, transform: 'rotate(45 ' + cx + ' ' + cy + ')', rx: 3 }));
-    var t = sv('text', { x: cx, y: cy + 4, 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: '#14121f' }); t.textContent = '?';
+    plot.svg.appendChild(sv('rect', { x: cx - 8, y: cy - 8, width: 16, height: 16, fill: C.query, stroke: C.ink, 'stroke-width': 1.5, transform: 'rotate(45 ' + cx + ' ' + cy + ')', rx: 3 }));
+    var t = sv('text', { x: cx, y: cy + 4, 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: '#ffffff' }); t.textContent = '?';
     plot.svg.appendChild(t);
     if (label) { var l = sv('text', { x: cx, y: cy - 14, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.query }); l.textContent = label; plot.svg.appendChild(l); }
   }
@@ -98,7 +98,7 @@
           }));
           if (cfg.showDists) {
             var mx = (plot.sx(cfg.query.x) + plot.sx(n.p.x)) / 2, my = (plot.sy(cfg.query.y) + plot.sy(n.p.y)) / 2;
-            var t = sv('text', { x: mx, y: my - 4, 'font-size': 10, fill: '#c3c2b7', 'text-anchor': 'middle' });
+            var t = sv('text', { x: mx, y: my - 4, 'font-size': 10, fill: C.ink2, 'text-anchor': 'middle' });
             t.textContent = fmt(n.d, 1); plot.svg.appendChild(t);
           }
         });
@@ -141,7 +141,7 @@
         for (gy = 0; gy < GY; gy++) for (gx = 0; gx < GX; gx++) {
           plot.svg.appendChild(sv('rect', {
             x: plot.sx(gx * 10 / GX), y: plot.sy((gy + 1) * 10 / GY),
-            width: cw + 0.5, height: ch + 0.5, fill: CLASS_COLORS[cell[gy][gx]], opacity: 0.22
+            width: cw + 0.5, height: ch + 0.5, fill: CLASS_COLORS[cell[gy][gx]], opacity: 0.16
           }));
         }
         cfg.points.forEach(function (p, i) { drawPoint(plot, p, { ring: true, flag: cfg.flag === i }); });
@@ -208,7 +208,7 @@
         plot.svg.appendChild(sv('line', { x1: plot.sx(a.x), y1: plot.sy(a.y), x2: plot.sx(b.x), y2: plot.sy(b.y), stroke: C.c0, 'stroke-width': 3, opacity: 0.15 + 0.85 * wStraight }));
         [[a, cfg.aName || 'A'], [b, cfg.bName || 'B']].forEach(function (pair, idx) {
           var cx = plot.sx(pair[0].x), cy = plot.sy(pair[0].y);
-          plot.svg.appendChild(sv('circle', { cx: cx, cy: cy, r: 8, fill: C.query, stroke: '#fff', 'stroke-width': 2 }));
+          plot.svg.appendChild(sv('circle', { cx: cx, cy: cy, r: 8, fill: C.query, stroke: C.ink, 'stroke-width': 1.5 }));
           var t = sv('text', { x: cx, y: cy - 13, 'font-size': 11, 'text-anchor': 'middle', fill: C.ink2 }); t.textContent = pair[1]; plot.svg.appendChild(t);
         });
         stage.appendChild(plot.svg);
@@ -368,7 +368,7 @@
         var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
         function sx(kk) { return pad + (kk - 1) / (kmax - 1) * (W - 2 * pad); }
         function sy(acc) { return H - pad - acc * (H - 2 * pad - 10); }
-        svg.appendChild(sv('rect', { x: pad - 10, y: 6, width: W - 2 * pad + 20, height: H - pad + 2, fill: 'none', stroke: C.line, rx: 8 }));
+        svg.appendChild(sv('rect', { x: pad - 10, y: 6, width: W - 2 * pad + 20, height: H - pad + 2, fill: 'none', stroke: C.line, rx: 2 }));
         [0, 0.5, 1].forEach(function (g) {
           svg.appendChild(sv('line', { x1: pad - 4, y1: sy(g), x2: W - pad + 4, y2: sy(g), stroke: C.line, 'stroke-width': 0.7 }));
           var t = sv('text', { x: pad - 8, y: sy(g) + 3, 'font-size': 9, 'text-anchor': 'end', fill: C.ink3 }); t.textContent = Math.round(g * 100) + '%'; svg.appendChild(t);
@@ -380,8 +380,8 @@
           svg.appendChild(sv('path', { d: d, fill: 'none', stroke: pair[1], 'stroke-width': 2 }));
         });
         svg.appendChild(sv('line', { x1: sx(k), y1: sy(0), x2: sx(k), y2: sy(1.04), stroke: C.ink3, 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
-        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.tr[k - 1]), r: 5, fill: C.c0, stroke: '#fff', 'stroke-width': 1.5 }));
-        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.va[k - 1]), r: 5, fill: C.query, stroke: '#fff', 'stroke-width': 1.5 }));
+        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.tr[k - 1]), r: 5, fill: C.c0, stroke: C.ink, 'stroke-width': 1.2 }));
+        svg.appendChild(sv('circle', { cx: sx(k), cy: sy(curves.va[k - 1]), r: 5, fill: C.query, stroke: C.ink, 'stroke-width': 1.2 }));
         stage.appendChild(svg);
         stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c0 + '"></span>score on data it has seen</span><span><span class="sw" style="background:' + C.query + '"></span>score on held-back data</span></div>');
         ui.setReadout('At k = <b>' + k + '</b>: seen data <b style="color:' + C.c0 + '">' + Math.round(100 * curves.tr[k - 1]) + '%</b> · held-back data <b style="color:' + C.query + '">' + Math.round(100 * curves.va[k - 1]) + '%</b>');
@@ -405,7 +405,7 @@
             stroke: rank === 0 ? CLASS_COLORS[n.p.c] : C.line, 'stroke-width': rank === 0 ? 3 : 1.2
           }));
           var mx = (plot.sx(cfg.query.x) + plot.sx(n.p.x)) / 2, my = (plot.sy(cfg.query.y) + plot.sy(n.p.y)) / 2;
-          var t = sv('text', { x: mx, y: my - 5, 'font-size': 10.5, fill: rank === 0 ? '#fff' : C.ink2, 'text-anchor': 'middle', 'font-weight': rank === 0 ? 700 : 400 });
+          var t = sv('text', { x: mx, y: my - 5, 'font-size': 10.5, fill: rank === 0 ? C.ink : C.ink3, 'text-anchor': 'middle', 'font-weight': rank === 0 ? 700 : 400 });
           t.textContent = fmt(n.d, 2); plot.svg.appendChild(t);
         });
         cfg.points.forEach(function (p, i) {
@@ -460,7 +460,7 @@
         ws.forEach(function (x) {
           var share = x.w / sum;
           var r = 10 + 46 * share;
-          html += '<div style="text-align:center;font-size:.78rem;color:' + C.ink2 + '"><div style="width:' + r + 'px;height:' + r + 'px;border-radius:99px;background:' + CLASS_COLORS[x.nb.c] + ';margin:0 auto 4px;border:2px solid #fff2"></div>' + x.nb.name + '<br>dist ' + fmt(x.nb.d, 1) + '</div>';
+          html += '<div style="text-align:center;font-size:.78rem;color:' + C.ink2 + '"><div style="width:' + r + 'px;height:' + r + 'px;border-radius:99px;background:' + CLASS_COLORS[x.nb.c] + ';margin:0 auto 4px;border:1.5px solid rgba(31,41,51,.3)"></div>' + x.nb.name + '<br>dist ' + fmt(x.nb.d, 1) + '</div>';
         });
         html += '</div>';
         var t0 = 100 * totals[0] / sum, t1 = 100 * totals[1] / sum;
@@ -492,7 +492,7 @@
         var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
         function sx(x) { return pad + x / 10 * (W - 2 * pad); }
         function sy(y) { return H - pad - (y - ymin) / (ymax - ymin) * (H - 2 * pad); }
-        svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad - 2, fill: 'none', stroke: C.line, rx: 8 }));
+        svg.appendChild(sv('rect', { x: pad - 8, y: 6, width: W - 2 * pad + 16, height: H - pad - 2, fill: 'none', stroke: C.line, rx: 2 }));
         if (cfg.xlab) { var xl = sv('text', { x: W / 2, y: H - 6, fill: C.ink3, 'font-size': 11, 'text-anchor': 'middle' }); xl.textContent = cfg.xlab; svg.appendChild(xl); }
         if (cfg.ylab) { var yl = sv('text', { x: 10, y: H / 2, fill: C.ink3, 'font-size': 11, 'text-anchor': 'middle', transform: 'rotate(-90 10 ' + H / 2 + ')' }); yl.textContent = cfg.ylab; svg.appendChild(yl); }
         // full prediction curve — feel the smoothness change
@@ -505,12 +505,12 @@
         cfg.points.map(function (p, i) { return { i: i, d: Math.abs(p.x - cfg.qx) }; })
           .sort(function (a, b) { return a.d - b.d; }).slice(0, k).forEach(function (n) { nearSet[n.i] = true; });
         cfg.points.forEach(function (p, i) {
-          svg.appendChild(sv('circle', { cx: sx(p.x), cy: sy(p.y), r: 6.5, fill: C.c0, opacity: nearSet[i] ? 1 : 0.35, stroke: nearSet[i] ? '#fff' : C.bg, 'stroke-width': nearSet[i] ? 2 : 1.5 }));
+          svg.appendChild(sv('circle', { cx: sx(p.x), cy: sy(p.y), r: 6.5, fill: C.c0, opacity: nearSet[i] ? 1 : 0.35, stroke: nearSet[i] ? C.ink : 'rgba(31,41,51,.35)', 'stroke-width': nearSet[i] ? 2 : 1 }));
         });
         var pred = predAt(cfg.qx, k);
         svg.appendChild(sv('line', { x1: sx(cfg.qx), y1: sy(ymin), x2: sx(cfg.qx), y2: sy(ymax), stroke: C.query, 'stroke-width': 1, 'stroke-dasharray': '4 4', opacity: 0.7 }));
         var cx = sx(cfg.qx), cy = sy(pred);
-        svg.appendChild(sv('rect', { x: cx - 7, y: cy - 7, width: 14, height: 14, fill: C.query, stroke: '#fff', 'stroke-width': 2, transform: 'rotate(45 ' + cx + ' ' + cy + ')', rx: 3 }));
+        svg.appendChild(sv('rect', { x: cx - 7, y: cy - 7, width: 14, height: 14, fill: C.query, stroke: C.ink, 'stroke-width': 1.5, transform: 'rotate(45 ' + cx + ' ' + cy + ')', rx: 3 }));
         stage.appendChild(svg);
         stage.insertAdjacentHTML('beforeend', '<div class="legend"><span><span class="sw" style="background:' + C.c0 + '"></span>known ' + (cfg.itemName || 'examples') + ' (bright = the ' + k + ' nearest)</span><span><span class="sw" style="background:' + C.query + '"></span>prediction line</span></div>');
         ui.setReadout('Prediction for yours: <b style="font-size:1.2em;color:' + C.query + '">' + (cfg.prefix || '') + fmt(pred, cfg.decimals == null ? 1 : cfg.decimals) + (cfg.unit ? ' ' + cfg.unit : '') + '</b> — the average of the ' + k + ' nearest ' + (cfg.itemName || 'examples') + '.');
@@ -524,11 +524,13 @@
     if (!maker) { container.appendChild(el('div', 'ws', 'Interactive lesson unavailable (' + cfg.type + ')')); return; }
     var inst = maker(cfg);
     var root = el('div', 'ws');
-    root.appendChild(el('div', 'ws-kicker', 'Interactive lesson — no theory yet, just play'));
-    if (cfg.title) root.appendChild(el('h3', 'ws-title', cfg.title));
-    if (cfg.world) root.appendChild(el('p', 'ws-world', cfg.world));
+    root.appendChild(el('div', 'ws-kicker', 'Lab exercise — derive it yourself, then we name it'));
+    var body = el('div', 'ws-body');
+    root.appendChild(body);
+    if (cfg.title) body.appendChild(el('h3', 'ws-title', cfg.title));
+    if (cfg.world) body.appendChild(el('p', 'ws-world', cfg.world));
     var stage = el('div', 'ws-stage');
-    root.appendChild(stage);
+    body.appendChild(stage);
     var knobRow = el('div', 'ws-knobrow');
     knobRow.appendChild(el('div', 'ws-knoblab', cfg.knob.label));
     var slider = document.createElement('input');
@@ -538,17 +540,17 @@
     knobRow.appendChild(slider);
     var knobVal = el('div', 'ws-knobval');
     knobRow.appendChild(knobVal);
-    root.appendChild(knobRow);
-    var dragHint = el('div', 'ws-dragme', '↔ drag the slider and watch what happens');
-    root.appendChild(dragHint);
+    body.appendChild(knobRow);
+    var dragHint = el('div', 'ws-dragme', '↔ drag the control · watch the measurement respond');
+    body.appendChild(dragHint);
     var readout = el('div', 'ws-readout');
-    root.appendChild(readout);
+    body.appendChild(readout);
     var insight = el('div', 'ws-insight tone-info');
-    root.appendChild(insight);
-    var revealBtn = el('button', 'ws-revealbtn', '✨ Name what you just discovered');
-    root.appendChild(revealBtn);
+    body.appendChild(insight);
+    var revealBtn = el('button', 'ws-revealbtn', 'Name what you just discovered →');
+    body.appendChild(revealBtn);
     var revealPanel = el('div', 'ws-reveal');
-    root.appendChild(revealPanel);
+    body.appendChild(revealPanel);
 
     var moves = 0, extremeHit = false, sawMin = false, sawMax = false, revealed = false;
     function isExtreme(v) {
