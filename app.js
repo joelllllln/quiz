@@ -4,6 +4,8 @@
   var app = document.getElementById('app');
   window.QUESTIONS = window.QUESTIONS || {};
   var TOPICS = [
+    { key: 'found', no: '00', name: 'Machine Learning Foundations', desc: 'Features, labels, training, generalisation — the base every topic stands on.',
+      levels: [{ qk: 'found1', part: 'Part I', name: 'The Ground Floor' }] },
     { key: 'knn', no: '01', name: 'k-Nearest Neighbours', desc: 'Classify by asking the most similar known examples to vote.',
       levels: [{ qk: 'easy', part: 'Part I', name: 'Foundations' }, { qk: 'medium', part: 'Part II', name: 'Practice' }, { qk: 'hard', part: 'Part III', name: 'Advanced Study' }] },
     { key: 'logreg', no: '02', name: 'Logistic Regression', desc: 'Turn a weighted score into an honest probability.',
@@ -38,6 +40,7 @@
       levels: [{ qk: 'tsne1', part: 'Part I', name: 'Foundations' }] }
   ];
   var GROUPS = [
+    { label: 'Start here — the groundwork', keys: ['found'] },
     { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm'] },
     { label: 'Ensemble methods', keys: ['rf', 'gboost', 'stacking'] },
     { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
@@ -150,8 +153,35 @@
     app.appendChild(grid);
   }
 
-  /* ---------------- exercise ---------------- */
+  /* ---------------- ground definitions primer ---------------- */
   function start(topic, level) {
+    var P = window.PRIMERS && window.PRIMERS[topic.key];
+    if (!P) return begin(topic, level);
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+      '<span class="exmeta">§ Topic ' + topic.no + ' · ' + esc(topic.name) + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var card = h('<article class="qcard primer">' +
+      '<div class="q-eyebrow">Ground definitions · read once, then begin</div>' +
+      '<h2 class="primer-title">' + esc(topic.name) + '</h2>' +
+      '<p class="primer-note">Every exercise in this topic builds on these terms. Skim them now — each one returns in the labs.</p>' +
+      '<dl class="terms"></dl>' +
+      '<div class="next-row"><button class="btn primer-start">Begin ' + esc(level.part) + ' — ' + esc(level.name) + ' →</button></div></article>');
+    var dl = card.querySelector('.terms');
+    P.terms.forEach(function (tm, i) {
+      var row = h('<div class="term"><dt><span class="term-no">' + (i < 9 ? '0' : '') + (i + 1) + '</span><span class="term-t"></span></dt><dd></dd></div>');
+      row.querySelector('.term-t').textContent = tm.t;
+      row.querySelector('dd').textContent = tm.d;
+      dl.appendChild(row);
+    });
+    card.querySelector('.primer-start').onclick = function () { begin(topic, level); };
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------------- exercise ---------------- */
+  function begin(topic, level) {
     S = { topic: topic, level: level, qs: QUESTIONS[level.qk], i: 0, correct: 0, results: [] };
     question(false);
   }
@@ -328,7 +358,7 @@
       (c > prev && prev >= 0 ? '<div class="r-best">New personal best — previously ' + prev + '</div>' : '') +
       '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
       '<div class="next-row" style="justify-content:center"><button class="btn">Sit it again</button><button class="btn ghost">Contents</button></div></div>');
-    card.querySelector('.btn').onclick = function () { start(S.topic, S.level); };
+    card.querySelector('.btn').onclick = function () { begin(S.topic, S.level); };
     card.querySelector('.btn.ghost').onclick = home;
     app.appendChild(card);
   }

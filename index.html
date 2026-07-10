@@ -151,6 +151,16 @@ input[type=range]{accent-color:var(--cobalt)}
 .remember b{font-family:var(--serif)}
 .remember .r-formula{font-family:var(--mono);font-size:.8rem;color:var(--ink-2);display:block;margin-top:2px}
 
+/* ---------- ground definitions primer ---------- */
+.primer-title{font-family:var(--serif);font-weight:700;font-size:1.5rem;margin:2px 0 4px}
+.primer-note{font-size:.93rem;color:var(--ink-2);margin-bottom:14px}
+.terms{margin:0 0 6px;border-top:1.5px solid var(--ink)}
+.term{display:block;padding:10px 2px 11px;border-bottom:1px solid var(--rule)}
+.term dt{display:flex;align-items:baseline;gap:10px;margin-bottom:3px}
+.term .term-no{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--cobalt)}
+.term .term-t{font-family:var(--serif);font-weight:600;font-size:1.02rem}
+.term dd{margin:0 0 0 34px;font-size:.92rem;color:var(--ink-2);line-height:1.5}
+
 /* ---------- quick check ---------- */
 .checks{margin-top:18px;display:flex;flex-direction:column;gap:14px}
 .check-card{border:1.5px solid var(--ink);border-radius:2px;background:var(--sheet);padding:14px 16px}
@@ -250,6 +260,8 @@ input[type=range]{accent-color:var(--cobalt)}
 <body>
 <div id="app"></div>
 <script src="widgets.js"></script>
+<script src="data_primers.js"></script>
+<script src="data_found.js"></script>
 <script src="data_easy.js"></script>
 <script src="data_medium.js"></script>
 <script src="data_hard.js"></script>
