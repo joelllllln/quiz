@@ -518,6 +518,19 @@
     };
   };
 
+  /* ================= static figure: render a widget's stage at a fixed value (for question exhibits) ================= */
+  window.renderFigure = function (container, cfg, at, caption) {
+    var maker = TYPES[cfg.type];
+    if (!maker) return;
+    var fig = el('figure', 'qfig');
+    var stage = el('div', 'ws-stage qfig-stage');
+    fig.appendChild(stage);
+    if (caption) fig.appendChild(el('figcaption', 'qfig-cap', caption));
+    try { maker(cfg).render(stage, at, { setReadout: function () {} }); }
+    catch (e) { return; }
+    container.appendChild(fig);
+  };
+
   /* ================= the shell: story → knob → live number → insight → reveal LAST ================= */
   window.renderWidget = function (container, cfg) {
     var maker = TYPES[cfg.type];

@@ -116,6 +116,11 @@
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
     card.querySelector('.qtext').textContent = q.q;
     var box = card.querySelector('.choices');
+    if (q.fig && window.renderFigure) {
+      var figHost = document.createElement('div');
+      card.insertBefore(figHost, box);
+      renderFigure(figHost, q.widget, q.fig.at, q.fig.cap);
+    }
     var order = shuffle(q.choices.map(function (_, i) { return i; }));
     var btns = [];
     order.forEach(function (origIdx, pos) {

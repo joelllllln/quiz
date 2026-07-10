@@ -118,6 +118,7 @@
     ],
     "explain": "Raising p amplifies closeness differences: the smallest d wins by an ever-bigger factor until the nearest point's weight swamps everyone. p is a dial from uniform-vote (p=0) to pure 1-NN (p→∞).",
     "simple": "Weight = 1 over distance-to-the-power-p. Crank p and the closest neighbour's advantage gets amplified until it outshouts everyone else combined — your k-neighbour vote quietly becomes a 1-neighbour vote.",
+    "fig": { "at": 0, "cap": "Fig. — one close \"edible\" voter, four farther \"toxic\" ones" },
     "widget": {
       "type": "voteWeight",
       "title": "The dial between two algorithms",
@@ -154,6 +155,7 @@
     ],
     "explain": "As the query slides along x, the prediction is the mean of a FIXED set of neighbours until one drops out and another drops in — then the average jumps. Flat, jump, flat, jump: a staircase.",
     "simple": "The prediction is the average of a fixed club of k members. Slide along and nothing changes until one member swaps out — then the average jumps. Flat, jump, flat, jump: a staircase.",
+    "fig": { "at": 2, "cap": "Fig. — the prediction line at k = 2" },
     "widget": {
       "type": "knnRegress",
       "title": "Anatomy of a staircase",
@@ -302,6 +304,7 @@
     ],
     "explain": "Scaling a vector by 3 leaves its direction unchanged but moves it far away in Euclidean terms. Cosine measures the angle between vectors — same topic mix = same direction = similar, at any length.",
     "simple": "Double a document and its word-count vector doubles too: same direction, longer arrow. Cosine compares DIRECTIONS (the topic mix) and ignores arrow length (the word count). Same topic = small angle = similar.",
+    "fig": { "at": 2, "cap": "Fig. — the long article sits far out along the same direction" },
     "widget": {
       "type": "metricSwitch",
       "title": "The long-winded twin",
@@ -576,6 +579,7 @@
     ],
     "explain": "For 0/1 values, |a−b| is 1 exactly when the bits differ, 0 otherwise. Summing gives the count of differing positions — the definition of Hamming distance.",
     "simple": "For 0/1 answers, the gap |a − b| is 1 exactly when the two disagree. Add the gaps and you have literally counted the disagreements. That count has a name: Hamming distance.",
+    "fig": { "at": 1, "cap": "Fig. — 3 disagreements across, 2 up" },
     "widget": {
       "type": "metricMorph",
       "title": "Counting the disagreements",
@@ -777,6 +781,7 @@
     ],
     "explain": "Weights: A = 1/1 = 1.0; B = 1/2 + 1/4 = 0.75. A wins despite being outnumbered 2 to 1 — closeness converted to influence.",
     "simple": "Work it out: A gets 1/1 = 1.0. B gets 1/2 + 1/4 = 0.75. Biggest total wins, so A — despite being outnumbered two-to-one. Closeness was converted into influence.",
+    "fig": { "at": 0, "cap": "Fig. — the three neighbours, before any weighting" },
     "widget": {
       "type": "voteWeight",
       "title": "Do the arithmetic with your thumb",
@@ -1054,6 +1059,7 @@
     ],
     "explain": "User-based collaborative filtering IS KNN: distance = dissimilarity of rating/purchase histories, neighbours = look-alike users, prediction = aggregate of their choices.",
     "simple": "'Users like you also bought…' means: find the k users whose taste is most like yours, and recommend what they liked. That is KNN wearing a business suit.",
+    "fig": { "at": 3, "cap": "Fig. — you (◆) among users of known taste" },
     "widget": {
       "type": "scatterK",
       "title": "The algorithm behind \"customers also bought\"",

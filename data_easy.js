@@ -11,6 +11,7 @@
     ],
     "explain": "KNN has no equation and no rules — it simply looks up the k most similar known examples and takes a vote among their labels.",
     "simple": "Imagine the new point asking its closest neighbours 'what are you?' and going with whatever most of them say. That's the whole algorithm — no formulas, no training. Just look at who's nearby and copy the majority.",
+    "fig": { "at": 4, "cap": "Fig. — a new arrival (◆) among labelled neighbours" },
     "widget": {
       "type": "scatterK",
       "title": "The mystery bird",
@@ -55,6 +56,7 @@
     ],
     "explain": "Classification KNN is a simple show of hands among the k nearest: apple 2, lemon 1 → apple.",
     "simple": "Three neighbours voted: apple, apple, lemon. Two hands beat one hand, so the answer is apple. It's literally just counting.",
+    "fig": { "at": 3, "cap": "Fig. — the three nearest neighbours of the mystery fruit" },
     "widget": {
       "type": "scatterK",
       "title": "The unlabelled fruit",
@@ -143,6 +145,7 @@
     ],
     "explain": "k = 1 means one voter: whatever the single nearest neighbour is, that's your answer — fast, simple, and fragile.",
     "simple": "With k = 1 you're asking exactly one neighbour and copying their answer, full stop. Whatever the single closest point is labelled, that's the prediction.",
+    "fig": { "at": 1, "cap": "Fig. — k = 1: the single closest point" },
     "widget": {
       "type": "scatterK",
       "title": "One-voter elections",
@@ -303,6 +306,7 @@
     ],
     "explain": "With two classes and even k, the vote can tie (2–2, 3–3…) and the answer becomes arbitrary. Odd k makes a tie impossible.",
     "simple": "With 3 voters you can get 2–1 but never a draw. With 4 voters you can get 2–2 — and then nobody wins. Odd numbers guarantee a winner.",
+    "fig": { "at": 4, "cap": "Fig. — an even jury: k = 4" },
     "widget": {
       "type": "scatterK",
       "title": "The hung jury",
@@ -347,6 +351,7 @@
     ],
     "explain": "With k = n, every training point votes every time, so position stops mattering — the overall majority class wins everywhere.",
     "simple": "If everyone votes, position stops mattering — the biggest group wins every time, everywhere. It's like deciding what one person likes by polling the entire country.",
+    "fig": { "at": 3, "cap": "Fig. — the new email, deep in the spam cluster" },
     "widget": {
       "type": "scatterK",
       "title": "When everyone votes, nobody's local",
@@ -393,6 +398,7 @@
     ],
     "explain": "With k = 1 the mislabeled point IS the whole vote. A larger k lets its correct neighbours outvote it.",
     "simple": "At k = 1, one bad label IS the entire decision — there's nobody to overrule it. Ask a few more neighbours and the honest ones outvote the mistake.",
+    "fig": { "at": 1, "cap": "Fig. — a mislabeled point (⚠) right beside the query" },
     "widget": {
       "type": "scatterK",
       "title": "One bad label",
@@ -506,6 +512,7 @@
     ],
     "explain": "For numeric targets there's nothing to \"vote\" on — KNN outputs the mean (sometimes median) of the k nearest values.",
     "simple": "When predicting a number, the neighbours can't 'vote' — so you average them. Three similar flats sold for about £150k, £160k, £170k? Guess around £160k.",
+    "fig": { "at": 3, "cap": "Fig. — recent sales by size; three comparables highlighted" },
     "widget": {
       "type": "knnRegress",
       "title": "Price my flat",
@@ -936,6 +943,7 @@
     ],
     "explain": "Neighbours are real stored examples: with 6 points, \"the 7 nearest\" doesn't exist. k ranges from 1 to n.",
     "simple": "Neighbours are real stored examples. If you only have 6, 'the 7 nearest' doesn't exist — like inviting 7 friends when you only know 6 people.",
+    "fig": { "at": 2, "cap": "Fig. — the entire training set: six examples" },
     "widget": {
       "type": "scatterK",
       "title": "A very small village",

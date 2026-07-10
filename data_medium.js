@@ -182,6 +182,7 @@
     ],
     "explain": "A big neighbourhood around ANY point contains mostly majority-class examples, so minority votes get swamped. Imbalance + large k = the minority class disappears.",
     "simple": "A big neighbourhood around ANY point fills up with the common class, because there's simply more of it. So the rare class loses big votes even on its home turf.",
+    "fig": { "at": 3, "cap": "Fig. — the transaction (◆) inside the fraud cluster" },
     "widget": {
       "type": "scatterK",
       "title": "The outnumbered minority",
@@ -229,6 +230,7 @@
     ],
     "explain": "With weights like 1/d, the far-away voters you accidentally included carry almost no weight, so growing k stops being destructive.",
     "simple": "With weights like 1-over-distance, far neighbours barely count for anything. So accidentally including a bunch of far voters (a too-big k) can no longer flip the answer.",
+    "fig": { "at": 0, "cap": "Fig. — three close voters vs four far ones, equal say" },
     "widget": {
       "type": "voteWeight",
       "title": "Democracy with earplugs",
@@ -494,6 +496,7 @@
     ],
     "explain": "A big train-validation gap is overfitting's signature. For KNN it screams \"k too small\" — likely k=1, where training score is 100% by construction.",
     "simple": "100% on questions it memorised, 70% on new ones = it memorised rather than learned. The GAP between the two numbers is the tell. A bigger k forces it to generalise.",
+    "fig": { "at": 1, "cap": "Fig. — training bottles (circles) and brand-new bottles (squares)" },
     "widget": {
       "type": "trainTestK",
       "title": "The gap that diagnoses",
@@ -669,6 +672,7 @@
     ],
     "explain": "Something must break the tie, and it's usually as mundane as data order. Harmless — but it means the \"k nearest\" set isn't always uniquely defined.",
     "simple": "Two points tied exactly for the last seat — something has to choose, so libraries just take whichever appears first in the file. Harmless, but good to know the choice is arbitrary.",
+    "fig": { "at": 2, "cap": "Fig. — two candidates at exactly the same distance" },
     "widget": {
       "type": "scatterK",
       "title": "Perfectly torn",
@@ -710,6 +714,7 @@
     ],
     "explain": "KNN always finds SOME k nearest points — even if they're all miles away — and votes as confidently as ever. Distance-to-neighbours isn't checked unless you add that check yourself.",
     "simple": "KNN always finds SOME k nearest points — even if they're miles away — and votes with full confidence. It has no built-in way to say 'this is nothing like anything I've seen'.",
+    "fig": { "at": 3, "cap": "Fig. — a query far from everything the model knows" },
     "widget": {
       "type": "scatterK",
       "title": "Confidently clueless",
@@ -874,6 +879,7 @@
     ],
     "explain": "Metrics disagree about diagonal vs axis-aligned gaps, so point A can be nearer under L2 while point B is nearer under L1 — flipping the 1-NN prediction entirely.",
     "simple": "The straight-line ruler and the street-grid ruler can honestly disagree about who's closest — diagonal shortcuts are cheap for one and pricey for the other. Different ruler → different neighbour → different answer.",
+    "fig": { "at": 1, "cap": "Fig. — the office, two cafés, and one of the two rulers" },
     "widget": {
       "type": "metricSwitch",
       "title": "The ruler picks the winner",
@@ -982,6 +988,7 @@
     ],
     "explain": "Gaps are 3 and 4; Euclidean squares, sums, and roots them: √(9 + 16) = √25 = 5. (7 would be the Manhattan distance.)",
     "simple": "The gaps are 3 and 4. Square them (9 and 16), add (25), take the square root: 5. It's the school triangle rule — Pythagoras — doing all the work.",
+    "fig": { "at": 1.5, "cap": "Fig. — the two checkpoints on the grid" },
     "widget": {
       "type": "metricMorph",
       "title": "The 3-4-5 walk",
@@ -1012,6 +1019,7 @@
     ],
     "explain": "Manhattan adds absolute gaps: |6−2| + |8−3| = 4 + 5 = 9. (6.4 is the Euclidean answer.)",
     "simple": "Just add the gaps: |6−2| = 4 and |8−3| = 5, so 4 + 5 = 9. No squaring, no square roots — taxi maths.",
+    "fig": { "at": 1.5, "cap": "Fig. — depot to flat: 4 blocks east, 5 north" },
     "widget": {
       "type": "metricMorph",
       "title": "Four across, five up",
