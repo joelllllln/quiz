@@ -172,8 +172,11 @@
       return;
     }
 
-    // first attempt, wrong → lab → quick check → retry
-    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Work the lab, pass the quick check, then take the question again.</div>'));
+    // first attempt, wrong → plain-English answer → lab → quick check → retry
+    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Here\'s the answer in plain English. Then work the lab, pass the quick check, and take the question again.</div>'));
+    card.appendChild(h('<div class="plain"><span class="p-label">The answer, in plain English</span>' +
+      '<div class="p-answer">' + esc(q.choices[0]) + '</div>' +
+      (q.simple ? '<p>' + q.simple + '</p>' : '') + '</div>'));
     renderWidget(card, q.widget);
     var toCheck = h('<div class="next-row"><button class="btn">On to the quick check →</button></div>');
     toCheck.children[0].onclick = function () {

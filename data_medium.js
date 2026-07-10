@@ -10,6 +10,7 @@
       "A global view of the data for a less faithful local one"
     ],
     "explain": "Small k = flexible, twitchy, sensitive to single points (high variance). Large k = rigid and stable but potentially too crude (high bias). k is the dial between them.",
+    "simple": "Small k = the decision hangs on one or two points, so predictions jump around (twitchy = high variance). Big k = steady but crude (stubborn = high bias). k is the dial between the two.",
     "widget": {
       "type": "boundaryK",
       "title": "The twitchy map",
@@ -56,6 +57,7 @@
       "Pick the largest odd k your runtime budget allows — more voters, more stability"
     ],
     "explain": "k is a hyperparameter: sweep it, score each candidate on data the model didn't train on, and keep the winner. Training accuracy would always point to k=1.",
+    "simple": "Try k = 1, 2, 3… and score each one on examples the model never saw. Keep whichever k scores best there. Training-data scores are useless for this — they'd say k = 1 forever.",
     "widget": {
       "type": "kCurve",
       "title": "Shopping for k",
@@ -111,6 +113,7 @@
       "rank(x) / n, replacing each value with its percentile"
     ],
     "explain": "z = (x − μ) / σ recentres each feature at 0 and rescales its spread to 1, so all features contribute comparably to distances.",
+    "simple": "A z-score asks 'how many typical steps from average is this value?' Subtract the mean, divide by the usual spread. Afterwards every feature speaks the same language: 'typical steps'.",
     "widget": {
       "type": "scaleFeature",
       "title": "Same ruler for everyone",
@@ -144,6 +147,7 @@
       "KNN keeps whichever copy has less variance and ignores the other"
     ],
     "explain": "Distance just sums feature differences. Two near-copies of the same signal = that signal gets two votes. KNN has no notion of \"redundant columns\".",
+    "simple": "If commute appears twice, its gap gets added into the distance twice — one opinion counted double. KNN can't tell it's the same information wearing two hats.",
     "widget": {
       "type": "scaleFeature",
       "title": "The feature that voted twice",
@@ -177,6 +181,7 @@
       "Predictions for fraud stabilise, since more voters means less noise"
     ],
     "explain": "A big neighbourhood around ANY point contains mostly majority-class examples, so minority votes get swamped. Imbalance + large k = the minority class disappears.",
+    "simple": "A big neighbourhood around ANY point fills up with the common class, because there's simply more of it. So the rare class loses big votes even on its home turf.",
     "widget": {
       "type": "scatterK",
       "title": "The outnumbered minority",
@@ -223,6 +228,7 @@
       "Using an even k, so the tight cluster can at least force a tie"
     ],
     "explain": "With weights like 1/d, the far-away voters you accidentally included carry almost no weight, so growing k stops being destructive.",
+    "simple": "With weights like 1-over-distance, far neighbours barely count for anything. So accidentally including a bunch of far voters (a too-big k) can no longer flip the answer.",
     "widget": {
       "type": "voteWeight",
       "title": "Democracy with earplugs",
@@ -260,6 +266,7 @@
       "Splits the big gap evenly across the features before summing"
     ],
     "explain": "Squaring amplifies large differences: a gap of 8 contributes 64 to Euclidean's sum while a gap of 1 contributes just 1. L2 is dominated by its largest coordinate gap.",
+    "simple": "Euclidean squares each gap first: a gap of 8 becomes 64 while a gap of 1 stays 1. Squaring makes big gaps enormous, so one huge gap ends up running the whole show.",
     "widget": {
       "type": "metricMorph",
       "title": "One enormous gap",
@@ -289,6 +296,7 @@
       "Points separate into distinct clusters, one per dimension"
     ],
     "explain": "In high dimensions, distances concentrate: everyone is roughly the same distance from everyone. KNN's core signal — \"this one is clearly closest\" — dissolves.",
+    "simple": "Add enough dimensions and everyone becomes roughly the same distance from everyone — like a huge dark warehouse where every shelf feels 'kind of far'. 'Nearest' stops meaning anything.",
     "widget": {
       "type": "dimCurse",
       "title": "Everyone is a stranger",
@@ -316,6 +324,7 @@
       "Only speed suffers; the neighbour ranking stays identical"
     ],
     "explain": "Every feature contributes to the distance, junk included. Columns of noise add random distance between genuinely similar points until true neighbours stop being nearest.",
+    "simple": "Junk columns add random amounts to every distance. With enough random noise, the truly-similar points stop being the closest ones — the real signal drowns.",
     "widget": {
       "type": "dimCurse",
       "title": "Drowning the signal",
@@ -343,6 +352,7 @@
       "It retrains whenever a new example arrives, blocking requests"
     ],
     "explain": "KNN defers all computation to prediction time. A model that must answer NOW is exactly the wrong place for an algorithm whose cost is paid per-query.",
+    "simple": "KNN does its heavy lifting when you ASK it something: it scans all stored examples per question. A checkout that needs an answer in milliseconds can't sit through that scan.",
     "widget": {
       "type": "speedLazy",
       "title": "The checkout timeout",
@@ -370,6 +380,7 @@
       "The linear model grows with the data; KNN's memory is fixed by k"
     ],
     "explain": "KNN's \"model\" IS the dataset — deleting it deletes the model. A trained linear model is a handful of coefficients; the data can be archived.",
+    "simple": "KNN's model IS the whole dataset, so deploying it means shipping the whole dataset. The linear model ships a handful of numbers and travels light.",
     "widget": {
       "type": "speedLazy",
       "title": "Shipping the suitcase",
@@ -397,6 +408,7 @@
       "They sort points once by distance to the origin and binary-search it"
     ],
     "explain": "A spatial index partitions space (like a postcode system): the search descends to the query's region and safely skips far-away branches, doing ~log(n) work instead of n.",
+    "simple": "It's the postcode trick: check your local area first instead of measuring the distance to every shop in the country. The tree safely skips whole regions that can't possibly win.",
     "widget": {
       "type": "speedLazy",
       "title": "The postcode trick",
@@ -425,6 +437,7 @@
       "Sawtooth-shaped — odd k scores high, even k scores low"
     ],
     "explain": "Tiny k memorises noise, huge k blurs into the majority class; validation accuracy usually peaks at a moderate k between the two failure modes.",
+    "simple": "Tiny k copies noise (bad). Huge k averages everything into mush (bad). In between sits a comfortable plateau (good). The curve is a hill with a cliff at each end.",
     "widget": {
       "type": "kCurve",
       "title": "Goldilocks and the 16 neighbours",
@@ -480,6 +493,7 @@
       "A normal gap — training always runs about 30 points above validation"
     ],
     "explain": "A big train-validation gap is overfitting's signature. For KNN it screams \"k too small\" — likely k=1, where training score is 100% by construction.",
+    "simple": "100% on questions it memorised, 70% on new ones = it memorised rather than learned. The GAP between the two numbers is the tell. A bigger k forces it to generalise.",
     "widget": {
       "type": "trainTestK",
       "title": "The gap that diagnoses",
@@ -540,6 +554,7 @@
       "Nothing — matching scores mean the model is well-tuned"
     ],
     "explain": "Both-scores-low with no gap means the model can't even fit what it saw: too much smoothing. In KNN that's an oversized k erasing real structure.",
+    "simple": "When even the training score is bad, the model is too blunt to draw what's really there — like painting a portrait with a broom. Shrink k so it can express detail again.",
     "widget": {
       "type": "boundaryK",
       "title": "The blurry model",
@@ -588,6 +603,7 @@
       "Five small validations are faster to run than one large one"
     ],
     "explain": "A single split is one roll of the dice — which points landed in validation? K-fold rotates the held-out slice and averages, shrinking the luck factor.",
+    "simple": "One split might hide the easy examples (lucky score) or the hard ones (cruel score). Rotate which slice is hidden, score each rotation, and average — the luck cancels out.",
     "widget": {
       "type": "foldPick",
       "title": "Five rolls of the dice",
@@ -619,6 +635,7 @@
       "Training halts with an error because one side is missing a class"
     ],
     "explain": "Slicing a sorted file gives a validation set full of one class and a training set starved of it. Shuffle (and ideally stratify) before splitting.",
+    "simple": "Slice the top off a file sorted by class and your validation set is all one class — while the training set barely contains that class at all. Shuffle first, so every slice looks like the real mix.",
     "widget": {
       "type": "foldPick",
       "title": "The sorted-file disaster",
@@ -651,6 +668,7 @@
       "Give the two tied points half a vote each"
     ],
     "explain": "Something must break the tie, and it's usually as mundane as data order. Harmless — but it means the \"k nearest\" set isn't always uniquely defined.",
+    "simple": "Two points tied exactly for the last seat — something has to choose, so libraries just take whichever appears first in the file. Harmless, but good to know the choice is arbitrary.",
     "widget": {
       "type": "scatterK",
       "title": "Perfectly torn",
@@ -691,6 +709,7 @@
       "Attaches a low-confidence warning to the prediction"
     ],
     "explain": "KNN always finds SOME k nearest points — even if they're all miles away — and votes as confidently as ever. Distance-to-neighbours isn't checked unless you add that check yourself.",
+    "simple": "KNN always finds SOME k nearest points — even if they're miles away — and votes with full confidence. It has no built-in way to say 'this is nothing like anything I've seen'.",
     "widget": {
       "type": "scatterK",
       "title": "Confidently clueless",
@@ -735,6 +754,7 @@
       "It only affects k = 1; any amount of averaging removes it"
     ],
     "explain": "An average over 1–2 values has no protection: if one is a typo (£3,000,000 instead of £300,000), nearby predictions inherit the madness.",
+    "simple": "An average over one or two values has no protection: if one of them is a typo, your prediction basically IS the typo. More values dilute it; a median simply ignores it.",
     "widget": {
       "type": "knnRegress",
       "title": "The typo in the ledger",
@@ -779,6 +799,7 @@
       "The overall proportion of spam in the entire training set"
     ],
     "explain": "The vote fraction (4/5) acts as a rough confidence estimate — that's exactly what predict_proba returns for KNN. Useful, though not a calibrated true probability.",
+    "simple": "4 of 5 neighbours said spam → you can report '80% of similar cases were spam'. It's not a guarantee, but it's far more useful than a bare label with no hint of doubt.",
     "widget": {
       "type": "scatterK",
       "title": "How sure is the committee?",
@@ -822,6 +843,7 @@
       "Drop the column — nominal categories can't enter a distance"
     ],
     "explain": "Numbering categories invents a fake ordering (it makes red \"closer\" to green than to blue). One-hot encoding gives every pair of different colours the same distance.",
+    "simple": "Numbering colours (red=1, green=2, blue=3) invents a lie: it makes red 'closer' to green than to blue. One-hot gives each colour its own yes/no column, so all colours are equally different.",
     "widget": {
       "type": "metricMorph",
       "title": "The accidental ranking",
@@ -851,6 +873,7 @@
       "They agree on the single nearest neighbour but diverge beyond k = 3"
     ],
     "explain": "Metrics disagree about diagonal vs axis-aligned gaps, so point A can be nearer under L2 while point B is nearer under L1 — flipping the 1-NN prediction entirely.",
+    "simple": "The straight-line ruler and the street-grid ruler can honestly disagree about who's closest — diagonal shortcuts are cheap for one and pricey for the other. Different ruler → different neighbour → different answer.",
     "widget": {
       "type": "metricSwitch",
       "title": "The ruler picks the winner",
@@ -893,6 +916,7 @@
       "They were redundant copies, and dropping copies always lifts accuracy"
     ],
     "explain": "For distance-based models, an irrelevant feature isn't neutral — it actively injects noise into every distance. Removing it purifies the similarity signal.",
+    "simple": "Deleting junk columns removes random noise from every distance, so the genuinely-similar points become the closest ones again. Less garbage in, better neighbours out.",
     "widget": {
       "type": "dimCurse",
       "title": "Addition by subtraction",
@@ -920,6 +944,7 @@
       "Lowering the decision threshold on the majority class's vote count"
     ],
     "explain": "Weighted votes stop distant majority neighbours from swamping close minority ones; over/under-sampling fixes the headcount problem at its source. Large k does the opposite.",
+    "simple": "Two fixes for the same disease: give close matches louder voices (distance weights), or fix the headcount itself (resample until the classes arrive balanced). Both stop 'rare' meaning 'automatically outvoted'.",
     "widget": {
       "type": "voteWeight",
       "title": "Saving the rare signal",
@@ -956,6 +981,7 @@
       "12 — from 3 × 4"
     ],
     "explain": "Gaps are 3 and 4; Euclidean squares, sums, and roots them: √(9 + 16) = √25 = 5. (7 would be the Manhattan distance.)",
+    "simple": "The gaps are 3 and 4. Square them (9 and 16), add (25), take the square root: 5. It's the school triangle rule — Pythagoras — doing all the work.",
     "widget": {
       "type": "metricMorph",
       "title": "The 3-4-5 walk",
@@ -985,6 +1011,7 @@
       "41 — from 4² + 5²"
     ],
     "explain": "Manhattan adds absolute gaps: |6−2| + |8−3| = 4 + 5 = 9. (6.4 is the Euclidean answer.)",
+    "simple": "Just add the gaps: |6−2| = 4 and |8−3| = 5, so 4 + 5 = 9. No squaring, no square roots — taxi maths.",
     "widget": {
       "type": "metricMorph",
       "title": "Four across, five up",
@@ -1014,6 +1041,7 @@
       "Scale only the query point to match the training data's range"
     ],
     "explain": "Distance is computed FROM feature values, so any repair to those values must happen first. Scaling distances after the fact can't undo a wrong neighbour ranking.",
+    "simple": "Distances are computed FROM the feature values, so any repair to the values must happen first. You can't unsalt a soup after serving it — fix upstream, then measure.",
     "widget": {
       "type": "scaleFeature",
       "title": "Repair before you measure",
@@ -1047,6 +1075,7 @@
       "A streaming system that must answer in single-digit milliseconds"
     ],
     "explain": "KNN's strengths: no training, no assumed formula, and boundaries as curvy as the data itself. Its weaknesses (cost, memory, high dimensions) are absent in small, low-dimensional problems.",
+    "simple": "KNN is happiest with: small data (scanning stays fast), a few meaningful features (distances stay honest), curvy class boundaries (no formula to constrain it), and no rush at answer time.",
     "widget": {
       "type": "boundaryK",
       "title": "The shape no line can draw",
@@ -1097,6 +1126,7 @@
       "Fraud is too rare to move accuracy either way, so the score is neutral"
     ],
     "explain": "Accuracy is judged against the majority-class baseline. On 90/10 data, 90% is the score of the laziest possible model; the interesting question is performance on the 10%.",
+    "simple": "If 90% of the data is 'normal', a rock that always says 'normal' also scores 90%. The real test is beating that do-nothing baseline — not the raw score.",
     "widget": {
       "type": "scatterK",
       "title": "The lazy genius",

@@ -10,6 +10,7 @@
       "Assigns the label of the densest region the point lands in, ignoring individual examples"
     ],
     "explain": "KNN has no equation and no rules — it simply looks up the k most similar known examples and takes a vote among their labels.",
+    "simple": "Imagine the new point asking its closest neighbours 'what are you?' and going with whatever most of them say. That's the whole algorithm — no formulas, no training. Just look at who's nearby and copy the majority.",
     "widget": {
       "type": "scatterK",
       "title": "The mystery bird",
@@ -53,6 +54,7 @@
       "Lemon — when votes split, the rarer class wins to keep the classes balanced"
     ],
     "explain": "Classification KNN is a simple show of hands among the k nearest: apple 2, lemon 1 → apple.",
+    "simple": "Three neighbours voted: apple, apple, lemon. Two hands beat one hand, so the answer is apple. It's literally just counting.",
     "widget": {
       "type": "scatterK",
       "title": "The unlabelled fruit",
@@ -96,6 +98,7 @@
       "The k most typical examples of the majority class"
     ],
     "explain": "\"Near\" is measured with a distance function (Euclidean by default): smaller distance = more similar = nearer.",
+    "simple": "'Nearest' just means the smallest distance number — like picking the shop closest to your house. KNN measures the distance to everyone, then keeps the smallest ones.",
     "widget": {
       "type": "scatterK",
       "title": "Who is actually closest?",
@@ -139,6 +142,7 @@
       "It copies the closest point's label but flips it if that point looks like an outlier"
     ],
     "explain": "k = 1 means one voter: whatever the single nearest neighbour is, that's your answer — fast, simple, and fragile.",
+    "simple": "With k = 1 you're asking exactly one neighbour and copying their answer, full stop. Whatever the single closest point is labelled, that's the prediction.",
     "widget": {
       "type": "scatterK",
       "title": "One-voter elections",
@@ -182,6 +186,7 @@
       "It discards duplicates and keeps one prototype per class"
     ],
     "explain": "KNN is a \"lazy\" learner: training = memorise the data. All the real work (distance computing, voting) happens at prediction time.",
+    "simple": "KNN doesn't study — it just saves all the examples, like stuffing every past paper into a drawer. All the actual thinking happens later, when a question arrives.",
     "widget": {
       "type": "speedLazy",
       "title": "The laziest student in class",
@@ -209,6 +214,7 @@
       "More data forces more features, and each feature slows the maths"
     ],
     "explain": "To find the k nearest, plain KNN computes the distance from the query to all n stored points — so prediction cost grows with n.",
+    "simple": "To find the closest points it has to check the distance to EVERY stored point, one by one, every time you ask. More stored points = more checking = slower answers.",
     "widget": {
       "type": "speedLazy",
       "title": "Find my photo twin",
@@ -236,6 +242,7 @@
       "The average of the horizontal and vertical gaps"
     ],
     "explain": "Euclidean distance is ruler distance: the straight-line length, √(Δx² + Δy²) in 2-D.",
+    "simple": "Euclidean distance is ruler distance: lay a ruler between the two points and read the straight-line length. That's the whole idea.",
     "widget": {
       "type": "metricMorph",
       "title": "Drone vs delivery bike",
@@ -265,6 +272,7 @@
       "The sum of the squared differences, without the square root"
     ],
     "explain": "Manhattan (city-block) distance adds up |Δx| + |Δy| — the path a taxi must drive on a street grid, no diagonals allowed.",
+    "simple": "Manhattan distance is taxi distance: you can't drive through buildings, so you add the blocks across plus the blocks up. Add the gap in each direction — done.",
     "widget": {
       "type": "metricMorph",
       "title": "The warehouse robot",
@@ -294,6 +302,7 @@
       "Odd k guarantees each class gets at least one vote"
     ],
     "explain": "With two classes and even k, the vote can tie (2–2, 3–3…) and the answer becomes arbitrary. Odd k makes a tie impossible.",
+    "simple": "With 3 voters you can get 2–1 but never a draw. With 4 voters you can get 2–2 — and then nobody wins. Odd numbers guarantee a winner.",
     "widget": {
       "type": "scatterK",
       "title": "The hung jury",
@@ -337,6 +346,7 @@
       "The class of the data's centre-most point"
     ],
     "explain": "With k = n, every training point votes every time, so position stops mattering — the overall majority class wins everywhere.",
+    "simple": "If everyone votes, position stops mattering — the biggest group wins every time, everywhere. It's like deciding what one person likes by polling the entire country.",
     "widget": {
       "type": "scatterK",
       "title": "When everyone votes, nobody's local",
@@ -382,6 +392,7 @@
       "k = 7 — nearby honest points get outvoted by the bad one"
     ],
     "explain": "With k = 1 the mislabeled point IS the whole vote. A larger k lets its correct neighbours outvote it.",
+    "simple": "At k = 1, one bad label IS the entire decision — there's nobody to overrule it. Ask a few more neighbours and the honest ones outvote the mistake.",
     "widget": {
       "type": "scatterK",
       "title": "One bad label",
@@ -426,6 +437,7 @@
       "It behaves fine — the voting step corrects for unit differences"
     ],
     "explain": "Distance adds raw differences: a £10,000 salary gap contributes ~10,000 while a 30-year age gap contributes 30. Salary drowns age unless you rescale.",
+    "simple": "Distance just adds up number gaps. A salary gap is in the thousands; an age gap is maybe 30. So salary shouts and age whispers — until you shrink them onto the same scale.",
     "widget": {
       "type": "scaleFeature",
       "title": "The shouting feature",
@@ -459,6 +471,7 @@
       "KNN standardises internally, so recorded units never matter"
     ],
     "explain": "Raw distances depend on units. Shrinking one feature ×1000 shrinks its influence ×1000, which can reshuffle who counts as \"nearest\".",
+    "simple": "Change metres to kilometres and those numbers shrink 1000×, while other features stay put — so a different person can suddenly be 'closest'. Same world, different ruler, different answer.",
     "widget": {
       "type": "scaleFeature",
       "title": "The unit prank",
@@ -492,6 +505,7 @@
       "It weights each neighbour's value by how common values like it are"
     ],
     "explain": "For numeric targets there's nothing to \"vote\" on — KNN outputs the mean (sometimes median) of the k nearest values.",
+    "simple": "When predicting a number, the neighbours can't 'vote' — so you average them. Three similar flats sold for about £150k, £160k, £170k? Guess around £160k.",
     "widget": {
       "type": "knnRegress",
       "title": "Price my flat",
@@ -537,6 +551,7 @@
       "Predictions snap back to following the single nearest neighbour"
     ],
     "explain": "Averaging over everyone gives the same number everywhere: the global mean. The prediction curve flattens into a horizontal line.",
+    "simple": "Averaging EVERYONE gives one number: the overall average — the same answer for every question. That's why the prediction line goes completely flat.",
     "widget": {
       "type": "knnRegress",
       "title": "The flatline machine",
@@ -581,6 +596,7 @@
       "A separate unlabelled pool for the algorithm to practise on"
     ],
     "explain": "KNN is supervised: the vote only works because each neighbour brings a known label with it. Unlabelled neighbours would have nothing to vote with.",
+    "simple": "KNN's only knowledge is the labels humans attached earlier. No labels = the neighbours have nothing to say — like asking directions from people who don't know the area either.",
     "widget": {
       "type": "scatterK",
       "title": "The botanist's gift",
@@ -624,6 +640,7 @@
       "It hugs the centre of each class more tightly"
     ],
     "explain": "Small k lets single points carve out their own little territories, so the border between classes wiggles around individuals. Larger k smooths it out.",
+    "simple": "Small k lets every single point grab its own patch of the map, so the border wiggles around individuals. Bigger k smooths those wiggles away.",
     "widget": {
       "type": "boundaryK",
       "title": "The border dispute",
@@ -670,6 +687,7 @@
       "The distance metric happens to fit this data perfectly"
     ],
     "explain": "Asked about a training point, 1-NN finds that exact point at distance 0 and copies its own label — a perfect score by cheating, saying nothing about new data.",
+    "simple": "Ask 'who's closest to this point?' when the point is already IN the data — the answer is itself, at distance zero. Of course it gets its own label right. It's an open-book exam.",
     "widget": {
       "type": "trainTestK",
       "title": "The open-book exam",
@@ -720,6 +738,7 @@
       "Confirm the training accuracy clears the majority-class baseline"
     ],
     "explain": "A held-out test set simulates the future: labelled examples the model has never seen. Its score there is an honest preview of real-world performance.",
+    "simple": "Hide some labelled examples in a drawer, build the model without them, then test on them. The model never saw them, so its score there is an honest preview of the real world.",
     "widget": {
       "type": "trainTestK",
       "title": "The dress rehearsal",
@@ -770,6 +789,7 @@
       "Classification averages the labels; regression takes a majority vote"
     ],
     "explain": "Same neighbour-finding, different combiner: categories get voted on, numbers get averaged.",
+    "simple": "If the answer is a WORD (spam / not spam), the neighbours vote. If the answer is a NUMBER (price, minutes), the neighbours get averaged. Same neighbours, different final step.",
     "widget": {
       "type": "knnRegress",
       "title": "Guess my rating",
@@ -814,6 +834,7 @@
       "Text only breaks Euclidean distance; Manhattan handles it natively"
     ],
     "explain": "KNN's core operation is arithmetic on feature values (subtract, square, add). \"rock − jazz\" means nothing until you represent each item as numbers.",
+    "simple": "You can't subtract 'jazz' from 'rock'. Distance is arithmetic, and arithmetic needs numbers — so first describe each item with numbers, and then distances exist.",
     "widget": {
       "type": "metricMorph",
       "title": "Turning songs into places",
@@ -843,6 +864,7 @@
       "Distant neighbours get extra influence, adding diversity to the vote"
     ],
     "explain": "Weighted KNN scales each vote by closeness (often 1/distance): a next-door neighbour speaks louder than one at the edge of the neighbourhood.",
+    "simple": "Instead of every neighbour getting one equal vote, closer neighbours get louder voices. A next-door twin counts for more than a vague acquaintance.",
     "widget": {
       "type": "voteWeight",
       "title": "Whisper or megaphone",
@@ -878,6 +900,7 @@
       "Flip a fair coin — with two classes it's unbiased either way"
     ],
     "explain": "A tie in headcount usually isn't a tie in evidence: weighting by distance lets the closer neighbours settle it meaningfully rather than arbitrarily.",
+    "simple": "2–2 is a tie in HANDS, but not in evidence: the closer pair look more like your point. Let closeness carry weight and the tie breaks itself — sensibly, not randomly.",
     "widget": {
       "type": "voteWeight",
       "title": "Courtroom deadlock",
@@ -912,6 +935,7 @@
       "12 — with replacement, each neighbour can vote twice"
     ],
     "explain": "Neighbours are real stored examples: with 6 points, \"the 7 nearest\" doesn't exist. k ranges from 1 to n.",
+    "simple": "Neighbours are real stored examples. If you only have 6, 'the 7 nearest' doesn't exist — like inviting 7 friends when you only know 6 people.",
     "widget": {
       "type": "scatterK",
       "title": "A very small village",
@@ -951,6 +975,7 @@
       "The boundary it derived from the examples during training"
     ],
     "explain": "KNN never distils the data into parameters. Its \"model\" is the memorised dataset itself, consulted from scratch at every prediction.",
+    "simple": "A linear model boils the data down to a little formula and can bin the data afterwards. KNN has no formula — the saved examples ARE the model. Delete them and nothing is left.",
     "widget": {
       "type": "speedLazy",
       "title": "Two rival forecasters",
@@ -978,6 +1003,7 @@
       "Weight steps down by a factor of k to compensate"
     ],
     "explain": "Normalising (min-max to 0–1) or standardising (z-scores) puts steps and sleep on equal footing so both genuinely influence who counts as similar.",
+    "simple": "Squash both features onto the same 0-to-1 scale, so a 'big' step difference and a 'big' sleep difference count about the same. Now both features get a fair say.",
     "widget": {
       "type": "scaleFeature",
       "title": "Steps shout, sleep whispers",
@@ -1011,6 +1037,7 @@
       "Blurs its edges while keeping its centre correctly labelled"
     ],
     "explain": "A large k asks so many (mostly outside) neighbours that the pocket's few residents are always outvoted: real structure gets blurred away. That's underfitting.",
+    "simple": "A giant k means a giant crowd votes on every spot — and a small real cluster always gets outvoted by the crowd around it. The map paints straight over it.",
     "widget": {
       "type": "boundaryK",
       "title": "The village in the forest",
@@ -1058,6 +1085,7 @@
       "The classes appear in roughly equal numbers"
     ],
     "explain": "\"Birds of a feather flock together\": KNN assumes closeness in feature space implies sameness of label. When that's false, KNN fails.",
+    "simple": "KNN's one big bet: things that look similar usually ARE similar — birds of a feather. When that's true of your data, it works; when it isn't, no k can save it.",
     "widget": {
       "type": "scatterK",
       "title": "Birds of a feather",
@@ -1101,6 +1129,7 @@
       "Measure all distances → discard outliers → average what remains"
     ],
     "explain": "Rank ALL stored points by distance first — only then can you know which k are nearest. The vote (or average) is always the final step.",
+    "simple": "The recipe: measure the distance to everyone → keep the k smallest → let those labels vote (or average, for numbers). Three steps, always in that order.",
     "widget": {
       "type": "scatterK",
       "title": "Watch the recipe run",
@@ -1144,6 +1173,7 @@
       "Estimating a student's exam percentage"
     ],
     "explain": "Approve/reject is a choice between categories → classification (vote). All the others predict a quantity → regression (average).",
+    "simple": "'Approve or reject?' has two possible answers — you're picking a CATEGORY, so it's classification. Temperature, price, minutes are NUMBERS — those are regression.",
     "widget": {
       "type": "scatterK",
       "title": "Approve or reject?",

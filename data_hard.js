@@ -10,6 +10,7 @@
       "It diverges — the farthest point races away faster than the nearest"
     ],
     "explain": "Distances concentrate around their mean as dimensions grow: max/min → 1. When that ratio is ~1, ranking by distance carries almost no information.",
+    "simple": "In high dimensions the farthest point ends up barely farther than the nearest — their ratio slides toward 1. And when near and far look alike, ranking by distance tells you nothing.",
     "widget": {
       "type": "dimCurse",
       "title": "The shrinking contrast",
@@ -37,6 +38,7 @@
       "Rebalancing after inserts dominates the runtime in high dimensions"
     ],
     "explain": "Index speed comes from skipping regions that provably can't contain the nearest neighbour. Distance concentration destroys those proofs: every region might contain it, so the search visits nearly everything.",
+    "simple": "An index gets its speed from skipping regions that are PROVABLY too far. When all distances are nearly equal, nothing is provably too far — so the 'smart' search ends up checking almost everything.",
     "widget": {
       "type": "dimCurse",
       "title": "Nothing left to skip",
@@ -64,6 +66,7 @@
       "Only accuracy is capped; probabilistic scores can still be perfect"
     ],
     "explain": "Where the classes truly overlap, the best possible decision still loses on some points (Bayes error). A model scoring 100% on such training data is memorising coin flips.",
+    "simple": "If identical-looking points can genuinely carry either label, some error is simply unavoidable — for ANY model. That floor is the Bayes error. Scoring 100% on such data means you memorised coin flips.",
     "widget": {
       "type": "boundaryK",
       "title": "The honest ceiling",
@@ -114,6 +117,7 @@
       "The two closest neighbours end up permanently sharing the vote"
     ],
     "explain": "Raising p amplifies closeness differences: the smallest d wins by an ever-bigger factor until the nearest point's weight swamps everyone. p is a dial from uniform-vote (p=0) to pure 1-NN (p→∞).",
+    "simple": "Weight = 1 over distance-to-the-power-p. Crank p and the closest neighbour's advantage gets amplified until it outshouts everyone else combined — your k-neighbour vote quietly becomes a 1-neighbour vote.",
     "widget": {
       "type": "voteWeight",
       "title": "The dial between two algorithms",
@@ -149,6 +153,7 @@
       "Equidistant ties keep forcing sudden re-orderings of the neighbour set"
     ],
     "explain": "As the query slides along x, the prediction is the mean of a FIXED set of neighbours until one drops out and another drops in — then the average jumps. Flat, jump, flat, jump: a staircase.",
+    "simple": "The prediction is the average of a fixed club of k members. Slide along and nothing changes until one member swaps out — then the average jumps. Flat, jump, flat, jump: a staircase.",
     "widget": {
       "type": "knnRegress",
       "title": "Anatomy of a staircase",
@@ -192,6 +197,7 @@
       "log₂(n) — the depth of the underlying search structure"
     ],
     "explain": "The input space fragments into roughly n/k regions, each free to take its own value — like a model with n/k independent parameters. k=1 gives n regions (very complex); k=n gives 1 (a constant).",
+    "simple": "The map splits into about n÷k patches that can each pick their own colour. k = 1: every point gets a patch (14 moving parts). k = n: one patch (1 moving part). Patch count ≈ parameter count.",
     "widget": {
       "type": "boundaryK",
       "title": "Counting the model's moving parts",
@@ -238,6 +244,7 @@
       "The interior can be reconstructed from the boundary if ever needed"
     ],
     "explain": "A query lands near the boundary or it doesn't: deep-interior points only ever confirm landslide votes. Dropping them barely moves any prediction, while slashing storage and query cost.",
+    "simple": "Points deep inside a class only pile onto votes that were already won. The disputed cases live near the border — keep those, drop the redundant interior, and the answers barely change.",
     "widget": {
       "type": "speedLazy",
       "title": "The great pruning",
@@ -265,6 +272,7 @@
       "They trade recall on rare classes for speed on common ones"
     ],
     "explain": "ANN methods answer \"a very-near neighbour, almost always the nearest\" instead of \"the provably nearest\" — recall ~95–99% at a tiny fraction of the cost. At web scale, exactness is a luxury nobody buys.",
+    "simple": "Approximate search occasionally returns the 2nd-nearest instead of the very nearest — in exchange for being hundreds of times faster. At web scale nobody notices, and nobody pays for exact.",
     "widget": {
       "type": "speedLazy",
       "title": "Close enough, a thousand times faster",
@@ -293,6 +301,7 @@
       "Jaccard similarity on the raw counts — set overlap ignores length"
     ],
     "explain": "Scaling a vector by 3 leaves its direction unchanged but moves it far away in Euclidean terms. Cosine measures the angle between vectors — same topic mix = same direction = similar, at any length.",
+    "simple": "Double a document and its word-count vector doubles too: same direction, longer arrow. Cosine compares DIRECTIONS (the topic mix) and ignores arrow length (the word count). Same topic = small angle = similar.",
     "widget": {
       "type": "metricSwitch",
       "title": "The long-winded twin",
@@ -331,6 +340,7 @@
       "It counts once per category level, multiplying its influence"
     ],
     "explain": "A one-hot mismatch contributes at most ~1 to the distance; a £20k income gap contributes 20,000. Unscaled, the categorical column may as well not exist.",
+    "simple": "A smoker/non-smoker mismatch adds at most 1 to the distance; a £20,000 income gap adds 20,000. Without rescaling, the one-bit column is a whisper in a storm.",
     "widget": {
       "type": "scaleFeature",
       "title": "The one-bit whisper",
@@ -364,6 +374,7 @@
       "Using the column median, refined later once the model is trained"
     ],
     "explain": "The KNN idea works for repair, not just prediction: rows similar in every other respect probably resemble the broken row in the missing feature too.",
+    "simple": "A row is missing one value? Find the rows most similar on everything else, and average what THEY have in that slot. It's the same 'ask the neighbours' trick, used to repair data instead of predict.",
     "widget": {
       "type": "knnRegress",
       "title": "The torn page",
@@ -408,6 +419,7 @@
       "Predictions in dense regions default to the majority class"
     ],
     "explain": "k-NN always finds exactly k voters, however far away. A fixed radius adapts the voter COUNT to local density instead — great where data is dense, but an empty circle where data is sparse.",
+    "simple": "'Everyone within radius r' can be… nobody, if the point sits in an empty area. No voters, no prediction. Plain k-NN never fails that way — it just quietly grabs faraway voters instead.",
     "widget": {
       "type": "radiusScatter",
       "title": "The circle that came back empty",
@@ -452,6 +464,7 @@
       "Only predictions for the billionaire's own row are affected"
     ],
     "explain": "Min-max divides by (max − min). With max = £2bn, ordinary incomes (£20k–£90k) all land within a hair of 0 — effectively erased. Robust scalers (median/IQR) resist this.",
+    "simple": "Min-max divides by (max − min). If the max is a billionaire, ordinary income gaps become ~0.00004 — invisible. Scale with median and quartiles instead: they don't care how extreme the extremes are.",
     "widget": {
       "type": "scaleFeature",
       "title": "The billionaire in the denominator",
@@ -485,6 +498,7 @@
       "The deployment data wasn't rescaled with the training scaler"
     ],
     "explain": "With time-ordered data, random splits are a séance: the model consults the future. Honest evaluation must train on the past and test on the future — like deployment will.",
+    "simple": "Shuffled splits let the model answer Tuesday's question using data from Friday — consulting the future. A deployed model can never do that, hence 92% in the lab and 61% in real life. Train on the past, test on the future.",
     "widget": {
       "type": "foldPick",
       "title": "The fortune teller's exam",
@@ -517,6 +531,7 @@
       "The one-vote classes are eliminated and the vote re-run between leaders"
     ],
     "explain": "KNN uses plurality: the biggest vote count wins, majority or not. With many classes, outright majorities get rare — and near-ties get common, so vote margins deserve attention.",
+    "simple": "The biggest pile of votes wins even if it's under half — 3 beats 2, 1 and 1. That's plurality. But a 3-of-7 winner is a shaky answer, so report the split, not just the name.",
     "widget": {
       "type": "scatterK",
       "title": "Winning without a majority",
@@ -560,6 +575,7 @@
       "The dot product of the two vectors"
     ],
     "explain": "For 0/1 values, |a−b| is 1 exactly when the bits differ, 0 otherwise. Summing gives the count of differing positions — the definition of Hamming distance.",
+    "simple": "For 0/1 answers, the gap |a − b| is 1 exactly when the two disagree. Add the gaps and you have literally counted the disagreements. That count has a name: Hamming distance.",
     "widget": {
       "type": "metricMorph",
       "title": "Counting the disagreements",
@@ -589,6 +605,7 @@
       "Convex hulls drawn tightly around each class"
     ],
     "explain": "With one voter, space belongs to whoever is closest: each training point gets a polygonal cell (all locations nearer to it than to anyone else). The class map is those cells, coloured by label.",
+    "simple": "With one voter, each training point owns the region where it is the closest — space carves into polygons, one per point, with edges exactly halfway between neighbours. That tiling is a Voronoi diagram.",
     "widget": {
       "type": "boundaryK",
       "title": "The mosaic underneath",
@@ -639,6 +656,7 @@
       "A measure of how balanced the classes are in that region"
     ],
     "explain": "Normal points live in crowds (small kth-neighbour distance); anomalies are far even from their closest peers. That single number is a classic outlier detector.",
+    "simple": "Normal points have close neighbours; weird points are far even from their nearest. So 'distance to your kth neighbour' doubles as a weirdness score — the bigger it is, the more likely an outlier.",
     "widget": {
       "type": "scatterK",
       "title": "The loneliness detector",
@@ -683,6 +701,7 @@
       "O(d²) — features interact pairwise inside the metric"
     ],
     "explain": "Each of the n stored points needs a distance: d subtractions/squares each. Both dataset size AND feature count multiply into every single query.",
+    "simple": "One prediction = n stored points × d numbers each = n·d operations. Two levers to cheapen it: store fewer points, or use fewer dimensions. Serious systems pull both.",
     "widget": {
       "type": "speedLazy",
       "title": "The bill has two factors",
@@ -710,6 +729,7 @@
       "It automatically cleans mislabeled points before the real model sees them"
     ],
     "explain": "KNN needs no training, assumes almost nothing, and captures any smooth boundary given decent features. It sets the bar: a complex model that can't clear it is complexity for nothing.",
+    "simple": "KNN takes minutes to set up, assumes almost nothing, and handles curvy patterns. If a week of fancy modelling can't beat it, the fancy model isn't earning its keep. Run the cheap thing first — it keeps everyone honest.",
     "widget": {
       "type": "boundaryK",
       "title": "The bar to clear",
@@ -756,6 +776,7 @@
       "A — but only because ties break toward the closest neighbour"
     ],
     "explain": "Weights: A = 1/1 = 1.0; B = 1/2 + 1/4 = 0.75. A wins despite being outnumbered 2 to 1 — closeness converted to influence.",
+    "simple": "Work it out: A gets 1/1 = 1.0. B gets 1/2 + 1/4 = 0.75. Biggest total wins, so A — despite being outnumbered two-to-one. Closeness was converted into influence.",
     "widget": {
       "type": "voteWeight",
       "title": "Do the arithmetic with your thumb",
@@ -789,6 +810,7 @@
       "£45/h — the mean of the top two, since rates skew upward"
     ],
     "explain": "(10 + 20 + 60) / 3 = £30/h. Note the £60 outlier dragged the mean above both other values — the median (£20) would have resisted it.",
+    "simple": "Plain average: (10 + 20 + 60) ÷ 3 = 30. Notice the £60 outlier dragged the answer above two of the three values — means chase outliers. (A median would have said 20 and shrugged.)",
     "widget": {
       "type": "knnRegress",
       "title": "Quote me a rate",
@@ -834,6 +856,7 @@
       "It doesn't — the same n covers any dimension once features are scaled"
     ],
     "explain": "A box covering 10% of each of d axes contains (0.1)^d of the space: 1 dimension needs ~10 points for coverage, 6 dimensions ~10⁶. Local neighbourhoods starve exponentially fast.",
+    "simple": "A neighbourhood covering 10% of each feature covers 0.1 × 0.1 × … of the space — a share that shrinks exponentially with every dimension. No one can collect data that fast; shrink the dimensions instead.",
     "widget": {
       "type": "dimCurse",
       "title": "The starving neighbourhood",
@@ -861,6 +884,7 @@
       "Reweighting the training labels rather than the space itself"
     ],
     "explain": "Instead of hand-picking Euclidean vs Manhattan, metric learning fits the ruler itself: directions that separate classes get amplified, irrelevant directions get squashed. KNN then runs in the improved geometry.",
+    "simple": "Instead of you hand-picking Euclidean vs Manhattan, an algorithm learns to stretch and rotate the space so that same-class points land near each other. Then ordinary KNN runs inside the improved geometry.",
     "widget": {
       "type": "metricSwitch",
       "title": "Fitting the ruler itself",
@@ -899,6 +923,7 @@
       "1-NN's capacity equals the feature count, so wide data explains the fit"
     ],
     "explain": "A model that can fit ANYTHING — including nonsense — gets no credit for fitting your data. High capacity makes training scores meaningless; generalisation must be measured out-of-sample.",
+    "simple": "1-NN can 'fit' anything perfectly — even pure nonsense — because every training point is its own nearest neighbour. A model that can ace nonsense earns no credit for acing your data. Judge it only on unseen data.",
     "widget": {
       "type": "trainTestK",
       "title": "The model that can memorise anything",
@@ -959,6 +984,7 @@
       "The weights are normalised to sum to 1, which cannot produce a tie"
     ],
     "explain": "A 2–2 headcount tie is common; 1/0.83 + 1/2.9 exactly equalling 1/1.4 + 1/2.2 is a measure-zero coincidence. Continuous weights dissolve the tie problem that odd k existed to solve.",
+    "simple": "Headcounts tie easily: 2–2. Sums of messy decimals like 1.25 vs 0.83 + 0.41 essentially never land EXACTLY equal. Once votes carry weights, ties stop existing — and the 'use odd k' rule retires.",
     "widget": {
       "type": "voteWeight",
       "title": "The tie that can't survive",
@@ -993,6 +1019,7 @@
       "Splitting that feature into w separate correlated columns"
     ],
     "explain": "Distance treats one unit of every feature equally, so rescaling a feature by w rescales its influence by w (w² in squared terms). Scaling isn't just cleanup — it's an importance dial.",
+    "simple": "Multiply a feature by 3 and its gaps count 3× in every distance — you've just declared it 3× more important. All scaling is secretly importance-setting; better to set it on purpose.",
     "widget": {
       "type": "scaleFeature",
       "title": "Importance is a number you choose",
@@ -1026,6 +1053,7 @@
       "A popularity ranking, lightly personalised by region"
     ],
     "explain": "User-based collaborative filtering IS KNN: distance = dissimilarity of rating/purchase histories, neighbours = look-alike users, prediction = aggregate of their choices.",
+    "simple": "'Users like you also bought…' means: find the k users whose taste is most like yours, and recommend what they liked. That is KNN wearing a business suit.",
     "widget": {
       "type": "scatterK",
       "title": "The algorithm behind \"customers also bought\"",
@@ -1069,6 +1097,7 @@
       "B needs distance weights instead — k itself shouldn't move"
     ],
     "explain": "Every mislabeled point is a saboteur in the jury pool. The dirtier the labels, the more honest voters you need per decision — the optimal k shifts right with noise.",
+    "simple": "Every mislabeled point is a saboteur in the jury pool. The more saboteurs, the more honest jurors you need per decision — so noisier labels push the best k higher.",
     "widget": {
       "type": "kCurve",
       "title": "Dirty data demands bigger juries",
@@ -1124,6 +1153,7 @@
       "Encode → scale → tune k on training accuracy → index → validate once at the end"
     ],
     "explain": "Foundations before tuning, tuning before serving: features must exist and be scaled before distances mean anything; hyperparameters are chosen on validation data; the index is a serving optimisation added last.",
+    "simple": "Each step feeds the next: make features numeric → put them on one scale (fitted on training data only) → drop junk features → choose k, metric and weights by honest validation → bolt on a fast index for serving.",
     "widget": {
       "type": "kCurve",
       "title": "The final dress rehearsal",
