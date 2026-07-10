@@ -1,7 +1,7 @@
 /* KNN — Level 1: Foundations. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).easy = [
   {
-    "q": "A new, unlabelled data point arrives. KNN measures its distance to every labelled example and keeps the k closest. What does it do with them to pick a label?",
+    "q": "A new point arrives with no label. KNN finds the k labelled points closest to it. What does KNN do with those k points to choose a label?",
     "choices": [
       "Lets their labels vote",
       "Averages their coordinates",
@@ -46,7 +46,7 @@
     }
   },
   {
-    "q": "k = 3, and the three nearest neighbours of a mystery fruit are labelled apple, apple, lemon. What does KNN predict?",
+    "q": "You set k = 3. The three nearest neighbours of a mystery fruit are: apple, apple, lemon. What does KNN predict?",
     "choices": [
       "Apple",
       "Lemon",
@@ -91,7 +91,7 @@
     }
   },
   {
-    "q": "KNN has measured the distance from a new point to every stored example. Which examples count as its 'nearest neighbours'?",
+    "q": "KNN measures the distance from the new point to every stored example. Which examples become its 'nearest neighbours'?",
     "choices": [
       "Those with the smallest distances",
       "Those inside an automatic radius",
@@ -135,7 +135,7 @@
     }
   },
   {
-    "q": "With k = 1, KNN finds the single closest training point to the new arrival. What happens next?",
+    "q": "You set k = 1. KNN finds the one training point closest to the new arrival. What happens next?",
     "choices": [
       "Its label is copied — done",
       "Two runners-up double-check it",
@@ -180,7 +180,7 @@
     }
   },
   {
-    "q": "During 'training', many models learn weights or rules from the data. What does KNN actually do with the training examples at training time?",
+    "q": "Most models do heavy work during training. What does KNN do with the training examples at training time?",
     "choices": [
       "Just stores them",
       "Caches all pairwise distances",
@@ -208,7 +208,7 @@
     }
   },
   {
-    "q": "As the training set grows, plain KNN's predictions get slower and slower. What is every single prediction forced to do?",
+    "q": "KNN gets slower at predicting as the training set grows. Why? What must every single prediction do?",
     "choices": [
       "Measure distance to every stored point",
       "Re-sort the whole dataset",
@@ -236,7 +236,7 @@
     }
   },
   {
-    "q": "Two points sit on a map. The EUCLIDEAN distance between them is best described as…",
+    "q": "Two points sit on a map. What is the Euclidean distance between them?",
     "choices": [
       "The straight-line length",
       "The sum of the axis gaps",
@@ -266,7 +266,7 @@
     }
   },
   {
-    "q": "Two points sit on a street grid. The MANHATTAN distance between them is computed by…",
+    "q": "Two points sit on a street grid. How is the Manhattan distance between them computed?",
     "choices": [
       "Adding the absolute axis gaps",
       "Square-rooting the squared gaps",
@@ -296,7 +296,7 @@
     }
   },
   {
-    "q": "When classifying into two classes, practitioners usually pick an odd k (3, 5, 7…). What does an odd k guarantee?",
+    "q": "With two classes, people usually choose an odd k, like 3, 5 or 7. What does an odd k guarantee?",
     "choices": [
       "The vote can never tie",
       "Higher accuracy on average",
@@ -341,7 +341,7 @@
     }
   },
   {
-    "q": "You set k equal to the entire training set, so every stored point votes on every prediction. Wherever the new point lands, KNN now predicts…",
+    "q": "You set k to the size of the whole training set, so every point votes every time. What does KNN now predict for ANY new point?",
     "choices": [
       "The overall majority class",
       "The nearest point's class",
@@ -388,7 +388,7 @@
     }
   },
   {
-    "q": "One training point is mislabeled, and a new point lands right next to it. Which setting of k is most likely to inherit the mistake?",
+    "q": "One training point has the wrong label. A new point lands right next to it. Which k is most likely to copy the mistake?",
     "choices": [
       "k = 1",
       "k = 3",
@@ -434,7 +434,7 @@
     }
   },
   {
-    "q": "A dataset mixes age (18–70) and salary (£20,000–£90,000), both used raw. When KNN computes distances, what actually happens?",
+    "q": "A dataset has age (18–70) and salary (£20,000–£90,000). You use the raw numbers. What happens when KNN computes distances?",
     "choices": [
       "Salary drowns out age",
       "Age drowns out salary",
@@ -468,7 +468,7 @@
     }
   },
   {
-    "q": "You convert one column from metres to kilometres (÷1000) and change nothing else. For unscaled KNN, what can this alone do?",
+    "q": "You change one column from metres to kilometres (divide by 1,000). Nothing else changes. What can this alone do to unscaled KNN?",
     "choices": [
       "Change who counts as nearest",
       "Nothing — the ranking is preserved",
@@ -502,7 +502,7 @@
     }
   },
   {
-    "q": "KNN regression must output a number — a price, say — from the k nearest neighbours' values. How does it combine them?",
+    "q": "KNN regression predicts a number, like a price. It finds the k nearest neighbours. How does it turn their values into one prediction?",
     "choices": [
       "Averages them",
       "Votes on them",
@@ -549,7 +549,7 @@
     }
   },
   {
-    "q": "In KNN regression you crank k up to the size of the whole dataset. Every prediction now becomes…",
+    "q": "In KNN regression, you set k to the size of the whole dataset. What does every prediction become?",
     "choices": [
       "The global average",
       "Perfectly accurate",
@@ -594,7 +594,7 @@
     }
   },
   {
-    "q": "Before KNN can classify anything at all, the stored training examples must come with one crucial thing. Which?",
+    "q": "What must the stored training examples have before KNN can classify anything at all?",
     "choices": [
       "Human-provided labels",
       "Balanced classes",
@@ -638,7 +638,7 @@
     }
   },
   {
-    "q": "Watch KNN's decision boundary as k shrinks toward 1. The border between the classes becomes…",
+    "q": "You shrink k down towards 1. What does the boundary between the classes become?",
     "choices": [
       "More jagged and wiggly",
       "Smoother and straighter",
@@ -685,7 +685,7 @@
     }
   },
   {
-    "q": "You score 1-NN on the exact data it trained on and get a perfect 100%. Why is that score meaningless?",
+    "q": "You test 1-NN on the same data it trained on. It scores 100%. Why does that score mean nothing?",
     "choices": [
       "Each point's nearest neighbour is itself",
       "The data must be noise-free",
@@ -736,7 +736,7 @@
     }
   },
   {
-    "q": "You want an honest estimate of how your KNN model will handle future, unseen cases. What's the standard move?",
+    "q": "You want to know how well your KNN model will do on future, unseen data. What is the standard way to check?",
     "choices": [
       "Score it on held-out data",
       "Score training data, minus 10%",
@@ -787,7 +787,7 @@
     }
   },
   {
-    "q": "Same neighbours, two tasks: classification outputs a category, regression outputs a number. What differs in the final step?",
+    "q": "Classification predicts a category. Regression predicts a number. The neighbours are found the same way — so what differs in the last step?",
     "choices": [
       "Vote for classes, average for numbers",
       "Different distance metrics",
@@ -832,7 +832,7 @@
     }
   },
   {
-    "q": "You feed KNN raw text categories like 'rock', 'jazz', 'pop'. Why does it fail before it can even start?",
+    "q": "You give KNN raw text categories like 'rock', 'jazz' and 'pop'. Why can't it work?",
     "choices": [
       "You can't do arithmetic on words",
       "The strings differ in length",
@@ -862,7 +862,7 @@
     }
   },
   {
-    "q": "In distance-weighted KNN the k neighbours still vote — but the votes are no longer equal. Who speaks loudest?",
+    "q": "In distance-weighted KNN, the neighbours' votes are no longer equal. Whose votes count the most?",
     "choices": [
       "The closest neighbours",
       "The most common class",
@@ -898,7 +898,7 @@
     }
   },
   {
-    "q": "k = 4 and the vote splits 2–2. One principled tie-break uses information you already computed. Which?",
+    "q": "You set k = 4 and the vote splits 2–2. Which tie-break uses information you already have?",
     "choices": [
       "Weight the votes by closeness",
       "Take the overall majority class",
@@ -933,7 +933,7 @@
     }
   },
   {
-    "q": "Your training set holds exactly 6 examples. What is the largest k that means anything?",
+    "q": "Your training set has exactly 6 examples. What is the biggest k that makes sense?",
     "choices": [
       "6",
       "5",
@@ -974,7 +974,7 @@
     }
   },
   {
-    "q": "A trained linear model keeps a small formula and can throw its data away. What must KNN keep in order to remain a model at all?",
+    "q": "A trained linear model keeps a small formula and can delete its data. What must KNN keep to stay a working model?",
     "choices": [
       "The entire training set",
       "One average point per class",
@@ -1002,7 +1002,7 @@
     }
   },
   {
-    "q": "A fitness app feeds daily steps (0–20,000) and sleep hours (0–12) into KNN. Before any distances are computed, you should…",
+    "q": "An app uses daily steps (0–20,000) and sleep hours (0–12) in KNN. What should you do before computing any distances?",
     "choices": [
       "Rescale both to a shared range",
       "Log-transform sleep",
@@ -1036,7 +1036,7 @@
     }
   },
   {
-    "q": "The data genuinely contains a small pocket of one class inside the other's territory. What does a very large k do to that pocket?",
+    "q": "The data has a small, real pocket of one class inside the other class's area. What does a very large k do to that pocket?",
     "choices": [
       "Votes it out of existence",
       "Preserves it — smoothing keeps structure",
@@ -1084,7 +1084,7 @@
     }
   },
   {
-    "q": "Every algorithm quietly bets on something being true about the world. KNN's entire bet is that…",
+    "q": "Every algorithm relies on one big assumption about the world. What is KNN's?",
     "choices": [
       "Similar things share labels",
       "Features are equally important",
@@ -1128,7 +1128,7 @@
     }
   },
   {
-    "q": "Put KNN's three prediction steps in the correct order.",
+    "q": "KNN makes a prediction in three steps. Which order is correct?",
     "choices": [
       "Measure all → keep k nearest → combine",
       "Keep k nearest → measure → combine",
@@ -1172,7 +1172,7 @@
     }
   },
   {
-    "q": "Four of these tasks predict a quantity. Which one is a KNN CLASSIFICATION task instead?",
+    "q": "Four of these tasks predict a number. Which one is a classification task?",
     "choices": [
       "Approving or rejecting a loan",
       "Predicting tomorrow's temperature",

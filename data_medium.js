@@ -1,7 +1,7 @@
 /* KNN — Level 2: Practitioner. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).medium = [
   {
-    "q": "You move k from large to small: the model reacts more to individual points, less to the crowd. In bias–variance terms, you traded…",
+    "q": "You change k from large to small. The model now reacts more to individual points and less to the crowd. In bias–variance language, what did you trade?",
     "choices": [
       "Stability for twitchiness",
       "Twitchiness for stability",
@@ -48,7 +48,7 @@
     }
   },
   {
-    "q": "k is a hyperparameter — the training data can't learn it for you, and training accuracy would just say 'k = 1 forever'. The defensible way to choose it is by…",
+    "q": "k is a setting you choose — the model can't learn it, and training accuracy would always point to k = 1. What is the right way to choose it?",
     "choices": [
       "Best score on held-out data",
       "Best score on training data",
@@ -104,7 +104,7 @@
     }
   },
   {
-    "q": "Standardising a feature (turning it into z-scores) replaces each value x with which formula?",
+    "q": "Standardising a feature means turning each value x into a z-score. Which formula does that?",
     "choices": [
       "(x − mean) ÷ standard deviation",
       "(x − min) ÷ (max − min)",
@@ -138,7 +138,7 @@
     }
   },
   {
-    "q": "Commute distance accidentally appears in the data TWICE — once in km, once in minutes, almost perfectly correlated. Inside KNN's distance, commute now…",
+    "q": "Commute distance appears in the data twice — once in km, once in minutes — and the two columns are nearly identical. Inside KNN's distance, commute now…",
     "choices": [
       "Counts double",
       "Counts half",
@@ -172,7 +172,7 @@
     }
   },
   {
-    "q": "The data is 90% 'normal' and 10% 'fraud'. As k grows large, what happens to fraud predictions — even for points deep inside the fraud cluster?",
+    "q": "The data is 90% 'normal' and 10% 'fraud'. You make k large. What happens to fraud predictions, even deep inside the fraud cluster?",
     "choices": [
       "They fade away",
       "They increase",
@@ -220,7 +220,7 @@
     }
   },
   {
-    "q": "You want the safety of a big k without letting far-away voters drown a tight, correct local cluster. Which variant does exactly that?",
+    "q": "You want a big k, but you don't want far-away voters to drown out a tight, correct local cluster. Which KNN variant fixes this?",
     "choices": [
       "Distance-weighted voting",
       "A larger training set",
@@ -259,7 +259,7 @@
     }
   },
   {
-    "q": "Two points differ hugely on ONE feature and barely on the rest. Compared with Manhattan, how does Euclidean treat that one big gap?",
+    "q": "Two points differ a lot on ONE feature and barely on the rest. Compared with Manhattan, how does Euclidean distance treat that one big gap?",
     "choices": [
       "Amplifies it — gaps are squared",
       "Dampens it — the root compresses",
@@ -289,7 +289,7 @@
     }
   },
   {
-    "q": "Keep adding dimensions and the distances between random points concentrate around one value. 'The nearest neighbour' becomes…",
+    "q": "You keep adding features (dimensions), and the distances between random points all bunch together. What does the 'nearest neighbour' become?",
     "choices": [
       "Barely nearer than the farthest",
       "Sharper and more reliable",
@@ -317,7 +317,7 @@
     }
   },
   {
-    "q": "Two features genuinely predict the label. You add 20 columns of random junk. KNN's accuracy…",
+    "q": "Two features truly predict the label. You add 20 columns of random junk. What happens to KNN's accuracy?",
     "choices": [
       "Drops — junk noise drowns the signal",
       "Rises — more information helps",
@@ -345,7 +345,7 @@
     }
   },
   {
-    "q": "An online checkout needs its fraud answer inside 50 ms. Why is vanilla KNN a poor fit for that job?",
+    "q": "An online checkout needs its fraud answer within 50 milliseconds. Why is plain KNN a bad choice for this job?",
     "choices": [
       "It pays its whole cost per query",
       "It needs days of training first",
@@ -373,7 +373,7 @@
     }
   },
   {
-    "q": "Once deployed, a linear model ships as a handful of coefficients. To keep working, KNN must ship…",
+    "q": "A deployed linear model is just a few numbers. What must a deployed KNN model carry with it?",
     "choices": [
       "Its whole training set",
       "Only k and the metric",
@@ -401,7 +401,7 @@
     }
   },
   {
-    "q": "k-d trees and ball trees make exact neighbour search dramatically faster in low dimensions. What is the trick?",
+    "q": "k-d trees and ball trees make exact neighbour search much faster in low dimensions. How?",
     "choices": [
       "Skip regions that provably can't win",
       "Delete redundant training points",
@@ -430,7 +430,7 @@
     }
   },
   {
-    "q": "Sweep k from 1 to n and plot the VALIDATION accuracy at each value. The typical shape is…",
+    "q": "You try every k from 1 to n and plot the validation accuracy. What shape does the plot usually have?",
     "choices": [
       "Rise, plateau, then cliff",
       "A steady climb toward k = n",
@@ -486,7 +486,7 @@
     }
   },
   {
-    "q": "Training score 100%, validation score 70%. Name the diagnosis — and the direction of the cure.",
+    "q": "Your model scores 100% on training data and 70% on validation data. What is the diagnosis, and which way should k move?",
     "choices": [
       "Overfitting — raise k",
       "Underfitting — lower k",
@@ -548,7 +548,7 @@
     }
   },
   {
-    "q": "Training score 65%, validation score 64% — both poor, no gap. Name the diagnosis — and the direction of the cure.",
+    "q": "Your model scores 65% on training data and 64% on validation data — both poor, no gap. What is the diagnosis, and which way should k move?",
     "choices": [
       "Underfitting — lower k",
       "Overfitting — raise k",
@@ -597,7 +597,7 @@
     }
   },
   {
-    "q": "Instead of one train/validation split, you rotate the held-out slice five times and average the five scores. What does that buy you?",
+    "q": "Instead of one train/validation split, you rotate the held-out slice five times and average the five scores. What do you gain?",
     "choices": [
       "A score that doesn't depend on luck",
       "Five times more training data",
@@ -629,7 +629,7 @@
     }
   },
   {
-    "q": "The data file is sorted by class, and you slice the first 20% off as a validation set without shuffling. What have you actually built?",
+    "q": "The data file is sorted by class. You cut the first 20% off as a validation set, without shuffling. What have you created?",
     "choices": [
       "A one-class, useless validation set",
       "A perfectly stratified split",
@@ -662,7 +662,7 @@
     }
   },
   {
-    "q": "Two training points sit at EXACTLY the same distance from the query, but only one neighbour slot remains. Typical implementations…",
+    "q": "Two training points sit at EXACTLY the same distance from the query, but only one neighbour slot is left. What do most implementations do?",
     "choices": [
       "Pick arbitrarily (e.g. file order)",
       "Include both, using k + 1",
@@ -704,7 +704,7 @@
     }
   },
   {
-    "q": "A query lands miles away from every training point — nothing in the data resembles it. Plain KNN…",
+    "q": "A query lands far away from every training point — nothing in the data looks like it. What does plain KNN do?",
     "choices": [
       "Answers confidently anyway",
       "Returns 'unknown'",
@@ -750,7 +750,7 @@
     }
   },
   {
-    "q": "KNN regression with a small k, and one stored value is a wild typo (£900 where £90 belongs). Queries landing near the typo get…",
+    "q": "You use KNN regression with a small k. One stored value is a typo: £900 where £90 belongs. What happens to predictions near the typo?",
     "choices": [
       "Predictions dragged toward it",
       "Averages that absorb it harmlessly",
@@ -795,7 +795,7 @@
     }
   },
   {
-    "q": "k = 5 and the neighbours vote 4 spam, 1 normal. Beyond the label 'spam', the fraction 4/5 hands you a free…",
+    "q": "k = 5, and the neighbours vote 4 spam, 1 normal. The fraction 4/5 gives you something extra, for free. What?",
     "choices": [
       "Rough confidence score",
       "Calibrated true probability",
@@ -839,7 +839,7 @@
     }
   },
   {
-    "q": "You need a colour column — {red, green, blue} — inside KNN's distance. The standard encoding is…",
+    "q": "You need a colour column — red, green or blue — inside KNN's distance. What is the standard encoding?",
     "choices": [
       "One 0/1 column per colour",
       "red=1, green=2, blue=3",
@@ -869,7 +869,7 @@
     }
   },
   {
-    "q": "Same data, same k — you only switch the metric from Euclidean to Manhattan. Predictions can genuinely change, because…",
+    "q": "Same data, same k. You only switch the metric from Euclidean to Manhattan. Why can the predictions change?",
     "choices": [
       "'Nearest' itself can change",
       "They can't — the rankings match",
@@ -913,7 +913,7 @@
     }
   },
   {
-    "q": "You DELETE five features and KNN's accuracy goes UP. Most likely, those five features were…",
+    "q": "You delete five features and accuracy goes UP. What were those five features, most likely?",
     "choices": [
       "Noise distorting the distances",
       "Redundant but harmless copies",
@@ -941,7 +941,7 @@
     }
   },
   {
-    "q": "Rare-disease screening with KNN: the minority class keeps getting outvoted. Which pairing most directly protects it?",
+    "q": "You're screening for a rare disease, and the minority class keeps getting outvoted. Which pair of fixes protects it most directly?",
     "choices": [
       "Distance weights + resampling",
       "Bigger k + raw features",
@@ -978,7 +978,7 @@
     }
   },
   {
-    "q": "Compute it by hand: the EUCLIDEAN distance between (1, 2) and (4, 6) is…",
+    "q": "Work it out by hand: what is the Euclidean distance between (1, 2) and (4, 6)?",
     "choices": [
       "5",
       "7",
@@ -1009,7 +1009,7 @@
     }
   },
   {
-    "q": "Compute it by hand: the MANHATTAN distance between (2, 3) and (6, 8) is…",
+    "q": "Work it out by hand: what is the Manhattan distance between (2, 3) and (6, 8)?",
     "choices": [
       "9",
       "6.4",
@@ -1040,7 +1040,7 @@
     }
   },
   {
-    "q": "In a correctly built KNN pipeline, when does feature scaling happen, relative to computing any distances?",
+    "q": "You're building a KNN pipeline. When should feature scaling happen, compared with computing the distances?",
     "choices": [
       "Before — always",
       "After, applied to the distances",
@@ -1074,7 +1074,7 @@
     }
   },
   {
-    "q": "Every algorithm has a home turf. Where does KNN genuinely shine?",
+    "q": "Every algorithm has a home turf. In which situation does KNN work best?",
     "choices": [
       "Small clean data, curvy boundary",
       "Billions of rows, hot queries",
@@ -1125,7 +1125,7 @@
     }
   },
   {
-    "q": "Your KNN reports 90% accuracy on data that is 90% 'normal' and 10% 'fraud'. Before celebrating, you should compare that score against…",
+    "q": "Your KNN scores 90% accuracy on data that is 90% 'normal'. Before celebrating, what should you compare that score against?",
     "choices": [
       "The always-'normal' baseline",
       "A fair coin flip (50%)",

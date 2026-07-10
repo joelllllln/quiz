@@ -1,7 +1,7 @@
 /* KNN — Level 3: Advanced. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).hard = [
   {
-    "q": "Send the number of dimensions toward infinity and track the ratio (distance to farthest point) ÷ (distance to nearest point). It tends toward…",
+    "q": "Push the number of dimensions towards infinity. Now divide the distance to the farthest point by the distance to the nearest point. What value does that ratio approach?",
     "choices": [
       "1",
       "0",
@@ -29,7 +29,7 @@
     }
   },
   {
-    "q": "k-d trees answer queries in ~log(n) time in 2-D, yet degrade toward brute-force O(n) in high dimensions. What exactly breaks?",
+    "q": "k-d trees are fast in 2-D (about log n per query) but slow towards O(n) in high dimensions. What exactly stops working?",
     "choices": [
       "Pruning — nothing is provably far",
       "Memory — the tree overflows",
@@ -57,7 +57,7 @@
     }
   },
   {
-    "q": "The two classes genuinely overlap: identical-looking points occur with either label. For ANY classifier on this data, perfect accuracy is…",
+    "q": "The two classes truly overlap: the same-looking point can carry either label. For ANY classifier on this data, what is perfect accuracy?",
     "choices": [
       "Impossible — some error is irreducible",
       "Reachable with enough data",
@@ -108,7 +108,7 @@
     }
   },
   {
-    "q": "Weighted KNN with weight = 1/dᵖ. Crank the power p toward infinity, and your k-neighbour model behaves exactly like…",
+    "q": "Weighted KNN uses weight = 1/dᵖ. You push the power p towards infinity. What does your k-neighbour model turn into?",
     "choices": [
       "1-NN, whatever k is",
       "Plain unweighted k-NN",
@@ -145,7 +145,7 @@
     }
   },
   {
-    "q": "KNN regression's prediction curve is a staircase — flat stretch, sudden jump, flat stretch. The jumps happen at exactly the moments when…",
+    "q": "A KNN regression curve is a staircase: flat, jump, flat, jump. When exactly do the jumps happen?",
     "choices": [
       "The k-member club changes",
       "A value crosses zero",
@@ -190,7 +190,7 @@
     }
   },
   {
-    "q": "A useful rule of thumb: the effective number of parameters ('moving parts') of a KNN model is roughly…",
+    "q": "Rule of thumb: how many effective parameters ('moving parts') does a KNN model have?",
     "choices": [
       "n ÷ k",
       "k",
@@ -237,7 +237,7 @@
     }
   },
   {
-    "q": "Prototype selection keeps mostly boundary-area points and throws away the deep interior — yet accuracy barely moves. Why?",
+    "q": "Prototype selection throws away deep-interior points and keeps mostly boundary-area points — yet accuracy barely changes. Why?",
     "choices": [
       "Interior points never swing votes",
       "Interior points carry more noise",
@@ -265,7 +265,7 @@
     }
   },
   {
-    "q": "HNSW, LSH and friends (approximate nearest-neighbour search) power modern vector search. The deal they offer is…",
+    "q": "Modern vector search runs on approximate methods like HNSW and LSH. What trade do they offer?",
     "choices": [
       "Rarely miss the nearest; hugely faster",
       "Exact results at fixed latency",
@@ -294,7 +294,7 @@
     }
   },
   {
-    "q": "Two documents share a topic, but one is 3× longer — its word-count vector points the same way, just 3× farther out. The measure that ignores that is…",
+    "q": "Two documents cover the same topic, but one is three times longer, so its word-count vector is three times bigger. Which measure ignores that size difference?",
     "choices": [
       "Cosine similarity",
       "Raw Euclidean",
@@ -334,7 +334,7 @@
     }
   },
   {
-    "q": "One-hot columns (0 or 1) sit beside raw income (tens of thousands). Without rescaling, the categorical information is…",
+    "q": "One-hot columns (0 or 1) sit next to raw income (tens of thousands). You don't rescale. What happens to the categorical information?",
     "choices": [
       "Effectively invisible",
       "Completely dominant",
@@ -368,7 +368,7 @@
     }
   },
   {
-    "q": "KNN imputation (e.g. sklearn's KNNImputer) fills a missing value with…",
+    "q": "KNN can also repair data. How does KNN imputation fill in a missing value?",
     "choices": [
       "The most-similar rows' average",
       "The class-weighted column mean",
@@ -413,7 +413,7 @@
     }
   },
   {
-    "q": "Radius-based neighbours ('everyone within distance r') has one failure mode that plain k-NN can never have. Which?",
+    "q": "Radius neighbours uses 'everyone within distance r' instead of 'the k closest'. It has one failure that plain k-NN can never have. What is it?",
     "choices": [
       "Zero voters — no prediction",
       "Ties that cannot be broken",
@@ -458,7 +458,7 @@
     }
   },
   {
-    "q": "You min-max scale income to [0, 1] — but one customer is a billionaire, so the denominator is enormous. Ordinary income differences become…",
+    "q": "You min-max scale income to [0, 1] — but one customer is a billionaire, so the divisor is enormous. What happens to ordinary income differences?",
     "choices": [
       "A microscopic sliver near 0",
       "Spread evenly across [0, 1]",
@@ -492,7 +492,7 @@
     }
   },
   {
-    "q": "A sales forecaster scores 92% under random cross-validation but 61% once deployed. With time-ordered data, the classic culprit is…",
+    "q": "A sales forecaster scores 92% under random cross-validation but only 61% in production. The data is time-ordered. What is the classic cause?",
     "choices": [
       "Neighbours drawn from the future",
       "Concept drift after launch",
@@ -525,7 +525,7 @@
     }
   },
   {
-    "q": "Four classes, k = 7, and the vote comes back 3–2–1–1. Standard KNN predicts…",
+    "q": "Four classes, k = 7. The vote comes back 3–2–1–1. What does standard KNN predict?",
     "choices": [
       "The 3-vote class",
       "Nothing — no majority exists",
@@ -569,7 +569,7 @@
     }
   },
   {
-    "q": "On binary feature vectors (every feature 0 or 1), Manhattan distance is exactly the same thing as…",
+    "q": "Every feature is binary — just 0 or 1. On this data, Manhattan distance is exactly the same as which named distance?",
     "choices": [
       "Hamming distance",
       "Euclidean distance",
@@ -600,7 +600,7 @@
     }
   },
   {
-    "q": "Set k = 1 and colour the map by prediction. The decision regions form a famous geometric structure:",
+    "q": "Set k = 1 and colour the whole map by prediction. What famous structure do the decision regions form?",
     "choices": [
       "A Voronoi diagram",
       "An axis-aligned grid",
@@ -651,7 +651,7 @@
     }
   },
   {
-    "q": "Beyond classification entirely: the distance to a point's kth nearest neighbour is widely used as…",
+    "q": "Forget classification for a moment. The distance from a point to its kth nearest neighbour is widely used as what?",
     "choices": [
       "An anomaly score",
       "A class-purity proxy",
@@ -696,7 +696,7 @@
     }
   },
   {
-    "q": "Brute-force KNN with n stored points and d features. The cost of ONE prediction scales as…",
+    "q": "Brute-force KNN stores n points with d features each. How does the cost of ONE prediction scale?",
     "choices": [
       "O(n · d)",
       "O(k)",
@@ -724,7 +724,7 @@
     }
   },
   {
-    "q": "On a brand-new classification problem, experienced practitioners run KNN before building anything fancy. Its job is to serve as…",
+    "q": "On a brand-new problem, experienced people run KNN before building anything fancy. What role does it play?",
     "choices": [
       "The baseline to beat",
       "A feature selector",
@@ -771,7 +771,7 @@
     }
   },
   {
-    "q": "Weights = 1/distance. The neighbours: A at distance 1; B at distance 2; B at distance 4. Who wins, and on what totals?",
+    "q": "Weights = 1/distance. The neighbours are: A at distance 1, B at distance 2, B at distance 4. Who wins the vote, and on what totals?",
     "choices": [
       "A — 1.0 beats 0.75",
       "B — 2 voters beat 1",
@@ -806,7 +806,7 @@
     }
   },
   {
-    "q": "Unweighted KNN regression with k = 3. The three nearest freelancers charged £10, £20 and £60 per hour. The predicted rate is…",
+    "q": "Plain (unweighted) KNN regression with k = 3. The three nearest freelancers charged £10, £20 and £60 per hour. What rate does the model predict?",
     "choices": [
       "£30",
       "£20",
@@ -852,7 +852,7 @@
     }
   },
   {
-    "q": "To keep neighbourhoods 'local' (covering ~10% of each feature's range), how must the training data grow per added dimension?",
+    "q": "You want neighbourhoods to stay 'local' — covering about 10% of each feature's range. How must the amount of data grow for each added dimension?",
     "choices": [
       "Exponentially",
       "Linearly",
@@ -880,7 +880,7 @@
     }
   },
   {
-    "q": "Metric learning (Mahalanobis, LMNN, NCA) improves KNN not by tuning k, but by learning to…",
+    "q": "Metric learning (Mahalanobis, LMNN, NCA) makes KNN better without touching k. What does it learn to do?",
     "choices": [
       "Reshape the space itself",
       "Pick a different k per region",
@@ -919,7 +919,7 @@
     }
   },
   {
-    "q": "1-NN reaches zero training error on ANY dataset — even one with purely random labels. The lesson: its training error…",
+    "q": "1-NN gets zero training error on ANY dataset — even one with completely random labels. What does that tell you about its training error?",
     "choices": [
       "Carries no information",
       "Proves model quality",
@@ -980,7 +980,7 @@
     }
   },
   {
-    "q": "'Use odd k' exists purely to dodge tied votes. Why does that rule retire the moment votes become distance-weighted?",
+    "q": "The rule 'use an odd k' exists only to avoid tied votes. Why does it stop mattering once votes are distance-weighted?",
     "choices": [
       "Real-number totals almost never tie",
       "Weights force odd k internally",
@@ -1015,7 +1015,7 @@
     }
   },
   {
-    "q": "You multiply one feature by w before computing any distances. In effect, you have just declared that feature…",
+    "q": "Before computing any distances, you multiply one feature by w. What have you effectively declared that feature to be?",
     "choices": [
       "w times more important",
       "w times noisier",
@@ -1049,7 +1049,7 @@
     }
   },
   {
-    "q": "'Users like you also bought…' — strip away the business language, and that recommender is running…",
+    "q": "'Users like you also bought…' Strip away the marketing language. Which algorithm is that recommender running?",
     "choices": [
       "KNN over users",
       "K-means clustering",
@@ -1094,7 +1094,7 @@
     }
   },
   {
-    "q": "Dataset A has clean labels. Dataset B is the same task with many mislabeled points. Where should B's best-performing k sit, relative to A's?",
+    "q": "Dataset A has clean labels. Dataset B is the same task but with many wrong labels. Where should B's best k sit, compared with A's?",
     "choices": [
       "Higher than A's",
       "Lower than A's",
@@ -1150,7 +1150,7 @@
     }
   },
   {
-    "q": "Order the production KNN pipeline correctly, start to finish.",
+    "q": "You're building a production KNN system from scratch. Which order of steps is correct?",
     "choices": [
       "Encode → scale → select → tune on CV → index",
       "Tune k first → scale → choose features",
