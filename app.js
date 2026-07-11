@@ -105,18 +105,32 @@
   // Index every question once, tagged with topic name, difficulty level (1/2/3), and whether it's a definition question.
   var QINDEX = null;
   function normw(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-  function isDefStem(s) { return /\bwhat (is|are|does|makes|do)\b/i.test(s) || (/^\s*(in [^,]+,\s*)?(what|which)\b/i.test(s) && /\b(mean|means|called|represents?|measures?)\b/i.test(s)); }
+  // A "definition" question asks what a named concept IS/MEANS — not what happens in a scenario.
+  // Guards reject computations, second-person scenarios, and behavioural "what does X become/do/predict" stems.
+  function isDefStem(s) {
+    s = (s || '').trim();
+    if (/\bwork it out\b|\bcompute\b|\bcalculate\b/i.test(s)) return false;
+    if (/\bwhat\s+(is|are)\s+(it|they|that|this)\s*\?/i.test(s)) return false;
+    if (/\bwhat\s+(is|are)\s+the\s+([a-z-]+\s+){0,2}(biggest|smallest|right|best|standard|classic|canonical|main|only|diagnosis|cause|reason|sequence|way|method|procedure|scheme|encoding|answer|culprit|move|problem|fix|remedy|cure|catch|trade|mechanism)\b/i.test(s)) return false;
+    if (/\binterconvert\b/i.test(s)) return false;
+    if (/\bwhat\s+is\b[^?]{0,50}\bdoing\b/i.test(s)) return false;
+    if (/\bwhat\s+(does|do|will|did|would)\b[^?]{0,70}\b(become|becomes|predict|produce|do to|expect|forbid|trade|trading|tell you|amount to|look like|happen|protect|typically do|really do|really trading|mean for)\b/i.test(s)) return false;
+    if (/\byou\s+(set|shrink|sweep|lower|raise|push|crank|turn|switch|delete|forgot|plot|report)\b/i.test(s)) return false;
+    var body = s.replace(/^in\s+[^,]{1,45},\s+/i, '').trim();
+    if (/^what\s+(is|are)\b/i.test(body)) return true;
+    if (/\bwhat\s+(is|are)\s+(a\s|an\s|the\s|'|"|‘|meant\s+by\b|happening\b)/i.test(s)) return true;
+    if (/\bwhat\s+(is|are)\s+[\w-]+\s*\?/i.test(s)) return true;
+    if (/\bwhat\s+(does|do)\s+[^?]{0,45}\b(mean|means|measure|measures|represent|represents)\b/i.test(s)) return true;
+    return false;
+  }
   function buildIndex() {
     if (QINDEX) return QINDEX;
-    var P = window.PRIMERS || {};
     QINDEX = [];
     TOPICS.forEach(function (t) {
-      var terms = (P[t.key] ? P[t.key].terms : []).map(function (x) { return normw(x.t.split('(')[0].split('/')[0]); });
       t.levels.forEach(function (L, li) {
         (QUESTIONS[L.qk] || []).forEach(function (q) {
-          var rn = normw(q.widget && q.widget.reveal && q.widget.reveal.name);
-          var termMatch = terms.some(function (tn) { return tn.length >= 3 && (rn.indexOf(tn) >= 0 || (rn.length >= 3 && tn.indexOf(rn) >= 0)); });
-          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: termMatch && isDefStem(q.q) });
+          // Definitions live in Foundations (Level 1); higher levels are applied/scenario questions.
+          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: li === 0 && isDefStem(q.q) });
         });
       });
     });
@@ -129,9 +143,11 @@
     return { type: (f.type === 'def' || f.type === 'q') ? f.type : 'both', diff: (f.diff === '1' || f.diff === '2' || f.diff === '3') ? f.diff : 'all' };
   }
   function setFilter(f) { try { localStorage.setItem('ds_daily_filter', JSON.stringify(f)); } catch (e) {} }
-  function filterSig(f) { return f.type + ':' + f.diff; }
+  // Definitions are Foundations-only, so the difficulty filter doesn't apply to them.
+  function filterSig(f) { return f.type + ':' + (f.type === 'def' ? 'all' : f.diff); }
   function filterLabel(f) {
-    var t = f.type === 'def' ? 'Definitions' : f.type === 'q' ? 'Applied questions' : 'Definitions & questions';
+    if (f.type === 'def') return 'Definitions · Foundations';
+    var t = f.type === 'q' ? 'Applied questions' : 'Definitions & questions';
     var d = f.diff === 'all' ? 'all levels' : 'Level ' + f.diff;
     return t + ' · ' + d;
   }
@@ -139,7 +155,7 @@
     return buildIndex().filter(function (e) {
       if (f.type === 'def' && !e.def) return false;
       if (f.type === 'q' && e.def) return false;
-      if (f.diff !== 'all' && e.level !== +f.diff) return false;
+      if (f.type !== 'def' && f.diff !== 'all' && e.level !== +f.diff) return false;
       return true;
     });
   }
@@ -294,8 +310,9 @@
           '<div class="daily-filters">' +
             '<div class="filt-row"><span class="filt-lab">Type</span>' +
               chips('type', f.type, [{ v: 'both', t: 'Both' }, { v: 'def', t: 'Definitions' }, { v: 'q', t: 'Questions' }]) + '</div>' +
+            (f.type === 'def' ? '' :
             '<div class="filt-row"><span class="filt-lab">Level</span>' +
-              chips('diff', f.diff, [{ v: 'all', t: 'All' }, { v: '1', t: '1' }, { v: '2', t: '2' }, { v: '3', t: '3' }]) + '</div>' +
+              chips('diff', f.diff, [{ v: 'all', t: 'All' }, { v: '1', t: '1' }, { v: '2', t: '2' }, { v: '3', t: '3' }]) + '</div>') +
           '</div>' +
           '<p class="daily-prog">' + progText + '</p>' +
           '<div class="daily-bar"><div style="width:' + pctW + '%"></div></div>' +
