@@ -1,6 +1,40 @@
 /* Performance Optimisation — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).perf1 = [
   {
+    "q": "A model scores 99% on the data it was trained on, but only 70% on fresh unseen data. What is this gap called?",
+    "choices": [
+      "Overfitting: memorising training rows instead of real patterns",
+      "Underfitting: the model is too simple to capture the real pattern",
+      "Regularising: penalising the model for carrying excess complexity",
+      "Generalising: performing equally well on training and on new data",
+      "Baselining: merely matching the trivial do-nothing reference rule"
+    ],
+    "explain": "When training accuracy is high but validation accuracy is much lower, the model has overfit: it memorised noise and quirks specific to the training rows instead of the underlying pattern. Underfitting is the opposite failure — the model is too simple, so BOTH scores are poor. The goal is the middle ground where the model is complex enough to learn the signal but not so complex that it memorises the data.",
+    "simple": "A student who memorises last year's exact exam answers aces the practice paper but flunks the real test — they learned the answers, not the subject. That is overfitting. A student who barely studied fails both papers equally: that is underfitting.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Learn vs memorise",
+      "world": "One model's training and validation scores as we crank up its complexity from too simple to too complex.",
+      "xlab": "model complexity →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["too simple", "simple", "balanced", "complex", "too complex"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "training score", "ys": [65, 80, 90, 96, 99] },
+        { "name": "validation (unseen)", "ys": [63, 79, 88, 80, 70] }
+      ],
+      "knob": { "label": "Complexity", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Too simple: both scores are stuck low (around 65%). The model can't even fit the training data — that's underfitting.", "tone": "info" },
+        { "max": 3, "text": "Adding complexity lifts both curves; validation peaks around 88% at the 'balanced' setting. That sweet spot is what you want.", "tone": "info" },
+        { "max": 4, "text": "🤯 Push complexity to the max: training soars to 99% while validation collapses to 70%. That widening gap IS overfitting — memorising, not learning.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Overfitting vs underfitting", "formula": "high train + low validation = overfit; both low = underfit", "text": "The core diagnostic: read the gap between training and validation scores to tell memorising apart from genuine learning." }
+    }
+  },
+  {
     "q": "In machine learning, what is a 'baseline'?",
     "choices": [
       "A dead-simple rule your real model must beat to prove its worth",

@@ -2,6 +2,23 @@
 (window.QUESTIONS = window.QUESTIONS || {}).logreg1 = [
 
 {
+  q: "Logistic regression has 'regression' in its name. What kind of task is it actually used for?",
+  choices: ["Classification - assigning each case to a category", "Regression - predicting a continuous number for each case", "Clustering - grouping unlabelled cases into natural groups", "Ranking - ordering cases from most to least probable one", "Forecasting - projecting a numeric value into the future"],
+  explain: "Logistic regression fits a linear model to the log-odds (that is the 'regression' part), but the sigmoid turns that score into a class probability, and a threshold converts it into a category label. So the machinery is regression-style while the delivered task is classification. It predicts a discrete class, not a continuous value.",
+  simple: "The name is a historical leftover. Under the hood it does regression-style arithmetic on a score, but the job you hire it for is a yes/no sorting decision, like a bouncer deciding who gets in. You care about the category it hands back, not the raw number.",
+  widget: {
+    type: "curveStatic", title: "Regression inside, classification out",
+    world: "As the raw linear score rises, the model's probability climbs past the 50% line and the predicted label flips to YES.",
+    xlab: "raw score →", xs: [0,1,2,3,4], labels: ["-2","-1","0","+1","+2"], dec: 0, yunit: "%",
+    series: [ { name: "probability of YES", ys: [12,27,50,73,88] }, { name: "50% threshold", ys: [50,50,50,50,50] } ],
+    knob: { label: "Raw score", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "At a low score the probability sits near 12% - the model firmly predicts the NO class.", tone: "info" }, { max: 3, text: "As the score climbs the probability rises toward the 50% threshold line.", tone: "info" }, { max: 4, text: "🤯 Once probability passes 50% the label flips to YES - a regression-style score has produced a classification.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Regression in name, classification in job", formula: "linear score → probability → class label", text: "The 'regression' fits a line to the log-odds; the sigmoid and threshold turn it into a category decision." }
+  }
+},
+
+{
   q: "What is the 'weighted score' that logistic regression computes for each case?",
   choices: ["Each feature times its weight, all summed with the intercept", "The probability each feature gets after the sigmoid squash", "The count of features that push toward the positive class", "The largest single feature-times-weight term in the case", "The average of every feature value multiplied together"],
   explain: "The model multiplies every feature by its learned weight, adds those products together, and adds the intercept. This single number, the linear combination w.x + b, is then handed to the sigmoid. It summarises the whole case in one value before any probability is formed.",

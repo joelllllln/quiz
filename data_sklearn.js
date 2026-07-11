@@ -1,6 +1,140 @@
 /* Advanced Scikit-learn — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).skl1 = [
   {
+    "q": "Why do many scikit-learn functions like train_test_split and RandomForestClassifier accept a random_state argument?",
+    "choices": [
+      "It fixes the random seed so the same run reproduces identical results",
+      "It sets how many random features each tree split is allowed to weigh",
+      "It controls how much random noise gets added to the training labels",
+      "It tells the model the maximum number of random restarts to attempt",
+      "It picks a random subset of rows to permanently discard as outliers"
+    ],
+    "explain": "Algorithms that shuffle, split, or sample rely on a pseudo-random number generator. Passing a fixed random_state seeds that generator, so every run produces the same splits, initializations, and results. That reproducibility is what makes model comparisons fair and bugs debuggable.",
+    "simple": "Think of shuffling a deck of cards. If you and a friend both start from the exact same shuffle, you deal the same hands every time. random_state is that agreed-upon shuffle, so anyone re-running your code sees the identical outcome.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Same seed, same run",
+      "world": "Two people run the same model five times; one fixes random_state, one does not.",
+      "xlab": "repeated runs →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["run 1", "run 2", "run 3", "run 4", "run 5"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "Fixed seed (accuracy %)", "ys": [85, 85, 85, 85, 85] },
+        { "name": "No seed (accuracy %)", "ys": [82, 87, 84, 86, 83] }
+      ],
+      "knob": { "label": "Run number", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Run to run, the fixed-seed line never moves off 85%.", "tone": "info" },
+        { "max": 3, "text": "The unseeded line wobbles every run - hard to compare.", "tone": "info" },
+        { "max": 4, "text": "🤯 Fix the seed and your 'random' results become perfectly repeatable.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "random_state / reproducibility", "formula": "random_state=42 -> identical results every run", "text": "Seeding the random generator makes splits, shuffles, and fits reproducible." }
+    }
+  },
+  {
+    "q": "Why do you hold out a test set with train_test_split instead of scoring the model on the same data it trained on?",
+    "choices": [
+      "Scores on unseen data reveal how well the model truly generalizes",
+      "Smaller training sets always make the fitting step run much faster",
+      "Models cannot mathematically compute a score on their training rows",
+      "Test data is needed to give the model extra examples to learn from",
+      "Splitting the data automatically removes outliers from both halves"
+    ],
+    "explain": "A model can memorize its training rows and score deceptively high on them, hiding overfitting. Evaluating on a held-out test set - data never seen during fit - estimates performance on future, real-world inputs. That honest estimate is the whole point of the split.",
+    "simple": "Imagine a student who studies the exact answer key, then takes a test made of those same questions - of course they ace it. To know if they really learned, you give them new questions. The test set is those new questions your model has never seen.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Train score vs test score",
+      "world": "As a model is allowed to fit the training data harder, watch both scores.",
+      "xlab": "model complexity →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["very simple", "simple", "medium", "complex", "very complex"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "Train accuracy", "ys": [70, 80, 88, 94, 99] },
+        { "name": "Test accuracy", "ys": [68, 78, 85, 82, 74] }
+      ],
+      "knob": { "label": "Complexity", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Simple model: train and test scores roughly agree.", "tone": "info" },
+        { "max": 3, "text": "Push complexity up and train accuracy keeps rising.", "tone": "info" },
+        { "max": 4, "text": "🤯 Train hits 99% but test drops to 74% - only the held-out set caught the overfitting.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Train/test split (holdout evaluation)", "formula": "train_test_split(X, y, test_size=0.2)", "text": "Scoring on unseen data is the only honest measure of generalization." }
+    }
+  },
+  {
+    "q": "What does k-fold cross-validation (as in cross_val_score with cv=5) actually do?",
+    "choices": [
+      "Splits data into k parts, trains on k-1 and tests on the rest, rotating",
+      "Trains the model k separate times and keeps only the single fastest one",
+      "Runs the model k times and averages k different candidate learning rates",
+      "Splits the labels into k groups and predicts each group's running average",
+      "Repeats the fit until the score stops improving for k straight rounds"
+    ],
+    "explain": "Cross-validation partitions the data into k equal folds. Each fold takes a turn as the test set while the other k-1 folds train the model, giving k scores. Averaging them uses every row for both training and testing and yields a more stable estimate than a single split.",
+    "simple": "Picture five friends taking turns being the referee while the other four play. Everyone gets a fair turn judging, so no single lucky or unlucky matchup decides the verdict. Cross-validation rotates which slice of data is the 'referee' test set.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Rotating the test fold",
+      "world": "Five-fold CV: each fold is the test set once, producing five scores.",
+      "xlab": "fold used as test →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["fold 1", "fold 2", "fold 3", "fold 4", "fold 5"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "Fold score (accuracy %)", "ys": [84, 79, 86, 81, 85] }
+      ],
+      "knob": { "label": "Fold", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Fold 1 alone gives 84% - but that's just one split.", "tone": "info" },
+        { "max": 3, "text": "Different folds score differently: 79% up to 86%.", "tone": "info" },
+        { "max": 4, "text": "🤯 Average all five (about 83%) for a stable estimate no single split could give.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "K-fold cross-validation", "formula": "cross_val_score(model, X, y, cv=5)", "text": "Every row serves as test once; averaging k folds gives a stable score." }
+    }
+  },
+  {
+    "q": "A column contains the text values 'red', 'green', and 'blue'. Why must you one-hot encode it before a scikit-learn model can use it?",
+    "choices": [
+      "Models need numbers, so each category becomes its own 0/1 column",
+      "Text columns must be sorted alphabetically before any model reads them",
+      "One-hot encoding shrinks the table so training uses far less memory",
+      "Models require every column to hold only unique, non-repeating values",
+      "Encoding merges the rarest categories together to balance the classes"
+    ],
+    "explain": "Scikit-learn estimators operate on numeric arrays, so raw category strings must be converted first. One-hot encoding creates a separate 0/1 indicator column per category, avoiding the false ordering that simply numbering them (red=0, green=1, blue=2) would imply. OneHotEncoder learns the categories on training data and applies the same mapping later.",
+    "simple": "A model only speaks numbers, not words like 'red' or 'blue'. Labeling them 1, 2, 3 would wrongly suggest blue is 'more than' red. Instead you give each color its own yes/no switch, so no color looks bigger than another.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One column becomes many",
+      "world": "One-hot encoding a categorical column that has more and more distinct categories.",
+      "xlab": "distinct categories →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["2", "5", "10", "20", "50"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "New 0/1 columns created", "ys": [2, 5, 10, 20, 50] }
+      ],
+      "knob": { "label": "Categories", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Two categories become two indicator columns.", "tone": "info" },
+        { "max": 3, "text": "Ten categories become ten columns, each a 0/1 switch.", "tone": "info" },
+        { "max": 4, "text": "🤯 Fifty categories become fifty numeric columns - now the model can read them.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "One-hot encoding categoricals", "formula": "OneHotEncoder() -> one 0/1 column per category", "text": "Estimators need numeric input, so each category becomes its own indicator column." }
+    }
+  },
+  {
     "q": "In scikit-learn, what is an 'estimator'?",
     "choices": [
       "Any object that learns from data via a shared create-fit-use interface",

@@ -1,6 +1,98 @@
 /* Random Forests & Bagging — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).rf1 = [
   {
+    "q": "A random forest is built from many DECISION TREES. What is a single decision tree, at heart?",
+    "choices": [
+      "A flowchart of yes/no questions leading to a prediction",
+      "A straight boundary line drawn between two classes of points",
+      "A weighted sum of the features pushed through an activation",
+      "A stored table of every training row used for lookup later",
+      "A running average of the labels it has most recently seen"
+    ],
+    "explain": "A decision tree splits the data with a sequence of threshold tests (e.g. income > 50k?), each answer sending a row down a branch until it lands in a leaf that gives the prediction. Grown deep, one tree can fit almost any training set but is unstable - a small change to the data reshuffles its splits. That high-variance instability is exactly the flaw bagging and random forests were built to tame.",
+    "simple": "Picture a game of 20 questions: 'Is income above 50k? Is age under 30?' Each answer walks you down a branch until you reach a leaf with the final guess. One tree alone is clever but jumpy - nudge the data and it draws a whole new set of questions. A forest calms that jumpiness by growing many trees and pooling them.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One tree, grown deeper",
+      "world": "A single decision tree grown ever deeper on the same data, watching training accuracy vs test accuracy.",
+      "xlab": "tree depth →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "3",
+        "6",
+        "12",
+        "unlimited"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "training accuracy", "ys": [ 70, 82, 90, 97, 100 ] },
+        { "name": "test accuracy", "ys": [ 69, 80, 86, 82, 74 ] }
+      ],
+      "knob": { "label": "tree depth", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "A stump (depth 1) barely splits the data - both training and test accuracy are low. The lone tree is underfit.", "tone": "info" },
+        { "max": 3, "text": "Moderate depth: the single tree captures real structure and test accuracy peaks around 86%.", "tone": "info" },
+        { "max": 4, "text": "🤯 Unlimited depth: training accuracy hits a perfect 100% but test accuracy sinks to 74% - the lone tree memorised noise. This high-variance overfitting is the exact flaw a forest fixes.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Decision tree", "formula": "sequence of if/else splits -> leaf prediction; a deep tree = high variance", "text": "A decision tree is a chain of yes/no splits ending in a prediction; grown deep it overfits, and that instability is what forests average away." }
+    }
+  },
+  {
+    "q": "A trained random forest has 300 trees. How does it turn 300 tree outputs into ONE final prediction?",
+    "choices": [
+      "Majority vote for classification, average for regression",
+      "It keeps only the single most confident tree's answer",
+      "It chains the trees so each corrects the previous one",
+      "It picks whichever tree had the lowest training error",
+      "It multiplies all the trees' probabilities then rounds"
+    ],
+    "explain": "A random forest aggregates by democracy: for classification each tree casts a vote and the majority class wins (or the class probabilities are averaged), while for regression the trees' numeric predictions are simply averaged. Because the trees are decorrelated, their independent errors partly cancel in the pool, so the combined answer is steadier than any single tree's.",
+    "simple": "Every tree gets one say. For a category the forest holds a show of hands and the most-voted label wins; for a number it just takes the average of all the trees' guesses. No single tree is in charge - the crowd's blended answer is calmer, and usually more accurate, than any lone opinion.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The crowd settles down",
+      "world": "Growing a forest and watching the pooled vote settle as more trees are added, versus one lone tree.",
+      "xlab": "trees combined →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "5",
+        "25",
+        "100",
+        "300"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "forest accuracy", "ys": [ 84, 88, 90.5, 91.5, 92 ] },
+        { "name": "one lone tree", "ys": [ 84, 84, 84, 84, 84 ] }
+      ],
+      "knob": { "label": "trees combined", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "With one tree the forest IS that tree - 84% and jumpy.", "tone": "info" },
+        { "max": 3, "text": "As votes accumulate the independent errors cancel and accuracy climbs past 90%.", "tone": "info" },
+        { "max": 4, "text": "🤯 By 300 trees the pooled vote settles near 92% and barely moves - blending many decorrelated trees beats any single one, and adding more never overfits.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Aggregation (voting and averaging)", "formula": "classification -> majority vote; regression -> mean of tree outputs", "text": "A forest's final answer is the pooled verdict of all its trees - a majority vote for classes, a plain average for numbers - which cancels their independent errors." }
+    }
+  },
+  {
     "q": "A random forest's max_features setting controls what, exactly, at each split?",
     "choices": [
       "How many random features that split is allowed to consider",

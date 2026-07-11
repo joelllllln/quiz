@@ -1,6 +1,74 @@
 /* Gradient Boosting & XGBoost — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).gb1 = [
   {
+    "q": "Gradient boosting is an ENSEMBLE method. What does building an 'ensemble' mean?",
+    "choices": [
+      "Combine many models so the group beats any single member alone",
+      "Train one deep model much longer until it finally stops improving",
+      "Keep the single best model found and discard every other candidate",
+      "Average one model's output with copies of that very same model again",
+      "Scan every feature threshold exhaustively to find one perfect split"
+    ],
+    "explain": "An ensemble combines the predictions of many individual models into one aggregated prediction that is more accurate and robust than any single member. Gradient boosting is a sequential ensemble: it keeps adding small trees, each correcting the combined error of all the trees before it. The strength comes from the group, not from any one weak tree.",
+    "simple": "One person guessing the number of jelly beans in a jar is usually way off, but the average of a whole crowd's guesses is famously close. An ensemble works the same way: pool many so-so models and their combined answer is far better than any one of them. Boosting builds its crowd one member at a time, each new member focused on fixing the group's current mistakes.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One model vs many",
+      "world": "Add more small models to the ensemble and watch the combined accuracy climb past any single member.",
+      "xlab": "models in ensemble →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1", "5", "20", "60", "200" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "ensemble accuracy (%)", "ys": [ 62, 74, 85, 90, 93 ] },
+        { "name": "single model (%)", "ys": [ 62, 62, 62, 62, 62 ] }
+      ],
+      "knob": { "label": "Members", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "With just one model you're at 62% -- exactly what a lone weak learner gives. The group has no advantage yet.", "tone": "info" },
+        { "max": 3, "text": "By 20 members the combined vote reaches 85%. Each added model chips away at errors the group still makes.", "tone": "info" },
+        { "max": 4, "text": "🤯 At 200 members the ensemble hits 93% while any single member is stuck near 62% -- the group is far smarter than its parts.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Ensemble", "formula": "ensemble prediction = combine many models", "text": "Gradient boosting is a sequential ensemble that adds one small model at a time." }
+    }
+  },
+  {
+    "q": "A model scores 99% on its training data but only 71% on new unseen data. What is this gap called?",
+    "choices": [
+      "Overfitting: it memorized the training set instead of the real pattern",
+      "Underfitting: the model is far too simple to capture the real structure",
+      "Regularizing: the penalty was so strong the model ignored real signal too",
+      "Convergence: the model reached its lowest possible error on every split",
+      "Class imbalance: one label dominates and distorts the accuracy figure too"
+    ],
+    "explain": "Overfitting happens when a model fits the noise and quirks of the training set rather than the underlying pattern, so it looks great on data it has already seen but generalizes poorly to new data. The tell-tale sign is a large gap between training and validation/test performance. In boosting, adding too many rounds is a classic way to overfit.",
+    "simple": "It's like a student who memorizes the exact answers to last year's practice exam but never learns the actual subject. They ace that practice paper and then bomb the real test with new questions. A model that memorizes its training data does exactly this -- perfect on what it has seen, lost on anything new.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Great on seen, poor on new",
+      "world": "Keep adding rounds: training accuracy keeps rising while validation accuracy peaks then falls -- that gap is overfitting.",
+      "xlab": "boosting rounds →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "10", "50", "150", "400", "900" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "training accuracy (%)", "ys": [ 80, 88, 94, 98, 100 ] },
+        { "name": "validation accuracy (%)", "ys": [ 78, 84, 86, 80, 71 ] }
+      ],
+      "knob": { "label": "Rounds", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Early on both curves rise together -- the model is still learning genuine pattern that helps on new data too.", "tone": "info" },
+        { "max": 3, "text": "Around 400 rounds training keeps climbing but validation has already peaked and started to dip. The gap is opening.", "tone": "info" },
+        { "max": 4, "text": "🤯 At 900 rounds training hits 100% while validation crashes to 71% -- a huge gap that means pure memorization, not learning.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Overfitting", "formula": "overfit = high train accuracy, low new-data accuracy", "text": "A big train-vs-validation gap signals memorization; early stopping keeps rounds before the gap opens." }
+    }
+  },
+  {
     "q": "In gradient boosting, what happens during a single BOOSTING ROUND?",
     "choices": [
       "Measure the current errors, fit a small tree to them, then add it on",

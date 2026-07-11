@@ -1,6 +1,27 @@
 /* KNN — Level 1: Foundations. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).easy = [
   {
+    q: "Where does the value of k in KNN come from?",
+    choices: [
+      "You choose it yourself before running KNN",
+      "KNN learns it from the training data on its own",
+      "It is fixed at one and can never be changed",
+      "It always equals the number of features used",
+      "The closest neighbour sets it during prediction"
+    ],
+    explain: "k is a hyperparameter: a setting the user picks before making predictions, which the algorithm never adjusts on its own. KNN has no training step that could learn k — it just memorises the examples. In practice you try several values of k and keep the one that performs best on held-out data.",
+    simple: "k is like deciding how many friends to ask before you make up your mind. Nobody sets that number for you — you pick it. Ask too few and one loud voice sways you; ask too many and the answer turns to mush.",
+    widget: {
+      type: "curveStatic", title: "k is a dial you set",
+      world: "Before KNN runs, you pick how many neighbours it will consult.",
+      xlab: "k you choose →", xs: [0,1,2,3,4], labels: ["1","2","3","4","5"], dec: 0, yunit: "",
+      series: [ { name: "Neighbours consulted", ys: [1,2,3,4,5] } ],
+      knob: { label: "k you choose", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "Set k=1 and KNN just copies the single closest point.", tone: "info" }, { max: 3, text: "Turn the dial up and more neighbours get to vote.", tone: "info" }, { max: 4, text: "🤯 KNN never learns k — you set this dial in advance, then it obeys.", tone: "wow" } ],
+      extreme: { at: "max" }, reveal: { name: "k is a chosen hyperparameter", formula: "you set k before running; KNN never learns it", text: "k is a setting the user picks in advance, not a value learned from the data." }
+    }
+  },
+  {
     q: "In KNN, what is the 'feature space'?",
     choices: [
       "A map where each example is a point, one axis per feature",

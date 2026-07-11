@@ -1,6 +1,40 @@
 /* K-Means — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).kmeans1 = [
   {
+    "q": "When k-means finishes, how many clusters does each single data point belong to?",
+    "choices": [
+      "Exactly one — its nearest cluster",
+      "Several, split by fractional weights",
+      "Two whenever it sits near a border",
+      "Zero until a cut-off is chosen",
+      "Any number that overlap its area"
+    ],
+    "explain": "K-means uses hard assignment: every point is given to exactly one cluster — the one whose centroid is nearest — and gets a single definite label. There are no partial or percentage memberships; a point on a boundary is still forced fully into whichever centroid edges it out. Soft methods like Gaussian mixtures relax this, but plain k-means never does.",
+    "simple": "It is like everyone in a room walking to the nearest exit: you pick ONE door and go through it, even if two doors are almost equally close. Nobody stands half in one doorway and half in another. K-means labels each point with a single cluster, full stop.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One point, one cluster",
+      "world": "However close or far the clusters sit, k-means still stamps each point with a single label.",
+      "xlab": "cluster separation →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "overlap", "close", "apart", "far", "distinct" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "k-means (hard)", "ys": [ 1, 1, 1, 1, 1 ] },
+        { "name": "soft alternative", "ys": [ 3, 2, 2, 1, 1 ] }
+      ],
+      "knob": { "label": "cluster separation", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Even with clusters overlapping, k-means still hands the point exactly ONE label.", "tone": "info" },
+        { "max": 3, "text": "A soft method spreads the point across a few clusters at once; k-means never does.", "tone": "info" },
+        { "max": 4, "text": "🤯 No matter how the data looks, k-means membership is always exactly 1 cluster — that is hard assignment.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Hard assignment", "formula": "each point → 1 cluster", "text": "K-means gives every point a single definite cluster label, never a partial membership." }
+    }
+  },
+  {
     "q": "In each round of k-means, what does the 'assignment step' do?",
     "choices": [
       "Attaches each point to its nearest centroid",

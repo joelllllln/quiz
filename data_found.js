@@ -2,6 +2,80 @@
 (window.QUESTIONS = window.QUESTIONS || {}).found1 = [
 
 {
+  q: "Traditional software follows rules a human wrote out by hand. What is fundamentally different about how a machine-learning system arrives at its rules?",
+  choices: ["It infers the rules automatically from many labelled examples instead of a human writing them out", "It runs the human's rules far faster by spreading the very same fixed logic across many processors", "It stores every example it is shown so it can look up an exact match whenever a new case arrives", "It asks a human to confirm each rule before applying it, learning only which rules to trust most", "It generates rules at random and simply keeps whichever ones a human reviewer happens to approve of"],
+  explain: "In traditional programming a person specifies the logic step by step; in machine learning you supply examples of inputs paired with correct outputs, and the learning procedure discovers the rules that map one to the other. That is why ML shines on problems too messy to hand-code — spotting spam, recognising faces — where nobody can write the rules explicitly. The machine is not memorising cases; it extracts a general pattern it can apply to brand-new inputs.",
+  simple: "Normally a programmer types out every 'if this, then that' by hand. Machine learning flips this around: you show the computer thousands of solved examples and let it work the rules out for itself. It is like teaching a child to spot dogs by pointing at many dogs, rather than trying to write a perfect word-definition of 'dog'.",
+  widget: {
+    type: "curveStatic", title: "When hand-coding gives out",
+    world: "The same task attempted two ways — rules a human writes by hand, versus rules a model learns from examples — as the task gets messier.",
+    xlab: "task messiness →", xs: [0,1,2,3,4], labels: ["trivial","simple","moderate","messy","chaotic"], dec: 0, yunit: "%",
+    series: [
+      { name: "hand-coded rules (accuracy %)", ys: [95, 84, 64, 40, 20] },
+      { name: "learned from examples (accuracy %)", ys: [92, 90, 88, 85, 82] }
+    ],
+    knob: { label: "Task messiness", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "On a trivial task the hand-written rules are fine — even a touch better. When a person CAN state the rules, just state them; you do not need ML.", tone: "info" },
+      { max: 3, text: "As the task gets messier the hand-coded rules crack: nobody can enumerate every case. The learned model barely notices — it soaks the pattern from examples.", tone: "info" },
+      { max: 4, text: "🤯 On the chaotic real-world task, hand-coding collapses while learning-from-data holds up. That gap IS machine learning's reason to exist: it writes rules no human could.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Machine learning vs traditional programming", formula: "traditional: human writes the rules · ML: rules learned from examples",
+      text: "Reach for ML only when the rules are too complex or too fuzzy for a person to write out by hand." }
+  }
+},
+
+{
+  q: "A colleague says: 'I ran a decision-tree algorithm on our data and it gave me a model.' In plain terms, what is the difference between the algorithm and the model?",
+  choices: ["The algorithm is the procedure that learns; the model is the finished result it produces from data", "The algorithm is the trained result; the model is the raw procedure you run before any data arrives", "They are two names for one trained object — 'algorithm' in theory and 'model' when written in code", "The algorithm is the input dataset; the model is that very same dataset once it has been fully cleaned", "The algorithm is the metric that scores accuracy; the model is the chart you draw from those scores"],
+  explain: "An algorithm — a decision tree, linear regression, gradient descent — is a fixed recipe for turning data into a model, and it is the same before you ever see the data. Running that algorithm on a specific dataset produces a model: the concrete learned function with particular numbers baked in. So one algorithm can yield countless different models, one for every dataset you train it on.",
+  simple: "Think of the algorithm as a recipe and the model as the cake it bakes. The recipe stays the same every time; the cake depends on the ingredients — your data — you put in. Swap in different data and the same recipe gives you a different cake, that is, a different model.",
+  widget: {
+    type: "curveStatic", title: "One recipe, many cakes",
+    world: "A single fixed algorithm run on the same kind of data in growing amounts — watch the MODEL it produces change while the algorithm never does.",
+    xlab: "data fed to the same algorithm →", xs: [0,1,2,3,4], labels: ["tiny","small","medium","large","huge"], dec: 0, yunit: "%",
+    series: [
+      { name: "resulting model accuracy (%)", ys: [55, 68, 79, 86, 89] }
+    ],
+    knob: { label: "Data fed in", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Tiny data, same recipe: the algorithm still runs, but the model it bakes is weak — thin ingredients, thin cake.", tone: "info" },
+      { max: 3, text: "Feed the identical algorithm more data and it turns out a stronger model. The recipe never changed; the result did.", tone: "info" },
+      { max: 4, text: "🤯 The algorithm was one fixed procedure the whole way across — every point here is a DIFFERENT model it produced. Algorithm is the recipe; model is the cake.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Algorithm vs model", formula: "algorithm (recipe) + data → model (result)",
+      text: "One algorithm can produce endless models. You choose the algorithm, but what you deploy is the model." }
+  }
+},
+
+{
+  q: "A spam filter is 'right 95% of the time', yet users are furious that real emails keep landing in the spam folder. Which pair of measures exposes the problem that a single accuracy number hides?",
+  choices: ["Precision and recall — how many spam catches were correct, and how much real spam slipped through", "Training loss and test loss — the error the model made on the rows it saw versus brand-new rows", "Speed and memory — how fast the model scores one email and how much storage space it takes up on disk", "Bias and variance — how much the model underfits versus how wildly it swings across samples", "Learning rate and tree depth — how big each training step is and how deep the decision tree may grow"],
+  explain: "Accuracy is just the fraction of predictions that are correct, which crushes two very different mistakes into one number. Precision asks: of everything the filter flagged as spam, how much really was spam? Recall asks: of all the real spam, how much did it catch? A filter that dumps good email into the spam folder has poor precision even when overall accuracy looks high — so classifiers are judged on precision and recall together, not accuracy alone.",
+  simple: "Saying a filter is '95% accurate' hides WHICH mistakes it makes. Precision is how trustworthy its 'spam!' calls are; recall is how much of the real spam it actually grabs. A filter can look accurate while quietly tossing your genuine emails in the bin — only precision and recall reveal that.",
+  widget: {
+    type: "curveStatic", title: "The precision-recall tug of war",
+    world: "One spam filter with a strictness dial, turned from lenient to aggressive — the same model, judged by two measures at once.",
+    xlab: "filter strictness →", xs: [0,1,2,3,4], labels: ["lax","mild","balanced","strict","extreme"], dec: 0, yunit: "%",
+    series: [
+      { name: "recall (% of spam caught)", ys: [40, 62, 80, 92, 98] },
+      { name: "precision (% of flags correct)", ys: [98, 94, 85, 65, 40] }
+    ],
+    knob: { label: "Filter strictness", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Lax filter: almost every 'spam!' flag is right (high precision), but heaps of spam slips past (low recall). Accuracy alone can't see this split.", tone: "info" },
+      { max: 3, text: "Turn up strictness and recall climbs — more spam caught — but precision starts falling as real emails get wrongly flagged. One number can't capture both.", tone: "info" },
+      { max: 4, text: "🤯 At the extreme it catches nearly all spam yet mislabels piles of genuine mail — precision craters. This trade-off is exactly what a lone accuracy score hides.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Precision and recall", formula: "precision = correct flags / all flags · recall = spam caught / all real spam",
+      text: "Report both (or their F1 blend); a single accuracy number can quietly hide expensive mistakes." }
+  }
+},
+
+{
   q: "Before any model exists, you're handed a spreadsheet of past customer visits. In machine-learning language, what is this 'dataset', concretely?",
   choices: ["A table of past cases where each row is one recorded event and each column holds one fact about it", "A single large file of raw text the model reads from start to finish to absorb the patterns inside it", "The trained model's memory, storing every answer it has produced so it can look those answers up later", "A ranked list of the features that matter most, ordered so the strongest predictor sits right at the top", "The stream of live predictions a deployed model emits, gathered together for monitoring and later review"],
   explain: "A dataset is just an organised record of the past: rows are individual cases (one visit, one sale, one email) and columns are the facts recorded about each case. Models learn nothing from the world directly — they learn from this table, so its rows-are-cases, columns-are-facts shape is the starting point of every project. Get the table right and everything downstream has something honest to stand on.",

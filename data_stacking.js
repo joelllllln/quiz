@@ -1,6 +1,72 @@
 /* Stacking & Voting — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).stack1 = [
   {
+    q: "You have several trained models. An 'ensemble' does what with them?",
+    choices: [
+      "Combines their predictions so the group beats any single model",
+      "Selects the single strongest model and discards the weaker ones",
+      "Retrains one large model using all the smaller models' weights",
+      "Splits the data so each model learns a separate feature group",
+      "Ranks the models and reports only the top performer's answer"
+    ],
+    explain: "An ensemble combines the predictions of several models into one verdict — by voting, averaging, or a meta-model — instead of betting on a single model. Because independent models make DIFFERENT errors, those errors partly cancel when pooled, so the group is usually more accurate and more robust than its best member.",
+    simple: "Think of asking a panel of experts instead of just one. No single expert is right about everything, but when you pool their answers the individual mistakes tend to wash out and the group's verdict is steadier. That is the whole promise of an ensemble: many okay models, combined, beat one good model.",
+    widget: {
+      type: "curveStatic", title: "Many beat one",
+      world: "One ensemble growing from a single model to five combined members. Watch the pooled accuracy.",
+      xlab: "models combined →", xs: [0,1,2,3,4], labels: ["1 model","2 models","3 models","4 models","5 models"], dec: 0, yunit: "%",
+      series: [ { name: "ensemble accuracy", ys: [84,87,89,90,91] } ],
+      knob: { label: "Models combined", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "One model on its own: 84% — nobody to combine with, so no ensemble effect yet.", tone: "info" }, { max: 3, text: "Add a second and third model and the pooled accuracy climbs to 90% as their errors start cancelling.", tone: "info" }, { max: 4, text: "🤯 Five combined models reach 91% — the group beats any single member, and that is the whole point of an ensemble.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Ensemble", formula: "combine several models' predictions into one verdict", text: "Many diverse models pooled together usually beat the single best model, because their errors cancel." }
+    }
+  },
+  {
+    q: "Your models each predict a NUMBER (a price, not a class). How does an averaging ensemble combine them?",
+    choices: [
+      "Takes the average of the numbers each model predicts",
+      "Takes the number predicted by the most accurate model",
+      "Takes the largest number any of the models predicts",
+      "Takes the number that appears in the most models",
+      "Takes the median training label as the final number"
+    ],
+    explain: "For regression there are no class labels to tally, so the ensemble averages the numeric predictions (a plain mean, or a weighted one). Averaging pulls the combined estimate toward the middle of the members' guesses, damping any single model's large error. It is the regression counterpart of majority voting in classification.",
+    simple: "When each model guesses a number, you cannot take a 'majority' the way you would with categories — so you just average the guesses. If one model wildly overshoots and another undershoots, the average lands sensibly in between. Same wisdom-of-the-crowd idea, applied to numbers instead of votes.",
+    widget: {
+      type: "curveStatic", title: "Averaging the guesses",
+      world: "Five models each estimate one house's price; watch the averaged estimate settle as more join in.",
+      xlab: "models averaged →", xs: [0,1,2,3,4], labels: ["1 model","2 models","3 models","4 models","5 models"], dec: 0, yunit: "k",
+      series: [ { name: "averaged estimate", ys: [420,360,340,335,330] }, { name: "true price", ys: [330,330,330,330,330] } ],
+      knob: { label: "Models averaged", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "One model alone estimates 420k — far above the true 330k, with nothing to balance its error.", tone: "info" }, { max: 3, text: "Average in a few more models and the combined estimate drops toward 335k as high and low guesses offset.", tone: "info" }, { max: 4, text: "🤯 Averaging all five lands at 330k — dead on. Combining numbers by the mean cancels individual over- and under-shoots.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Averaging (regression ensembles)", formula: "combine numeric predictions by taking their mean", text: "Regression's version of voting: average the members' numbers so over- and under-shoots cancel out." }
+    }
+  },
+  {
+    q: "In WEIGHTED voting, how is the final answer decided differently from plain voting?",
+    choices: [
+      "Better models are given more voting weight than weaker ones",
+      "Only the single strongest model's vote is allowed to count",
+      "Every model votes twice so that ties can never happen",
+      "Models vote in turn until one of them changes its answer",
+      "Weaker models keep retraining until they match the strongest"
+    ],
+    explain: "Plain voting treats every model equally — one model, one vote. Weighted voting gives more reliable models a larger say (weights are often set by validation accuracy), so a strong model can outweigh two mediocre ones that happen to agree. Applied to soft voting, the members' probabilities are combined as a weighted average rather than a plain one.",
+    simple: "It is a committee where the seasoned expert's opinion counts for more than the intern's. Instead of one-model-one-vote, you hand each model a share of influence based on how much you trust it. That way a couple of weak models cannot gang up to overrule a genuinely strong one.",
+    widget: {
+      type: "curveStatic", title: "Not all votes equal",
+      world: "One strong model and two weak ones vote; slide from equal weight toward trusting the strong model more.",
+      xlab: "weight on the strong model →", xs: [0,1,2,3,4], labels: ["equal","slight","moderate","heavy","dominant"], dec: 0, yunit: "%",
+      series: [ { name: "ensemble accuracy", ys: [86,89,91,92,90] } ],
+      knob: { label: "Weight on strong model", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "Equal weights: the strong model and two weak ones each get one vote, so the pair can outvote it — 86%.", tone: "info" }, { max: 3, text: "Give the reliable model more weight and accuracy rises to 92% as it stops being overruled by weak agreement.", tone: "info" }, { max: 4, text: "🤯 Push all the weight onto one model and you fall back to 90% — a single model, no committee left. The sweet spot is weighting, not dictatorship.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Weighted voting", formula: "combine votes as a weighted sum, more trust = more weight", text: "Give more reliable models a bigger say so a strong model is not overruled by weak models that happen to agree." }
+    }
+  },
+  {
     q: "In a stacking or voting ensemble, what are the 'base models'?",
     choices: [
       "The individual member models whose predictions get combined",

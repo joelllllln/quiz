@@ -2,6 +2,40 @@
 (window.QUESTIONS = window.QUESTIONS || {}).bayes1 = [
 
 {
+  q: "In probability, what does the notation P(A | B) — 'the probability of A given B' — mean?",
+  choices: ["The chance of A once you already know B is true", "The chance that A and B both end up happening", "The chance of B once you already know A holds", "The chance of either A or B turning out true", "The chance of A whether or not B ever occurred"],
+  explain: "P(A | B) is a conditional probability: it restricts attention to only the cases where B holds, then asks how often A happens among those. Conditioning on B can change the number a lot, and P(A | B) is generally NOT the same as P(B | A). Every likelihood and posterior in Naive Bayes is a conditional probability of this form.",
+  simple: "It means 'given that we already know B, how likely is A?'. Knowing the sky is stormy changes how likely rain is, compared with knowing nothing. The word 'given' just tells you to look only at the slice of the world where B is true.",
+  widget: {
+    type: "curveStatic", title: "The power of 'given'",
+    world: "The chance of rain, once you are told how the sky looks.",
+    xlab: "sky condition given →", xs: [0,1,2,3,4], labels: ["clear","light","hazy","cloudy","storm"], dec: 0, yunit: "%",
+    series: [ { name: "P(rain | sky)", ys: [5,20,45,70,95] } ],
+    knob: { label: "Sky condition", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "Given a clear sky, the chance of rain is just 5%. The 'given' fixes which slice of days we look at.", tone: "info" }, { max: 3, text: "As the thing we condition on changes, the probability of the same event, rain, changes with it.", tone: "info" }, { max: 4, text: "🤯 Given a storm sky it is 95%. Same event, rain, but conditioning swings its probability from 5% to 95%. That is what 'given' does.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Conditional probability", formula: "P(A | B) — the chance of A within the cases where B holds", text: "Conditioning on B narrows the world to where B is true, then measures how often A occurs there." }
+  }
+},
+
+{
+  q: "Naive Bayes wants P(spam | words), but from training it can only easily measure P(words | spam). What lets it turn the second into the first?",
+  choices: ["Bayes' theorem, which flips one conditional into the other", "The likelihood ratio, which divides one class by the other", "The independence rule, which multiplies each word's chance", "Normalisation, which rescales the chances to sum to one", "The base rate, which fixes how common spam is overall"],
+  explain: "Counting training mail gives P(words | spam) directly, but a classifier needs the reverse, P(spam | words). Bayes' theorem, P(A|B) = P(B|A) x P(A) / P(B), converts one direction into the other using the prior. That inversion is exactly why the method carries Bayes' name.",
+  simple: "A doctor knows how often a symptom shows up given a disease, but the patient wants the disease given the symptom. Those are two different questions with two different answers. Bayes' theorem is the rule that turns the one you can measure into the one you actually want.",
+  widget: {
+    type: "curveStatic", title: "The two directions differ",
+    world: "One fixed test. Its flipped answer P(sick | positive) as the disease gets commoner.",
+    xlab: "disease base rate given →", xs: [0,1,2,3,4], labels: ["0.1%","1%","5%","20%","50%"], dec: 0, yunit: "%",
+    series: [ { name: "P(sick | positive)", ys: [2,17,51,83,95] } ],
+    knob: { label: "How common the disease is", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "Even after a positive test, a very rare disease stays unlikely, about 2%. The flipped answer is not the test's own accuracy.", tone: "info" }, { max: 3, text: "The same positive test gives a different P(sick | positive) as the disease becomes more common.", tone: "info" }, { max: 4, text: "🤯 P(positive | sick) never changed, yet P(sick | positive) ran from 2% to 95%. The two directions are different numbers, and Bayes' theorem is what converts one into the other.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Bayes' theorem (flipping the conditional)", formula: "P(A | B) = P(B | A) x P(A) / P(B)", text: "Bayes' theorem flips the conditional you can measure into the one you want, using the prior." }
+  }
+},
+
+{
   q: "In Naive Bayes, what is meant by a piece of 'evidence'?",
   choices: ["An observed clue, like a word, that nudges the belief", "The final probability the model assigns to each class", "The prior odds the model holds before seeing anything", "A weight the model learns by minimising its errors", "The fixed threshold used to accept a prediction"],
   explain: "Evidence is any observed feature the model conditions on: a word present in an email, a symptom, a sensor reading. Each item has a likelihood under each class and contributes one multiplier to Bayes' rule. More evidence simply means more multipliers stacked onto the prior.",

@@ -2,6 +2,40 @@
 (window.QUESTIONS = window.QUESTIONS || {}).metrics1 = [
 
 {
+  q: "Out of every prediction a classifier makes, what fraction did it get right? Which metric is this?",
+  choices: ["The share of all predictions that are correct", "The share of flagged cases that are correct", "The share of real cases the model catches", "The balance of precision against recall", "The share of cases that are truly positive"],
+  explain: "Accuracy is (TP + TN) divided by the total number of predictions: every correct call over every call made. It is the most intuitive metric, but it says nothing about WHICH kind of case the model gets right, so it can be badly misleading when one class dominates.",
+  simple: "Imagine grading a multiple-choice test by counting how many answers were right out of the total. That single percentage is accuracy. It is easy to read, but it treats every question as equally important — which is not always true in the real world.",
+  widget: {
+    type: "curveStatic", title: "Counting the hits",
+    world: "A model labels 100 test cases; watch accuracy climb as more of its predictions land correct.",
+    xlab: "correct predictions →", xs: [0,1,2,3,4], labels: ["50","65","80","90","98"], dec: 0, yunit: "%",
+    series: [ { name: "accuracy", ys: [50,65,80,90,98] } ],
+    knob: { label: "Correct out of 100", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "At 50 correct out of 100, the model is right half the time — no better than a coin flip on balanced data.", tone: "info" }, { max: 3, text: "As more predictions land correct, accuracy climbs toward 90%: nine in ten calls are right.", tone: "info" }, { max: 4, text: "🤯 98% accuracy looks flawless — but if 98% of cases were negative anyway, a model that always says 'no' scores the same. Accuracy alone can hide that.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Accuracy", formula: "(TP + TN) / all predictions", text: "The share of all predictions that are correct — simple, but misleading when classes are imbalanced." }
+  }
+},
+
+{
+  q: "Of all the genuinely negative cases (the truly innocent), what fraction did the model correctly clear? Which metric is this?",
+  choices: ["Specificity, the true-negative rate", "Sensitivity, the true-positive rate", "Precision, the flagged-correct rate", "Prevalence, the actual-positive rate", "Fallout, the false-negative rate"],
+  explain: "Specificity, also called the true-negative rate, is TN / (TN + FP): of everything that was really negative, how much the model correctly left alone. It is the exact mirror of recall (sensitivity), which measures the positive class instead. High specificity means few false alarms.",
+  simple: "Think of an airport scanner waving through the innocent travellers. Specificity asks: of all the harmless people, how many did it correctly let pass without a needless search? If it is high, honest travellers are rarely stopped by mistake.",
+  widget: {
+    type: "curveStatic", title: "Clearing the innocent",
+    world: "100 truly-negative cases; as the model correctly clears more of them, specificity rises and false alarms fall.",
+    xlab: "innocents correctly cleared →", xs: [0,1,2,3,4], labels: ["60%","70%","80%","90%","99%"], dec: 0, yunit: "%",
+    series: [ { name: "specificity", ys: [60,70,80,90,99] }, { name: "false alarms", ys: [40,30,20,10,1] } ],
+    knob: { label: "Innocents cleared", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "Only 60% of innocent cases cleared means 40 false alarms per 100 — a flood of wrongful flags.", tone: "info" }, { max: 3, text: "Clearing 90% of innocents cuts false alarms to 10 per 100; specificity and the false-alarm rate always add to 100%.", tone: "info" }, { max: 4, text: "🤯 At 99% specificity almost no innocent is flagged — the mirror image of recall, which watches the positives instead of the negatives.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Specificity (true-negative rate)", formula: "TN / (TN + FP)", text: "Of all truly negative cases, the fraction the model correctly clears — recall's counterpart for the negative class." }
+  }
+},
+
+{
   q: "In a probabilistic classifier, what is the decision 'threshold'?",
   choices: ["The score cutoff above which a case is called 'yes'", "The minimum accuracy a model must reach before deploying", "The fraction of all predictions the model gets right", "The point where precision and recall are exactly equal", "The smallest score the model is able to output"],
   explain: "A probabilistic classifier outputs a score, usually between 0 and 1; the threshold is the cutoff at which that score becomes a hard 'yes' label. Lowering it flags more cases (recall rises, precision usually falls); raising it flags fewer. It is a policy dial you set after training, not something the model learns.",

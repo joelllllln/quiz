@@ -2,6 +2,31 @@
 (window.QUESTIONS = window.QUESTIONS || {}).svm1 = [
 
 {
+  q: "What kind of machine-learning task is a support vector machine (SVM) built for?",
+  choices: ["Sorting labelled examples into classes", "Grouping unlabelled points into clusters", "Predicting a continuous output value", "Compressing many features into fewer", "Choosing actions to maximise reward"],
+  explain: "An SVM is a supervised classifier: you train it on examples that already carry class labels, and it learns a boundary that sorts new, unlabelled items into those same classes. That distinguishes it from unsupervised clustering (which has no labels) and from regression (which predicts a number). The classic SVM separates two classes, though libraries extend it to more.",
+  simple: "It is like teaching a child to tell cats from dogs by showing lots of photos already tagged 'cat' or 'dog'. Once trained, the child can sort a brand-new photo into one bucket. Without those tagged photos to learn from, the SVM would have nothing to copy.",
+  widget: {
+    type: "curveStatic", title: "Learning from labelled examples",
+    world: "Feed the SVM more labelled training examples and watch how well it sorts brand-new items.",
+    xlab: "labelled training examples given →", xs: [0,1,2,3,4], labels: ["0","10","100","1,000","10,000"], dec: 0, yunit: "%",
+    series: [
+      { name: "accuracy on new items", ys: [50,65,80,90,95] },
+      { name: "random guessing", ys: [50,50,50,50,50] }
+    ],
+    knob: { label: "Labelled examples", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "With no labelled examples the SVM has nothing to learn from — it does no better than a coin flip at 50%.", tone: "info" },
+      { max: 3, text: "Each new batch of labelled examples sharpens the boundary, pulling accuracy well above guessing.", tone: "info" },
+      { max: 4, text: "🤯 Labels are the fuel: from 50% guessing up to 95%, every gain came from examples a human had already tagged.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "SVM is a supervised classifier", formula: "learn from labelled examples → sort new items into classes",
+      text: "The whole method assumes you already have labelled training data to learn the boundary from." }
+  }
+},
+
+{
   q: "In a support vector machine, what is the 'decision boundary'?",
   choices: ["The surface that separates one class from the other", "The empty street between the two nearest points", "The handful of points that pin the model in place", "The penalty charged for each misclassified point", "The similarity function comparing pairs of points"],
   explain: "The decision boundary is the surface where the SVM switches its predicted class — a line in 2-D, a plane or hyperplane in higher dimensions. Points on one side get labelled one class, points on the other side the other class, so placing this surface well is the entire training goal.",

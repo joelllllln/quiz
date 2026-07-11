@@ -2,6 +2,62 @@
 (window.QUESTIONS = window.QUESTIONS || {}).trees1 = [
 
 {
+  q: "How does training actually build a decision tree from the data?",
+  choices: [
+    "It picks the best single split, then repeats on each resulting group",
+    "It tests every possible whole-tree shape and keeps the highest scorer",
+    "It starts at the leaves and merges groups upward until one root is left",
+    "It adjusts numeric weights over many passes until the error stops falling",
+    "It draws one smooth curved boundary that separates all the classes at once"
+  ],
+  explain: "Trees are built greedily and top-down: at each step the algorithm picks the split that reduces impurity the most right now, then recursively repeats the same procedure on each child group. It never looks ahead or revisits an earlier split, which makes training fast but does not guarantee the globally best tree.",
+  simple: "Building a tree is like tidying a messy drawer by asking the single most useful question first, then treating each resulting pile as a smaller drawer and sorting it the same way. You keep zooming in, one best question at a time, until each pile is neat. You never go back to redo an earlier question.",
+  widget: {
+    type: "curveStatic", title: "One best split, then repeat",
+    world: "Follow the greedy builder as it splits the messiest group, then recurses into each new group.",
+    xlab: "splitting steps taken →", xs: [0,1,2,3,4], labels: ["start","1","2","3","4"], dec: 0, yunit: "",
+    series: [ { name: "impurity remaining", ys: [100,60,35,18,8] } ],
+    knob: { label: "Splitting steps taken", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Step zero: one big mixed group and no splits yet, so impurity sits at its highest.", tone: "info" },
+      { max: 3, text: "Each step greedily takes the best available split, then recurses into the groups it creates.", tone: "info" },
+      { max: 4, text: "🤯 The tree is grown one locally-best question at a time — never planned all at once.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Greedy top-down splitting", formula: "repeat: best split now → recurse on each child",
+      text: "Trees grow one locally-best split at a time, then recurse into every group they create." }
+  }
+},
+
+{
+  q: "The same decision tree can predict a category OR a number. What differs between the two?",
+  choices: [
+    "Only what a leaf reports: the majority class, or the average value",
+    "Whether the tree is allowed to ask questions about numeric features",
+    "Whether the splits reduce impurity or instead increase it on purpose",
+    "Whether the tree has one single root or grows several separate roots",
+    "Whether the model keeps all the training rows stored inside every leaf"
+  ],
+  explain: "A classification tree and a regression tree share the same greedy split-and-recurse structure; the real difference is what a leaf outputs. Classification leaves report the majority class of their training cases, while regression leaves report the average target value. The split criterion adapts too (variance reduction instead of Gini), but the tree is built the same way.",
+  simple: "Whether a tree guesses a category or a number, it is the same flowchart of yes/no questions. The only change is what happens at the end: a classification leaf votes for the most common label, and a regression leaf just averages the numbers that landed there. Same routing, different kind of answer.",
+  widget: {
+    type: "curveStatic", title: "Leaf: vote or average",
+    world: "Watch what one regression leaf outputs as more training cases fall into it: their running average.",
+    xlab: "cases collected in the leaf →", xs: [0,1,2,3,4], labels: ["1","2","3","4","5"], dec: 0, yunit: "",
+    series: [ { name: "leaf's average target", ys: [200,180,190,185,186] } ],
+    knob: { label: "Cases collected in the leaf", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "With one case in the leaf, the regression prediction is just that single value.", tone: "info" },
+      { max: 3, text: "As more training cases land in the leaf, it reports their running average.", tone: "info" },
+      { max: 4, text: "🤯 Swap 'average' for 'majority vote' and the very same leaf does classification instead.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Classification vs regression trees", formula: "leaf = majority class (classify) or mean value (regress)",
+      text: "Same split-and-recurse tree; only the leaf's answer changes from a vote to an average." }
+  }
+},
+
+{
   q: "In a decision tree, what is a 'node' (a split)?",
   choices: [
     "A yes/no question on one feature that sends a case left or right",
