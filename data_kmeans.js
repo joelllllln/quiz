@@ -1,6 +1,105 @@
 /* K-Means — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).kmeans1 = [
   {
+    "q": "In each round of k-means, what does the 'assignment step' do?",
+    "choices": [
+      "Attaches each point to its nearest centroid",
+      "Moves every centroid to the mean of its current members",
+      "Merges the two closest centroids into a single group",
+      "Discards any point that sits far from every centroid",
+      "Picks the starting centroids by spreading them apart"
+    ],
+    "explain": "The assignment step compares each point to all k centroids and links it to the nearest one, carving the data into k groups. It reads the centroids' current positions and moves none of them itself, since moving centroids is the update step's job.",
+    "simple": "Picture a few ice-cream vans parked around town and everyone walking to the nearest van. Deciding which van each person joins is the assignment step. Nobody drives the vans here; you only sort people into the closest queue.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Everyone joins the nearest centre",
+      "world": "As the centroids sit farther apart, each point's nearest choice gets clearer, so assignments become more decisive.",
+      "xlab": "gap between centroids →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "overlap", "near", "apart", "far", "distinct" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "points confidently assigned", "ys": [ 20, 45, 70, 88, 99 ] }
+      ],
+      "knob": { "label": "Gap", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Centroids nearly overlap: many points are almost equidistant, so their nearest-centroid choice is a coin toss.", "tone": "info" },
+        { "max": 3, "text": "As the centroids separate, most points have one obviously closest centre and snap to it cleanly.", "tone": "info" },
+        { "max": 4, "text": "🤯 Well-separated centroids: almost every point has an unambiguous nearest centre, so the assignment step just sorts each into its closest queue.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Assignment step", "formula": "each point → argmin distance to the k centroids", "text": "One half of the k-means loop: hold the centroids fixed, then re-sort every point to its nearest one before the update step moves the centroids." }
+    }
+  },
+  {
+    "q": "After the points are assigned, what does the k-means 'update step' do?",
+    "choices": [
+      "Moves each centroid to its members' average position",
+      "Reassigns each point to the centroid nearest to it",
+      "Deletes any centroid that captured too few points",
+      "Splits the largest cluster into two smaller ones",
+      "Spreads the initial centroids as far apart as possible"
+    ],
+    "explain": "The update step recomputes each centroid as the mean of the points currently assigned to it, so every centre slides to the middle of its own group. Assignments are held fixed here; the next assignment step then reacts to the moved centroids.",
+    "simple": "Once everyone has queued at their nearest ice-cream van, each van drives to the middle of its own queue. That re-parking is the update step. Then people re-queue, the vans re-park, and on it goes until nothing moves.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Centres slide to their group's middle",
+      "world": "Each round the update step moves every centroid to its members' mean; watch how far the centres still travel as the loop settles.",
+      "xlab": "iterations completed →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "start", "1", "2", "3", "settled" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "distance a centroid still moves", "ys": [ 100, 55, 25, 8, 0 ] }
+      ],
+      "knob": { "label": "Iteration", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "First update: centroids leap a long way from their random start toward the middle of the crowd that just joined them.", "tone": "info" },
+        { "max": 3, "text": "Each further update moves the centroids less as they home in on their group's true mean.", "tone": "info" },
+        { "max": 4, "text": "🤯 The centroids stop moving: every centre already sits at its members' mean, so recomputing the average changes nothing. k-means has converged.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Update step", "formula": "each centroid becomes the mean of its assigned points", "text": "The other half of the loop: hold the assignments fixed, then move every centroid to its members' average. Alternated with assignment until nothing moves." }
+    }
+  },
+  {
+    "q": "What does the 'k-means++' initialisation do?",
+    "choices": [
+      "Spreads the starting centroids far apart",
+      "Runs the two k-means steps far more times per fit",
+      "Automatically decides the best number of clusters k",
+      "Lets clusters take any shape instead of round blobs",
+      "Scales the features so distances become comparable"
+    ],
+    "explain": "k-means++ is a seeding rule: it picks initial centroids that are spread out, choosing each new seed with probability proportional to its squared distance from the seeds chosen so far. Better starting positions make k-means far less likely to converge to a poor local optimum.",
+    "simple": "Plain k-means drops its starting centres at random, and an unlucky start gives bad clusters. k-means++ instead scatters the starting centres far apart on purpose, like seating strangers in opposite corners of a room. From those spread-out starts, the algorithm usually lands on a good answer in one go.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Smart starts, spread apart",
+      "world": "Compare final cluster quality as the seeding improves from lumped-together random starts to fully spread k-means++ seeds.",
+      "xlab": "how spread apart the seeds are →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "clumped", "", "medium", "", "spread" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "chance of a good result", "ys": [ 30, 50, 70, 85, 97 ] }
+      ],
+      "knob": { "label": "Spread", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Seeds clumped together: two centres start inside the same true group, and k-means often never untangles them.", "tone": "warn" },
+        { "max": 3, "text": "More spread-out seeds cover the data better, so the algorithm finds the real groups more reliably.", "tone": "info" },
+        { "max": 4, "text": "🤯 Fully spread k-means++ seeds land near the true centres from the start, usually a good clustering in a single run. sklearn uses it by default.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "k-means++", "formula": "spread the seeds out; pick each next seed far from the existing ones", "text": "A smarter initialisation than random. Spread-out starts avoid bad local optima, which is why init='k-means++' is the sklearn default." }
+    }
+  },
+  {
     "q": "In clustering, what exactly is a 'cluster'?",
     "choices": [
       "A group of points more similar to each other than to the rest",

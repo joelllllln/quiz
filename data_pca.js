@@ -1,6 +1,105 @@
 /* PCA — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).pca1 = [
   {
+    "q": "PCA talks about a dataset's 'dimensions'. In this sense, what are the dimensions?",
+    "choices": [
+      "The number of features (columns), one axis per feature",
+      "The number of data points (rows) gathered for the dataset",
+      "The count of principal components worth keeping after PCA",
+      "The number of separate clusters hidden inside the cloud",
+      "The spread of values along the most variable feature"
+    ],
+    "explain": "Each feature is a coordinate axis, so a table with 50 columns describes points in 50-dimensional space, no matter how many rows it has. Dimensionality is about width (features), not height (samples). PCA's job is to replace those many axes with a few blended ones.",
+    "simple": "Describing a person by height alone puts them on a line (1-D); add weight and they live on a flat sheet (2-D); add age and it becomes a room (3-D). Every new measurement is a new direction to move in. Fifty measurements means a 50-directional space no eye can picture, which is exactly why PCA wants to shrink it.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One feature, one axis",
+      "world": "Start with one measurement and keep adding more; each new feature opens a brand-new direction the data can vary in.",
+      "xlab": "features described →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["1 feature", "2 features", "3 features", "4 features", "5 features"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "axes in the space", "ys": [1, 2, 3, 4, 5] }
+      ],
+      "knob": { "label": "Features added", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "One or two features: a line or a flat sheet, easy to picture and easy to plot.", "tone": "info" },
+        { "max": 3, "text": "Four features already means a 4-axis space; your eyes give out at three.", "tone": "info" },
+        { "max": 4, "text": "🤯 Each feature is literally another axis, so 50 columns build a 50-dimensional space. PCA exists to swap those many axes for a handful.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Dimension", "formula": "one feature = one axis; d features = d-dimensional space", "text": "Dimensionality counts features, not samples; PCA replaces many axes with a few high-variance ones." }
+    }
+  },
+  {
+    "q": "PCA produces a 'scree plot'. What does it show, and what is it for?",
+    "choices": [
+      "Each component's variance, plotted; the elbow hints how many to keep",
+      "Each feature's loading, plotted; used to name what a component means",
+      "The data points projected onto the first two principal components, mapped",
+      "Each point's reconstruction error, plotted to flag anomalous rows",
+      "Features ranked by correlation, used to drop redundant columns"
+    ],
+    "explain": "A scree plot draws each component's explained variance in descending order. The curve usually drops steeply and then flattens; the elbow where it levels off marks the point beyond which extra components add little, guiding how many to retain.",
+    "simple": "Picture a mountainside of loose rubble (scree) that starts steep and then eases into a gentle slope. The steep part is your few important components; the flat tail is the rubble, small and interchangeable leftovers. You keep the axes before the bend and let the rest slide.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Find the elbow",
+      "world": "Variance carried by each component, biggest first; watch where the steep drop turns into a flat tail.",
+      "xlab": "component number →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["PC1", "PC2", "PC3", "PC4", "PC5"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "variance explained (%)", "ys": [62, 21, 9, 5, 3] }
+      ],
+      "knob": { "label": "Component", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "PC1 and PC2 tower over the rest, the steep face of the slope where most of the story lives.", "tone": "info" },
+        { "max": 3, "text": "By PC3 and PC4 the bars have shrunk to single digits; the curve is bending into its flat tail.", "tone": "info" },
+        { "max": 4, "text": "🤯 The elbow after the second or third bar is the whole point: keep the axes before it, discard the flat rubble after.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Scree plot", "formula": "plot variance explained per component; keep the axes before the elbow", "text": "The elbow is a visual rule of thumb for how many components to retain." }
+    }
+  },
+  {
+    "q": "In PCA-based anomaly detection you compute a point's 'reconstruction error'. What is it?",
+    "choices": [
+      "How much a point changes after being compressed and then rebuilt",
+      "How far a point sits from the overall mean of the whole dataset",
+      "How many components are needed before the point is captured",
+      "How much variance the discarded components would have added back",
+      "How poorly a trained classifier predicts the label of that point"
+    ],
+    "explain": "PCA compresses a point onto a few components, then reconstructs it back in the original space; the gap between the original and the rebuilt version is the reconstruction error. Ordinary points live in the space the top components span, so they survive the round trip almost unchanged, while anomalies lie off those directions and come back distorted, and that large error flags them.",
+    "simple": "Imagine summarising a photo in ten words, then asking a friend to redraw it from your words. A typical scene comes back close to the original; a bizarre one-off scene comes back mangled, because your ten words never planned for it. PCA does the same round trip, and the points that rebuild badly are the odd ones out.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Survive the round trip?",
+      "world": "Compress each point to a few components and rebuild it; measure how far the rebuilt version lands from the original.",
+      "xlab": "points, typical → unusual →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["typical", "typical", "mixed", "unusual", "anomaly"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "reconstruction error", "ys": [3, 5, 12, 34, 71] }
+      ],
+      "knob": { "label": "Point", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Typical points rebuild almost perfectly, a tiny error, because they lie in the space the top components describe.", "tone": "info" },
+        { "max": 3, "text": "As points drift off the main directions, the rebuilt version lands further away and the error climbs.", "tone": "info" },
+        { "max": 4, "text": "🤯 The anomaly cannot be rebuilt from the kept components, so its error spikes, and that large reconstruction error is exactly the alarm PCA anomaly detection listens for.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Reconstruction error", "formula": "error = ||x - rebuild(compress(x))||; large error means anomaly", "text": "Normal points survive compression but anomalies do not, so reconstruction error doubles as an outlier score." }
+    }
+  },
+  {
     "q": "PCA works by 'projecting' data onto fewer directions. What does projecting a point onto a line mean?",
     "choices": [
       "Dropping it straight onto the line, like a shadow — keeping its position along the line, losing the rest",

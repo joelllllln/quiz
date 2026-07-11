@@ -1,6 +1,107 @@
 /* t-SNE — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).tsne1 = [
   {
+    "q": "In t-SNE, what does the 'learning rate' control?",
+    "choices": [
+      "The step size taken while optimising point positions",
+      "How many neighbours each point keeps close as it trains",
+      "The number of passes made over the dataset before stopping",
+      "How strongly distant clusters are pulled toward the centre",
+      "The fraction of points sampled to speed up each update"
+    ],
+    "explain": "The learning rate sets how big a step each point moves on every optimisation iteration. Too small and points barely budge, leaving everything stuck in one ball; too large and clusters overshoot and shatter. Modern implementations use 'auto' to pick a sensible value from the dataset size.",
+    "simple": "Imagine nudging pieces into place on a board. Tiny nudges and nothing ever spreads out — one clump forever; huge nudges and pieces fly apart into chaos. The learning rate is the size of each nudge, and 'auto' usually picks a good one so you do not have to.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Step size vs layout quality",
+      "world": "The same data run at rising learning rates: watch the map go from one stuck ball, through a clean spread, to shattered debris.",
+      "xlab": "learning rate →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1", "10", "auto", "1000", "50000" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "layout quality (%)", "ys": [ 15, 55, 95, 80, 20 ] }
+      ],
+      "knob": { "label": "Learning rate", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Learning rate 1–10: steps too small, points barely move — everything stays balled up.", "tone": "info" },
+        { "max": 3, "text": "'auto' and moderate values: points spread into clean, separated clusters — the sweet spot at 95%.", "tone": "info" },
+        { "max": 4, "text": "🤯 Learning rate 50000: steps so big clusters overshoot and shatter into meaningless debris. Right in the middle wins.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Learning rate", "formula": "step size of the layout optimisation · too small = one ball, too big = shattered", "text": "Leave it at 'auto', which scales the step to your dataset size and behaves." }
+    }
+  },
+  {
+    "q": "What does setting init='pca' do when you run t-SNE?",
+    "choices": [
+      "Starts the layout from PCA coordinates, not randomness",
+      "Runs PCA afterwards to clean up the finished t-SNE layout",
+      "Replaces t-SNE's neighbour probabilities with PCA's variances",
+      "Picks the perplexity automatically from the PCA components",
+      "Reduces the data to two PCA axes and skips t-SNE entirely"
+    ],
+    "explain": "Instead of scattering points randomly to begin with, t-SNE places them at their PCA positions and optimises from there. Because that starting point already encodes real large-scale geometry, re-runs agree with each other and the arrangement of the clusters inherits meaningful global structure. It makes results more stable and reproducible.",
+    "simple": "A random start is like tipping a jigsaw onto the table and sorting from chaos — every dump looks different. Starting from PCA is like laying the pieces roughly where they belong first, then tidying. You get the same sensible picture every time, and the big regions sit where they should.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Random start vs PCA start",
+      "world": "Five re-runs of t-SNE: a random init lands somewhere new each time, while init='pca' reproduces almost the same map.",
+      "xlab": "run →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "run 1", "run 2", "run 3", "run 4", "run 5" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "layout agreement, random init (%)", "ys": [ 100, 42, 55, 38, 60 ] },
+        { "name": "layout agreement, init='pca' (%)", "ys": [ 100, 97, 98, 97, 98 ] }
+      ],
+      "knob": { "label": "Run", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Run 1 is the reference; both starts match themselves at 100%.", "tone": "info" },
+        { "max": 3, "text": "Random init drifts to 40–60% agreement — a different-looking map each run.", "tone": "warn" },
+        { "max": 4, "text": "🤯 init='pca' holds ~97% across every run: reproducible maps whose global arrangement inherits real geometry.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "init='pca'", "formula": "start layout from PCA coordinates, not randomness", "text": "Re-runs agree and the islands' arrangement inherits real global geometry." }
+    }
+  },
+  {
+    "q": "What is UMAP, the method often mentioned alongside t-SNE?",
+    "choices": [
+      "A newer reducer: much faster, with better global layout than t-SNE",
+      "A tool that measures exact distances between t-SNE's finished clusters",
+      "An algorithm that automatically picks the best perplexity for t-SNE",
+      "A method that turns t-SNE maps into reusable features for models",
+      "A newer reducer that only works on data already reduced by PCA"
+    ],
+    "explain": "UMAP is a more recent dimensionality-reduction method in the same family as t-SNE. It runs much faster on large datasets, tends to preserve global structure better, and — unlike standard t-SNE — can place brand-new points onto an existing map. The same warning holds: do not read literal distances off it.",
+    "simple": "UMAP is t-SNE's younger cousin. It draws the same kind of similarity map but usually quicker, keeps the big-picture arrangement a bit truer, and can drop a new arrival onto an existing map without redrawing everything. Just like t-SNE, though, the exact gaps on it are not to be trusted.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "t-SNE vs UMAP as data grows",
+      "world": "The same dataset put through both methods at rising sizes; watch the running-time gap explode.",
+      "xlab": "dataset size →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1k", "10k", "100k", "500k", "1M" ],
+      "dec": 0,
+      "yunit": "s",
+      "series": [
+        { "name": "t-SNE time (s)", "ys": [ 5, 60, 900, 6000, 15000 ] },
+        { "name": "UMAP time (s)", "ys": [ 2, 12, 90, 400, 800 ] }
+      ],
+      "knob": { "label": "Dataset size", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "On small data both finish quickly — a few seconds either way.", "tone": "info" },
+        { "max": 3, "text": "At 100k–500k rows the gap explodes: UMAP in minutes, t-SNE in hours.", "tone": "info" },
+        { "max": 4, "text": "🤯 At a million points UMAP still runs while t-SNE is impractical — plus UMAP embeds new points and keeps global layout truer. Same distance caveat, though.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "UMAP", "formula": "faster · better global layout · can embed new points · same distance caveats", "text": "The modern cousin of t-SNE — read cluster membership from it, not literal distances." }
+    }
+  },
+  {
     "q": "t-SNE and PCA both do 'dimensionality reduction'. In plain terms, what is that?",
     "choices": [
       "Turning data with many features into fewer, so it's easier to visualise or model",
