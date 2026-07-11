@@ -53,36 +53,6 @@
   var LETTERS = 'ABCDE';
   var S = {};
 
-  /* One concept-mechanics check per widget type; instantiated per question. */
-  var TYPE_CHECKS = {
-    scatterK: { q: 'In the lab, what happened when you asked (nearly) everyone to vote?', ok: 'Far-away points joined in and the verdict drifted toward the more common class', no: ['The verdict became more local and more precise', 'The distances between the points themselves changed'] },
-    boundaryK: { q: 'In the lab, what did a very SMALL k do to the territory map?', ok: 'Made it jagged — single points carved out their own little islands', no: ['Made it one big smooth split with no detail', 'Removed the border entirely'] },
-    trainTestK: { q: 'In the lab, which bar was the honest measure of the model?', ok: 'The score on never-seen cases', no: ['The score on already-seen cases', 'Whichever bar was higher at the time'] },
-    metricMorph: { q: 'In the lab, the two points never moved — so what made the distance change?', ok: 'The measuring rule itself: distance is a choice, not a fact', no: ['Rounding errors in the calculation', 'The number of points being measured'] },
-    scaleFeature: { q: 'In the lab, why did the "nearest" keep changing as you dragged?', ok: 'The feature with the biggest raw units was drowning out the other until rescaled', no: ['The candidates\' actual values were changing', 'The vote switched from majority to average'] },
-    dimCurse: { q: 'In the lab, what did adding more and more facts do?', ok: 'Evened out all the distances until "nearest" barely meant anything', no: ['Made the true nearest neighbour stand out more sharply', 'Made the distances more accurate'] },
-    speedLazy: { q: 'From the lab: when does KNN pay its computation bill?', ok: 'At answer time — every single query scans the stored examples', no: ['Once, up front, during training', 'Never — lookups are effectively free'] },
-    voteWeight: { q: 'In the lab, what did turning up the weighting do?', ok: 'Gave closer neighbours a louder voice and faded out the far ones', no: ['Gave every neighbour a more equal say', 'Dropped the closest neighbour from the vote'] },
-    knnRegress: { q: 'From the lab: how does KNN produce a NUMBER?', ok: 'It averages the values of the k nearest examples', no: ['It takes a majority vote among the values', 'It fits a straight line through the neighbours'] },
-    kCurve: { q: 'In the lab, which curve should you trust when choosing k?', ok: 'The held-back data curve — it behaves like the future', no: ['The seen-data curve — it uses more information', 'Both equally; average the two curves'] },
-    foldPick: { q: 'From the lab: why rotate the held-out slice and average?', ok: 'One single split can be lucky or unlucky; averaging removes the luck', no: ['It lets the model train on the test data safely', 'It makes each fold score higher'] },
-    metricSwitch: { q: 'In the lab, nothing moved — so what flipped the nearest neighbour?', ok: 'Changing the distance rule (the metric) alone', no: ['Changing the value of k', 'Relabelling one of the points'] },
-    radiusScatter: { q: 'From the lab: what can a fixed radius do that fixed k never does?', ok: 'Come back with ZERO neighbours and no prediction at all', no: ['Include the same point twice', 'Produce negative distances'] },
-    threshold: { q: 'In the lab, what happened when you flagged (nearly) everything?', ok: 'Every real positive got caught — but the false alarms exploded', no: ['The false alarms disappeared too', 'The number of caught positives fell'] },
-    rocCurve: { q: 'In the lab, what did moving the cutoff do on the ROC plot?', ok: 'Slid the model along its own curve — trading false alarms for catches', no: ['Bent the curve into a new shape', 'Changed the AUC number'] },
-    sigmoid: { q: 'In the lab, what did the S-curve output for every input?', ok: 'A probability between 0% and 100%', no: ['A class label directly', 'A distance to the boundary'] },
-    bayesOdds: { q: 'In the lab, how did each new piece of evidence act on the verdict?', ok: 'It MULTIPLIED the odds up or down', no: ['It added a fixed amount to a score', 'It replaced all the earlier evidence'] },
-    treeSplit: { q: 'In the lab, what made a split position "good"?', ok: 'It left the two sides as pure as possible', no: ['It put equal counts on both sides', 'It sat exactly at the middle of the axis'] },
-    treeDepth: { q: 'In the lab, what did growing the tree deeper do?', ok: 'Chased every training point — right up to memorising noise', no: ['Made the map smoother and simpler', 'Lowered the training accuracy'] },
-    marginSVM: { q: 'In the lab, which boundary position was best?', ok: 'The one giving the widest street to the nearest points', no: ['The one hugging the bigger class', 'Any position — they all behave the same'] },
-    curveStatic: { q: 'In the lab, how do you pick the best setting from curves like these?', ok: 'Take the setting where the held-back/validation curve peaks', no: ['Take the setting where the training curve peaks', 'Always take the largest setting'] },
-    boostFit: { q: 'In the lab, what did each new boosting round aim at?', ok: 'The errors the ensemble was still making', no: ['A fresh random sample of the data', 'The points it already predicted well'] },
-    forestMap: { q: 'In the lab, what happened to the map as trees joined the committee?', ok: 'It steadied — individual trees\' quirks averaged away', no: ['It got more jagged with every tree', 'It stopped fitting the training points'] },
-    kmeansStep: { q: 'In the lab, what did each k-means step consist of?', ok: 'Points join their nearest centre, then each centre moves to its group\'s middle', no: ['Centres move toward the densest single point', 'Points swap colours at random until stable'] },
-    dbscanScan: { q: 'In the lab, where did the number of clusters come from?', ok: 'It emerged from the density and the radius — nobody typed a k', no: ['It was fixed at three in advance', 'One cluster per noise point'] },
-    pcaSpin: { q: 'In the lab, what made one axis angle better than another?', ok: 'It kept more of the cloud\'s spread when points were flattened onto it', no: ['It passed through more points exactly', 'It was closer to horizontal'] },
-    dendro: { q: 'In the lab, what did sliding the cut line up and down change?', ok: 'How many clusters the same tree yields — the tree itself never changed', no: ['The order of the merges', 'The distances between the items'] }
-  };
 
   function h(html) { var d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
   function shuffle(a) {
@@ -590,13 +560,13 @@
       return;
     }
 
-    // first attempt, wrong → plain-English answer → lab → quick check → retry
-    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Here\'s the answer in plain English. Then work the lab, pass the quick check, and take the question again.</div>'));
+    // first attempt, wrong → plain-English answer → lab → build-up (break the answer down) → retry
+    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Here\'s the answer in plain English. Then work the lab, build the answer up step by step, and take the question again.</div>'));
     card.appendChild(h('<div class="plain"><span class="p-label">The answer, in plain English</span>' +
       '<div class="p-answer">' + esc(q.choices[0]) + '</div>' +
       (q.simple ? '<p>' + q.simple + '</p>' : '') + '</div>'));
     renderWidget(card, q.widget);
-    var toCheck = h('<div class="next-row"><button class="btn">On to the quick check →</button></div>');
+    var toCheck = h('<div class="next-row"><button class="btn">Break it down →</button></div>');
     toCheck.children[0].onclick = function () {
       toCheck.remove();
       quickCheck(q, card);
@@ -604,19 +574,22 @@
     card.appendChild(toCheck);
   }
 
-  /* ---------------- quick check ---------------- */
+  /* ---------------- build-up: break the correct answer into easier parts ---------------- */
   function buildChecks(q) {
-    var checks = [];
-    var t = TYPE_CHECKS[q.widget && q.widget.type];
-    if (t) checks.push({ q: t.q, options: [t.ok].concat(t.no) });
+    // Preferred: authored step-by-step breakdown of the correct answer (inline, or from the STEPS map keyed by stem).
+    var steps = q.steps || (window.STEPS && window.STEPS[q.q]);
+    if (steps && steps.length) {
+      return steps.map(function (s) { return { q: s.q, options: [s.ok].concat(s.no) }; });
+    }
+    // Fallback for any question without an authored breakdown yet: name the underlying idea.
     var r = q.widget && q.widget.reveal;
     if (r && r.name) {
       var names = S.qs.map(function (x) { return x.widget && x.widget.reveal && x.widget.reveal.name; })
         .filter(function (n) { return n && n !== r.name; });
       names = shuffle(names).slice(0, 2);
-      if (names.length === 2) checks.push({ q: 'The idea this lab demonstrated is called…', options: [r.name, names[0], names[1]] });
+      if (names.length === 2) return [{ q: 'Which idea does the correct answer rest on?', options: [r.name, names[0], names[1]] }];
     }
-    return checks;
+    return [];
   }
 
   function quickCheck(q, card) {
@@ -624,7 +597,7 @@
     var wrap = h('<div class="checks"></div>');
     var answered = 0;
     checks.forEach(function (c, ci) {
-      var cc = h('<div class="check-card"><div class="check-label">Quick check ' + (ci + 1) + ' of ' + checks.length + '</div>' +
+      var cc = h('<div class="check-card"><div class="check-label">Step ' + (ci + 1) + ' of ' + checks.length + '</div>' +
         '<div class="check-q"></div><div class="check-opts"></div></div>');
       cc.querySelector('.check-q').textContent = c.q;
       var opts = cc.querySelector('.check-opts');
