@@ -1,6 +1,72 @@
 /* Stacking & Voting — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).stack1 = [
   {
+    q: "In a stacking or voting ensemble, what are the 'base models'?",
+    choices: [
+      "The individual member models whose predictions get combined",
+      "The single best model kept after discarding the others",
+      "The final model that blends everyone's predictions together",
+      "The preprocessing steps run before any model is fitted",
+      "The raw training rows shared across all the members"
+    ],
+    explain: "Base models (level-0 models) are the ensemble's committee members — each is trained on the data and makes its own prediction. Voting or a meta-model then combines those predictions. They work best when drawn from DIFFERENT families (a tree, a linear model, a kNN) so their mistakes don't overlap.",
+    simple: "The base models are the advisors in the room, not the chairperson who sums them up. Each one studies the problem and gives an opinion; the ensemble's whole job is to combine those opinions. And a room full of identical advisors is useless — you want different backgrounds so where one is blind, another sees.",
+    widget: {
+      type: "curveStatic", title: "The committee members",
+      world: "One ensemble, its base models swapped from a lone model to several different families. Watch the combined accuracy.",
+      xlab: "base-model variety →", xs: [0,1,2,3,4], labels: ["1 model","clones","2 families","3 families","4 families"], dec: 0, yunit: "%",
+      series: [ { name: "ensemble accuracy", ys: [85,85,88,90,91] } ],
+      knob: { label: "Base-model variety", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "One model, or clones of it: 85% — with no distinct members to combine, there is no committee.", tone: "info" }, { max: 3, text: "Bring in different model families as base models and accuracy climbs to 90% as their mistakes stop overlapping.", tone: "info" }, { max: 4, text: "🤯 Four diverse base models reach 91% — an ensemble is only ever as good as the members feeding it.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Base models", formula: "the level-0 members whose predictions the ensemble combines", text: "Choose base models from different families so they fail in different places — that diversity is the ensemble's fuel." }
+    }
+  },
+  {
+    q: "What is 'blending' in ensemble learning?",
+    choices: [
+      "Training the meta-model on base predictions from one held-out slice",
+      "Averaging the base models' probabilities with fixed equal weights",
+      "Merging several base models into one combined set of weights",
+      "Retraining each base model on the residual errors of the previous member",
+      "Fusing the base and test features together before any training"
+    ],
+    explain: "Blending is the quick cousin of stacking: you hold out a slice of the training data, fit the base models on the rest, and train the meta-model only on the base models' predictions for that held-out slice. It costs one fit per base model, but the meta-model learns from just that slice instead of every row.",
+    simple: "Both blending and stacking need a fair exam to grade the base models on — never questions they memorised. Blending sets aside one small exam sheet: fast to run, but the judge only sees a few grades. It's the budget version of stacking's full rotation.",
+    widget: {
+      type: "curveStatic", title: "One held-out slice",
+      world: "Blending's meta-model trains only on a held-out slice; watch the trade-off as that slice grows.",
+      xlab: "held-out slice size →", xs: [0,1,2,3,4], labels: ["5%","10%","15%","25%","40%"], dec: 0, yunit: "%",
+      series: [ { name: "data the meta-model learns from", ys: [5,10,15,25,40] }, { name: "data left to train base models", ys: [95,90,85,75,60] } ],
+      knob: { label: "Holdout slice", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "A tiny 5% holdout: base models keep almost all the data, but the meta-model learns from only 5% of rows — barely enough to judge them.", tone: "info" }, { max: 3, text: "A 15% slice is the usual blending choice: a workable meta-model, and the base models still see 85%.", tone: "info" }, { max: 4, text: "🤯 Push the holdout to 40% and the meta-model gets plenty, but the base models are now starved — one holdout always trades one against the other. Stacking sidesteps this with out-of-fold predictions.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Blending", formula: "meta-model trains on base predictions from a single held-out slice", text: "The quick version of stacking: one fit per base model, but the meta-model learns from only that slice." }
+    }
+  },
+  {
+    q: "In stacking, what is the 'leakage' you must avoid?",
+    choices: [
+      "Letting the meta-model learn from base predictions on their own training rows",
+      "Letting the base models see one another's predictions during their own training",
+      "Letting the test set's labels slip into the base models' feature columns",
+      "Letting one base model dominate because it happened to train the longest",
+      "Letting the meta-model read the raw features instead of the predictions"
+    ],
+    explain: "If the meta-model learns from predictions a base model made on rows it TRAINED on, those predictions look unrealistically perfect (a deep forest is near-flawless on its own rows). The meta-model then over-trusts that model and collapses in production. Out-of-fold predictions prevent it — every base score comes from a model that never saw that row.",
+    simple: "The chairperson must grade the advisors on cases they hadn't seen, not on questions they memorised. Grade them on their own homework and the biggest memoriser looks like a genius — so the chairperson trusts it blindly, and the committee fails its first real client.",
+    widget: {
+      type: "curveStatic", title: "The memoriser's mirage",
+      world: "One stack, its base predictions made increasingly on their own training rows. Watch the reported score and the real one part ways.",
+      xlab: "share of leaky in-sample predictions →", xs: [0,1,2,3,4], labels: ["0%","25%","50%","75%","100%"], dec: 0, yunit: "%",
+      series: [ { name: "reported validation score", ys: [90,91,93,94,96] }, { name: "true production accuracy", ys: [90,89,88,87,86] } ],
+      knob: { label: "Leak severity", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "No leak: reported 90, delivered 90 — the meta-model judged the base models on rows they hadn't seen.", tone: "info" }, { max: 3, text: "As more base predictions come from their own training rows, the reported score inflates while the real one quietly sags.", tone: "warn" }, { max: 4, text: "🤯 Fully leaky: a dazzling 96 reported, a disappointing 86 delivered. The meta-model just learned to worship the biggest memoriser.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Leakage (here)", formula: "meta-model trained on base predictions made on their own training rows", text: "The cardinal sin of stacking; prevented by out-of-fold predictions so every base score is honest." }
+    }
+  },
+  {
     "q": "The simplest way to combine models is VOTING. What does a voting ensemble actually do?",
     "choices": [
       "Runs several models and picks the answer most of them agree on",

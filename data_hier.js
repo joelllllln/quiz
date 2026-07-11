@@ -1,6 +1,139 @@
 /* Hierarchical Clustering — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).hier1 = [
   {
+    "q": "In hierarchical clustering, what does 'Ward linkage' do when deciding which two clusters to merge?",
+    "choices": [
+      "Merges the pair whose union least increases within-cluster spread",
+      "Merges the pair whose closest two points are nearest together",
+      "Merges the pair whose farthest two points are closest together",
+      "Merges the pair with the largest average pairwise distance",
+      "Merges the two clusters that currently hold the fewest points"
+    ],
+    "explain": "At each step Ward evaluates every candidate merge by how much it would raise the total within-cluster variance (inertia), and picks the one that raises it least. This is exactly the objective k-means minimises, so Ward tends to produce compact, roundish clusters — which is why it is sklearn's default linkage.",
+    "simple": "Ward is a tidiness-obsessed matchmaker. Of all the clusters that could merge next, it joins the pair that keeps each resulting group as tight and undivided as possible — it hates spreading the members out. That instinct for compact groups is the same one k-means follows.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The least-spread merge wins",
+      "world": "Five candidate merges Ward could make this round, each scored by how much it would grow within-cluster spread. Slide across them and see which one Ward actually picks.",
+      "xlab": "candidate merge →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "a+b", "a+c", "b+d", "c+e", "d+e" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "extra within-cluster spread", "ys": [ 2, 6, 9, 11, 14 ] }
+      ],
+      "knob": { "label": "Candidate merge", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "a+b barely raises spread (2) — Ward's pick is the merge that adds the least within-cluster variance.", "tone": "info" },
+        { "max": 3, "text": "Other candidate pairs raise spread more (6-11). Ward skips them, however near their closest points happen to sit.", "tone": "info" },
+        { "max": 4, "text": "🤯 d+e balloons the variance most (14); Ward chooses the pair that grows spread LEAST — the same objective k-means minimises.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Ward linkage", "formula": "merge the pair with the smallest increase in within-cluster variance", "text": "sklearn's default. Gives compact, roundish clusters — the hierarchical cousin of k-means' objective." }
+    }
+  },
+  {
+    "q": "On a dendrogram, what does the 'merge height' of a join tell you?",
+    "choices": [
+      "How far apart the two clusters were when they merged",
+      "How many points sit inside the newly formed cluster",
+      "How many merges happened before this one occurred",
+      "How much variance the new cluster removes overall",
+      "How close the merged cluster sits to the tree root"
+    ],
+    "explain": "Every join in a dendrogram is drawn at a vertical height equal to the linkage distance between the two clusters it fused. Low joins mean the clusters were close (a confident merge); high joins mean they were far apart (a reluctant, shotgun merge forced only because nothing closer was left).",
+    "simple": "Read the tree like a thermometer for reluctance. A join near the bottom means the two groups were practically neighbours — an easy, obvious pairing. A join way up high means they were strangers dragged together only because everyone else had already paired off.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "How reluctant was each join?",
+      "world": "The merges of one small dataset, in the order they happened, each plotted at the distance the two clusters sat apart. Slide from the first merge to the last.",
+      "xlab": "merge order →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1st", "2nd", "3rd", "4th", "5th" ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "merge height (distance)", "ys": [ 0.3, 0.6, 1.0, 4.2, 7.5 ] }
+      ],
+      "knob": { "label": "Merge order", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "The first joins sit low (0.3) — the two clusters were almost touching, so this merge is confident.", "tone": "info" },
+        { "max": 3, "text": "Heights climb as clustering proceeds: each pair forced together is a little farther apart than the last.", "tone": "info" },
+        { "max": 4, "text": "🤯 The final merge is way up at 7.5 — a shotgun wedding of two clusters that were never really close.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Merge height", "formula": "join height = linkage distance between the two clusters merged", "text": "Low merges are trustworthy; high merges are suspicious. Big jumps in height are where you cut the tree." }
+    }
+  },
+  {
+    "q": "When reading a dendrogram, what does 'the tallest gap' (a long stretch of height where nothing merges) tell you?",
+    "choices": [
+      "Naturally separated groups, so cutting there gives the most defensible k",
+      "The exact centre of the tree, so cutting there balances the two halves",
+      "A patch of noisy points, so cutting there discards the weakest merges",
+      "The busiest part of the history, where most of the clusters join at once",
+      "The place the linkage rule switched, so cutting there is always required"
+    ],
+    "explain": "A wide vertical band with no merges means every remaining group had to travel a long way before joining anything — a sign the groups below are genuinely far apart. Cutting inside that gap yields a cluster count that stays stable across a wide range of heights, which is the most defensible choice of k.",
+    "simple": "Imagine the tree pauses, holding its breath: for a long stretch of height, nothing merges. That silence means the groups already formed are truly far from each other. Slice anywhere in that quiet band and you get the same answer — which is why it is the safest place to cut.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Listen for the silence",
+      "world": "The merges of one dataset in order, each at the height it happened. Slide through them and watch for the long jump where the tree goes quiet.",
+      "xlab": "merge order →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1st", "2nd", "3rd", "4th", "5th" ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "merge height (distance)", "ys": [ 0.4, 0.9, 1.3, 4.6, 5.1 ] }
+      ],
+      "knob": { "label": "Merge order", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Down low the merges come thick and fast (0.4, 0.9) — points inside a genuine group joining up.", "tone": "info" },
+        { "max": 3, "text": "Then a long empty stretch: nothing merges between 1.3 and 4.6. That silence is the tallest gap.", "tone": "info" },
+        { "max": 4, "text": "🤯 Cut anywhere inside that gap and the clusters stay the same — the widest gap marks the most defensible k.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "The tallest gap", "formula": "widest height range with no merges = most separated groups = best place to cut", "text": "The dendrogram's version of the elbow: cut in the gap, not at an arbitrary height." }
+    }
+  },
+  {
+    "q": "What does adding a 'connectivity constraint' do to agglomerative clustering?",
+    "choices": [
+      "Lets clusters merge only if they actually touch on a neighbour graph",
+      "Forces every resulting cluster to contain the same number of points",
+      "Requires the number of clusters to be fixed before merging starts",
+      "Limits each cluster to points that share an identical class label",
+      "Speeds up merging by ignoring the farthest pairs of points"
+    ],
+    "explain": "A connectivity constraint supplies a neighbour graph (e.g. k-nearest-neighbours) and forbids any merge between clusters that are not connected in it. Merges then propagate only along the data's local structure, so clusters grow to follow curved manifolds instead of jumping across empty space.",
+    "simple": "Normally two clusters can merge if they are close as the crow flies, even with a void between them. The connectivity constraint hands the algorithm a map of who-touches-whom and says: you may only join hands with a neighbour you can actually reach. Clusters then snake along the data's real shape.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Follow the shape, don't jump the gap",
+      "world": "The same agglomerative method on five dataset shapes, scored by cluster quality, with and without a neighbour-graph constraint. Slide across the shapes.",
+      "xlab": "dataset shape →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "blobs", "2 moons", "swiss roll", "spiral", "rings" ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "with connectivity", "ys": [ 0.66, 0.72, 0.80, 0.78, 0.75 ] },
+        { "name": "without (plain)", "ys": [ 0.64, 0.30, 0.18, 0.22, 0.28 ] }
+      ],
+      "knob": { "label": "Dataset shape", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "On round blobs both do fine — the neighbour graph barely matters when clusters are already compact.", "tone": "info" },
+        { "max": 3, "text": "On curved shapes plain linkage jumps across gaps; the constraint keeps clusters following the data.", "tone": "info" },
+        { "max": 4, "text": "🤯 On rings and spirals the constraint wins big — clusters may only grow along points that actually touch.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Connectivity constraint", "formula": "merges allowed only between neighbours in a supplied graph (e.g. kNN)", "text": "sklearn: AgglomerativeClustering(connectivity=...). Lets clusters grow along manifolds instead of leaping empty space." }
+    }
+  },
+  {
     "q": "The output of hierarchical clustering is a 'dendrogram'. What is a dendrogram?",
     "choices": [
       "A tree diagram recording which groups merged, and at what distance",

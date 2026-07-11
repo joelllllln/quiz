@@ -2,6 +2,23 @@
 (window.QUESTIONS = window.QUESTIONS || {}).metrics1 = [
 
 {
+  q: "In a probabilistic classifier, what is the decision 'threshold'?",
+  choices: ["The score cutoff above which a case is called 'yes'", "The minimum accuracy a model must reach before deploying", "The fraction of all predictions the model gets right", "The point where precision and recall are exactly equal", "The smallest score the model is able to output"],
+  explain: "A probabilistic classifier outputs a score, usually between 0 and 1; the threshold is the cutoff at which that score becomes a hard 'yes' label. Lowering it flags more cases (recall rises, precision usually falls); raising it flags fewer. It is a policy dial you set after training, not something the model learns.",
+  simple: "Think of a smoke alarm's sensitivity knob. Turn it low and it shrieks at burnt toast; turn it high and it might sleep through a real fire. The threshold is that knob for a classifier: it decides how confident the model must be before it shouts 'yes'.",
+  widget: {
+    type: "curveStatic", title: "Turning the dial",
+    world: "Sweep the decision threshold from low to high and watch how many cases get flagged versus missed.",
+    xlab: "threshold →", xs: [0,1,2,3,4], labels: ["very low","low","medium","high","very high"], dec: 0, yunit: "",
+    series: [ { name: "cases flagged", ys: [12,9,6,3,1] }, { name: "real cases missed", ys: [0,1,3,6,9] } ],
+    knob: { label: "Threshold", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "Low threshold: almost everything gets flagged, so you catch the real cases but drag in plenty of false alarms too.", tone: "info" }, { max: 3, text: "Raising the dial flags fewer cases; catches drop and misses climb. Every notch trades one error type for the other.", tone: "info" }, { max: 4, text: "🤯 Very high threshold: the model barely says 'yes' at all, so few false alarms but most real cases slip past. Same model, opposite behaviour, from moving one number.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Threshold", formula: "predict 'yes' when score >= threshold", text: "A cutoff you choose after training that converts probability scores into hard decisions." }
+  }
+},
+
+{
   q: "A classifier's predictions are compared against the truth. Every single prediction lands in one of exactly four buckets. Which four?",
   choices: ["Caught, missed, false alarm, correct pass", "True, false, positive, and negative labels", "Precision, recall, accuracy, and F1 score", "Sensitivity, specificity, fallout, dropout", "Positive, negative, neutral, and unclassified"],
   explain: "True positive (caught it), false negative (missed it), false positive (false alarm), true negative (correctly left alone). Every metric you'll ever meet is built from these four counts.",

@@ -2,6 +2,152 @@
 (window.QUESTIONS = window.QUESTIONS || {}).trees1 = [
 
 {
+  q: "In a decision tree, what is a 'node' (a split)?",
+  choices: [
+    "A yes/no question on one feature that sends a case left or right",
+    "A stored weight the tree multiplies with an incoming feature value",
+    "An endpoint that holds the final prediction for cases reaching it",
+    "A tally of how many features the entire tree examines in total",
+    "The averaged label across every training case the model has seen"
+  ],
+  explain: "A node (an internal node) is a single split: a threshold test on one feature, such as 'area < 1,250?'. Cases that answer yes flow down one branch and those that answer no flow down the other, repeating until they reach a leaf.",
+  simple: "Think of each node as one fork in a choose-your-own-adventure book: it asks a single yes/no question and points you down one of two paths. Follow enough forks and you land on an ending. The whole tree is just forks stacked on forks.",
+  widget: {
+    type: "curveStatic", title: "One node per fork",
+    world: "Start with everyone in one group and add splits; each node carves out one more group.",
+    xlab: "splits (nodes) added →", xs: [0,1,2,3,4], labels: ["0","1","2","3","4"], dec: 0, yunit: "",
+    series: [ { name: "distinct groups", ys: [1,2,3,4,5] } ],
+    knob: { label: "Splits (nodes) added", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Zero splits: everyone sits in one undivided group, because no question has been asked yet.", tone: "info" },
+      { max: 3, text: "Each node adds one yes/no question, carving the data into one more separate group.", tone: "info" },
+      { max: 4, text: "🤯 Four nodes give five groups; every node is just one more fork routing cases left or right.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Node / split", formula: "node = test 'feature < threshold?' → left / right branch",
+      text: "Every internal node asks about exactly one feature; stacking them builds the whole flowchart." }
+  }
+},
+
+{
+  q: "What is the 'root' of a decision tree?",
+  choices: [
+    "The first, most informative question, seen by every case",
+    "The final endpoint that stores the tree's chosen prediction",
+    "The deepest branch reached only by a few unusual cases",
+    "The feature that earned the least impurity reduction overall",
+    "The average of all leaf predictions gathered into one value"
+  ],
+  explain: "The root is the topmost node, the single split every case passes through first. Training picks it to be the most informative question available, the one whose split reduces impurity the most, so it sits at the very top of the tree.",
+  simple: "The root is the very first question on the flowchart, the one nobody can skip. Because every case starts here, the tree spends its best question on it: the one that separates the groups most cleanly.",
+  widget: {
+    type: "curveStatic", title: "The top question does the most",
+    world: "Read how much impurity each level of the tree removes, from the root downward.",
+    xlab: "level (root = 0) →", xs: [0,1,2,3,4], labels: ["root","1","2","3","4"], dec: 0, yunit: "",
+    series: [ { name: "impurity removed here", ys: [50,25,12,6,3] } ],
+    knob: { label: "Level (root = 0)", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "The root (level 0) removes the most impurity of any node, which is exactly why it is chosen first.", tone: "info" },
+      { max: 3, text: "Deeper levels split smaller, cleaner groups, so each one removes less than the root did.", tone: "info" },
+      { max: 4, text: "🤯 Every case in the dataset passes through the root; later questions only refine what it started.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Root", formula: "root = top node, chosen to maximise impurity reduction",
+      text: "One question every case sees first: the tree's single most valuable split." }
+  }
+},
+
+{
+  q: "What do 'Gini' and 'entropy' measure in a decision tree?",
+  choices: [
+    "How mixed a group's labels are, so splits can reduce it",
+    "How deep the tree is allowed to grow before it stops",
+    "How many training cases finally landed inside each leaf",
+    "How far apart two cases sit in the feature space",
+    "How confident the final leaf vote is on brand-new cases"
+  ],
+  explain: "Gini and entropy are two near-identical formulas for impurity: how mixed a group's labels are, from 0 (all one class) up to a maximum at a 50/50 split. Training scores each candidate split by how much it lowers this number and keeps the split that reduces it most.",
+  simple: "Both are just a mixed-ness score for a bucket of labels: all-same scores zero, a perfect 50/50 muddle scores highest. Gini and entropy disagree only in tiny details, like two thermometers reading almost the same temperature. The tree always tries to cut the mixed-ness down.",
+  widget: {
+    type: "curveStatic", title: "The mixed-ness hill",
+    world: "Vary how mixed one group is and watch its impurity rise and fall.",
+    xlab: "fraction of one class →", xs: [0,1,2,3,4], labels: ["0%","25%","50%","75%","100%"], dec: 0, yunit: "",
+    series: [
+      { name: "Gini", ys: [0,38,50,38,0] },
+      { name: "entropy", ys: [0,81,100,81,0] }
+    ],
+    knob: { label: "Fraction of one class", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "At 0% (all one class) impurity is zero: the group is pure and needs no further splitting.", tone: "info" },
+      { max: 3, text: "As the mix approaches 50/50 the score climbs; the group is as muddled as it can get.", tone: "info" },
+      { max: 4, text: "🤯 Gini and entropy trace the same hill, peaking at 50/50: two formulas, one idea, mixed-ness.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Gini / entropy", formula: "Gini = 2p(1-p); entropy = -sum p*log2(p); both peak at 50/50",
+      text: "Interchangeable impurity measures; splits are chosen to reduce whichever one you pick." }
+  }
+},
+
+{
+  q: "What does 'pruning' a decision tree mean?",
+  choices: [
+    "Cutting back branches that only memorised training noise",
+    "Adding extra branches until every leaf is perfectly pure",
+    "Rescaling each feature so the splits compare on equal footing",
+    "Averaging many trees so their separate errors cancel out",
+    "Reordering the questions so the cheapest ones are asked first"
+  ],
+  explain: "Pruning removes branches that fit noise rather than signal, either by limiting growth up front (pre-pruning, e.g. max_depth or min_samples_leaf) or by trimming a fully grown tree afterward (post-pruning, e.g. ccp_alpha). The smaller tree generalises better even though it fits the training data slightly worse.",
+  simple: "A tree left to grow wild sprouts tiny branches around every oddball point, which is memorising rather than learning. Pruning is the gardener's shears: snip the branches that only serve noise and the plant is healthier. A leaner tree does better on cases it has never seen.",
+  widget: {
+    type: "curveStatic", title: "Snip back to the sweet spot",
+    world: "Grow the tree from tiny to full and compare its training and validation scores.",
+    xlab: "tree size (leaves) →", xs: [0,1,2,3,4], labels: ["4","8","16","32","64"], dec: 0, yunit: "",
+    series: [
+      { name: "training score", ys: [70,82,90,96,100] },
+      { name: "validation score", ys: [68,80,85,80,72] }
+    ],
+    knob: { label: "Tree size (leaves)", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "A tiny, heavily pruned tree underfits: both scores are still low because it asks too few questions.", tone: "info" },
+      { max: 3, text: "Around the middle the validation score peaks; this pruned size generalises best of all.", tone: "info" },
+      { max: 4, text: "🤯 The full tree hits 100% training but validation sags: those last branches only memorised noise, so pruning cuts them.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Pruning", formula: "limit growth (max_depth, min_samples_leaf) or trim after (ccp_alpha)",
+      text: "Cut the branches that fit noise; the smaller tree generalises better." }
+  }
+},
+
+{
+  q: "What does a decision tree's 'feature importance' tell you?",
+  choices: [
+    "How much total impurity each feature reduced across the tree",
+    "The exact direction each feature pushes the final prediction",
+    "Which single feature the root always chooses to split on",
+    "How strongly two features correlate with each other in data",
+    "The order in which features were fed into the training call"
+  ],
+  explain: "Feature importance sums the impurity reduction each feature earned every time it was used to split, across the whole tree. A bigger total means the feature did more of the separating work. It is a useful hint rather than a verdict: the numbers shift between retrains and get unreliable when features are correlated.",
+  simple: "Imagine tallying, for each question-topic, how much cleaner it made the groups every time it was asked. A topic that repeatedly tidied things up scores high. It tells you what the tree leaned on, but treat it as a clue rather than gospel, since shuffling the data can reshuffle the ranking.",
+  widget: {
+    type: "curveStatic", title: "Who did the sorting work",
+    world: "Rank the features by how much impurity each one removed across the whole tree.",
+    xlab: "feature (most to least important) →", xs: [0,1,2,3,4], labels: ["income","age","debts","region","zip"], dec: 0, yunit: "",
+    series: [ { name: "impurity reduction credited", ys: [45,28,15,8,4] } ],
+    knob: { label: "Feature (ranked)", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "The top feature earned the largest impurity reduction, so the tree leaned on it the most.", tone: "info" },
+      { max: 3, text: "Importance falls off down the ranking; the lower features did little separating work.", tone: "info" },
+      { max: 4, text: "🤯 It is only a hint: retrain on slightly different data and this ranking can reshuffle, especially with correlated features.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Feature importance", formula: "importance = total impurity reduction credited to each feature",
+      text: "A useful hint about what the tree relied on, but it shifts between retrains." }
+  }
+},
+
+{
   q: "A decision tree classifies a customer. What is the model actually made of?",
   choices: ["A chain of yes/no questions ending in a verdict", "A weighted sum of the features passed to a curve", "A stored table of all the examples it trained on", "A product of one probability factor per feature", "A single straight line dividing the two classes"],
   explain: "A tree is questions all the way down: 'age < 30?' → 'income < 40k?' → verdict. Each answer routes you down a branch until you hit a leaf holding the prediction.",

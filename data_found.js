@@ -2,6 +2,103 @@
 (window.QUESTIONS = window.QUESTIONS || {}).found1 = [
 
 {
+  q: "Before any model exists, you're handed a spreadsheet of past customer visits. In machine-learning language, what is this 'dataset', concretely?",
+  choices: ["A table of past cases where each row is one recorded event and each column holds one fact about it", "A single large file of raw text the model reads from start to finish to absorb the patterns inside it", "The trained model's memory, storing every answer it has produced so it can look those answers up later", "A ranked list of the features that matter most, ordered so the strongest predictor sits right at the top", "The stream of live predictions a deployed model emits, gathered together for monitoring and later review"],
+  explain: "A dataset is just an organised record of the past: rows are individual cases (one visit, one sale, one email) and columns are the facts recorded about each case. Models learn nothing from the world directly — they learn from this table, so its rows-are-cases, columns-are-facts shape is the starting point of every project. Get the table right and everything downstream has something honest to stand on.",
+  simple: "Think of an ordinary spreadsheet of things that already happened: one line per event, one column per fact you wrote down. That's all a dataset is — no magic, just tidy history. Everything the model ever 'knows' comes from staring at this table, so the very first skill is reading it: which line is a case, and which column is a fact about that case.",
+  widget: {
+    type: "curveStatic", title: "Rows pile into knowledge",
+    world: "One dataset growing over time: as more past cases get recorded, more of the real pattern becomes learnable from the table.",
+    xlab: "rows recorded →", xs: [0,1,2,3,4], labels: ["10","100","1k","10k","100k"], dec: 0, yunit: "%",
+    series: [
+      { name: "pattern captured (%)", ys: [20, 55, 78, 90, 94] }
+    ],
+    knob: { label: "Rows recorded", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Ten rows: barely a sketch of the truth. A handful of cases can't reveal a pattern — the table is too thin to learn from.", tone: "info" },
+      { max: 3, text: "By ten thousand rows the shape fills in: every extra row is one more past case the model can generalise from.", tone: "info" },
+      { max: 4, text: "🤯 A hundred thousand rows and the curve flattens near the ceiling: the dataset now holds most of the recoverable pattern. The model never touched the world — only this table. Rows are cases, columns are facts, and that is the whole raw material.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Dataset", formula: "rows = past cases · columns = facts recorded about each case",
+      text: "In code it becomes X (feature columns) and y (the label column). Every topic in this manual begins by reading one of these tables." }
+  }
+},
+
+{
+  q: "Your spam dataset has one line for each email you've ever received. What is a single one of those lines called in machine learning, and what does it represent?",
+  choices: ["An example (or row) — one recorded case, like a single email, that the model learns from by seeing many", "A feature — one measurable fact about the data, like word count, that the model reads as input for its guess", "A label — the correct answer for the case, like spam or not, that the model is being trained to reproduce", "A parameter — one internal number the model adjusts during training so its error on the data keeps shrinking", "A batch — a small group of cases fed through the model together before its numbers are nudged just once"],
+  explain: "An example (spoken of as a 'row') is one complete case in the dataset: one email, one house sale, one patient visit, with all its facts on a single line. Models don't learn from one example — they learn by seeing many, extracting what the cases have in common. The other options are real ML terms, but each names a PART of the setup (a column, an answer, an internal number), not the whole recorded case.",
+  simple: "Picture the spam spreadsheet again: each row is one email, laid out with all its details. That single row is an 'example' — one thing that happened, written down. The model becomes smart not from any one row but from flipping through thousands of them, the way you'd learn what 'spam' feels like after seeing a few hundred junk messages.",
+  widget: {
+    type: "curveStatic", title: "One row, then a thousand",
+    world: "A dataset seen as a stack of individual examples — watch how many rows the model needs before it stops guessing.",
+    xlab: "examples seen →", xs: [0,1,2,3,4], labels: ["1","10","100","1k","10k"], dec: 0, yunit: "%",
+    series: [
+      { name: "test accuracy (%)", ys: [50, 58, 74, 86, 90] }
+    ],
+    knob: { label: "Examples seen", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "One or ten examples: the model has almost nothing to generalise from — barely above a coin flip at 50-58%.", tone: "info" },
+      { max: 3, text: "A thousand examples and the picture sharpens to 86%: each row was one more case the model could learn from.", tone: "info" },
+      { max: 4, text: "🤯 Ten thousand examples, 90% accuracy: no single row taught the model 'spam' — the pattern lived across the whole pile. That's why one example is the atom of learning, and why datasets are measured in rows.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Example (row)", formula: "one example = one complete case, all its facts on a single line",
+      text: "Rows are what you count when you ask 'how much data do I have?'. More independent examples almost always means better generalisation." }
+  }
+},
+
+{
+  q: "People say the computer 'builds a model' from the data. Stripped of the mystique, what IS a model?",
+  choices: ["A function the computer builds from data: features go in, a prediction comes out — a learned recipe", "The full table of training examples, kept in memory so each new case can be matched against it and copied", "The set of settings a person picks before training, such as depth or learning rate, that steer the fitting", "The measure of how wrong each guess is, which training keeps pushing downward until it stops improving", "The held-out block of data used at the very end to grade how well the finished system handles unseen cases"],
+  explain: "A model is a function with adjustable internal numbers: you feed it feature values and it returns a prediction. Training is what fills in those numbers from data, but the model itself is just the resulting input-output recipe — logistic regression, a decision tree, and a neural net differ only in the shape of that recipe. The distractors name things AROUND the model (the data, the hyperparameters, the loss, the test set), not the recipe itself.",
+  simple: "Forget the word 'model' sounding clever. It's a machine with dials: put a house's size and location in one end, and a price guess comes out the other. Training is the process that set the dials; the dialled-in machine IS the model. Nothing mystical — a recipe the computer wrote by looking at examples, that turns inputs into an answer.",
+  widget: {
+    type: "curveStatic", title: "Features in, prediction out",
+    world: "A model treated as a recipe: feed it a house size and read the price it returns — the same recipe applied across sizes.",
+    xlab: "input feature: house size (1000s sqft) →", xs: [0,1,2,3,4], labels: ["1.0","1.5","2.0","2.5","3.0"], dec: 0, yunit: "k",
+    series: [
+      { name: "predicted price (GBP k)", ys: [180, 240, 300, 360, 420] }
+    ],
+    knob: { label: "House size", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Smallest house in, 180k out. The model isn't thinking — it's applying the recipe training baked into its numbers.", tone: "info" },
+      { max: 3, text: "Feed larger sizes and the price climbs steadily: same recipe, different input, a fresh prediction each time.", tone: "info" },
+      { max: 4, text: "🤯 The biggest house maps to 420k by the same rule as the smallest. A model is exactly this: a fixed function, features in and a prediction out. Every algorithm in this manual is just a different SHAPE of that function.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Model", formula: "model = a learned function · features in → prediction out",
+      text: "Training chooses the function's internal numbers; the model is the finished input-output recipe. In sklearn it's the fitted estimator object." }
+  }
+},
+
+{
+  q: "You feed a brand-NEW house's features into a trained model and it hands back a number. What is that step, and its output, called?",
+  choices: ["A prediction — running a new row of features (no label) through the trained model to get its best guess", "Training — adjusting the model's internal numbers so that its error on the examples it is shown keeps shrinking", "Generalisation — the model's knack for performing well on the fresh cases it never once saw while it was learning", "Validation — scoring the model on held-out rows to compare settings before any final number is chosen or reported", "Labelling — attaching the known correct answer to each past row so the model has something concrete to learn from"],
+  explain: "A prediction is the model's forward use: hand it a new case's features (the label is unknown — that's the whole point) and it returns its best guess at that missing label. It's the opposite direction from training: training consumes examples WITH answers to set the model's numbers; prediction consumes features WITHOUT an answer and produces one. The distractors are all real, adjacent steps, but none names the act of turning a new feature row into a guess.",
+  simple: "Training is the studying; prediction is sitting the actual exam. You show the finished model a house it has never seen — just its size, age, location — and it fills in the one blank it was built to fill: the price. No answer key is attached to that new house; producing the missing answer is exactly what predicting means.",
+  widget: {
+    type: "curveStatic", title: "One new row, one guess",
+    world: "A trained model applied to brand-new houses of increasing size — each input row produces one predicted price, shown against what the house truly sold for.",
+    xlab: "new house size (1000s sqft) →", xs: [0,1,2,3,4], labels: ["1.0","1.5","2.0","2.5","3.0"], dec: 0, yunit: "k",
+    series: [
+      { name: "model's prediction (GBP k)", ys: [210, 255, 300, 345, 390] },
+      { name: "true sold price (GBP k)",    ys: [205, 250, 305, 350, 395] }
+    ],
+    knob: { label: "New house size", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Smallest new house: the model predicts 210k with no answer key in hand — it's filling the blank, not checking one.", tone: "info" },
+      { max: 3, text: "Across mid-sized houses the prediction shadows the true price closely: a good model's guesses track reality on cases it never saw.", tone: "info" },
+      { max: 4, text: "🤯 The largest house: predicted 390k, actually 395k — a guess made from features alone, the label supplied by the model, not the data. That forward step, features-in-guess-out on a new row, is prediction. It's the whole reason a model exists.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Prediction", formula: "new features (no label) → trained model → best guess at the label",
+      text: "In code it's model.predict(X_new). Training sets the model up; prediction is what you actually deploy it to do." }
+  }
+},
+
+{
   q: "A house-price dataset has columns: square footage, bedrooms, age, location score — and sold price. You want to predict prices for NEW houses. Which column plays a different role from the others, and why?",
   choices: ["Sold price is the LABEL — it's what we predict, and it's exactly the column we won't have for new houses", "Location score is the LABEL — it's a human judgement, and a model must output a judgement rather than a hard fact", "Bedrooms is the odd column out — it's a whole count, while the others are all smooth continuous measurements", "Square footage is the key input — it's the feature the model leans on hardest, which sets it apart from the rest", "Age is different — it keeps ticking up after the sale, so unlike the fixed columns it can't feed a prediction"],
   explain: "Features are inputs you'll know at prediction time; the label is the output you're trying to produce. The split isn't about data types or sizes — it's about WHEN you know each column. For a new listing, footage/bedrooms/age/location are all knowable; the sold price is precisely the unknown the model exists to fill in.",

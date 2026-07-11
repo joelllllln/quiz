@@ -2,6 +2,91 @@
 (window.QUESTIONS = window.QUESTIONS || {}).bayes1 = [
 
 {
+  q: "In Naive Bayes, what is meant by a piece of 'evidence'?",
+  choices: ["An observed clue, like a word, that nudges the belief", "The final probability the model assigns to each class", "The prior odds the model holds before seeing anything", "A weight the model learns by minimising its errors", "The fixed threshold used to accept a prediction"],
+  explain: "Evidence is any observed feature the model conditions on: a word present in an email, a symptom, a sensor reading. Each item has a likelihood under each class and contributes one multiplier to Bayes' rule. More evidence simply means more multipliers stacked onto the prior.",
+  simple: "Think of a detective gathering clues at a scene. A fingerprint, a footprint, a scribbled note: each one is a separate piece of evidence. On its own each just nudges the hunch a little; together they build the case.",
+  widget: {
+    type: "curveStatic", title: "Clues stacking up",
+    world: "Start with a hunch, then add one clue at a time and watch belief climb.",
+    xlab: "clues gathered →", xs: [0,1,2,3,4], labels: ["none","1","2","3","4"], dec: 0, yunit: "%",
+    series: [ { name: "belief in spam", ys: [40,47,63,80,92] } ],
+    knob: { label: "Clues gathered", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "One clue nudges the belief from the starting hunch of 40% up to 47%.", tone: "info" }, { max: 3, text: "Each extra clue pushes belief higher: evidence accumulates, it does not replace.", tone: "info" }, { max: 4, text: "🤯 Four separate clues carry the hunch from 40% to 92%, and each was just one small nudge.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Evidence", formula: "each observed clue adds one multiplier to the odds", text: "Evidence is the raw observed clues Naive Bayes conditions on, one nudge each." }
+  }
+},
+
+{
+  q: "In Naive Bayes, what does the 'likelihood' of a clue measure?",
+  choices: ["How probable that clue is within each class", "How common each class is before any clue", "How the two class likelihoods divide out", "How updated the belief is after the clue", "How many clues an email happens to contain"],
+  explain: "The likelihood is P(clue | class): among spam, how often does 'FREE' appear, and separately, how often among legit mail. It is estimated per class straight from training counts. These per-class numbers are the raw ingredients that Bayes' rule combines.",
+  simple: "Imagine asking two crowds, spammers and normal senders, 'how many of you say FREE?'. The fraction of hands raised in each crowd is the likelihood for that group. It is a within-group frequency, measured one crowd at a time.",
+  widget: {
+    type: "curveStatic", title: "Two crowds, one question",
+    world: "For each word, the fraction of spam versus legit emails that contain it.",
+    xlab: "word →", xs: [0,1,2,3,4], labels: ["hi","FREE","meeting","winner","invoice"], dec: 2, yunit: "",
+    series: [ { name: "P(word | spam)", ys: [0.30,0.40,0.05,0.35,0.06] }, { name: "P(word | legit)", ys: [0.30,0.05,0.40,0.02,0.20] } ],
+    knob: { label: "Word", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "'hi' is equally common in both crowds, so its two likelihoods match and it carries no signal.", tone: "info" }, { max: 3, text: "'meeting' leans legit while 'winner' leans spam: each word's two likelihoods differ.", tone: "info" }, { max: 4, text: "🤯 'invoice' too: every bar is a within-class frequency, measured one crowd at a time.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Likelihood", formula: "P(clue | class) — the clue's frequency within a class", text: "Likelihood asks how typical a clue is inside each class, estimated straight from counts." }
+  }
+},
+
+{
+  q: "What is a clue's 'likelihood ratio' in Naive Bayes?",
+  choices: ["Its likelihood in one class divided by the other", "Its likelihood in spam minus the legit likelihood", "Its likelihood multiplied by the class prior odds", "Its likelihood averaged over both of the classes", "Its likelihood summed across every training email"],
+  explain: "The likelihood ratio is P(clue|spam) / P(clue|legit). A value of 4 means the clue is four times more common in spam, so it multiplies the odds toward spam by 4; below 1 it pushes the other way. It converts each clue into a single multiplier for Bayes' rule.",
+  simple: "Two crowds raised their hands for 'FREE': 40% of spammers but only 10% of normal senders. Divide, four to one, and you get the clue's pulling power. Ratios above one tug toward spam; below one, away.",
+  widget: {
+    type: "curveStatic", title: "Turning clues into multipliers",
+    world: "Each word's spam likelihood divided by its legit likelihood: its pull.",
+    xlab: "word →", xs: [0,1,2,3,4], labels: ["hi","meeting","winner","FREE","$$$"], dec: 1, yunit: "x",
+    series: [ { name: "likelihood ratio", ys: [1.0,0.3,3.0,4.0,9.0] } ],
+    knob: { label: "Word", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "'hi' has ratio 1 so it multiplies nothing; 'meeting' is 0.3, tugging toward legit.", tone: "info" }, { max: 3, text: "'winner' multiplies the spam odds by 3, and 'FREE' by 4.", tone: "info" }, { max: 4, text: "🤯 '$$$' has ratio 9, one word multiplying the spam odds ninefold. That single number is all Bayes needs.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Likelihood ratio", formula: "P(clue|spam) / P(clue|legit) — the clue's odds multiplier", text: "Dividing the two likelihoods turns any clue into one number that scales the odds." }
+  }
+},
+
+{
+  q: "In Bayes' rule, what does the 'posterior' represent?",
+  choices: ["The updated belief after weighing the evidence", "The starting belief before any evidence arrives", "A single clue's multiplier applied to the odds", "The frequency of a clue inside just one class", "The cutoff that turns a belief into a label"],
+  explain: "The posterior is P(class | evidence): what you believe after combining the prior with every clue's likelihood ratio. In odds form it is simply the prior odds times the product of the multipliers. It is the output that Bayes' rule exists to compute.",
+  simple: "You start the day guessing a coin is fair, then watch it land heads ten times in a row. Your revised, better-informed belief afterward is the posterior. It is the prior plus everything the evidence taught you.",
+  widget: {
+    type: "curveStatic", title: "Belief, before and after",
+    world: "Start from the prior, apply each clue's multiplier, read the updated belief.",
+    xlab: "clues applied →", xs: [0,1,2,3,4], labels: ["prior","+1","+2","+3","+4"], dec: 0, yunit: "%",
+    series: [ { name: "belief in spam", ys: [30,55,72,85,92] } ],
+    knob: { label: "Clues applied", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "At zero clues the belief is just the prior, 30%. Nothing has updated yet.", tone: "info" }, { max: 3, text: "Each multiplier revises the belief upward: the prior becomes the posterior step by step.", tone: "info" }, { max: 4, text: "🤯 After all the clues the posterior is 92%, a world away from the 30% prior. That gap is what the evidence bought.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Posterior", formula: "P(class | evidence) = prior odds x product of ratios", text: "The posterior is the prior updated by every clue, Bayes' rule's finished answer." }
+  }
+},
+
+{
+  q: "What makes Naive Bayes a 'generative' model?",
+  choices: ["It learns each class's pattern, then asks which fits", "It draws a boundary that separates the two classes", "It stores every case and matches the nearest one", "It tunes weights to minimise its prediction error", "It fabricates extra emails to grow the training set"],
+  explain: "A generative model learns P(features | class), a picture of what each class's data typically looks like, plus the prior. For a new case it asks which class would most likely have generated these features. This contrasts with discriminative models, which model the boundary P(class | features) directly.",
+  simple: "Two people each describe their typical junk mail and typical real mail. When a new letter arrives you ask 'whose description does this match better?' rather than drawing a fence between them. Building a picture of each class, then checking fit, is the generative way.",
+  widget: {
+    type: "curveStatic", title: "Whose description fits?",
+    world: "A new email's words, scored against the learned spam profile and legit profile.",
+    xlab: "email word →", xs: [0,1,2,3,4], labels: ["FREE","winner","click","now","!!!"], dec: 2, yunit: "",
+    series: [ { name: "spam profile", ys: [0.40,0.35,0.30,0.25,0.28] }, { name: "legit profile", ys: [0.05,0.03,0.08,0.10,0.02] } ],
+    knob: { label: "Word matched", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "'FREE' fits the spam profile far better than the legit one.", tone: "info" }, { max: 3, text: "Word after word, the email resembles the spam class's learned picture.", tone: "info" }, { max: 4, text: "🤯 Every word matches spam's profile more closely, so the generative model says spam most likely produced this email.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Generative model", formula: "pick argmax P(class) x P(features | class)", text: "It learns each class's data profile, then asks which class most likely generated the case." }
+  }
+},
+
+{
   q: "An email arrives containing the words 'FREE', 'winner' and 'meeting'. How does Naive Bayes decide whether it's spam?",
   choices: ["Combines each word's evidence with the base rate and picks the likelier class", "Adds up how often each suspicious word appears and thresholds the total", "Multiplies each word's evidence together but leaves the base rate out entirely", "Picks whichever class simply owns the most training emails overall", "Finds the single most similar past email and copies over its label"],
   explain: "Naive Bayes starts from the prior (how common spam is) and multiplies in each word's likelihood ratio — how much more often it appears in spam than in legit mail. Biggest resulting probability wins.",

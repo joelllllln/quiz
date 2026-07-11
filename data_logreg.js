@@ -2,6 +2,74 @@
 (window.QUESTIONS = window.QUESTIONS || {}).logreg1 = [
 
 {
+  q: "What is the 'weighted score' that logistic regression computes for each case?",
+  choices: ["Each feature times its weight, all summed with the intercept", "The probability each feature gets after the sigmoid squash", "The count of features that push toward the positive class", "The largest single feature-times-weight term in the case", "The average of every feature value multiplied together"],
+  explain: "The model multiplies every feature by its learned weight, adds those products together, and adds the intercept. This single number, the linear combination w.x + b, is then handed to the sigmoid. It summarises the whole case in one value before any probability is formed.",
+  simple: "It is like a scorecard: each answer is worth some points (its weight), and you add all the points up plus a starting bonus. One person, one final tally. That tally is the only thing the model reacts to next.",
+  widget: {
+    type: "curveStatic", title: "Adding up the score",
+    world: "Features are added one at a time to build a single applicant's running score.",
+    xlab: "features added →", xs: [0,1,2,3,4], labels: ["start","+income","+history","+debt","+age"], dec: 0, yunit: "",
+    series: [ { name: "running score", ys: [0,2,3.5,3,4] } ],
+    knob: { label: "Features added", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "At the start the score is just the intercept - no features have spoken yet.", tone: "info" }, { max: 3, text: "Each feature adds (or subtracts) its own weighted contribution to the running total.", tone: "info" }, { max: 4, text: "🤯 The final number is the whole case boiled down to one value - that single score is all the sigmoid ever sees.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Weighted score", formula: "score = w1x1 + w2x2 + ... + b", text: "One number summing every feature's weighted push plus the baseline, ready for the sigmoid." }
+  }
+},
+
+{
+  q: "What role does the intercept (bias) term play in logistic regression?",
+  choices: ["It sets the baseline score when every feature is zero", "It rescales each feature so the weights can stay small", "It marks the cutoff where a probability becomes a label", "It measures how steep the sigmoid curve becomes overall", "It counts how many features push toward the positive class"],
+  explain: "The intercept is added to the weighted sum no matter the feature values, so it fixes the score (and thus the probability) when all features are zero. It shifts the whole sigmoid left or right along the score axis. It captures the model's baseline lean toward one class before any evidence is weighed.",
+  simple: "Think of a race where one runner gets a head start before the gun fires. The intercept is that head start: the model's opening lean toward yes or no, already in place before any feature runs. Features then add to or subtract from it.",
+  widget: {
+    type: "curveStatic", title: "The head start",
+    world: "Sweeping the intercept slides the baseline score up while all features stay fixed.",
+    xlab: "intercept value →", xs: [0,1,2,3,4], labels: ["-2","-1","0","+1","+2"], dec: 0, yunit: "",
+    series: [ { name: "baseline score", ys: [-2,-1,0,1,2] } ],
+    knob: { label: "Intercept value", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "A strongly negative intercept means the model leans NO before any feature is seen.", tone: "info" }, { max: 3, text: "At zero the baseline is neutral - a coin flip until features tip it.", tone: "info" }, { max: 4, text: "🤯 A positive intercept pre-loads the score toward YES; the same features then decide from a biased start.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Intercept (bias)", formula: "score = w.x + b  (b is the intercept)", text: "The baseline score added to every case, setting the model's default lean before features speak." }
+  }
+},
+
+{
+  q: "In logistic regression, what are the 'odds' of an outcome?",
+  choices: ["The ratio of the yes-chance to the no-chance", "The probability rescaled onto a 0-to-100 range", "The raw score before the sigmoid squashes it", "The chance of yes minus the chance of no", "The logarithm of the probability of the outcome"],
+  explain: "Odds express a belief as a ratio: probability divided by (1 minus probability). A 75% chance is odds of 3:1, meaning three expected yeses for every no. Odds run from 0 to infinity, unlike probability's 0-to-1, which is why the model finds them convenient to multiply.",
+  simple: "A bookie does not say '75% chance'; they say '3 to 1'. Odds are the same belief written as a head-to-head ratio: how many yeses you expect for each no. A fair coin sits at 1:1.",
+  widget: {
+    type: "curveStatic", title: "Probability as a ratio",
+    world: "As the yes-probability climbs, the odds ratio stretches upward far faster.",
+    xlab: "probability of yes →", xs: [0,1,2,3,4], labels: ["50%","67%","75%","80%","90%"], dec: 0, yunit: "",
+    series: [ { name: "odds (yes:no)", ys: [1,2,3,4,9] } ],
+    knob: { label: "Probability level", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "At 50% the odds are 1:1 - a dead heat, one yes per no.", tone: "info" }, { max: 3, text: "75% is 3:1 - the ratio grows faster than the probability does.", tone: "info" }, { max: 4, text: "🤯 By 90% the odds are 9:1; near certainty the ratio races toward infinity while probability barely moves.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Odds", formula: "odds = p / (1 - p)", text: "The belief rewritten as a yes-to-no ratio, running from 0 to infinity instead of 0 to 1." }
+  }
+},
+
+{
+  q: "What is the log-odds (logit) in logistic regression?",
+  choices: ["The logarithm of the odds, where the model is linear", "The probability left over after the sigmoid squashes it", "The ratio of the yes-chance to the no-chance directly", "The penalty added to the loss for large weight values", "The cutoff that turns a probability into a class label"],
+  explain: "The log-odds is log(p / (1 - p)), the natural scale on which logistic regression is a straight line: log-odds = w.x + b. The sigmoid is exactly the inverse map that pulls this unbounded quantity back into a 0-to-1 probability. Weights add together on this scale, which is what makes them interpretable.",
+  simple: "Odds stretch from 0 to infinity and bunch up awkwardly. Take their logarithm and the scale turns symmetric and straight: yes and no sit an equal distance either side of zero. That straight ruler is where the model actually does its adding.",
+  widget: {
+    type: "curveStatic", title: "The straight-line scale",
+    world: "Converting odds to log-odds turns a lopsided ratio into an evenly spaced straight line.",
+    xlab: "odds (yes:no) →", xs: [0,1,2,3,4], labels: ["1:4","1:2","1:1","2:1","4:1"], dec: 0, yunit: "",
+    series: [ { name: "log-odds", ys: [-1.4,-0.7,0,0.7,1.4] } ],
+    knob: { label: "Odds level", min: 0, max: 4, step: 1, init: 0 },
+    insights: [ { max: 1, text: "Odds of 1:4 map to a negative log-odds - the NO side of zero.", tone: "info" }, { max: 3, text: "Even odds (1:1) sit exactly at zero: the natural centre of the log-odds scale.", tone: "info" }, { max: 4, text: "🤯 The steps are now evenly spaced - each doubling of the odds adds the same fixed amount. On THIS ruler the model is a straight line.", tone: "wow" } ],
+    extreme: { at: "max" },
+    reveal: { name: "Log-odds (logit)", formula: "logit = log( p / (1 - p) ) = w.x + b", text: "The straight-line scale the model thinks in; the sigmoid is just its inverse back to probability." }
+  }
+},
+
+{
   q: "A logistic regression model looks at a loan application. What does it actually output?",
   choices: ["A probability between 0 and 1", "The single most likely class label", "A signed distance from the boundary", "The raw weighted sum, unsquashed", "A hard 0 or 1 decision value"],
   explain: "Logistic regression computes a weighted score, then squashes it through the sigmoid function into a probability. The label comes later, when YOU threshold that probability.",

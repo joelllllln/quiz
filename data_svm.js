@@ -2,6 +2,56 @@
 (window.QUESTIONS = window.QUESTIONS || {}).svm1 = [
 
 {
+  q: "In a support vector machine, what is the 'decision boundary'?",
+  choices: ["The surface that separates one class from the other", "The empty street between the two nearest points", "The handful of points that pin the model in place", "The penalty charged for each misclassified point", "The similarity function comparing pairs of points"],
+  explain: "The decision boundary is the surface where the SVM switches its predicted class — a line in 2-D, a plane or hyperplane in higher dimensions. Points on one side get labelled one class, points on the other side the other class, so placing this surface well is the entire training goal.",
+  simple: "Picture a fence dividing two neighbours' gardens: step to one side and you are on the cats' turf, step across and you are on the dogs'. The decision boundary is that fence — the exact line where the model flips its answer.",
+  widget: {
+    type: "curveStatic", title: "Which side of the line?",
+    world: "Walk across one feature axis and watch each class's vote as you pass through the boundary.",
+    xlab: "feature value (class A side to class B side) →", xs: [0,1,2,3,4], labels: ["far left","left","boundary","right","far right"], dec: 0, yunit: "",
+    series: [
+      { name: "vote for class A", ys: [100,75,50,25,0] },
+      { name: "vote for class B", ys: [0,25,50,75,100] }
+    ],
+    knob: { label: "Position across the axis", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "Deep on the left the model is sure it is class A — you are well inside one side of the boundary.", tone: "info" },
+      { max: 3, text: "At the middle label the two votes tie at 50/50 — that crossing point IS the decision boundary, where the prediction flips.", tone: "info" },
+      { max: 4, text: "🤯 Cross the boundary and the winning class swaps entirely. The whole model reduces to one question: which side of this surface are you on?", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Decision boundary", formula: "predict class A on one side, class B on the other",
+      text: "Everything the SVM does is in service of positioning this one separating surface." }
+  }
+},
+
+{
+  q: "What is the 'kernel trick' in an SVM?",
+  choices: ["Getting a richer space's benefit using only pairwise similarities", "Mapping every point into a richer space and storing its coordinates", "Curving the boundary by stacking many straight cuts together", "Widening the margin until curved classes become separable", "Lowering gamma so each point's influence reaches further out"],
+  explain: "The kernel trick computes only the similarity (inner product) between each pair of points in the richer space, never the points' actual high-dimensional coordinates. Because the SVM's maths only ever needs those pairwise similarities, it can exploit a huge — even infinite — feature space at the price of the original one. That is what makes non-linear SVMs affordable.",
+  simple: "Imagine rating how alike two songs are without writing down every note of each — you just hand back one similarity score. The kernel trick does that: it skips building the giant new feature space and only reports how similar each pair of points would be there, which is all the SVM actually needs.",
+  widget: {
+    type: "curveStatic", title: "Skipping the expensive coordinates",
+    world: "Grow the richness of the feature space and compare the cost of building coordinates versus just returning similarities.",
+    xlab: "richness of the feature space →", xs: [0,1,2,3,4], labels: ["2-D","10-D","100-D","10,000-D","infinite"], dec: 0, yunit: "",
+    series: [
+      { name: "explicit-mapping cost", ys: [1,5,50,5000,9999] },
+      { name: "kernel-trick cost", ys: [1,1,1,1,1] }
+    ],
+    knob: { label: "Feature-space richness", min: 0, max: 4, step: 1, init: 0 },
+    insights: [
+      { max: 1, text: "In a small space, computing the new coordinates directly is cheap — the trick barely matters yet.", tone: "info" },
+      { max: 3, text: "As the feature space balloons, explicitly building coordinates gets ruinous — but the kernel's pairwise cost has not moved.", tone: "info" },
+      { max: 4, text: "🤯 An infinite-dimensional space (the RBF kernel) would cost infinity to build — yet the kernel still returns one similarity number per pair. Impossibility made affordable is the whole trick.", tone: "wow" }
+    ],
+    extreme: { at: "max" },
+    reveal: { name: "Kernel trick", formula: "use K(x, x') = similarity in the rich space; never compute coordinates",
+      text: "Only inner products between points are ever needed, so the feature space can be huge or infinite while the work stays pairwise." }
+  }
+},
+
+{
   q: "Many straight lines separate two classes perfectly. Which one does an SVM choose?",
   choices: ["The one leaving the widest gap to the nearest points", "The one that runs straight through both class centroids", "The one minimising total squared error to the points", "The one that touches the fewest training points", "The one perpendicular to the largest class spread"],
   explain: "All separating lines score 100% on training data — SVM breaks the tie by maximising the MARGIN: the distance to the closest point on each side. Widest street wins.",

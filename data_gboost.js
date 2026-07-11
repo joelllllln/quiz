@@ -1,6 +1,52 @@
 /* Gradient Boosting & XGBoost — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).gb1 = [
   {
+    "q": "In gradient boosting, what happens during a single BOOSTING ROUND?",
+    "choices": [
+      "Measure the current errors, fit a small tree to them, then add it on",
+      "Retrain every existing tree at once on the full original set of labels",
+      "Average all current trees and discard the least accurate member so far",
+      "Re-split the data into fresh folds and rerun cross-validation entirely",
+      "Lower the learning rate slightly and reshuffle every single training row"
+    ],
+    "explain": "A boosting round is one iteration of the core loop: compute the residuals (the ensemble's current errors), fit a fresh weak learner to those leftovers, and add its shrunken prediction to the running total. Hundreds of these rounds stack tiny corrections into a strong model. It is not a retrain-everything step -- earlier trees are frozen the moment they are added.",
+    "simple": "Think of one round as a single editing pass over a draft. You look at what's still wrong, write one small fix aimed only at those mistakes, and staple it onto the growing stack. Do that pass hundreds of times and a pile of tiny fixes becomes a polished result -- but you never rewrite the earlier passes.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One round, one small fix",
+      "world": "Each boosting round measures the leftover error, fits one small tree to it, and adds it on. Watch the error shrink round by round.",
+      "xlab": "boosting rounds →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0",
+        "10",
+        "30",
+        "80",
+        "200"
+      ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "remaining error", "ys": [ 1, 0.55, 0.3, 0.14, 0.06 ] },
+        { "name": "training accuracy (%)", "ys": [ 50, 76, 85, 92, 96 ] }
+      ],
+      "knob": { "label": "Rounds", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Round 0: nothing added yet, so the whole error is still on the table. The first round's small tree will attack the biggest leftovers.", "tone": "info" },
+        { "max": 3, "text": "By round 30 each pass has trimmed a bit more: measure errors, fit a small tree, add it. That single loop, repeated, is all boosting does.", "tone": "info" },
+        { "max": 4, "text": "🤯 After 200 rounds the leftover error is nearly gone -- hundreds of tiny per-round fixes have compounded into a strong model, every earlier tree left untouched.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Boosting round", "formula": "one round = measure errors → fit small tree → add scaled tree", "text": "Boosting is just this cycle repeated hundreds of times; early stopping decides how many rounds to keep." }
+    }
+  },
+  {
     "q": "Boosting builds a 'weak learner' at each step. What does WEAK actually mean here?",
     "choices": [
       "A deliberately small model, like a shallow tree, only a bit better than guessing",

@@ -1,6 +1,242 @@
 /* Advanced Scikit-learn — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).skl1 = [
   {
+    "q": "In scikit-learn, what is an 'estimator'?",
+    "choices": [
+      "Any object that learns from data via a shared create-fit-use interface",
+      "Only the final predictive model sitting at the end of a pipeline chain",
+      "A scoring function that measures how well predictions match the labels",
+      "A saved set of hyperparameters you pass into a model's constructor",
+      "The numeric array of predictions a model returns for the new rows"
+    ],
+    "explain": "Estimator is sklearn's base abstraction: every model, scaler, and encoder is an estimator with the same grammar - construct it with hyperparameters, call .fit() to learn, then use it. This one interface is why you can swap a LogisticRegression for a RandomForest without changing the surrounding code.",
+    "simple": "Think of estimators as appliances that all share the same three buttons: build, learn, use. Because a blender and a toaster expose the same controls, you can swap one for the other without relearning the panel. That uniformity is what makes sklearn feel like one tool instead of a hundred.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One interface, many models",
+      "world": "Swapping the model at the end of a fixed pipeline: how many surrounding lines you must rewrite each time.",
+      "xlab": "models tried →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["LogReg", "SVC", "Tree", "Forest", "GBoost"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "glue lines changed to swap", "ys": [0, 0, 0, 0, 0] },
+        { "name": "model types supported", "ys": [1, 2, 3, 4, 5] }
+      ],
+      "knob": { "label": "Models tried", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "One estimator, one interface: construct, fit, predict.", "tone": "info" },
+        { "max": 3, "text": "Swap in three more model types - the surrounding code still changes by zero lines.", "tone": "info" },
+        { "max": 4, "text": "🤯 Every estimator shares create-fit-use, so models become interchangeable parts.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Estimator", "formula": "est = Model(params); est.fit(X, y)", "text": "The shared interface lets you swap any estimator for another without touching the code around it." }
+    }
+  },
+  {
+    "q": "What does calling .fit(X, y) do to a scikit-learn estimator?",
+    "choices": [
+      "It learns from the data and stores what it learned on the object",
+      "It returns the predicted labels for the rows you pass as X and y",
+      "It splits the data into training and validation folds internally",
+      "It checks the model's accuracy against the true labels held in y",
+      "It sets the hyperparameters that control how the model behaves"
+    ],
+    "explain": ".fit() is the learning step: the estimator looks at features X (and labels y when supervised) and stores the fitted parameters - coefficients, tree splits, scaler means - as attributes ending in an underscore. Nothing is predicted yet; fit only changes the object's internal state.",
+    "simple": "Fitting is studying for the exam, not taking it. The model pores over the examples and writes everything it figures out onto its own notes. Later, .predict() is sitting the exam using those notes.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "What fit changes",
+      "world": "Watch a model's training error fall as .fit() learns from the data across passes.",
+      "xlab": "fit progress →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["start", "25%", "50%", "75%", "done"],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "training error", "ys": [0.9, 0.5, 0.3, 0.18, 0.12] }
+      ],
+      "knob": { "label": "Fit progress", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Before fitting, the fresh estimator knows nothing - error is high.", "tone": "info" },
+        { "max": 3, "text": "As .fit() processes the data, the learned parameters drive the error down.", "tone": "info" },
+        { "max": 4, "text": "🤯 When fit finishes, the learning is stored on the object, ready to use.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": ".fit(X, y)", "formula": "est.fit(X, y) -> learns, stores params_ on est", "text": "Fit is the only step that changes what the model knows; call it on training data only." }
+    }
+  },
+  {
+    "q": "After fitting a classifier, how do .predict and .predict_proba differ?",
+    "choices": [
+      "predict gives hard class labels; predict_proba gives class probabilities",
+      "predict gives probabilities; predict_proba gives the rounded class labels",
+      "predict works only on the training rows; predict_proba on new unseen rows",
+      "predict retrains the model on each call; predict_proba reuses the fit",
+      "predict handles regression targets; predict_proba handles class targets"
+    ],
+    "explain": "Both apply the fitted model to new rows, but at different resolutions: predict returns a single chosen label per row, while predict_proba returns the estimated probability of each class. The hard label is usually just predict_proba's argmax at a 0.5 threshold - the probabilities let you move that threshold.",
+    "simple": "predict is the doctor saying 'you have the flu'. predict_proba is the doctor saying '80% flu, 15% cold, 5% nothing'. Same diagnosis engine, but the percentages let you decide how cautious to be before acting.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Labels vs probabilities",
+      "world": "Five rows sorted by predicted probability of the positive class; the hard label appears once probability crosses 0.5.",
+      "xlab": "rows, low to high p →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["r1", "r2", "r3", "r4", "r5"],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "predict_proba (P of positive)", "ys": [0.1, 0.35, 0.5, 0.72, 0.9] },
+        { "name": "predict (hard label 0/1)", "ys": [0, 0, 1, 1, 1] }
+      ],
+      "knob": { "label": "Row", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Low-probability rows: predict_proba near 0, predict says class 0.", "tone": "info" },
+        { "max": 3, "text": "Around 0.5, predict flips to class 1 - the label is just proba thresholded.", "tone": "info" },
+        { "max": 4, "text": "🤯 predict_proba keeps the nuance predict throws away; move the threshold to trade precision for recall.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": ".predict / .predict_proba", "formula": "predict = argmax(predict_proba) at threshold 0.5", "text": "Use predict_proba when you need to tune the decision threshold, not just accept 0.5." }
+    }
+  },
+  {
+    "q": "In scikit-learn, what is a 'transformer' and what does .transform do?",
+    "choices": [
+      "An estimator that reshapes data; fit learns a recipe, transform applies it",
+      "An estimator that predicts labels; fit trains it, then transform scores it",
+      "A model that combines several estimators; transform averages their output",
+      "A tool that tunes hyperparameters; transform refits the best model on data",
+      "A function that splits data into folds; transform returns each fold in turn"
+    ],
+    "explain": "Transformers are estimators whose job is to reshape data rather than predict - scalers, encoders, PCA. .fit learns the transformation parameters from training data (a scaler's mean and std, say), and .transform then applies that fixed recipe to any data you pass, including the test set.",
+    "simple": "A transformer is like a recipe you calibrate once. .fit tastes the training batch and decides 'add this much salt'; .transform then seasons every future dish by that same rule. Because the recipe is fixed at fit time, test data gets the training recipe - no peeking.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Fit the recipe, transform the data",
+      "world": "Raw feature values passed through a fitted StandardScaler: transform maps them onto a common z-scored scale.",
+      "xlab": "sample rows →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["r1", "r2", "r3", "r4", "r5"],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "raw value", "ys": [100, 120, 140, 160, 180] },
+        { "name": "after .transform (z-score)", "ys": [-1.41, -0.71, 0, 0.71, 1.41] }
+      ],
+      "knob": { "label": "Row", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "fit learned the mean (140) and spread from the training rows.", "tone": "info" },
+        { "max": 3, "text": "transform re-expresses each raw value as standard deviations from that mean.", "tone": "info" },
+        { "max": 4, "text": "🤯 The same learned recipe applies to test data - fit on train, transform everywhere.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Transformer & .transform", "formula": "scaler.fit(X_train); scaler.transform(X_any)", "text": "Fit learns the recipe from training data only; transform applies that same recipe to any set." }
+    }
+  },
+  {
+    "q": "What does GridSearchCV do?",
+    "choices": [
+      "Tries every hyperparameter combo with cross-validation, refits the best",
+      "Samples random hyperparameter combos until the score stops improving",
+      "Trains one model per fold and averages all their predictions together",
+      "Selects the most important features before the final model is fitted",
+      "Splits the data once into train and validation to tune the parameters"
+    ],
+    "explain": "GridSearchCV wraps another estimator, exhaustively evaluates every combination in a hyperparameter grid using k-fold cross-validation, and reports the combo with the best mean CV score. It then refits that winning configuration on the entire training set, so the fitted object is ready to predict.",
+    "simple": "It's a bake-off: you list the settings to try, and GridSearchCV bakes a cake for every combination, scoring each with cross-validation. It crowns the best recipe and immediately bakes one final full-size cake with it, ready to serve.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Search the grid, keep the peak",
+      "world": "Mean cross-validation score for five hyperparameter settings GridSearchCV tries; it keeps the peak.",
+      "xlab": "hyperparameter setting →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["C=0.01", "C=0.1", "C=1", "C=10", "C=100"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "mean CV score", "ys": [78, 85, 90, 88, 82] }
+      ],
+      "knob": { "label": "Setting", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Weak regularisation setting: the CV score is low.", "tone": "info" },
+        { "max": 3, "text": "GridSearchCV keeps searching; the middle setting peaks at 90%.", "tone": "info" },
+        { "max": 4, "text": "🤯 It picks the best combo AND refits it on all the training data automatically.", "tone": "wow" }
+      ],
+      "extreme": { "at": 2 },
+      "reveal": { "name": "GridSearchCV", "formula": "GridSearchCV(model, param_grid, cv=5).fit(X, y).best_estimator_", "text": "Exhaustive and reliable for a few parameters; switch to random search when the grid explodes." }
+    }
+  },
+  {
+    "q": "What does it mean to 'calibrate' a classifier's probabilities?",
+    "choices": [
+      "Adjust its scores so a predicted 70% comes true about 70% of the time",
+      "Rescale its features so each one has zero mean and unit variance first",
+      "Tune its threshold so that precision and recall come out perfectly balanced",
+      "Retrain it on more data so its raw accuracy climbs as high as possible",
+      "Shrink its coefficients so the model leans less on any single feature"
+    ],
+    "explain": "A calibrated model's confidence matches reality: among all cases it labels '70% likely', about 70% truly are positive. Many classifiers (SVMs, boosted trees) output distorted scores, so CalibratedClassifierCV wraps them and remaps those scores using held-out data. Calibration changes the probabilities, not the ranking or the accuracy.",
+    "simple": "A weather forecaster who says '70% rain' should see rain on about 70% of such days - otherwise their confidence is meaningless. Calibration retrains that forecaster's sense of confidence so the numbers can be trusted, without changing which days they think are wetter.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Bending scores onto the diagonal",
+      "world": "Predicted probability vs how often the event actually occurs; calibration bends the curve onto the diagonal.",
+      "xlab": "predicted probability →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["0.1", "0.3", "0.5", "0.7", "0.9"],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "uncalibrated (observed)", "ys": [0.25, 0.4, 0.5, 0.58, 0.7] },
+        { "name": "calibrated (observed)", "ys": [0.11, 0.29, 0.5, 0.71, 0.89] }
+      ],
+      "knob": { "label": "Predicted bin", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Uncalibrated: it says 0.1 but the event happens 25% of the time - overcautious.", "tone": "warn" },
+        { "max": 3, "text": "The raw scores drift off the ideal diagonal in both directions.", "tone": "info" },
+        { "max": 4, "text": "🤯 After calibration, a predicted 0.9 really occurs ~90% - probabilities you can trust.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Calibration", "formula": "CalibratedClassifierCV(clf).fit(X, y)", "text": "Calibrate whenever you act on the probability itself - pricing, thresholds, expected value." }
+    }
+  },
+  {
+    "q": "What does permutation importance measure?",
+    "choices": [
+      "How much the score drops when one feature's column is shuffled",
+      "How large each feature's learned coefficient is inside the final model",
+      "How strongly each pair of input features is correlated with each other",
+      "How many times a feature is chosen for a split across all the trees",
+      "How much adding a brand-new feature would improve the model's score"
+    ],
+    "explain": "Permutation importance shuffles one column at a time on held-out data and measures how much the model's score falls: a big drop means the model relied on that feature, a tiny drop means it didn't. Because it only re-scores an already-fitted model, it works for any estimator and reflects real predictive value, not just internal coefficients.",
+    "simple": "To find out if a band member matters, mute their microphone and hear how much worse the song sounds. Permutation importance does exactly that to each feature - scramble it, listen for the drop in quality. Big drop, key player; no drop, they were miming.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Mute a feature, hear the drop",
+      "world": "Model score after shuffling each feature in turn; the larger the fall from baseline, the more that feature mattered.",
+      "xlab": "feature shuffled →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["age", "income", "zip", "color", "id"],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "score after shuffle", "ys": [0.72, 0.8, 0.87, 0.9, 0.91] },
+        { "name": "baseline (nothing shuffled)", "ys": [0.91, 0.91, 0.91, 0.91, 0.91] }
+      ],
+      "knob": { "label": "Feature", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Shuffling 'age' craters the score from 0.91 to 0.72 - the model leaned on it hard.", "tone": "info" },
+        { "max": 3, "text": "Middle features cost less when scrambled; the model used them only a little.", "tone": "info" },
+        { "max": 4, "text": "🤯 Shuffling 'id' barely dents the score - it carried almost no signal.", "tone": "wow" }
+      ],
+      "extreme": { "at": 0 },
+      "reveal": { "name": "Permutation importance", "formula": "permutation_importance(model, X_val, y_val)", "text": "Model-agnostic and computed on held-out data - trust it over raw feature_importances_." }
+    }
+  },
+  {
     "q": "In sklearn you wrap StandardScaler and a classifier into one Pipeline object, then cross-validate the pipeline. What does that buy that separate steps don't?",
     "choices": [
       "The scaler is re-fitted inside each training fold — leakage becomes impossible by construction",

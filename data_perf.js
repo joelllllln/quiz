@@ -1,6 +1,142 @@
 /* Performance Optimisation — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).perf1 = [
   {
+    "q": "In machine learning, what is a 'baseline'?",
+    "choices": [
+      "A dead-simple rule your real model must beat to prove its worth",
+      "The highest accuracy any model could possibly reach on the data",
+      "The final tuned model you actually ship to production users",
+      "The average score across every model your team has trained so far",
+      "A setting you pick before training to control the model's complexity"
+    ],
+    "explain": "A baseline is a trivial predictor — always guess the majority class, or repeat last period's value. It marks what zero skill looks like, so an impressive 92% means nothing until you know the baseline already scored 91%. Every later improvement is measured as points gained over this anchor.",
+    "simple": "Before praising a runner's time, you need to know what a casual jog scores. The baseline is that casual jog: the laziest sensible guess. If your fancy model barely beats it, all your effort bought almost nothing.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Points over the rock",
+      "world": "A project's model score next to the flat do-nothing baseline as effort grows.",
+      "xlab": "effort →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["baseline", "logistic", "tuned tree", "ensemble", "+features"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "your model", "ys": [84, 88, 90, 91, 92] },
+        { "name": "baseline (majority guess)", "ys": [84, 84, 84, 84, 84] }
+      ],
+      "knob": { "label": "Project stage", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Effort zero: the model is just the baseline — 84%, the majority-class guess. Zero skill, by definition.", "tone": "info" },
+        { "max": 3, "text": "As effort grows the model pulls above the flat baseline. The GAP is the only part that is real skill.", "tone": "info" },
+        { "max": 4, "text": "🤯 92% sounds great — but the baseline already scored 84%, so you actually earned 8 points. Always read a score as distance above the baseline, never alone.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Baseline", "formula": "real skill = model score − baseline score", "text": "The cheapest, highest-return habit in ML: establish the do-nothing score on day one, so every later number means something." }
+    }
+  },
+  {
+    "q": "What is a holdout (validation) set used for?",
+    "choices": [
+      "Data kept out of training, used to compare settings fairly",
+      "Extra rows added into training so the model sees more cases",
+      "The dumb rule a model must beat before it is worth shipping",
+      "Data used to compute the final number reported to the world",
+      "The slice the model trains on to learn its own parameters"
+    ],
+    "explain": "A validation (holdout) set is data withheld during training so you can compare hyperparameter choices on cases the model never learned from. It gives an honest read on which setting generalises best. The test set is held back even further — untouched by these comparisons — for the final verdict.",
+    "simple": "You don't practise for an exam using the exact exam questions — you'd only prove you can memorise. The validation set is a stack of practice questions kept in a drawer: you check yourself on them to pick your best approach, fairly.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Judged on unseen rows",
+      "world": "One model's score on data it trained on versus held-out validation data as complexity rises.",
+      "xlab": "model complexity →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["min", "low", "med", "high", "max"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "training score", "ys": [70, 82, 90, 96, 99] },
+        { "name": "validation (holdout)", "ys": [68, 80, 86, 82, 74] }
+      ],
+      "knob": { "label": "Complexity setting", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "At low complexity both scores sit close — but only the held-out number tells you how the model treats NEW rows.", "tone": "info" },
+        { "max": 3, "text": "Validation peaks in the middle while training keeps climbing. Trust the holdout, not the training enthusiasm.", "tone": "info" },
+        { "max": 4, "text": "🤯 At max complexity training hits 99% but validation sinks to 74% — the model memorised. Without a holdout set you'd never see the crash coming.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Holdout / validation set", "formula": "split off rows before training → score candidate settings on them", "text": "The honest referee for every tuning decision. Keep a separate test set sealed for the final number." }
+    }
+  },
+  {
+    "q": "What does k-fold cross-validation do?",
+    "choices": [
+      "Rotates which slice is held out, scores each, then averages",
+      "Trains one model and tests it on a single held-out slice",
+      "Adds more folds of data into training to reduce the bias",
+      "Picks the single split that gives the best possible score",
+      "Repeats training until the validation loss stops improving"
+    ],
+    "explain": "Cross-validation splits the data into k folds, then rotates: each fold takes a turn as the held-out test while the rest train, and the k scores are averaged. This removes the luck of any single split, since one lucky or unlucky slice can't dominate. The averaged score is a far more stable estimate of real performance.",
+    "simple": "Judging a student on one random quiz is unfair — they might draw an easy or a nasty set. Cross-validation gives five different quizzes, each covering a different part, and averages the marks. No single lucky or unlucky day decides the grade.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Rotating the held-out fold",
+      "world": "Each single fold's score versus the stable 5-fold average for the same model.",
+      "xlab": "fold used as test →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["fold 1", "fold 2", "fold 3", "fold 4", "fold 5"],
+      "dec": 1,
+      "yunit": "%",
+      "series": [
+        { "name": "single-fold score", "ys": [86, 79, 88, 82, 84] },
+        { "name": "5-fold average", "ys": [83.8, 83.8, 83.8, 83.8, 83.8] }
+      ],
+      "knob": { "label": "Fold shown", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Fold 1 alone says 86%. Judge on that one slice and you'd overrate the model.", "tone": "info" },
+        { "max": 3, "text": "Each fold gives a different verdict — 79% to 88%. Any single split is partly luck.", "tone": "info" },
+        { "max": 4, "text": "🤯 The five folds average to ~84%, steady no matter which slice you look at. THAT average is the number you trust, not any lucky single split.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Cross-validation", "formula": "k folds: each takes a turn as test → average the k scores", "text": "Removes single-split luck. 5 or 10 folds is standard; it's the honest way to compare settings." }
+    }
+  },
+  {
+    "q": "What is data leakage in machine learning?",
+    "choices": [
+      "Test-set or future info sneaking into training by mistake",
+      "Losing rows of your data when a file is saved incorrectly",
+      "A model slowly forgetting old data as it trains for longer",
+      "Sharing private user records outside the company's servers",
+      "Splitting off too little data to test the model fairly on"
+    ],
+    "explain": "Data leakage is when information the model shouldn't have at training time — test-set statistics or facts from the future — slips into training. A classic case is scaling features using the whole dataset before splitting. Scores look wonderful in testing, then collapse in production because the leak isn't there anymore.",
+    "simple": "It's like studying with a copy of the real exam hidden in your notes: your practice scores soar, but they're a lie. When the real test arrives without the cheat sheet, reality bites. Leakage flatters you now and betrays you later.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The score that evaporates",
+      "world": "Offline test score versus true production score as more leakage creeps in.",
+      "xlab": "amount of leakage →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["none", "a little", "some", "a lot", "severe"],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "offline score", "ys": [84, 88, 91, 94, 97] },
+        { "name": "production score", "ys": [84, 83, 83, 82, 82] }
+      ],
+      "knob": { "label": "Leakage amount", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "No leak: offline and production agree at 84%. Honest, if unglamorous.", "tone": "info" },
+        { "max": 3, "text": "As leakage grows the offline score inflates while production stays flat — the gap is pure illusion.", "tone": "warn" },
+        { "max": 4, "text": "🤯 Severe leakage: 97% offline, 82% live. Every point above the flat production line was borrowed from data the model won't have in the real world.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Data leakage", "formula": "fit every preprocessing step on the training split ONLY", "text": "The most common silent bug in applied ML. A too-good-to-be-true score usually is — hunt the leak before celebrating." }
+    }
+  },
+  {
     "q": "KNN's k, a tree's depth, SVM's C, logistic regression's regularisation — what do all of these have in common?",
     "choices": [
       "They're hyperparameters — chosen by you, judged on validation data",

@@ -1,6 +1,52 @@
 /* Random Forests & Bagging — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).rf1 = [
   {
+    "q": "A random forest's max_features setting controls what, exactly, at each split?",
+    "choices": [
+      "How many random features that split is allowed to consider",
+      "How many rows each bootstrap sample draws with replacement",
+      "How deep each individual tree is permitted to grow down",
+      "How many trees the whole forest will end up growing in total",
+      "How many features must be used somewhere in every tree"
+    ],
+    "explain": "max_features caps the number of randomly-chosen candidate features a tree may weigh when picking each split. It is the forest's main diversity dial: a smaller value forces trees to explore different features (more decorrelation, weaker individual trees), while a larger value lets every tree chase the same strong feature. sqrt(d) is the classification default.",
+    "simple": "At each fork in a tree, the forest hides most of the columns and only shows a random handful; max_features is how big that handful is. Show just one column and the trees are wildly different but a bit blind; show all of them and every tree makes the same first cut. The default is to show about the square root of the columns - enough variety without going blind.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The diversity dial",
+      "world": "One forest, sweeping max_features from 1 feature per split up to all of them, on a 64-feature dataset.",
+      "xlab": "max_features per split →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "3",
+        "sqrt(d)~8",
+        "20",
+        "64=all"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "forest accuracy", "ys": [ 86, 89, 91, 89.5, 87 ] },
+        { "name": "how similar the trees are (%)", "ys": [ 30, 50, 62, 80, 100 ] }
+      ],
+      "knob": { "label": "max_features", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "One feature per split: the trees are wildly diverse (30% similar) but each is nearly blind, so accuracy is only okay.", "tone": "info" },
+        { "max": 3, "text": "Around sqrt(d) (~8 features): the sweet spot - trees stay different enough to decorrelate yet still split sensibly, and accuracy peaks.", "tone": "info" },
+        { "max": 4, "text": "🤯 All 64 features: every tree grabs the same strong feature first, the trees become near-clones (100% similar), and accuracy slips back toward plain bagging. Diversity was the point.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "max_features", "formula": "features per split ~ sqrt(d) (classification default) -> decorrelated but capable trees", "text": "Lower max_features = more diversity and weaker trees; higher = stronger but more correlated trees. sqrt(d) for classification, about d/3 for regression, are the usual starting points." }
+    }
+  },
+  {
     "q": "Before any 'forest', the base idea is an ENSEMBLE. In one sentence, what is an ensemble model?",
     "choices": [
       "Many models whose predictions are combined into one answer",

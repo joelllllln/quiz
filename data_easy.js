@@ -1,6 +1,28 @@
 /* KNN — Level 1: Foundations. 30 questions; choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).easy = [
   {
+    q: "In KNN, what is the 'feature space'?",
+    choices: [
+      "A map where each example is a point, one axis per feature",
+      "The set of k neighbours consulted for a single prediction",
+      "The full list of labels attached to the stored examples",
+      "The gap left empty between the two class clusters here",
+      "The rule KNN learns at training time to split classes"
+    ],
+    explain: "Feature space is the coordinate system with one axis per feature, so every example becomes a point positioned by its feature values. KNN does all of its work here: 'similar' examples sit close together and distance between points measures dissimilarity. Neighbours, votes and boundaries are all defined relative to positions in this space.",
+    simple: "Picture a map where left-right is one measurement and up-down is another. Every example gets pinned to a spot based on its numbers, so look-alikes end up as neighbours on the map. KNN never leaves this map — finding nearby points is the whole game.",
+    widget: {
+      type: "curveStatic", title: "One axis per feature",
+      world: "Each feature you record adds one axis to the space every example lives in.",
+      xlab: "features (axes) added →", xs: [0,1,2,3,4], labels: ["none","1","2","3","4"], dec: 0, yunit: "",
+      series: [ { name: "Detail per example", ys: [0,25,50,75,100] }, { name: "Points that look identical", ys: [100,60,30,12,4] } ],
+      knob: { label: "Features (axes) added", min: 0, max: 4, step: 1, init: 0 },
+      insights: [ { max: 1, text: "With zero or one axis every example is just a dot on a line — most of them look identical.", tone: "info" }, { max: 3, text: "Each new feature adds an axis, spreading examples apart so 'similar' becomes 'close'.", tone: "info" }, { max: 4, text: "🤯 With every feature as its own axis, each example gets a unique spot — and KNN measures similarity as plain distance between those spots.", tone: "wow" } ],
+      extreme: { at: "max" },
+      reveal: { name: "Feature space", formula: "example -> point; one axis per feature", text: "KNN plots every example as a point in this space and reasons purely about who is near whom." }
+    }
+  },
+  {
     "q": "A new point arrives with no label. KNN finds the k labelled points closest to it. What does KNN do with those k points to choose a label?",
     "choices": [
       "Lets their labels vote",

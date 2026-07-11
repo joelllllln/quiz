@@ -1,6 +1,107 @@
 /* DBSCAN — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).dbscan1 = [
   {
+    "q": "DBSCAN is a 'density-based' clustering method. What does 'density' mean here?",
+    "choices": [
+      "How crowded a region is — how many points sit close together in a small area",
+      "How far apart the two nearest clusters sit from each other in space",
+      "How many clusters the algorithm decides to output across the whole run",
+      "How evenly the points are spread across the entire feature space overall",
+      "How close a point lies to the mean centre of the cluster it joins"
+    ],
+    "explain": "In DBSCAN a cluster is a region where points are packed closely together — high density — separated by sparser, emptier space. Density is made precise by two knobs: eps (how far to look) and min_samples (how many neighbours must be within that reach). Wherever enough points crowd within eps, DBSCAN grows a cluster, whatever its shape.",
+    "simple": "Density just means 'how crowded'. Picture a party: some corners are packed shoulder to shoulder, others nearly empty. DBSCAN calls the packed corners clusters and the empty gaps between them 'not a cluster'. It hunts for crowds, not for tidy round blobs.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Crowds vs empty space",
+      "world": "One dataset viewed at rising density levels — watch how much of it counts as 'crowded'.",
+      "xlab": "region crowdedness →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["empty", "sparse", "medium", "packed", "dense"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "points in crowded regions (%)", "ys": [5, 25, 55, 80, 95] },
+        { "name": "points in empty gaps (%)", "ys": [95, 75, 45, 20, 5] }
+      ],
+      "knob": { "label": "crowdedness", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Sparse regions: hardly any point has close company, so almost nothing counts as a crowd.", "tone": "info" },
+        { "max": 3, "text": "As regions grow more crowded, more points sit inside genuine crowds and clusters take shape.", "tone": "info" },
+        { "max": 4, "text": "🤯 Packed regions are pure density — DBSCAN calls these crowds clusters and the gaps between them empty space, whatever their shape.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Density", "formula": "cluster = crowded region; gaps between crowds = empty space", "text": "Density, set by eps and min_samples, is DBSCAN's whole definition of what a cluster is." }
+    }
+  },
+  {
+    "q": "DBSCAN labels some points 'border' points. What is a border point?",
+    "choices": [
+      "A point within a core point's neighbourhood but not crowded enough to be core itself",
+      "A point sitting exactly on the line that divides two neighbouring clusters apart",
+      "A point that belongs to no cluster at all and is left labelled as noise instead",
+      "The outermost core point lying along the very edge of a dense cluster region",
+      "A point that is equally distant from two different cluster centres at the same time"
+    ],
+    "explain": "A border point sits within eps of a core point, so it joins that core's cluster — but it doesn't have min_samples neighbours of its own, so it can't extend the cluster further. It belongs to the cluster's edge: included, but unable to recruit new members. Core points grow clusters; border points merely ride along.",
+    "simple": "A border point is a cluster's hanger-on. It stands close enough to a member of the crowd to be counted in, but doesn't have a full crowd around itself, so it sits on the fringe. It gets to belong, but it can't pull anyone else in the way core points can.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Standing on the fringe",
+      "world": "Points sampled from a cluster's core outward — where does 'core' end and 'border' begin?",
+      "xlab": "distance from the dense interior →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["centre", "inner", "edge", "fringe", "outside"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "neighbours within eps", "ys": [12, 9, 5, 3, 1] },
+        { "name": "min_samples threshold", "ys": [4, 4, 4, 4, 4] }
+      ],
+      "knob": { "label": "distance out", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Deep in the interior a point has many neighbours — well above the threshold, so it's a core point.", "tone": "info" },
+        { "max": 3, "text": "Near the edge the neighbour count dips below min_samples: the point is now a border point, included but not core.", "tone": "info" },
+        { "max": 4, "text": "🤯 Past the fringe a point has almost no neighbours and drops out entirely — border points are the last ones still attached to the crowd.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Border point", "formula": "within eps of a core point but < min_samples neighbours of its own", "text": "Border points belong to the cluster's edge — pulled in by a core neighbour, but unable to grow the cluster themselves." }
+    }
+  },
+  {
+    "q": "How does the 'k-distance plot' help you choose DBSCAN's eps?",
+    "choices": [
+      "Sort each point's distance to its k-th neighbour and read eps off the elbow",
+      "Plot the distance between every pair of points and then take the maximum",
+      "Count the clusters produced at each eps and keep the value with the largest count",
+      "Average every point's nearest-neighbour distance and simply use that as eps",
+      "Chart cluster sizes against eps and pick the value at the widest stable plateau"
+    ],
+    "explain": "For points inside a cluster, the distance to their k-th nearest neighbour is small and similar; for noise it is large. Sorting those distances gives a curve that stays low then bends sharply upward — the elbow marks the boundary between 'inside a cluster' and 'crossing empty space'. Reading eps off that bend replaces a blind guess with a value measured from the data.",
+    "simple": "Ask every point 'how far to your k-th closest neighbour?'. People in crowds answer with small, similar numbers; loners answer with big ones. Sort the answers and the line crawls flat then suddenly shoots up — that corner is where crowd ends and emptiness begins, and that's your eps.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Find the elbow",
+      "world": "Every point's k-th-neighbour distance, sorted low to high — the bend tells you eps.",
+      "xlab": "points, sorted by k-th-NN distance →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["10%", "40%", "70%", "90%", "99%"],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "k-th-NN distance", "ys": [0.3, 0.4, 0.5, 1.2, 2.8] }
+      ],
+      "knob": { "label": "position along curve", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "The flat shelf: most points reach their k-th neighbour within about 0.4 — these are dense cluster interiors.", "tone": "info" },
+        { "max": 3, "text": "Around 90% along, the curve starts lifting — border points reaching a little further for their neighbours.", "tone": "info" },
+        { "max": 4, "text": "🤯 The last stretch rockets upward: noise points crossing empty space. eps sits at the elbow, about 0.5 — measured, not guessed.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "k-distance plot", "formula": "sort dist-to-kth-neighbour; eps = value at the elbow", "text": "The standard recipe for reading a sensible eps straight off the data instead of guessing." }
+    }
+  },
+  {
     "q": "DBSCAN's first parameter is 'eps'. What does eps mean?",
     "choices": [
       "The radius that defines each point's neighbourhood — 'this close counts as near'",
