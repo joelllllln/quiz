@@ -1,6 +1,40 @@
 /* DBSCAN — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).dbscan1 = [
   {
+    "q": "k-means tends to find round, blob-shaped clusters. Why can DBSCAN instead trace long, curvy shapes like two crescent moons?",
+    "choices": [
+      "It links each dense point to nearby dense ones, so a cluster can bend along any path",
+      "It fits a smooth flexible curve through the middle of each cluster that it finds",
+      "It rotates the feature axes until every stretched cluster turns into a round blob",
+      "It measures a cluster centre and grows its radius outward until the shape is filled",
+      "It reruns k-means many times and merges the round blobs into one longer curved shape"
+    ],
+    "explain": "DBSCAN builds a cluster by starting at a core point and absorbing every point within eps, then repeating that from each newly reached core point. Because clusters expand outward through chains of dense neighbours rather than from a single centre, they can follow crescents, rings, or spirals. Centroid methods like k-means assume roughly spherical clusters and cut such shapes apart.",
+    "simple": "Imagine people in a crowd holding hands: as long as each person can reach the next, the chain can curve into any shape — an S, a ring, a snake. DBSCAN grows a cluster the same way, hopping from one close neighbour to the next. k-means instead assumes each group is a round huddle around one central spot, so it cannot follow a long bendy shape.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Chaining dense neighbours",
+      "world": "As DBSCAN hops from neighbour to neighbour, a single cluster can trace a longer, curvier shape.",
+      "xlab": "neighbour hops along the chain →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["1 hop", "2 hops", "3 hops", "4 hops", "5 hops"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "DBSCAN cluster reach", "ys": [1, 2, 3, 4, 5] },
+        { "name": "k-means round blob", "ys": [1, 1, 1, 1, 1] }
+      ],
+      "knob": { "label": "neighbour hops", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "A hop or two: the cluster is still just a small round patch of points.", "tone": "info" },
+        { "max": 3, "text": "More hops chain further dense points together, so the cluster starts to bend.", "tone": "info" },
+        { "max": 4, "text": "🤯 Enough hops and the cluster snakes into any shape a single centroid could never fit.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Arbitrary-shaped clusters", "formula": "cluster = chain of dense neighbours", "text": "By linking dense point to dense point, DBSCAN traces clusters of any shape, not just round blobs." }
+    }
+  },
+  {
     "q": "DBSCAN is a 'density-based' clustering method. What does 'density' mean here?",
     "choices": [
       "How crowded a region is — how many points sit close together in a small area",

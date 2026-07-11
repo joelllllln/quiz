@@ -1,6 +1,73 @@
 /* t-SNE — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).tsne1 = [
   {
+    "q": "t-SNE is called a 'nonlinear' method, while PCA is 'linear'. In plain terms, what does being nonlinear let t-SNE do?",
+    "choices": [
+      "Unfold curved, tangled shapes that a straight-line method flattens",
+      "Run much faster on very large datasets than almost any other method",
+      "Reproduce the very same picture from every random starting seed",
+      "Return true distances you can measure straight off the final map",
+      "Learn a fixed formula that projects any brand-new point instantly"
+    ],
+    "explain": "PCA can only apply a linear projection — rotations and rescalings of straight axes — so it flattens data that lies on a curved manifold and lets separate groups overlap. t-SNE instead models pairwise neighbour probabilities, so it can bend and unroll curved structure while keeping nearby points nearby. That is why t-SNE often separates classes that PCA leaves smeared together.",
+    "simple": "PCA is like photographing a rolled-up poster from one angle — the curves get squashed and things overlap. t-SNE is like carefully unrolling the poster flat before you look. Because it is allowed to bend, it untangles shapes that a straight camera never could.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Linear vs nonlinear separation",
+      "world": "The same curved, Swiss-roll-like data seen by PCA versus t-SNE as the structure gets more and more tangled.",
+      "xlab": "how tangled the data is →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "flat", "slight", "curved", "rolled", "knotted" ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "PCA (linear)", "ys": [ 90, 70, 45, 25, 10 ] },
+        { "name": "t-SNE (nonlinear)", "ys": [ 92, 90, 88, 85, 82 ] }
+      ],
+      "knob": { "label": "Tangle level", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Nearly flat data: both PCA and t-SNE separate the classes just fine.", "tone": "info" },
+        { "max": 3, "text": "As the data curls, PCA's straight axes smear the classes together while t-SNE keeps them apart.", "tone": "info" },
+        { "max": 4, "text": "🤯 Knotted data: PCA collapses to 10% while t-SNE holds ~82% — bending beats straightening.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Nonlinear dimensionality reduction", "formula": "PCA = straight projection · t-SNE = bends to unfold curved manifolds", "text": "Because t-SNE is nonlinear it untangles curved structure that PCA's straight-line projection flattens." }
+    }
+  },
+  {
+    "q": "How does t-SNE's running time behave as you feed it more and more data points?",
+    "choices": [
+      "It grows steeply, so huge datasets get slow or need subsampling",
+      "It stays flat, since the layout cost never depends on point count",
+      "It falls off, because bigger samples let it settle in fewer steps",
+      "It grows only with the number of input dimensions, not the points",
+      "It is fixed once you choose the perplexity, whatever the sample size"
+    ],
+    "explain": "t-SNE compares each point against many neighbours on every optimisation iteration, so its cost climbs sharply — roughly quadratically in the naive form — with the number of points. On datasets of hundreds of thousands of points it becomes slow, which is why people subsample or first reduce dimensions with PCA. Faster variants like Barnes-Hut t-SNE and UMAP exist partly to ease this.",
+    "simple": "Imagine everyone at a party trying to shake hands with everyone else — double the guests and the handshakes explode. t-SNE works a bit like that as points pile up, so it crawls on very large datasets. That is why people often shrink the data with PCA first or just run it on a sample.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Points vs running time",
+      "world": "The same algorithm timed as the dataset grows from a thousand points up to a million.",
+      "xlab": "number of points →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "1k", "10k", "100k", "500k", "1M" ],
+      "dec": 0,
+      "yunit": "s",
+      "series": [
+        { "name": "run time (s)", "ys": [ 1, 10, 120, 700, 3600 ] }
+      ],
+      "knob": { "label": "Number of points", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "A few thousand points: t-SNE finishes in about a second — no problem.", "tone": "info" },
+        { "max": 3, "text": "At 100k–500k points the wait climbs from a couple of minutes into many minutes as comparisons pile up.", "tone": "info" },
+        { "max": 4, "text": "🤯 One million points can take roughly an hour — subsample or PCA-reduce first.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Computational cost", "formula": "run time grows ~quadratically with the number of points", "text": "t-SNE gets slow on very large datasets, so subsample or reduce dimensions with PCA before running it." }
+    }
+  },
+  {
     "q": "In t-SNE, what does the 'learning rate' control?",
     "choices": [
       "The step size taken while optimising point positions",

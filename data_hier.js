@@ -1,6 +1,106 @@
 /* Hierarchical Clustering — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).hier1 = [
   {
+    "q": "Before hierarchical clustering can merge anything, it needs the distance between two individual data points. For ordinary numeric features, how is that distance most commonly measured?",
+    "choices": [
+      "The straight-line (Euclidean) distance between them",
+      "The number of features on which they disagree most",
+      "The count of other points sitting between the two",
+      "The difference between their two feature averages",
+      "The height at which the two points end up merging"
+    ],
+    "explain": "Agglomerative clustering is built on a pairwise distance (dissimilarity) matrix, and for continuous features the default is Euclidean distance — the ordinary straight-line gap between two points across all their features. Every linkage rule (single, complete, average, Ward) is just a different way of summarising these point-to-point distances into a distance between whole clusters.",
+    "simple": "Think of each data point as a pin on a map that has many directions instead of just two. The distance between two pins is simply how far you would walk in a straight line from one to the other. The whole method is just repeatedly asking 'which two things are closest?', so it needs that basic ruler first.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "A ruler between two points",
+      "world": "Two data points pinned in feature space; slide to stretch the gap between them and watch their straight-line distance grow.",
+      "xlab": "gap between the two points →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "touching", "near", "apart", "far", "very far" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "Euclidean distance", "ys": [ 0, 2, 4, 6, 8 ] }
+      ],
+      "knob": { "label": "Gap", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "At the smallest gap the distance is about 0 — the two points sit almost on top of each other, so clustering treats them as nearly identical.", "tone": "info" },
+        { "max": 3, "text": "As the points slide apart the straight-line distance climbs (2 → 6), and they look less and less alike to the algorithm.", "tone": "info" },
+        { "max": 4, "text": "🤯 At the widest gap the distance peaks (8) — this single point-to-point ruler is what every linkage rule is built on top of.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Distance between points", "formula": "Euclidean distance = straight-line gap across all features", "text": "The base ruler; linkage rules only summarise these point distances into cluster distances." }
+    }
+  },
+  {
+    "q": "k-means makes you choose the number of clusters k before it runs. How does hierarchical clustering differ on this point?",
+    "choices": [
+      "It builds the whole tree first, so you choose k after",
+      "It also makes you fix the number of clusters first",
+      "It always settles on exactly three clusters in the end",
+      "It refuses to split the points into clusters at all",
+      "It needs the number of features decided before it runs"
+    ],
+    "explain": "Agglomerative clustering merges points all the way up into a single tree (dendrogram) without ever being told how many clusters to find. You choose the number of clusters afterwards by cutting the tree at a chosen height, and you can try many values of k from the one tree — unlike k-means, which commits to k before it starts.",
+    "simple": "k-means is like being asked 'how many teams?' before you have even met the players. Hierarchical clustering meets everyone first, drawing a full family tree of who is related to whom, and only then lets you decide how many groups to slice it into. You can change your mind about the number without redoing the work.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Decide the count later",
+      "world": "One dendrogram, cut at different heights; slide the cut and watch how many clusters fall out — all from the same tree.",
+      "xlab": "where you cut the tree →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "very high", "high", "middle", "low", "very low" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "clusters you get", "ys": [ 1, 2, 3, 5, 8 ] }
+      ],
+      "knob": { "label": "Cut height", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Cut way up high and the whole dataset is still one cluster (1) — the tree already exists; you are only choosing where to slice.", "tone": "info" },
+        { "max": 3, "text": "Slide the cut down and more groups appear (2 → 5), all read off the SAME tree without re-running anything.", "tone": "info" },
+        { "max": 4, "text": "🤯 At the lowest cut you get many clusters (8); k was never chosen up front — hierarchical clustering hands you every k at once.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "No need to pre-specify k", "formula": "build the tree once, choose k by where you cut", "text": "Unlike k-means, the number of clusters is decided after fitting, and any k comes from the one tree." }
+    }
+  },
+  {
+    "q": "Your dataset has 'age' (0-100) and 'height in metres' (0-2). Why should you scale the features before hierarchical clustering?",
+    "choices": [
+      "Otherwise the large-range feature dominates the distances",
+      "Otherwise the algorithm cannot build a dendrogram at all",
+      "Otherwise the number of clusters is chosen automatically",
+      "Otherwise every merge happens at exactly the same height",
+      "Otherwise the smallest-range feature decides the distances"
+    ],
+    "explain": "Hierarchical clustering merges by distance, and Euclidean distance adds up each feature's contribution. A feature on a big numeric range (age spanning 0-100) swamps one on a small range (height spanning 0-2), so the clusters end up reflecting age alone. Standardising each feature to a comparable scale lets every feature pull its fair weight.",
+    "simple": "Imagine judging how similar two people are by adding up the difference in their age (in years) and their height (in metres). Age differences come out as big numbers and height differences as tiny ones, so the tape measure basically ignores height. Rescaling both onto the same footing lets each trait count equally.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One feature drowns the rest",
+      "world": "The distance between two people split into an age part and a height part before any scaling; slide up the age gap and watch it swamp the total.",
+      "xlab": "age gap between the two (years) →",
+      "xs": [ 0, 1, 2, 3, 4 ],
+      "labels": [ "0 yrs", "10 yrs", "25 yrs", "50 yrs", "80 yrs" ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "distance from age", "ys": [ 0, 10, 25, 50, 80 ] },
+        { "name": "distance from height", "ys": [ 1, 1, 1, 1, 1 ] }
+      ],
+      "knob": { "label": "Age gap", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "With no age gap the tiny height difference (1) is all that is left — here the two features are comparable.", "tone": "info" },
+        { "max": 3, "text": "As the age gap grows (10 → 50) it towers over the height difference (still 1), so distance tracks age almost alone.", "tone": "info" },
+        { "max": 4, "text": "🤯 At an 80-year gap age (80) utterly drowns height (1); without scaling, the big-range feature decides every merge.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Feature scaling", "formula": "standardise features so their ranges are comparable before clustering", "text": "Distance-based clustering is dominated by large-range features unless each feature is rescaled first." }
+    }
+  },
+  {
     "q": "In hierarchical clustering, what does 'Ward linkage' do when deciding which two clusters to merge?",
     "choices": [
       "Merges the pair whose union least increases within-cluster spread",

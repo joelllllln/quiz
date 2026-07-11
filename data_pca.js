@@ -1,6 +1,74 @@
 /* PCA — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).pca1 = [
   {
+    "q": "PCA scans your data to find directions of greatest spread. Does it use the target labels (the values you are trying to predict)?",
+    "choices": [
+      "No — PCA ignores labels and reads only the features",
+      "Yes — it points the first axis toward the labels",
+      "Yes — labels decide which features to keep first",
+      "Only when the labels are numeric, not categories",
+      "Only after you standardise the labels with the features"
+    ],
+    "explain": "PCA is an unsupervised method: it computes directions of maximum variance from the feature matrix alone and never touches the target column. Because of this, the exact same components come out whether or not a label exists. This also means high-variance directions are not guaranteed to be the ones that help prediction.",
+    "simple": "Imagine sorting a pile of photos purely by how different they look from each other, without ever being told the categories. That is PCA: it studies how the data spreads and never peeks at the answer key. Give it labels or hide them and it draws exactly the same axes.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The labels sit unused",
+      "world": "Keep adding label columns next to the data and watch how many of them PCA actually reads while choosing its axes.",
+      "xlab": "label columns available →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["0 labels", "1 label", "2 labels", "3 labels", "4 labels"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "labels PCA uses", "ys": [0, 0, 0, 0, 0] },
+        { "name": "features PCA uses", "ys": [8, 8, 8, 8, 8] }
+      ],
+      "knob": { "label": "Label columns added", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "One label available — PCA ignores it and reads only the feature spread.", "tone": "info" },
+        { "max": 3, "text": "Three labels sitting right there, still unused; the axes depend only on the features.", "tone": "info" },
+        { "max": 4, "text": "🤯 However many labels you add, PCA uses zero of them — it is unsupervised, so the same components come out with or without a target.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "PCA is unsupervised", "formula": "components = f(features only); labels ignored", "text": "PCA builds its axes from feature variance alone, so it never looks at the target labels." }
+    }
+  },
+  {
+    "q": "Your data has 40 features, far too many to plot. How does PCA let you SEE the cloud on a 2-D scatter plot?",
+    "choices": [
+      "Project every point onto the top 2 components and plot those",
+      "Drop every feature except the 2 with the widest range",
+      "Average the 40 features down into 2 summary columns",
+      "Plot the 2 features that correlate most with the rest",
+      "Cluster the points first, then plot the 2 largest groups"
+    ],
+    "explain": "To visualise high-dimensional data, PCA keeps only the first two principal components and gives each point its coordinates along them. Plotting PC1 against PC2 puts every row on a single 2-D scatter that preserves as much of the total spread as any two axes can. It is the standard first look at an unlabelled dataset's structure.",
+    "simple": "Picture a tangled 3-D sculpture: photograph it from the one angle that shows the most detail and you get a flat picture you can actually study. PCA finds that best 'camera angle' for 40-dimensional data and shrinks it to two axes. You lose some depth, but you finally get a picture you can look at.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Many features, still 2 axes",
+      "world": "Grow the number of features in the dataset and watch how many axes PCA needs to draw the picture you actually look at.",
+      "xlab": "features in the data →",
+      "xs": [0, 1, 2, 3, 4],
+      "labels": ["2 feat", "10 feat", "20 feat", "30 feat", "40 feat"],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "original features", "ys": [2, 10, 20, 30, 40] },
+        { "name": "PCs used to plot", "ys": [2, 2, 2, 2, 2] }
+      ],
+      "knob": { "label": "Features in data", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "2 features already plot as a scatter — no PCA needed yet.", "tone": "info" },
+        { "max": 3, "text": "20-30 features cannot be plotted directly, but projecting onto PC1 and PC2 still gives one 2-D scatter.", "tone": "info" },
+        { "max": 4, "text": "🤯 40 features, still just 2 axes to draw — plot PC1 vs PC2 and you SEE the whole cloud's main structure.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "PCA for visualisation", "formula": "plot = points projected onto PC1 and PC2", "text": "Keeping the top two components turns any high-dimensional dataset into one readable 2-D scatter." }
+    }
+  },
+  {
     "q": "PCA talks about a dataset's 'dimensions'. In this sense, what are the dimensions?",
     "choices": [
       "The number of features (columns), one axis per feature",
