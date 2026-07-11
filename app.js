@@ -181,7 +181,59 @@
     }
     begin({ name: 'Daily 50', no: '★', key: '__daily__' },
       { qk: '__daily__', part: 'Daily 50', name: todayLabel() },
-      { qs: dq.qs, origins: dq.origins, daily: true, sig: sig, startAt: d.pos, startCorrect: d.correct, results: d.results });
+      { qs: dq.qs, origins: dq.origins, mixed: true, modeLabel: 'Daily 50', daily: true, sig: sig, startAt: d.pos, startCorrect: d.correct, results: d.results });
+  }
+
+  /* ---------------- per-card history + adaptive review ---------------- */
+  function dayNum() { return Math.floor(Date.now() / 86400000); }
+  function cardId(q) { return 'c' + hashStr(q.q); }
+  var CARDS = null;
+  function loadCards() { if (CARDS) return CARDS; try { CARDS = JSON.parse(localStorage.getItem('ds_cards') || '{}') || {}; } catch (e) { CARDS = {}; } return CARDS; }
+  function saveCards() { try { localStorage.setItem('ds_cards', JSON.stringify(CARDS)); } catch (e) {} }
+  function recordCard(q, right) {
+    var c = loadCards(), id = cardId(q);
+    var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
+    r.seen++;
+    if (right) r.box = Math.min(5, r.box + 1);
+    else { r.wrong++; r.box = Math.max(0, r.box - 2); }
+    r.last = dayNum();
+    c[id] = r; saveCards();
+  }
+  function cardStatus(q) {
+    var r = loadCards()[cardId(q)];
+    if (!r || !r.seen) return 'new';
+    if (r.box >= 4) return 'learnt';
+    if (r.wrong > 0 && r.box <= 1) return 'struggling';
+    return 'learning';
+  }
+  function masterySummary() {
+    var s = { learnt: 0, learning: 0, struggling: 0, new: 0 };
+    buildIndex().forEach(function (e) { s[cardStatus(e.q)]++; });
+    return s;
+  }
+  function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
+  function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
+  var PRACTICE_N = 20;
+  function practiceSelect(mix) {
+    var c = loadCards(), day = dayNum();
+    var known = [], neu = [];
+    buildIndex().forEach(function (e) { var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
+    known.forEach(function (k) { k.p = (5 - k.r.box) * 8 + Math.min(20, day - k.r.last) + Math.random() * 4; });
+    known.sort(function (a, b) { return b.p - a.p; });
+    neu = shuffle(neu);
+    var N = PRACTICE_N;
+    var nc = Math.round(mix * N), kc = N - nc;
+    if (kc > known.length) { nc += kc - known.length; kc = known.length; }
+    if (nc > neu.length) { kc = Math.min(known.length, kc + (nc - neu.length)); nc = neu.length; }
+    var sel = known.slice(0, kc).map(function (k) { return k.e; }).concat(neu.slice(0, nc));
+    return shuffle(sel);
+  }
+  function startPractice() {
+    var sel = practiceSelect(getMix());
+    if (!sel.length) return;
+    begin({ name: 'Smart Review', no: '⚡', key: '__practice__' },
+      { qk: '__practice__', part: 'Smart Review', name: '' },
+      { qs: sel.map(function (e) { return e.q; }), origins: sel.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Smart Review', practice: true });
   }
 
   function rememberHTML(q) {
@@ -210,6 +262,7 @@
 
     // ---- Daily challenge (filterable) + lifetime total ----
     renderDaily();
+    renderPractice();
 
     function renderDaily() {
       var old = app.querySelector('.daily-card');
@@ -260,6 +313,46 @@
       var go = daily.querySelector('.daily-go');
       if (dn > 0) go.onclick = startDaily;
       if (old) app.replaceChild(daily, old); else app.appendChild(daily);
+    }
+
+    function renderPractice() {
+      var sum = masterySummary();
+      var mixPct = Math.round(getMix() * 100);
+      function splitFor(pct) {
+        var m = pct / 100, N = PRACTICE_N;
+        var seen = sum.struggling + sum.learning + sum.learnt;
+        var nc = Math.round(m * N), kc = N - nc;
+        if (kc > seen) { nc += kc - seen; kc = seen; }
+        if (nc > sum.new) { kc = Math.min(seen, kc + (nc - sum.new)); nc = sum.new; }
+        return { kc: kc, nc: nc };
+      }
+      function readoutText(pct) {
+        var s = splitFor(pct);
+        if (!s.kc && !s.nc) return 'No cards available yet — try a topic first.';
+        return 'This session: ~' + s.kc + ' review (weakest first) · ~' + s.nc + ' new';
+      }
+      var review = h('<section class="review-card">' +
+        '<div class="review-eyebrow">Adaptive · spaced repetition</div>' +
+        '<h2 class="review-title">Smart Review</h2>' +
+        '<div class="mast-badges">' +
+          '<span class="mb mb-learnt"><b>' + sum.learnt + '</b> learnt</span>' +
+          '<span class="mb mb-learning"><b>' + sum.learning + '</b> learning</span>' +
+          '<span class="mb mb-strug"><b>' + sum.struggling + '</b> struggling</span>' +
+          '<span class="mb mb-new"><b>' + sum.new + '</b> new</span>' +
+        '</div>' +
+        '<div class="dial-wrap">' +
+          '<div class="dial-ends"><span>Review what I know</span><span>New material</span></div>' +
+          '<input class="dial" type="range" min="0" max="100" step="5" value="' + mixPct + '" aria-label="Review to new mix">' +
+          '<p class="dial-read">' + readoutText(mixPct) + '</p>' +
+        '</div>' +
+        '<div class="next-row"><button class="btn review-go">Start review →</button></div>' +
+      '</section>');
+      var dial = review.querySelector('.dial');
+      var read = review.querySelector('.dial-read');
+      dial.oninput = function () { read.textContent = readoutText(+dial.value); };
+      dial.onchange = function () { setMix((+dial.value) / 100); };
+      review.querySelector('.review-go').onclick = startPractice;
+      app.appendChild(review);
     }
 
     GROUPS.forEach(function (g) {
@@ -332,7 +425,8 @@
       topic: topic, level: level,
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
-      daily: !!opts.daily, sig: opts.sig || null,
+      daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed,
+      modeLabel: opts.modeLabel || '', sig: opts.sig || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
@@ -349,8 +443,8 @@
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
 
-    var eyebrow = S.daily
-      ? ('§ Daily 50 · ' + esc((S.origins && S.origins[S.i]) || 'Mixed'))
+    var eyebrow = S.mixed
+      ? ('§ ' + esc(S.modeLabel || 'Mixed') + ' · ' + esc((S.origins && S.origins[S.i]) || 'Mixed'))
       : ('§ ' + esc(S.topic.name) + ' · ' + esc(L.part) + ' — ' + esc(L.name));
     var card = h('<article class="qcard"><div class="q-eyebrow">' + eyebrow +
       (isRetry ? ' · <span class="retry-note">second attempt</span>' : '') + '</div>' +
@@ -394,7 +488,7 @@
   function answer(q, chosen, btn, btns, card, isRetry) {
     var right = chosen === 0;
     markAll(btns, btn, right);
-    if (!isRetry) S.results.push(right);
+    if (!isRetry) { S.results.push(right); recordCard(q, right); }
 
     if (right) {
       if (!isRetry) { S.correct++; bumpTotal(); }
@@ -516,7 +610,24 @@
     window.scrollTo(0, 0);
   }
 
+  function donePractice() {
+    var n = S.qs.length, c = S.correct;
+    var sum = masterySummary();
+    app.innerHTML = '';
+    var card = h('<div class="result-card">' +
+      '<div class="r-eyebrow">Smart Review · adaptive session</div>' +
+      '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
+      '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
+      '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+      '<div class="next-row" style="justify-content:center"><button class="btn">Another session</button><button class="btn ghost">Contents</button></div></div>');
+    card.querySelector('.btn').onclick = startPractice;
+    card.querySelector('.btn.ghost').onclick = home;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
   function done() {
+    if (S.practice) return donePractice();
     if (S.daily) return doneDaily();
     var n = S.qs.length, c = S.correct;
     var L = S.level;
