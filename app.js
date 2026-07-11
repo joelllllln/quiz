@@ -229,6 +229,23 @@
   }
   function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
   function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
+
+  /* ---------------- favourites ---------------- */
+  var FAVS = null;
+  function loadFavs() { if (FAVS) return FAVS; try { FAVS = JSON.parse(localStorage.getItem('ds_favs') || '{}') || {}; } catch (e) { FAVS = {}; } return FAVS; }
+  function saveFavs() { try { localStorage.setItem('ds_favs', JSON.stringify(FAVS)); } catch (e) {} }
+  function isFav(q) { return !!loadFavs()[cardId(q)]; }
+  function toggleFav(q) { var f = loadFavs(), id = cardId(q); if (f[id]) delete f[id]; else f[id] = 1; saveFavs(); return !!f[id]; }
+  function favCount() { return Object.keys(loadFavs()).length; }
+  function favQuestions() { var f = loadFavs(); return buildIndex().filter(function (e) { return f[cardId(e.q)]; }); }
+  function startFavourites() {
+    var sel = shuffle(favQuestions());
+    if (!sel.length) return;
+    begin({ name: 'Favourites', no: '★', key: '__favs__' },
+      { qk: '__favs__', part: 'Favourites', name: '' },
+      { qs: sel.map(function (e) { return e.q; }), origins: sel.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Favourites', favourites: true });
+  }
+
   var PRACTICE_N = 20;
   function practiceSelect(mix) {
     var c = loadCards(), day = dayNum();
@@ -279,6 +296,7 @@
     // ---- Daily challenge (filterable) + lifetime total ----
     renderDaily();
     renderPractice();
+    renderFavourites();
 
     function renderDaily() {
       var old = app.querySelector('.daily-card');
@@ -372,6 +390,18 @@
       app.appendChild(review);
     }
 
+    function renderFavourites() {
+      var n = favCount();
+      if (!n) return;
+      var fav = h('<section class="fav-card">' +
+        '<div class="fav-info"><span class="fav-star">★</span>' +
+        '<div><div class="fav-title">Favourites</div>' +
+        '<div class="fav-sub">' + n + ' saved question' + (n === 1 ? '' : 's') + '</div></div></div>' +
+        '<button class="btn ghost fav-go">Review →</button></section>');
+      fav.querySelector('.fav-go').onclick = startFavourites;
+      app.appendChild(fav);
+    }
+
     GROUPS.forEach(function (g) {
       app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
       g.keys.forEach(function (tk) {
@@ -442,7 +472,7 @@
       topic: topic, level: level,
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
-      daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed,
+      daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites,
       modeLabel: opts.modeLabel || '', sig: opts.sig || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
@@ -463,10 +493,20 @@
     var eyebrow = S.mixed
       ? ('§ ' + esc(S.modeLabel || 'Mixed') + ' · ' + esc((S.origins && S.origins[S.i]) || 'Mixed'))
       : ('§ ' + esc(S.topic.name) + ' · ' + esc(L.part) + ' — ' + esc(L.name));
-    var card = h('<article class="qcard"><div class="q-eyebrow">' + eyebrow +
+    var card = h('<article class="qcard">' +
+      '<div class="q-top"><div class="q-eyebrow">' + eyebrow +
       (isRetry ? ' · <span class="retry-note">second attempt</span>' : '') + '</div>' +
+      '<button class="fav-btn' + (isFav(q) ? ' is-fav' : '') + '" type="button" aria-label="Save to favourites" aria-pressed="' + (isFav(q) ? 'true' : 'false') + '">' + (isFav(q) ? '★' : '☆') + '</button>' +
+      '</div>' +
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
     card.querySelector('.qtext').textContent = q.q;
+    var favBtn = card.querySelector('.fav-btn');
+    favBtn.onclick = function () {
+      var on = toggleFav(q);
+      favBtn.classList.toggle('is-fav', on);
+      favBtn.textContent = on ? '★' : '☆';
+      favBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
     var box = card.querySelector('.choices');
     if (q.fig && window.renderFigure) {
       var figHost = document.createElement('div');
@@ -487,8 +527,21 @@
       btns.push({ b: b, orig: origIdx });
       box.appendChild(b);
     });
+    if (!isRetry) {
+      var skipRow = h('<div class="skip-row"><button class="skip-btn" type="button">Skip for now →</button></div>');
+      skipRow.querySelector('.skip-btn').onclick = skip;
+      card.appendChild(skipRow);
+    }
     app.appendChild(card);
     window.scrollTo(0, 0);
+  }
+
+  function skip() {
+    S.results.push(null); // neutral: not recorded as right or wrong
+    S.i++;
+    if (S.daily) saveDaily(S.i >= S.qs.length);
+    if (S.i >= S.qs.length) return done();
+    question(false);
   }
 
   function markAll(btns, chosenBtn, right) {
@@ -502,8 +555,16 @@
     btns.forEach(function (x) { if (x.orig === 0) { x.b.classList.add('is-correct'); x.b.classList.remove('dim'); } });
   }
 
+  function dotsHTML(res) {
+    return '<div class="dots">' + res.map(function (r, i) {
+      var cls = r === null ? 'skip' : (r ? 'ok' : 'no');
+      return '<span class="dot-q ' + cls + '">' + (i + 1) + '</span>';
+    }).join('') + '</div>';
+  }
+
   function answer(q, chosen, btn, btns, card, isRetry) {
     var right = chosen === 0;
+    var sr = card.querySelector('.skip-row'); if (sr) sr.remove();
     markAll(btns, btn, right);
     if (!isRetry) { S.results.push(right); recordCard(q, right); }
 
@@ -620,7 +681,7 @@
       '<div class="r-eyebrow">Daily 50 · ' + esc(todayLabel()) + '</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
       '<p class="r-msg">' + msg + ' <span class="small">Lifetime correct: <b>' + getTotal() + '</b></span></p>' +
-      '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+      dotsHTML(S.results) +
       '<div class="next-row" style="justify-content:center"><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn.ghost').onclick = home;
     app.appendChild(card);
@@ -635,9 +696,23 @@
       '<div class="r-eyebrow">Smart Review · adaptive session</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
       '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
-      '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+      dotsHTML(S.results) +
       '<div class="next-row" style="justify-content:center"><button class="btn">Another session</button><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn').onclick = startPractice;
+    card.querySelector('.btn.ghost').onclick = home;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
+  function doneFav() {
+    var n = S.qs.length, c = S.correct;
+    app.innerHTML = '';
+    var card = h('<div class="result-card">' +
+      '<div class="r-eyebrow">★ Favourites · ' + n + ' card' + (n === 1 ? '' : 's') + '</div>' +
+      '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
+      '<p class="r-msg">Your saved questions, reviewed. <span class="small">Lifetime correct: <b>' + getTotal() + '</b></span></p>' +
+      dotsHTML(S.results) +
+      '<div class="next-row" style="justify-content:center"><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn.ghost').onclick = home;
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -646,6 +721,7 @@
   function done() {
     if (S.practice) return donePractice();
     if (S.daily) return doneDaily();
+    if (S.favourites) return doneFav();
     var n = S.qs.length, c = S.correct;
     var L = S.level;
     var prev = +(localStorage.getItem(bestKey(L.qk)) || -1);
@@ -661,7 +737,7 @@
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
       '<p class="r-msg">' + msg + ' <span class="small">(first attempts only)</span></p>' +
       (c > prev && prev >= 0 ? '<div class="r-best">New personal best — previously ' + prev + '</div>' : '') +
-      '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+      dotsHTML(S.results) +
       '<div class="next-row" style="justify-content:center"><button class="btn">Sit it again</button><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn').onclick = function () { begin(S.topic, S.level); };
     card.querySelector('.btn.ghost').onclick = home;
