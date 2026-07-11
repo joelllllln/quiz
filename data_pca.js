@@ -1,13 +1,186 @@
 /* PCA — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).pca1 = [
   {
+    "q": "PCA works by 'projecting' data onto fewer directions. What does projecting a point onto a line mean?",
+    "choices": [
+      "Dropping it straight onto the line, like a shadow — keeping its position along the line, losing the rest",
+      "Moving it to the nearest existing data point on the line",
+      "Rounding its coordinates to the closest whole numbers",
+      "Deleting the point if it falls off the line",
+      "Rotating the whole dataset until it lies flat"
+    ],
+    "explain": "Projection casts each point onto a chosen line (or lower-dimensional space) — like a shadow falling onto the floor. You keep the point's position ALONG the line and discard the perpendicular part. PCA's job is choosing the line that loses the least.",
+    "simple": "Think of shadows. Shine a light straight down and every point drops onto the floor, keeping its left-right position but losing its height. That's projection: squash onto a line, keep the along-the-line position, throw away the rest. Reducing dimensions IS projecting — and PCA just picks the smartest direction to cast the shadow.",
+    "widget": {
+      "type": "pcaSpin",
+      "title": "Casting the shadow",
+      "world": "An oval cloud of points. Rotate the line and watch each point drop onto it (its shadow). Some angles keep the points spread out; others squash them together.",
+      "xlab": "x",
+      "ylab": "y",
+      "points": [
+        { "x": 1, "y": 2.4 },
+        { "x": 2, "y": 3.1 },
+        { "x": 3, "y": 3.4 },
+        { "x": 3.5, "y": 4.4 },
+        { "x": 4.5, "y": 4.2 },
+        { "x": 5, "y": 5.6 },
+        { "x": 5.5, "y": 5.1 },
+        { "x": 6.5, "y": 6.3 },
+        { "x": 7, "y": 5.9 },
+        { "x": 8, "y": 7.4 },
+        { "x": 8.5, "y": 6.9 },
+        { "x": 9, "y": 7.8 }
+      ],
+      "knob": { "label": "Axis angle", "min": 0, "max": 180, "step": 2, "init": 90 },
+      "insights": [
+        { "max": 60, "text": "Project onto this line and the shadows bunch up — points that were far apart land near each other. Lots of information lost.", "tone": "info" },
+        { "max": 120, "text": "Rotate toward the cloud's long direction and the shadows spread out again — the projection keeps more of how the points differ.", "tone": "info" },
+        { "max": 180, "text": "🤯 Projection is just 'drop each point onto the line'. It's not rounding, not snapping to a nearby point, not deleting — it's a shadow, and the angle decides how much survives.", "tone": "wow" }
+      ],
+      "extreme": { "at": 34 },
+      "reveal": { "name": "Projection", "formula": "cast each point onto a line/subspace, keep the along-axis position", "text": "Dimensionality reduction is projection onto fewer directions. PCA chooses the directions that keep the most spread." }
+    }
+  },
+  {
+    "q": "PCA's first output is the 'first principal component' (PC1). What is it?",
+    "choices": [
+      "The single direction along which the data is most spread out",
+      "The most important original feature, kept unchanged",
+      "The average of all the data points",
+      "The line connecting the two farthest points",
+      "The direction with the least variation in the data"
+    ],
+    "explain": "PC1 is the direction of MAXIMUM variance — the line along which the cloud is stretched most. Projecting onto it preserves as much spread (information) as any single direction can. PC2 is the most-spread direction at right angles to it, and so on.",
+    "simple": "PC1 is the cloud's long axis — the direction it's stretched the most. Flatten the data onto that one line and you keep more of how the points differ than any other line could manage. It's a new blended direction, not an original column, not the average, and definitely not the FLATTEST direction (that's the one PCA throws away).",
+    "widget": {
+      "type": "pcaSpin",
+      "title": "The long axis of the cloud",
+      "world": "Rotate the line and watch how spread-out the projected shadows are. PC1 is the angle where that spread is greatest.",
+      "xlab": "x",
+      "ylab": "y",
+      "points": [
+        { "x": 1, "y": 2.4 },
+        { "x": 2, "y": 3.1 },
+        { "x": 3, "y": 3.4 },
+        { "x": 3.5, "y": 4.4 },
+        { "x": 4.5, "y": 4.2 },
+        { "x": 5, "y": 5.6 },
+        { "x": 5.5, "y": 5.1 },
+        { "x": 6.5, "y": 6.3 },
+        { "x": 7, "y": 5.9 },
+        { "x": 8, "y": 7.4 },
+        { "x": 8.5, "y": 6.9 },
+        { "x": 9, "y": 7.8 }
+      ],
+      "knob": { "label": "Axis angle", "min": 0, "max": 180, "step": 2, "init": 90 },
+      "insights": [
+        { "max": 20, "text": "Across the cloud's short direction: the shadows squash together — minimal spread. This is the direction PCA would DISCARD.", "tone": "info" },
+        { "max": 60, "text": "Rotating toward the long diagonal, the spread of shadows grows — we're approaching PC1.", "tone": "info" },
+        { "max": 180, "text": "🤯 The angle of maximum spread IS PC1 — the direction that best preserves how the points differ. Not a raw feature, not the average, not the flattest line.", "tone": "wow" }
+      ],
+      "extreme": { "at": 34 },
+      "reveal": { "name": "Principal component (PC1)", "formula": "direction of maximum variance · PC2 = max variance at right angles · etc.", "text": "Each component is a blended direction. Keeping the top few is how PCA compresses while losing the least spread." }
+    }
+  },
+  {
+    "q": "PCA ranks components by 'variance'. Why does more variance mean more useful information?",
+    "choices": [
+      "A direction where points barely differ tells you almost nothing; spread is what distinguishes them",
+      "Variance measures how accurate the model's predictions are",
+      "High variance means the feature is measured in larger units",
+      "Variance counts how many points lie exactly on the line",
+      "More variance always means the data is noisier, not richer"
+    ],
+    "explain": "If every point projects to nearly the same spot along a direction, that direction can't tell the points apart — it carries little information. Spread (variance) is exactly what separates one point from another, so PCA keeps the high-variance directions and drops the flat ones.",
+    "simple": "Imagine a direction where everyone lands on the same spot — it distinguishes nobody, so it's useless for telling points apart. A direction where points spread out widely separates them clearly. Spread is information. That's why PCA ranks directions by variance and keeps the spread-out ones, discarding the flat directions where nothing varies.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Spread is information",
+      "world": "Two directions through the data: one where points spread widely, one where they bunch up. See how much each helps tell points apart.",
+      "xlab": "direction, low-spread → high-spread →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "flat",
+        "",
+        "medium",
+        "",
+        "long axis"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "variance kept (%)", "ys": [ 4, 18, 45, 72, 94 ] },
+        { "name": "how well points stay distinguishable", "ys": [ 6, 22, 48, 74, 95 ] }
+      ],
+      "knob": { "label": "Direction", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "The flat direction: points collapse onto nearly one spot — 4% of the variance, and you can barely tell them apart. Useless to keep.", "tone": "info" },
+        { "max": 2, "text": "As spread grows, the projection keeps points more distinguishable — variance and 'usefulness' rise together.", "tone": "info" },
+        { "max": 4, "text": "🤯 The long axis keeps 94% of the spread and almost all the distinguishing power. Variance IS information here — not accuracy, not units, not noise. That's why PCA keeps the high-variance directions.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Variance as information", "formula": "no spread → points indistinguishable → no information · PCA keeps high-variance directions", "text": "The 'explained variance ratio' reports how much of the total spread each component keeps — your guide to how many to retain." }
+    }
+  },
+  {
+    "q": "Each principal component comes with 'loadings'. What do loadings tell you?",
+    "choices": [
+      "How much each original feature contributes to that component — its recipe",
+      "How many data points fall on the component",
+      "The accuracy the component gives a classifier",
+      "The order in which components were computed",
+      "The distance between the two nearest points"
+    ],
+    "explain": "A component is a weighted blend of the original features, and the loadings are those weights — the recipe. Several features loading strongly with the same sign means they rise together and the component tracks their shared theme; that's how you NAME a component.",
+    "simple": "Loadings are the component's recipe card: how much of each original feature it stirs in. If height, weight and arm-span all load heavily and positively on a component, you can name it 'body size'. Loadings turn an abstract direction into something interpretable — they're weights, not point counts or accuracy scores.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The component's recipe",
+      "world": "PC1's loading on each original feature. Slide across the features and read which ones the component actually blends — and which it ignores.",
+      "xlab": "original feature →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "height",
+        "weight",
+        "arm span",
+        "shoe size",
+        "hair colour"
+      ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "PC1 loading", "ys": [ 0.52, 0.55, 0.5, 0.42, 0.03 ] }
+      ],
+      "knob": { "label": "Feature", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Height and weight load ~0.5 each, same sign — PC1 rises when both rise. They share whatever it measures.", "tone": "info" },
+        { "max": 3, "text": "Arm span and shoe size join at the same sign: four size features, one shared axis. PC1 has earned the name 'body size'.", "tone": "info" },
+        { "max": 4, "text": "🤯 Hair colour loads ~0.03 — invisible to PC1. The loadings are the recipe: they say what each component is MADE of, and let you name it.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Loadings", "formula": "component = Σ (loading × feature) · the weights are the recipe", "text": "sklearn: pca.components_. Same-sign block of strong loadings = a shared factor you can name; near-zero = irrelevant." }
+    }
+  },
+  {
     "q": "Your dataset has 300 columns. Before any modelling, why would you deliberately throw dimensions away?",
     "choices": [
       "Distances degrade, models overfit and nothing can be visualised in 300-D",
-      "Fewer columns always means more information",
-      "Databases cap tables at 100 columns",
-      "Gradient descent requires under 50 features",
-      "It's purely to save disk space"
+      "High dimensions force nearly every pair of features to correlate",
+      "Each extra column quietly halves the rows available to train a model",
+      "Dropping features is the only dependable way to erase dataset outliers",
+      "Most storage engines silently truncate any table beyond a hundred columns"
     ],
     "explain": "High dimensions poison distance-based reasoning (everything becomes equally far), multiply overfitting room, slow everything, and defeat the human eye. Reduction trades a little information for geometry that works again.",
     "simple": "Three hundred columns is a description so long that everything sounds unique and nothing looks similar. Boil it down to the few directions that actually vary and suddenly: distances mean something, plots become possible, and models stop drowning. You met this villain before — the curse of dimensionality. Reduction is the counter-spell.",
@@ -32,10 +205,10 @@
     "q": "PCA must choose its FIRST axis — the single best line to flatten the data onto. Which line does it pick?",
     "choices": [
       "The one preserving the most spread (variance) after flattening",
-      "The horizontal axis, always",
-      "The line through the two farthest points",
-      "The line hitting the most points",
-      "A random line, refined later"
+      "The line minimising the total spread of the projected points",
+      "The line best fitting the data by ordinary least-squares regression",
+      "The line joining the overall mean to the single farthest point",
+      "The direction along which the projected points cluster most tightly"
     ],
     "explain": "Projecting onto a line squashes everything else away, so PCA keeps the line along which the data varies MOST — the direction that loses least. That's the first principal component, found exactly (no search needed) via eigenvectors.",
     "simple": "Photograph a shoal of fish so the photo tells you most: shoot along the shoal's longest axis and the fish spread across your frame; shoot end-on and they pile into a dot. PCA computes the perfect camera angle — the one where the flattened shadow stays as spread out as possible.",
@@ -73,10 +246,10 @@
     "q": "PC1 is fixed. Where does PCA put its SECOND component?",
     "choices": [
       "Perpendicular to PC1, capturing the most of the remaining spread",
-      "Parallel to PC1, for redundancy",
-      "Wherever variance is smallest",
-      "Through the two nearest points",
-      "At exactly 45° to PC1"
+      "Aligned with PC1 but shorter, deliberately reinforcing the main signal",
+      "Through the region of the cloud where the points are densest",
+      "At a fixed forty-five degrees from PC1 whatever the data shows",
+      "Along the line joining the two closest points in the cloud"
     ],
     "explain": "Components are orthogonal by construction: PC2 lives in the directions PC1 can't express, and grabs the most variance available there. Each successive component repeats the trick in what's left — ranked, non-overlapping axes.",
     "simple": "The first camera angle captured the shoal's length. The second photo must add NEW information — so it shoots at a right angle, capturing the shoal's width. No overlap, no wasted film: each component owns a direction the others can't see.",
@@ -114,10 +287,10 @@
     "q": "You run PCA on 50 features and get 50 components with their 'explained variance ratios'. How do you decide how many to KEEP?",
     "choices": [
       "Keep the top components until the cumulative ratio is high enough (say 90%)",
-      "Always keep exactly two",
-      "Keep the bottom half",
-      "Keep components with negative variance",
-      "Keep all 50 — that's the point"
+      "Keep only the components whose explained-variance ratio exceeds fifty percent",
+      "Keep every component whose individual ratio falls below the mean ratio",
+      "Keep exactly as many components as there are class labels in the data",
+      "Keep the components lying past the flattest stretch of the scree curve"
     ],
     "explain": "The ratios say what share of total variance each component carries, sorted descending. Cumulate them: if 8 components cover 92%, the other 42 axes hold 8% — mostly noise and redundancy. The scree/cumulative plot makes the cut visible.",
     "simple": "It's a talent show ranking: the first few components carry most of the show, the long tail contributes shrugs. Add up shares from the top until you've kept 'enough of the story' — often 90–95% — and send the rest home. Fifty columns in, eight axes out, story intact.",
@@ -161,10 +334,10 @@
     "q": "You run PCA on raw features: income (tens of thousands) and satisfaction (1–10). PC1 comes out pointing almost exactly along income. Why?",
     "choices": [
       "Variance is measured in raw units, so the big-unit feature owns the 'largest spread' by default",
-      "Income is genuinely 1,000× more informative",
-      "PCA always picks the first column",
-      "Satisfaction is categorical",
-      "The data must be mislabeled"
+      "Income has far more unique values, and PCA always follows whichever column has the highest cardinality",
+      "Bigger numbers yield bigger covariances, which PCA treats as the more reliable signal",
+      "PCA subtracts each column's mean but never rescales, so income's mean dominates PC1",
+      "Income happens to correlate with every other feature, forcing PC1 to align with it"
     ],
     "explain": "PCA maximises variance, and variance inherits units: income's spread is millions (of squared pounds), satisfaction's is single digits. Unstandardised PCA just rediscover which column has the biggest numbers. Scale first — always.",
     "simple": "Same shouting-contest bug you met with KNN and SVM: the feature with the biggest raw numbers wins any contest measured in raw numbers. 'Direction of most variance' becomes 'direction of the loudest unit'. Standardise, and PCA measures structure instead of units.",
@@ -195,10 +368,10 @@
     "q": "The data lies along a curved arc — like a bent wire. PCA keeps disappointing: no single axis captures it well. What's the structural reason?",
     "choices": [
       "PCA only offers STRAIGHT axes, and no straight line hugs a curve",
-      "The wire has too few points",
-      "Variance can't be computed on curves",
-      "The arc must first be labelled",
-      "PCA requires at least 3 dimensions"
+      "PCA needs uncorrelated inputs, and points on an arc are far too correlated",
+      "Variance along a curve is undefined, so PCA cannot rank the directions",
+      "PCA discards the curved component as noise before it picks its axes",
+      "A curve spreads its variance evenly, leaving PCA no direction to prefer"
     ],
     "explain": "PCA is linear: it can rotate and flatten, never bend. A curved manifold spreads its variance across multiple straight directions, so every single axis captures only a slice. Nonlinear methods (t-SNE, UMAP, kernel PCA) exist precisely for this.",
     "simple": "Try summarising a banana with one straight skewer: whichever way you push it through, much of the banana bulges away from it. Straight tools summarise straight-ish things. For bent shapes you need a tool allowed to bend — that's your bridge to t-SNE.",
@@ -237,10 +410,10 @@
     "q": "You compress 100 sensor channels to 12 principal components and reconstruct. The reconstruction is imperfect — yet often CLEANER than the original. How?",
     "choices": [
       "The discarded low-variance components held mostly noise, so dropping them denoises",
-      "Reconstruction adds new information",
-      "PCA sharpens edges deliberately",
-      "The sensors improve during PCA",
-      "It isn't — compression always degrades"
+      "Averaging the 100 channels into 12 cancels random noise via the central limit theorem",
+      "The top components amplify the strong signal while actively shrinking the weak channels",
+      "Reconstruction snaps each value to its nearest component, smoothing away the sharp spikes",
+      "Keeping fewer components lifts the signal-to-noise ratio of every channel equally"
     ],
     "explain": "Real signals concentrate in a few strong directions; sensor noise sprinkles evenly across ALL directions. Keeping the top components keeps most signal and only a sliver of noise — reconstruction filters the static by omission.",
     "simple": "Imagine summarising a noisy choir recording by its 12 strongest harmonics and replaying: the hiss — spread thinly across thousands of frequencies — mostly vanishes, while the melody survives. Throwing away the quiet parts threw away mostly static. Lossy compression, acting as a noise filter.",
@@ -285,10 +458,10 @@
     "q": "Two roads to fewer dimensions: feature SELECTION (keep 10 original columns) versus feature EXTRACTION like PCA (build 10 new blended axes). What's the real trade?",
     "choices": [
       "Selection keeps meaning; extraction keeps more variance per dimension",
-      "Extraction is always better",
-      "Selection is always better",
-      "They produce identical results",
-      "Selection only works on images"
+      "Selection maximises variance per axis; extraction preserves the original meaning",
+      "Selection blends every column; extraction keeps a subset of the originals intact",
+      "Selection removes correlation; extraction leaves the correlations fully in place",
+      "Both keep identical variance and differ only in how the axes are named"
     ],
     "explain": "Selected columns stay interpretable ('income', 'age') and cheap to collect, but correlated information gets crudely dropped. PCA components pack maximal variance per axis by blending everything — at the price of axes named 'PC3' that no stakeholder recognises.",
     "simple": "Downsizing a library: selection keeps the 10 best original books — readable, familiar, but some plots are lost. Extraction rebinds the whole collection into 10 dense anthologies — more story per shelf, but no book has a recognisable title anymore. Explaining to humans? Select. Feeding a model? Extract often wins.",
@@ -329,10 +502,10 @@
     "q": "You add PCA before a classifier. Where must the PCA be FITTED, and why does this question feel familiar?",
     "choices": [
       "On training data only, inside the pipeline — PCA is preprocessing, and the leakage rule never sleeps",
-      "On all data, for the best components",
-      "On the test set, for realism",
-      "PCA needs no fitting",
-      "Only on the labels"
+      "On the full dataset just once, because PCA is unsupervised and therefore cannot possibly leak the labels",
+      "On the training and validation folds together, holding only the final test set aside",
+      "On each incoming test fold at prediction time, so the components fit that data exactly",
+      "After the classifier is fit, so the components can be tuned to the model's errors"
     ],
     "explain": "PCA learns directions FROM data (means, covariances, eigenvectors) — fit it on everything and test-set information leaks into your features. Same law as scalers, selectors and imputers: anything with a .fit() goes inside the pipeline, trained on the training fold.",
     "simple": "PCA studies the data to choose its angles — that's learning, and learning from the test set is peeking, whatever the tool. You've now seen this rule catch scalers, feature selectors, imputers, calibrators, stacking… and today PCA. It's the closest thing applied ML has to a law of physics.",
@@ -361,10 +534,10 @@
     "q": "PCA on body measurements returns a first component with loadings: height 0.52, weight 0.55, arm span 0.50, shoe size 0.42, hair colour 0.03. How do you read this component?",
     "choices": [
       "As an 'overall body size' axis — all the size features load together with the same sign, hair colour contributes nothing",
-      "As proof height causes weight",
-      "As a cluster of tall people",
-      "As an error — loadings must sum to 1",
-      "As the least important direction"
+      "As a ranking of the original features by importance, with height the most important input and hair colour the least important",
+      "As simply the average of the five body measurements, each one weighted by how frequently its values happen to occur",
+      "As a contrast between the large and the small individuals, since these loadings all carry differing signs",
+      "As clear evidence that the five features are just redundant copies, so four of them ought to be dropped"
     ],
     "explain": "A component IS its loadings: the recipe of original features it blends. Several features loading strongly with the same sign = they rise together, and the component tracks their shared cause ('size'). Near-zero loadings = that feature is irrelevant to this axis. Mixed signs would read as a contrast (e.g. 'long-limbed vs stocky'). Naming components from their loading patterns is how PCA becomes interpretation, not just compression.",
     "simple": "Each component comes with a recipe card: how much of every original feature it stirs in. This one says 'roughly equal parts height, weight, arm span, shoe size — hold the hair colour'. Everything on the card grows together, so the axis is measuring whatever makes ALL of them grow: body size. Read the card, name the axis — that's the skill.",
@@ -407,10 +580,10 @@
     "q": "On one dataset PC1 captures 50% of the variance; on another it captures 99.5%. What property of the FEATURES drives how much variance one component can absorb?",
     "choices": [
       "Their correlation — the more the features move together, the more of the total variance a single shared axis can soak up",
-      "The number of rows",
-      "The units of the first feature",
-      "How many classes the labels have",
-      "The random seed of the solver"
+      "Their raw scale — features with the widest raw numeric range allow a single axis to absorb nearly all of the total variance",
+      "Their count — with fewer features present, each surviving component is forced to carry a larger share of the variance",
+      "Their skewness — the more skewed the feature distributions are, the more a single axis can come to dominate them",
+      "Their independence — the less the features overlap, the more of the variance one axis can summarise for you"
     ],
     "explain": "PCA is a redundancy harvester. Uncorrelated features each carry independent information — no single direction can represent them, so variance spreads across many components. Highly correlated features are near-copies of one underlying signal, and the component aligned with that signal absorbs almost everything. That's why PCA compresses sensor arrays and pixel images so well (massive redundancy) and does little for carefully engineered, decorrelated feature sets.",
     "simple": "Think of features as interview questions. If every question probes something different, you can't summarise the interview in one number. If ten questions are re-wordings of 'how big is it?', one number nails all ten. PCA's compression is exactly a measure of how much your features repeat each other — slide the correlation up and watch one axis swallow the dataset.",
@@ -453,10 +626,10 @@
     "q": "A fraud team compresses normal transactions with PCA (keeping a few components), then reconstructs each incoming transaction and measures the reconstruction error. Why does this catch anomalies?",
     "choices": [
       "The components encode how NORMAL data varies — normal points survive the compress-reconstruct round trip, anomalies lose what makes them odd and come back distorted",
-      "PCA clusters the fraud cases together",
-      "Reconstruction error equals the class label",
-      "Anomalies have larger raw feature values",
-      "It doesn't — PCA is supervised"
+      "PCA sorts every transaction along PC1, and fraud cases naturally pile up at the extreme high end of that one axis, where they clearly stand out from the crowd",
+      "The components store only the average transaction, so anything sitting far from that average gets flagged well before any reconstruction even happens",
+      "Fraudulent transactions carry far higher variance across their features, so they land in exactly the low-ranked components that PCA deliberately holds onto and keeps for them",
+      "Reconstruction assigns each transaction a class probability, and anomalies are simply those scoring below the operator's chosen cutoff value on it"
     ],
     "explain": "Fit PCA on normal data only. The kept components span the subspace of normal variation; whatever a transaction has OUTSIDE that subspace is discarded on projection. Normal points barely lie outside it → tiny error. An anomaly deviates in directions normal data never uses → its projection snaps back to the nearest 'normal-looking' point, and the distance between original and reconstruction is precisely its abnormality score. Threshold that error and you have an unsupervised fraud alarm.",
     "simple": "PCA learns a stencil of normal. Compressing a transaction means tracing it with the stencil; reconstructing means redrawing it from that tracing. Normal transactions redraw almost perfectly — the stencil was made for them. A weird transaction can't be traced with the stencil, so its redrawing comes back 'normalised' — and the gap between the original and the redraw is exactly HOW weird it was. No fraud labels needed; normal data defined its own alarm.",
@@ -499,10 +672,10 @@
     "q": "Vanilla PCA chokes: one dataset is 10M rows and won't fit in memory, another needs eigenvectors of a 20k-feature matrix, a third has structure that's curved, not linear. Which toolbox variants map to these three walls?",
     "choices": [
       "IncrementalPCA for out-of-core batches, randomized SVD for huge matrices, KernelPCA for curved structure",
-      "There is only one PCA — the walls are fatal",
-      "t-SNE, UMAP and k-means respectively",
-      "StandardScaler fixes all three",
-      "Deeper trees, more trees, and boosting"
+      "IncrementalPCA for huge matrices, KernelPCA for streaming batches, and randomized SVD for curved structure",
+      "TruncatedSVD for out-of-core batches, SparsePCA for huge matrices, KernelPCA for curved structure",
+      "SparsePCA for streaming batches, FastICA for huge matrices, and TruncatedSVD for curved structure",
+      "KernelPCA for out-of-core batches, IncrementalPCA for huge matrices, randomized SVD for curves"
     ],
     "explain": "Same objective, three engines. IncrementalPCA consumes data in mini-batches, updating components as it streams — nothing ever needs to fit in RAM. svd_solver='randomized' approximates just the top-k components via random projections instead of a full eigendecomposition — sklearn auto-picks it for big matrices when you ask for few components. KernelPCA applies the kernel trick so 'directions of maximal variance' can be measured in an implicit non-linear feature space — curved manifolds unroll. Know the walls, know which engine.",
     "simple": "One idea — find the directions where the data varies most — and three engineering escapes for when the naive recipe hits a wall. Data too big for memory? Feed it in spoonfuls (Incremental). Matrix too big to fully decompose? Estimate just the top few directions with clever randomness (randomized). Structure bends? Do PCA in a stretched space where the bend is straight (Kernel). Slide through the scenarios and match the engine.",

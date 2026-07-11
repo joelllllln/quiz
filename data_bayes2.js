@@ -3,7 +3,7 @@
 
 {
   q: "sklearn ships three Naive Bayes flavours — MultinomialNB, BernoulliNB, GaussianNB. You're staring at a new dataset. What actually decides which one to use?",
-  choices: ["The TYPE of your features: counts → Multinomial, yes/no flags → Bernoulli, continuous numbers → Gaussian", "The number of classes", "The size of the training set", "Whichever trains fastest", "The number of features"],
+  choices: ["The TYPE of your features: counts → Multinomial, yes/no flags → Bernoulli, continuous numbers → Gaussian", "The training SIZE: tiny sets -> GaussianNB, medium sets -> BernoulliNB, and large corpora -> MultinomialNB", "The number of CLASSES: two -> Bernoulli, several -> Multinomial, and very many -> Gaussian", "The class BALANCE: even split -> Multinomial, skewed -> Bernoulli, and very rare -> Gaussian", "The feature COUNT: a few -> Gaussian, dozens -> Bernoulli, and thousands -> Multinomial"],
   explain: "Each variant assumes a different shape for P(feature | class): Multinomial models how often things occur, Bernoulli models whether they occur at all, Gaussian fits a bell curve to continuous values. Match the assumption to the data and NB shines; mismatch it and accuracy craters.",
   simple: "The three flavours are the same recipe with different ideas about what a 'clue' looks like. If your clues are counts (word appeared 3 times), use Multinomial. If they're on/off (word appeared: yes/no), use Bernoulli. If they're measurements (temperature 38.2°), use Gaussian. Pick by looking at your columns, nothing else.",
   widget: {
@@ -29,7 +29,7 @@
 
 {
   q: "A test email contains the word 'zumba', which never once appeared in your spam training emails. With no smoothing, what does this single word do to the spam score?",
-  choices: ["Multiplies the whole product by ~zero — one unseen word vetoes every other clue", "Gets skipped as unknown", "Adds a small penalty", "Crashes the classifier", "Counts as weak evidence for spam"],
+  choices: ["Multiplies the whole product by ~zero — one unseen word vetoes every other clue", "Gets quietly skipped as an unknown token, so only the other clues decide the class", "Adds a small fixed penalty but lets the strong clues still carry the verdict", "Is counted as weak evidence nudging the email slightly toward spam", "Falls back to a default likelihood so the running product stays sensible"],
   explain: "NB multiplies P(word | class) across all words. An unseen word has an estimated probability of 0 in that class, and anything times zero is zero — so one novel word annihilates arbitrarily strong evidence from every other word. This is the zero-frequency problem, and it's why smoothing is not optional.",
   simple: "Naive Bayes multiplies clue after clue. Multiplication has a famous weakness: one zero wipes out everything. 'Never saw this word in spam' becomes 'spam is IMPOSSIBLE' — an insanely strong conclusion from one missing word. Watch three strong spam clues get vetoed by a single word about a dance class.",
   widget: {
@@ -56,7 +56,7 @@
 
 {
   q: "Laplace smoothing fixes the zero-veto by pretending every word was seen alpha extra times. Sweep alpha from 0 to 100 — what shape does validation accuracy trace?",
-  choices: ["A hump: too little leaves deadly zeros, too much blurs real evidence — the sweet spot is in between", "Steadily up — more smoothing is always safer", "Steadily down — any fake counts hurt", "Flat — alpha only affects speed", "Two peaks at both extremes"],
+  choices: ["A hump: too little leaves deadly zeros, too much blurs real evidence — the sweet spot is in between", "Steadily up: more smoothing always kills more of the deadly zeros, so validation accuracy just keeps climbing", "Steadily down: any fake counts dilute the real evidence, so accuracy only ever falls", "Flat: alpha changes only the training speed and never the validation accuracy at all", "A valley: both extremes stay safe while the middle alpha over-blurs the real counts"],
   explain: "alpha=0 keeps the zero-veto bug. Huge alpha drowns the real counts in fake ones, dragging every word's likelihood ratio toward 1 — the model forgets what it learned. In between sits a maximum, which is why alpha is a hyperparameter you tune (default 1.0 is usually near it).",
   simple: "Smoothing is adding a pinch of 'benefit of the doubt' to every word count. No pinch: one unseen word still vetoes everything. A truckload: every word looks equally common everywhere, and the model becomes an amnesiac. Somewhere between 'pinch' and 'truckload' is a best value — slide and find it.",
   widget: {
@@ -81,7 +81,7 @@
 
 {
   q: "GaussianNB is scoring a patient whose temperature is 99.5°F against two classes, healthy and flu. Mechanically, what did it learn per class, and how does it score?",
-  choices: ["A bell curve (mean + spread) per class per feature — it asks which class's bell explains 99.5° better", "A threshold temperature separating the classes", "A lookup table of every training temperature", "A linear weight for temperature", "The k nearest patients' labels"],
+  choices: ["A bell curve (mean + spread) per class per feature — it asks which class's bell explains 99.5° better", "A single threshold temperature per class that cleanly splits the healthy from the flu cases", "A stored lookup table holding every training temperature, matched against the new reading", "A linear weight for each feature, summed across all features and squashed through a logistic curve to a probability", "The labels of the k nearest past patients by temperature, then a majority vote among them"],
   explain: "GaussianNB stores just two numbers per class per feature: the mean and variance of that feature among that class's training rows. At prediction time it reads each class's bell-curve height at the observed value and uses those as the likelihoods in Bayes' rule. Two numbers per curve is why it trains almost instantly.",
   simple: "For each class, the model remembers 'temperatures of healthy people pile up around 98.2, flu around 100.3' — a bell shape each. A new reading of 99.5 is then a simple question: under which pile is this value less surprising? Slide the thermometer and watch the two bells trade places.",
   widget: {
@@ -106,7 +106,7 @@
 
 {
   q: "A marketing dataset has features 'sale', 'discount', '% off' and 'bargain' — four near-synonyms that almost always appear together. Why does this specifically hurt Naive Bayes?",
-  choices: ["NB assumes clues are independent, so it counts the same signal four times and becomes wildly overconfident", "NB can't store that many features", "Synonyms cause zero-frequency errors", "Correlated features slow training exponentially", "It doesn't — NB averages them out"],
+  choices: ["NB assumes clues are independent, so it counts the same signal four times and becomes wildly overconfident", "NB can't hold that many correlated features at once, so it silently drops the extra synonyms", "The four synonyms collide in the count table and trigger zero-frequency vetoes on the score", "Correlated features make NB's training time grow exponentially, so it slows to a crawl here", "It doesn't actually hurt at all - NB quietly averages the four near-synonyms back into one clean signal"],
   explain: "The 'naive' assumption is conditional independence: each feature multiplies the odds as if it were fresh information. Four rewordings of one signal therefore multiply four times, when the honest update is roughly one. The ranking often survives (everything inflates together) but the probabilities become caricatures.",
   simple: "Imagine four witnesses who all heard the SAME rumour. Naive Bayes treats them as four independent confirmations and gets four times as convinced — but really there's one piece of information wearing four hats. Watch one clue, reworded three times, snowball the odds.",
   widget: {
@@ -133,7 +133,7 @@
 
 {
   q: "Your filter trained on a 50/50 spam/ham corpus, but in production only 1% of mail is spam. The same email now deserves a different probability. What's the correct, cheap fix?",
-  choices: ["Reset the class prior to the deployment mix — the learned word evidence carries over unchanged", "Retrain from scratch on production data only", "Lower the decision threshold to 1%", "Remove the rarest words", "Nothing — NB is immune to class imbalance"],
+  choices: ["Reset the class prior to the deployment mix — the learned word evidence carries over unchanged", "Retrain the entire model from scratch on the production mail only, throwing away all the old counts", "Slide the decision threshold down to 1% so the classifier matches the new base rate", "Drop the rarest words from the vocabulary so the skew stops distorting the counts", "Nothing at all - Naive Bayes is inherently immune to any shift in the class balance"],
   explain: "NB's score factorises cleanly: prior odds × word likelihood ratios. The likelihood ratios (what each word says) don't depend on the class mix; only the prior does. So you can swap in honest deployment priors (sklearn: the `priors`/`class_prior` argument) without touching the learned counts.",
   simple: "The model's verdict is 'starting odds × what the words say'. Training on a 50/50 corpus set the starting odds to a coin flip, but in the real inbox spam starts as a 1-in-100 longshot. The word evidence is still perfectly valid — only the starting line moved. Slide the assumed spam share and watch the same email's score swing.",
   widget: {
@@ -158,7 +158,7 @@
 
 {
   q: "Your Naive Bayes spam filter ranks emails brilliantly (great ROC-AUC), yet its stated probabilities cluster at 0.0001% and 99.999%. How should you treat its output?",
-  choices: ["Trust the ORDER of scores, not their sizes — calibrate before using the numbers as probabilities", "Discard the model — it's broken", "Average the probabilities with 50%", "Only act on predictions above 99.999%", "Retrain with more data until the numbers moderate"],
+  choices: ["Trust the ORDER of scores, not their sizes — calibrate before using the numbers as probabilities", "Discard the model entirely - stated probabilities that extreme are a sign it is fundamentally broken", "Average each stated probability with a flat 50% to pull the extremes back inward", "Act only on the predictions above 99.999% and treat every other email as pure noise", "Keep retraining on far more data until the stated probabilities stop clustering"],
   explain: "Double-counted correlated evidence pushes NB's products to extremes, but it inflates all scores fairly consistently, so ranking survives. Wrap the model in a calibrator (CalibratedClassifierCV — Platt scaling or isotonic regression) when downstream decisions need honest probabilities.",
   simple: "The filter is like a friend with great instincts who talks in absolutes: everything is 'definitely' or 'no chance'. Their ORDERING of suspects is excellent; their confidence levels are theatre. You can keep the instincts and fix the theatre with a calibration step that remaps stated confidence onto observed reality.",
   widget: {
@@ -183,7 +183,7 @@
 
 {
   q: "Inside a trained spam filter, the word 'viagra' multiplies the odds ×40 while 'the' multiplies by ×1.0. What property of a word determines its evidential power?",
-  choices: ["The RATIO of its frequency in spam vs ham — words equally common in both multiply by ≈1 and say nothing", "How rare the word is overall", "How long the word is", "How early it appears in the email", "Its raw count in spam alone"],
+  choices: ["The RATIO of its frequency in spam vs ham — words equally common in both multiply by ≈1 and say nothing", "How RARE the word is across the whole corpus - the scarcer it is, the harder it swings the odds", "Its RAW count inside the spam class alone - the more spam emails it happens to turn up in, the stronger it is", "How EARLY it appears in the email - words near the start carry far more weight than later ones", "How LONG the token is - longer, more unusual words are inherently the most discriminative ones"],
   explain: "Each word's factor is P(word|spam)/P(word|ham) — a likelihood ratio. 'the' appears in essentially every email of both classes, so its ratio is ~1: multiplying by 1 changes nothing. Discriminative words are lopsided ACROSS classes, not merely frequent or rare. This is also why stop-word removal barely helps NB — stop words neutralise themselves.",
   simple: "A clue is only a clue if it's more common among the guilty than the innocent. 'the' shows up everywhere, so hearing it tells you nothing — its multiplier is ×1, the do-nothing number. 'viagra' is 40 times more at home in spam, so it swings the odds hard. Feed the words in and watch who actually moves the needle.",
   widget: {
@@ -210,7 +210,7 @@
 
 {
   q: "A support-ticket classifier must spot a category that's only 2% of tickets. Plain MultinomialNB keeps under-calling it. Which purpose-built variant targets exactly this, and how?",
-  choices: ["ComplementNB — it learns each class's word profile from all OTHER classes' documents, stabilising starved classes", "GaussianNB — bell curves handle imbalance", "BernoulliNB — absence features fix skew", "A second NB trained only on the rare class", "OutputCodeNB with error-correcting codes"],
+  choices: ["ComplementNB — it learns each class's word profile from all OTHER classes' documents, stabilising starved classes", "GaussianNB - fitting a bell curve to each word's counts smooths right over the class imbalance", "BernoulliNB - scoring every vocabulary word's ABSENCE hands the starved class enough extra signal to recover fully", "A second MultinomialNB trained only on the rare class's documents, then blended in by majority vote", "WeightedNB - it scales the rare class's prior upward until its recall matches the majority class"],
   explain: "With 2% of documents, the rare class's word counts are noisy and its estimates poor. ComplementNB estimates, for each class, the word distribution of its COMPLEMENT (everything else) — which is data-rich even when the class is starved — then scores against that. It's the standard NB pick for imbalanced text.",
   simple: "Trying to describe a tiny class from its own handful of documents is like sketching a face you glimpsed once. ComplementNB flips the problem: instead of 'what do refund tickets look like?' (few examples), it asks 'what does everything EXCEPT refunds look like?' (thousands of examples) and flags tickets that don't fit. More data per estimate, steadier answers.",
   widget: {
@@ -235,7 +235,7 @@
 
 {
   q: "You have 40 labelled examples — a weekend's hand-labelling — and a deadline. Logistic regression and Naive Bayes are both candidates. What does the classic learning-curve comparison say?",
-  choices: ["NB wins when data is scarce — its strong assumptions act like a head start — but flexible models overtake as data grows", "Logistic regression wins at every size", "NB wins at every size", "They're identical below 1,000 examples", "Neither works under 100 examples"],
+  choices: ["NB wins when data is scarce — its strong assumptions act like a head start — but flexible models overtake as data grows", "Logistic regression wins at every training size - a model carrying fewer assumptions always comes out ahead of one with more", "NB wins at every training size - its counting head start is a lead it never gives up to any rival", "The two stay essentially tied until a few thousand examples, then plateau at the same accuracy", "Neither model does anything useful below a hundred examples, so the whole comparison is moot"],
   explain: "Ng & Jordan's classic result: generative NB reaches its (higher) asymptotic error much faster — its independence assumption is a strong prior that substitutes for data — while discriminative logistic regression needs more examples but converges to a lower error. Rule of thumb: tiny data → NB; plenty → discriminative.",
   simple: "Strong assumptions are borrowed knowledge. NB shows up already 'knowing' how features behave (independently), so 40 examples are enough to fill in the blanks — while logistic regression is still guessing. But borrowed knowledge has a ceiling: once real data is abundant, the model with fewer assumptions learns things NB's shortcut can never express, and glides past it.",
   widget: {

@@ -3,7 +3,7 @@
 
 {
   q: "Mapping data into a rich feature space could mean computing millions of new features per point. The kernel TRICK avoids that how?",
-  choices: ["Kernels compute the mapped-space similarity directly, without ever building the features", "By sampling only 1% of the new features", "By caching the features on disk", "By using fewer support vectors", "By mapping only the support vectors"],
+  choices: ["Kernels compute the mapped-space similarity directly, without ever building the features", "By quietly sampling just a small random fraction of the millions of new features per point", "By explicitly building the features but caching them all on fast local disk", "By computing the full mapping for only the support vectors, not every point", "By reusing far fewer support vectors so the feature count stays small"],
   explain: "SVM training only ever needs DOT PRODUCTS between mapped points. A kernel function K(a,b) returns exactly that number straight from the original features — the giant feature vectors never exist.",
   simple: "You don't need the two mapped points — only how similar they'd be. The kernel is a shortcut formula for that similarity. Like knowing two people's compatibility score without writing out their million-line biographies first.",
   widget: {
@@ -28,7 +28,7 @@
 
 {
   q: "You must choose between a polynomial kernel and RBF for a new problem. What's the practical guidance?",
-  choices: ["RBF is the robust default; polynomial suits known interaction structure and needs careful degree tuning", "Polynomial is always more accurate", "RBF only works on images", "Polynomial needs no hyperparameters", "They are mathematically identical"],
+  choices: ["RBF is the robust default; polynomial suits known interaction structure and needs careful degree tuning", "Polynomial almost always beats RBF once you tune its degree, so it should always be your first default choice", "RBF only functions on image data, while polynomial is the safe general-purpose default everywhere", "Polynomial kernels have no hyperparameters to set, which makes them far simpler to deploy safely", "RBF and polynomial are mathematically identical, so the choice between them never matters at all"],
   explain: "RBF handles smooth local structure with one main knob (gamma) and degrades gracefully. Polynomial kernels shine when feature interactions of a known order matter, but high degrees explode and destabilise.",
   simple: "RBF is the all-terrain tyre: grips almost anything with one pressure dial. Polynomial is the racing slick: superb on exactly the right track (real interaction effects of degree 2–3), twitchy everywhere else. When unsure, start all-terrain.",
   widget: {
@@ -53,7 +53,7 @@
 
 {
   q: "An RBF-SVM's decision score for a new point is really a weighted sum of similarities to the support vectors. Which earlier algorithm does that make it resemble?",
-  choices: ["A weighted nearest-neighbour vote — but over support vectors only", "A decision tree over the SVs", "Naive Bayes with priors", "Plain linear regression", "K-means clustering"],
+  choices: ["A weighted nearest-neighbour vote — but over support vectors only", "A plain least-squares line fitted straight through the support vectors", "A shallow decision tree splitting on the support vectors alone", "A naive Bayes model using class priors over the support vectors", "A k-means clustering of the support vectors into tight groups"],
   explain: "RBF similarity decays with distance, so nearby support vectors dominate the sum — exactly the flavour of distance-weighted KNN, except the 'neighbours' are the handful of learned support vectors, each with a learned weight.",
   simple: "Under the hood, an RBF-SVM asks: 'which support vectors is this new point close to, and what do THEY say?' — closer ones shout louder. That's KNN's soul, wearing an optimised suit: fewer, smarter reference points with learned voting power.",
   widget: {
@@ -81,7 +81,7 @@
 
 {
   q: "Tuning an RBF-SVM, you sweep gamma with C fixed — results look random. Colleagues say to sweep both together. Why?",
-  choices: ["C and gamma interact — each gamma has a different best C, so tune them as a grid", "Gamma only matters for linear kernels", "C is learned automatically from gamma", "Sweeping both doubles the accuracy", "They're the same parameter renamed"],
+  choices: ["C and gamma interact — each gamma has a different best C, so tune them as a grid", "Gamma only has any real effect when you actually happen to use a linear kernel, not RBF", "C is chosen automatically from gamma, so only gamma needs sweeping", "Sweeping both together simply doubles the final accuracy you get", "C and gamma are really the same parameter under two different names"],
   explain: "Gamma sets local flexibility; C sets violation tolerance. A wiggly (high-gamma) boundary needs a different discipline level than a smooth one — the optimum lives on a diagonal ridge in the (C, gamma) plane, invisible to one-dimensional sweeps.",
   simple: "It's like seasoning: the right amount of salt depends on how much lemon you added. Tasting salt levels while the lemon is wrong tells you nothing. C and gamma are salt and lemon — adjust them together, on a grid.",
   widget: {
@@ -106,7 +106,7 @@
 
 {
   q: "SVMs are inherently two-class machines. Your problem has 5 classes. What do libraries actually do?",
-  choices: ["Train several binary SVMs (one-vs-rest or one-vs-one) and combine their verdicts", "Refuse — SVMs cannot do multi-class", "Add classes as extra features", "Use one SVM with five thresholds", "Convert the labels to numbers and regress"],
+  choices: ["Train several binary SVMs (one-vs-rest or one-vs-one) and combine their verdicts", "Refuse outright to train, since a single SVM can never handle more than two classes", "Fit a single SVM and slice its decision output with four internal thresholds", "Add each point's class identity as one extra input feature to the SVM", "Encode the five class labels as integers 1-5 and fit a regression"],
   explain: "One-vs-rest trains K classifiers ('class k or not?'); one-vs-one trains K(K−1)/2 pairwise duels and lets them vote. sklearn's SVC quietly runs one-vs-one under the hood.",
   simple: "A margin separates exactly two crowds, so multi-class SVM is a tournament of two-crowd matches: either each class against 'everyone else' (5 matches), or every pair head-to-head (10 duels), with the verdicts combined. You never see it — the library referees automatically.",
   widget: {
@@ -131,7 +131,7 @@
 
 {
   q: "Your SVM outputs decision scores like +1.73, but the fraud team demands calibrated probabilities. What's the standard fix?",
-  choices: ["Fit a small calibration model (Platt scaling / isotonic) mapping scores to probabilities on held-out data", "Divide the scores by their maximum", "Add 0.5 to every score", "Read scores as percentages directly", "Retrain with more support vectors"],
+  choices: ["Fit a small calibration model (Platt scaling / isotonic) mapping scores to probabilities on held-out data", "Divide every raw decision score by the single largest observed score so they all land cleanly between zero and one", "Read each raw decision score directly as a percentage, since they already lie in the right range", "Shift every decision score upward by exactly 0.5 so it reads as a valid probability", "Retrain the model with far more support vectors until the scores become true probabilities"],
   explain: "SVM margins aren't probabilities — they're distances. Platt scaling fits a sigmoid from score to observed frequency on validation folds (probability=True in sklearn does this); isotonic regression is the non-parametric alternative.",
   simple: "The SVM speaks in metres-from-the-boundary; the business speaks in percent. Calibration is the translation dictionary, learned from data: 'historically, points at +1.7 turned out positive 91% of the time'. A tiny second model does the translating.",
   widget: {
@@ -156,7 +156,7 @@
 
 {
   q: "Fraud is 2% of the data, and your SVM's boundary parks itself so deep in fraud territory that it flags almost nothing. Which built-in remedy targets this directly?",
-  choices: ["class_weight — make margin violations on the rare class cost more", "A polynomial kernel", "A larger test set", "Removing the majority class", "A smaller gamma"],
+  choices: ["class_weight — make margin violations on the rare class cost more", "A smaller gamma - widen each point's reach to cover the rare class", "A polynomial kernel to bend the boundary toward the rare class", "A far larger test set holding many more rare-class cases", "Removing majority points until the two classes are balanced"],
   explain: "With equal violation costs, sacrificing a few rare-class points buys a comfortable margin around the majority — so the optimiser does exactly that. class_weight='balanced' scales C per class, making rare-class violations expensive.",
   simple: "The optimiser is an accountant: 98 cheap majority points versus 2 'equally cheap' fraud points — guess who gets sacrificed for a tidier street. Raise the price of trampling fraud points (class weights) and the street repositions itself to respect them.",
   widget: {
@@ -178,7 +178,7 @@
 
 {
   q: "Support vector REGRESSION (SVR) flips the idea: instead of a street separating classes, it fits a tube around a curve. Which points become its support vectors?",
-  choices: ["Points on or outside the tube — everything comfortably inside it costs nothing", "Every training point equally", "Only the point with the largest error", "The points closest to the mean", "Random points, one per region"],
+  choices: ["Points on or outside the tube — everything comfortably inside it costs nothing", "Every single training point alike, each one contributing to the final fit equally", "Only the single point carrying the very largest prediction error of all", "The points sitting closest to the fitted curve's overall mean value", "Random points, roughly one drawn from each region of the curve"],
   explain: "SVR's epsilon-tube declares small errors free: points inside contribute nothing and aren't support vectors. Only points touching or violating the tube shape the model — sparsity, regression edition.",
   simple: "SVR says: 'predictions within ±ε of the truth are close enough — I refuse to fuss over them.' Only the awkward points outside that comfort tube get a say in the model. Wider tube: fewer fussy points, simpler model, until it's TOO relaxed.",
   widget: {
@@ -203,7 +203,7 @@
 
 {
   q: "Training a kernel SVM on 200,000 rows, your machine runs out of MEMORY before it runs out of patience. What's the structural cause?",
-  choices: ["The kernel matrix — pairwise similarities grow as n², independent of feature count", "Support vectors are stored twice", "The features are too many", "Python overhead", "The labels are stored as floats"],
+  choices: ["The kernel matrix — pairwise similarities grow as n², independent of feature count", "Too many input features — the memory required grows with the feature count squared", "Each support vector ends up being stored twice over during the training run", "The class labels are kept as wide floats rather than small integers", "Plain Python interpreter overhead balloons as the row count increases"],
   explain: "Kernel methods work on the n×n matrix of similarities between all training pairs: 200k² entries ≈ 320 GB in float64. Approximations (Nyström, random features) or linear SVMs are the escape routes.",
   simple: "A kernel machine wants a table of how similar every row is to every other row. Ten rows: 100 entries, cute. Two hundred thousand rows: forty BILLION entries — no laptop survives contact. The n² table, not the maths, is what breaks first.",
   widget: {
@@ -228,7 +228,7 @@
 
 {
   q: "For text classification with 50,000 sparse TF-IDF features, seasoned practitioners reach for LinearSVC rather than an RBF-SVM. Why?",
-  choices: ["High-dimensional text is usually already linearly separable — the RBF adds cost, not accuracy", "RBF kernels can't read sparse matrices", "LinearSVC has more hyperparameters to tune", "Text requires probability outputs", "RBF only supports two classes"],
+  choices: ["High-dimensional text is usually already linearly separable — the RBF adds cost, not accuracy", "Text classification always demands calibrated probability outputs, which the RBF kernel cannot give", "RBF kernels simply cannot operate on the sparse TF-IDF matrices that text produces", "LinearSVC exposes many more hyperparameters, making it much harder to tune correctly", "RBF kernels can only ever separate two classes, while text usually has many labels"],
   explain: "With 50k dimensions there's almost always a separating hyperplane already — the kernel's extra flexibility buys nothing but n² cost and overfitting risk. Linear SVMs on text are fast, sparse-friendly and hard to beat.",
   simple: "Kernels exist to ADD dimensions when the data's too flat to separate. Text arrives with fifty thousand dimensions built in — it doesn't need more room, it needs a fast straight cut. Adding RBF to text is bringing a ladder to a field with no walls.",
   widget: {

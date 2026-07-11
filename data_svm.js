@@ -3,7 +3,7 @@
 
 {
   q: "Many straight lines separate two classes perfectly. Which one does an SVM choose?",
-  choices: ["The one leaving the widest gap to the nearest points", "The one through the data's centre", "The one closest to the bigger class", "Any of them — they're equivalent", "The one minimising training error"],
+  choices: ["The one leaving the widest gap to the nearest points", "The one that runs straight through both class centroids", "The one minimising total squared error to the points", "The one that touches the fewest training points", "The one perpendicular to the largest class spread"],
   explain: "All separating lines score 100% on training data — SVM breaks the tie by maximising the MARGIN: the distance to the closest point on each side. Widest street wins.",
   simple: "Picture drawing a street between two crowds. Lots of streets avoid stepping on anyone — but the SAFEST street is the widest one, with the most breathing room to the nearest person on each side. SVM finds exactly that street.",
   widget: {
@@ -25,7 +25,7 @@
 
 {
   q: "In a trained SVM, which training points actually determine where the boundary sits?",
-  choices: ["Only the few points touching the street's edges", "All points, weighted equally", "The class centre points", "The most recently added points", "A random sample per class"],
+  choices: ["Only the few points touching the street's edges", "All the training points, each weighted equally", "The points that were the hardest to classify early", "The points sitting nearest each class centre", "The points farthest from the boundary line"],
   explain: "The maximum-margin boundary is pinned in place by the points AT the margin — the support vectors. Every other point could move (or vanish) without changing the model at all.",
   simple: "The street's position is set by the people standing right at its kerbs. Everyone deeper in the crowd could go home and the street wouldn't move an inch. Those kerb-standers are the 'support vectors' — the only points the model actually needs.",
   widget: {
@@ -47,7 +47,7 @@
 
 {
   q: "Real data is messy — one stray point sits inside the other class. A 'soft margin' SVM handles this how?",
-  choices: ["It tolerates some margin violations in exchange for a wider street", "It deletes the stray point first", "It refuses to train until separable", "It bends the boundary around the point", "It reweights the stray point's class"],
+  choices: ["It tolerates some margin violations in exchange for a wider street", "It curves the boundary so that it wraps tightly around the stray point", "It quietly drops the stray point before fitting the model", "It raises gamma until the stray point stops mattering", "It shrinks the margin to zero so no point is violated"],
   explain: "Soft-margin SVM pays a penalty per violation instead of demanding perfection. The C parameter prices those violations: it buys a wide, calm street at the cost of a few points on the wrong side.",
   simple: "Demanding a street that avoids literally everyone means a cramped, twisted street dictated by one weirdo. The soft margin says: fine — step past a couple of people, pay a small fine each, and keep the street wide for everyone else.",
   widget: {
@@ -72,7 +72,7 @@
 
 {
   q: "One class forms a ring AROUND the other — no straight line can separate them. The kernel idea rescues SVM how?",
-  choices: ["Add a computed feature (like distance from centre) that makes them separable", "Use many straight lines at once", "Convert the SVM into a tree", "Delete the inner class", "Lower C until the ring vanishes"],
+  choices: ["Add a computed feature (like distance from centre) that makes them separable", "Stack many straight boundaries together so they trace the outer ring's curve", "Lower C steadily until the soft margin swallows the whole ring shape", "Swap the SVM out for a small tree that can split the ring apart", "Widen the margin steadily until the inner class fits within it"],
   explain: "In the original features, no line works. Add a new axis — say r = distance from the centre — and the ring sits at high r, the core at low r: one straight cut on r separates them perfectly. Kernels do this transformation implicitly.",
   simple: "You can't cut a bullseye in two with one straight slice — in flat 2-D. But describe each point by 'how far from the centre is it?' and suddenly the two groups sit at different distances: one simple cut on THAT number wins. New viewpoint, easy problem.",
   widget: {
@@ -94,7 +94,7 @@
 
 {
   q: "Why does a WIDER margin tend to mean better performance on future data?",
-  choices: ["New points land near old ones — a wide buffer absorbs the scatter", "Wide margins always contain more points", "Width speeds up prediction", "Narrow margins overflow memory", "Width is aesthetic, not functional"],
+  choices: ["New points land near old ones — a wide buffer absorbs the scatter", "A wider margin always encloses more of the training points inside", "A wider street makes each prediction run noticeably faster", "A narrow margin risks overflowing the model's memory", "Wider margins guarantee zero errors on future test data"],
   explain: "Tomorrow's points are noisy copies of today's: each lands near where a similar training point stood. A boundary with a wide buffer keeps those jittered arrivals on the correct side; a tight one flips them.",
   simple: "Future customers won't land exactly on today's dots — they'll land NEARBY. If the boundary passes a hair's width from today's dots, tomorrow's near-misses fall on the wrong side. A wide street forgives the wobble.",
   widget: {
@@ -116,7 +116,7 @@
 
 {
   q: "After training an SVM on 50,000 points, only 900 turn out to be support vectors. What does that mean for the deployed model?",
-  choices: ["It only needs those 900 points to make every future prediction", "It must still store all 50,000", "It failed to converge properly", "900 points were mislabeled", "It will only work on 900 test cases"],
+  choices: ["It only needs those 900 points to make every future prediction", "It must still keep every one of the 50,000 points loaded to predict", "The other 49,100 points were quietly discarded as noise", "Training stalled the moment it isolated those 900 points", "It will generalise to at most 900 unseen test cases"],
   explain: "Predictions are computed from support vectors alone — everything else contributed nothing to the final boundary and can be discarded. The model is naturally sparse.",
   simple: "The 49,100 easy points — deep inside their own crowds — never influenced the street's position. Ship just the 900 kerb-standers and the model behaves identically. A crowd summarised by its edge cases.",
   widget: {
@@ -138,7 +138,7 @@
 
 {
   q: "You feed an SVM raw features: age (18–70) and salary (£20,000–£90,000). What happens to the margin calculation?",
-  choices: ["Salary's huge scale dominates it — scale features first", "Nothing — margins ignore units", "Age dominates, being first in the data", "The kernel removes the units", "Training refuses to start"],
+  choices: ["Salary's huge scale dominates it — scale features first", "Both features contribute equally regardless of their scale", "Age dominates it, since it appears first in each row", "The RBF kernel automatically cancels the units out", "Nothing changes, since margins are already unit-free"],
   explain: "Margins are DISTANCES, and distances add feature gaps — exactly like KNN. Raw salary gaps (thousands) swamp age gaps (tens), so the 'widest street' is computed in a warped space. Standardise first, always.",
   simple: "The street's width is measured with a ruler across all features at once. If one feature's numbers are a thousand times bigger, the ruler basically only measures THAT feature — the street ignores age entirely. Put the features on the same scale and the geometry becomes honest.",
   widget: {
@@ -166,7 +166,7 @@
 
 {
   q: "With an RBF kernel, the gamma parameter controls each training point's radius of influence. What does a very LARGE gamma produce?",
-  choices: ["Tiny islands around individual points — overfitting", "One smooth global boundary — underfitting", "A perfectly linear boundary", "Slower training but the same fit", "Wider margins everywhere"],
+  choices: ["Tiny islands around individual points — overfitting", "One smooth sweeping boundary, meaning clear underfitting", "A perfectly straight-line decision boundary appears", "Slower training but an identical final fit", "Much wider, more forgiving margins everywhere"],
   explain: "Large gamma = each point's influence dies off within a tiny radius, so the boundary is stitched from hyper-local bumps around individual points — flexible to the point of memorisation.",
   simple: "Gamma sets how far each point's opinion carries. Huge gamma = every point only vouches for its immediate doorstep, so the model draws a little bubble around each example — including every noisy one. It's k=1 syndrome, SVM edition.",
   widget: {
@@ -191,7 +191,7 @@
 
 {
   q: "Logistic regression and SVM both draw linear boundaries, but their training goals differ. What does each care about?",
-  choices: ["LogReg: honest probabilities everywhere · SVM: the margin at the border", "LogReg: the margin · SVM: probabilities", "Both: counting errors only", "LogReg: distance · SVM: odds ratios", "They optimise identical objectives"],
+  choices: ["LogReg: honest probabilities everywhere · SVM: the margin at the border", "LogReg: finding the single widest margin / SVM: calibrated probabilities", "Both simply minimise the raw count of misclassified points", "LogReg: geometric distance to points / SVM: raw log-odds ratios", "Both optimise exactly the same underlying training objective"],
   explain: "Log-loss keeps caring about every point — even easy ones — because probabilities must be right everywhere. Hinge loss goes flat once a point is comfortably past the margin: SVM spends all its attention on the border cases.",
   simple: "LogReg is a perfectionist teacher: even a 99%-safe point should be 99.9%. SVM is a bouncer: once you're safely inside, it stops caring about you entirely and watches the doorway. Same door position, different philosophies about the crowd.",
   widget: {
@@ -216,7 +216,7 @@
 
 {
   q: "You have 5 million training rows and need probability outputs, retrained nightly. Why might you NOT reach for a kernel SVM?",
-  choices: ["Kernel SVM training scales badly with rows, and probabilities aren't native", "SVMs can't handle more than two features", "SVMs need GPUs to train at all", "Kernel SVMs can't be regularised", "They only work on images"],
+  choices: ["Kernel SVM training scales badly with rows, and probabilities aren't native", "Kernel SVMs are hard-capped at handling only a couple of features per point", "Kernel SVMs simply cannot be regularised to prevent overfitting", "SVMs require a dedicated GPU just to complete any training run", "SVMs only ever work well on image and computer-vision tasks"],
   explain: "Kernel SVM training costs roughly between n² and n³ — brutal at millions of rows — and its outputs are margins, not probabilities (calibration is a bolt-on). Linear models or trees fit this brief better.",
   simple: "Kernel SVMs compare points with points, so the work explodes as rows pile up — 5 million rows means a very long night. And when the business asks 'what's the probability?', the SVM shrugs: it deals in distances, not percentages. Right tool, wrong job.",
   widget: {

@@ -3,7 +3,7 @@
 
 {
   q: "A logistic regression model looks at a loan application. What does it actually output?",
-  choices: ["A probability between 0 and 1", "A class label and nothing else", "A distance to the boundary", "An unbounded score", "A yes/no rule chain"],
+  choices: ["A probability between 0 and 1", "The single most likely class label", "A signed distance from the boundary", "The raw weighted sum, unsquashed", "A hard 0 or 1 decision value"],
   explain: "Logistic regression computes a weighted score, then squashes it through the sigmoid function into a probability. The label comes later, when YOU threshold that probability.",
   simple: "Think of it as a cautious expert: it never just says 'approve'. It says '82% likely to repay'. The S-shaped curve is the machine that turns any score into a percentage between 0 and 100.",
   widget: {
@@ -25,7 +25,7 @@
 
 {
   q: "The model computes a raw score of +4.2 for one customer and −7.9 for another. Why doesn't it report those numbers directly?",
-  choices: ["Raw scores are unbounded — the sigmoid maps them into 0–1 first", "Raw scores are always wrong", "Negative scores would crash the maths", "Scores must be integers", "It does — scores ARE the output"],
+  choices: ["Raw scores are unbounded — the sigmoid maps them into 0–1 first", "Probabilities simply read more naturally to people than signed raw scores", "The sigmoid step also filters random noise out of the score", "Negative scores are meaningless and would confuse the users", "The two scores sit on different scales and can't be compared"],
   explain: "The weighted sum can be any number from −∞ to +∞. The sigmoid maps that whole range into (0, 1), so the output can be read as a probability.",
   simple: "The raw score is like a mood: +4.2 means 'pretty sure yes', −7.9 means 'very sure no'. But moods aren't percentages. The S-curve translates: big positive → near 100%, big negative → near 0%, zero → exactly 50%.",
   widget: {
@@ -47,7 +47,7 @@
 
 {
   q: "The model says a customer has a 62% probability of churning. How does that become a yes/no decision?",
-  choices: ["Compare it to a cutoff — flag if above", "Round to the nearest whole number", "Ask the model a second time", "Average it with 50%", "It can't — probabilities aren't decisions"],
+  choices: ["Compare it to a cutoff — flag if above", "Flag it whenever it beats the base rate of churn", "The model already decided; 62% just reports it", "Average it with the previous customer's score", "Scale it up until it clears 100%, then flag"],
   explain: "You pick a threshold (0.5 by default) and flag everything above it. The probability is the model's work; the cutoff is YOUR policy decision.",
   simple: "The model hands you a percentage; you decide where to draw the line. 'Call every customer above 50%'? Above 30%? That line is a business choice — the model just supplies the numbers.",
   widget: {
@@ -69,7 +69,7 @@
 
 {
   q: "In feature space, what shape is the decision boundary of plain logistic regression?",
-  choices: ["A straight line (flat plane)", "A wiggly curve around each point", "A circle around each class", "A staircase of axis splits", "Whatever shape the data needs"],
+  choices: ["A straight line (flat plane)", "A smooth curve bending toward the data", "One circular region per class", "A staircase of axis-aligned cuts", "As many segments as the classes need"],
   explain: "The score is a weighted SUM of features, and 'score = 0' defines a straight line (a plane in higher dimensions). Curvy problems need engineered features or a different model.",
   simple: "The model draws one straight ruler-line across the map: this side yes, that side no. It cannot bend the line — if the true border is a curve, plain logistic regression can only approximate it with a straight edge.",
   widget: {
@@ -90,7 +90,7 @@
 
 {
   q: "One feature is 'emails sent per week'. Its learned weight is negative. What does that tell you?",
-  choices: ["More emails pushes the probability DOWN", "The feature is broken", "The feature has no effect", "The model failed to converge", "Emails were measured in wrong units"],
+  choices: ["More emails pushes the probability DOWN", "More emails pushes the probability UP", "The feature contributes almost nothing", "The weight's sign flips at the threshold", "Emails must be rescaled before it's valid"],
   explain: "A negative weight means the feature lowers the score, and so lowers the probability of the positive class. The sign of each weight is readable, honest information.",
   simple: "Weights are dials with a direction. Positive weight: the more of this, the more likely 'yes'. Negative: the more of this, the more likely 'no'. A negative weight on emails just means active emailers churn less.",
   widget: {
@@ -112,7 +112,7 @@
 
 {
   q: "Training adjusts the weights. What exactly does training try to minimise?",
-  choices: ["Log-loss — the penalty for confident wrong probabilities", "The number of wrong labels", "The distance to the class centres", "The sum of the weights", "The width of the margin"],
+  choices: ["Log-loss — the penalty for confident wrong probabilities", "The raw count of mislabelled training examples", "The squared error between the true labels and probabilities", "The total distance from points to their class centre", "The size of the margin separating the two classes"],
   explain: "Counting errors gives a flat, unhelpful signal (nudging a weight rarely flips a label). Log-loss is smooth: every nudge changes it a little, so gradient descent can follow it downhill.",
   simple: "Imagine tuning a radio. Counting errors is a dial that only clicks at rare positions — no feedback in between. Log-loss hums continuously: warmer, colder, warmer. Training follows the hum.",
   widget: {
@@ -137,7 +137,7 @@
 
 {
   q: "Why not just fit ordinary linear regression to a 0/1 target and call it a day?",
-  choices: ["A straight line predicts nonsense like −0.3 or 1.4", "Linear regression is too slow", "0/1 targets crash linear solvers", "It works identically in practice", "Lines can't pass through 0.5"],
+  choices: ["A straight line predicts nonsense like −0.3 or 1.4", "Least squares can't properly optimise a two-class target", "The fitted line would rank the classes backwards", "The intercept can't be estimated from 0/1 data", "A line can never cross the 0.5 probability mark"],
   explain: "A straight line is unbounded: far from the middle it happily outputs probabilities below 0 or above 1, and outliers drag the whole line. The sigmoid fixes both.",
   simple: "Fit a ruler-straight line to yes/no data and follow it far enough: it will predict a −30% chance of rain. The S-curve bends the ends flat so predictions always stay between 0% and 100%.",
   widget: {
@@ -162,7 +162,7 @@
 
 {
   q: "You give the model total freedom and its weights grow huge. It scores 99% on training data, 78% on validation. What's the standard fix?",
-  choices: ["Regularisation — penalise large weights", "Add more features", "Raise the decision threshold", "Switch to raw scores", "Train for longer"],
+  choices: ["Regularisation — penalise large weights", "Gather many more input features to fit", "Raise the decision threshold above 0.5", "Lower the learning rate and keep training", "Standardise the features before refitting"],
   explain: "Huge weights = near-vertical sigmoid = wild overconfidence fitted to noise. Regularisation adds a penalty for weight size, forcing the model to stay calm unless the data truly justifies it.",
   simple: "Big weights let the model scream 100%!! about borderline cases — great for memorising, terrible for the future. Regularisation is a tax on screaming: opinions cost weight-size, so the model only keeps the opinions worth paying for.",
   widget: {
@@ -187,7 +187,7 @@
 
 {
   q: "A hospital uses the model's probabilities to order follow-ups. Missing a real case is far worse than a false alarm. What should change?",
-  choices: ["Lower the threshold below 0.5", "Raise the threshold above 0.5", "Retrain with fewer features", "Report raw scores instead", "Nothing — 0.5 is standard"],
+  choices: ["Lower the threshold below 0.5", "Raise the threshold well above 0.5", "Retrain the model on more features", "Report the raw scores to the doctors", "Make the sigmoid curve much steeper"],
   explain: "The model is fine; the POLICY moves. Lowering the threshold flags patients at 30% or 20% risk — more false alarms, far fewer missed cases. Costs decide cutoffs.",
   simple: "If missing a sick patient is a catastrophe and a false alarm is just an extra check-up, you should act on weak evidence: flag at 25% risk, not 50%. Same model — you just moved your line toward caution.",
   widget: {
@@ -209,7 +209,7 @@
 
 {
   q: "A stakeholder asks: 'What does a one-unit increase in income do to the odds of approval?' Which property of logistic regression answers this directly?",
-  choices: ["Each weight is a readable odds multiplier (e^w)", "The sigmoid's steepness at zero", "The size of the training set", "The threshold you picked", "The number of iterations run"],
+  choices: ["Each weight is a readable odds multiplier (e^w)", "The sigmoid's slope at the decision boundary", "The intercept term shifted up by one unit", "The raw weight read straight off as a percentage", "The correlation between income and approval"],
   explain: "Exponentiate a weight and you get an odds ratio: e^w = how much one unit of that feature MULTIPLIES the odds. w = 0.7 → e^0.7 ≈ 2: each unit doubles the odds.",
   simple: "Logistic regression can explain itself: 'each extra year of history multiplies your approval odds by 1.6; each missed payment multiplies them by 0.4'. Few models can be read out loud like that.",
   widget: {

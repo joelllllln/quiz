@@ -1,13 +1,243 @@
 /* Gradient Boosting & XGBoost — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).gb1 = [
   {
+    "q": "Boosting builds a 'weak learner' at each step. What does WEAK actually mean here?",
+    "choices": [
+      "A deliberately small model, like a shallow tree, only a bit better than guessing",
+      "The most accurate model available, trained briefly",
+      "A model trained on only the weakest features",
+      "A model with its predictions scaled down by half",
+      "A deep tree that is later pruned back hard"
+    ],
+    "explain": "A weak learner is intentionally low-capacity — typically a tree of depth 3–6 — just strong enough to capture a little signal. Boosting's power comes from adding many such small corrections in sequence, not from any single member being good.",
+    "simple": "Weak means small on purpose. Each member is a stumpy little tree that alone barely beats a coin flip. The magic isn't in one member — it's in stacking hundreds of tiny corrections, each cleaning up what the last got wrong. Give boosting a strong deep tree instead and it overfits almost instantly.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Small members, big ensemble",
+      "world": "Boosted ensembles built from trees of different depth. Watch validation accuracy: the weak (shallow) learners win; the strong (deep) ones overfit.",
+      "xlab": "depth of each member →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "3",
+        "6",
+        "12",
+        "20"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "boosted validation accuracy", "ys": [ 89, 92, 91, 86, 82 ] },
+        { "name": "single member's own accuracy", "ys": [ 62, 74, 83, 92, 97 ] }
+      ],
+      "knob": { "label": "Member depth", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Depth-1 stumps barely beat guessing alone (62%) — yet boosted, they reach 89%. Weakness of the member is not weakness of the ensemble.", "tone": "info" },
+        { "max": 2, "text": "Depth 3: the boosted sweet spot (92%). Each member captures a little, leaving honest work for the next round.", "tone": "info" },
+        { "max": 4, "text": "🤯 Depth-20 members are strong alone (97%) but boosted they overfit to 82% — one greedy member memorises the noise, and the rest chase phantoms. Boosting NEEDS weak learners.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Weak learner", "formula": "small model, slightly better than chance · boosting sums many of them", "text": "In gradient boosting the weak learner is almost always a shallow tree (max_depth 3–6). Many small corrections beat one greedy fit." }
+    }
+  },
+  {
+    "q": "Gradient boosting trains its trees on the RESIDUALS. What is a residual, in plain terms?",
+    "choices": [
+      "The leftover error: how far the current prediction is from the truth",
+      "The average prediction across all trees so far",
+      "The slice of data held back for validation",
+      "The confidence the model assigns to each guess",
+      "The importance score of the most-used feature"
+    ],
+    "explain": "A residual is actual minus predicted — what the ensemble still gets wrong at this point. Each new tree is fitted to those leftovers, so it targets exactly the mistakes remaining, and adding it shrinks the error a little more.",
+    "simple": "It's the gap between the right answer and the model's current guess. Boosting reads that gap and trains the next tree to close it. Round after round, the tree keeps aiming at whatever's still wrong — like an editor who only marks the remaining typos each pass. The residual is the to-do list.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Chasing the leftovers",
+      "world": "The ensemble's total error and the size of the residuals it's still chasing, round by round. Each tree fits the current leftovers.",
+      "xlab": "boosting rounds →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0",
+        "5",
+        "20",
+        "60",
+        "150"
+      ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "average residual (leftover error)", "ys": [ 1, 0.62, 0.34, 0.16, 0.07 ] },
+        { "name": "training accuracy", "ys": [ 50, 74, 86, 92, 96 ] }
+      ],
+      "knob": { "label": "Rounds", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Round 0: the residuals are the whole error — nothing's been corrected yet. This is the to-do list the first tree will attack.", "tone": "info" },
+        { "max": 2, "text": "By round 20 the leftovers have halved: each tree fitted the current residuals, so the pile of remaining mistakes keeps shrinking.", "tone": "info" },
+        { "max": 4, "text": "🤯 Residuals near zero: almost nothing left to correct. Fitting the LEFTOVERS (not the average, not the confidence) is the whole engine of gradient boosting.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Residual", "formula": "residual = actual − predicted · each new tree is fitted to it", "text": "In gradient boosting the residual is the (negative) gradient of the loss. Fit it, add a shrunken version, repeat." }
+    }
+  },
+  {
+    "q": "Bagging (forests) and boosting both combine trees. What is the ONE structural difference between them?",
+    "choices": [
+      "Boosting builds trees in sequence, each fixing the last; bagging builds them independently, in parallel",
+      "Boosting uses deeper trees than bagging always does",
+      "Boosting averages votes while bagging takes a majority",
+      "Boosting needs labels while bagging does not",
+      "Boosting works only for regression, bagging for classification"
+    ],
+    "explain": "Bagging trains many trees independently on random samples and averages them (attacking variance). Boosting trains trees one after another, each fitted to the previous ensemble's errors (attacking bias). Parallel-and-average vs sequential-and-correct is the core split.",
+    "simple": "Bagging is a committee that all vote at once, never talking to each other — then you average. Boosting is a relay: each runner starts where the last stumbled, fixing the handed-over mistakes. Independent-and-averaged versus sequential-and-corrective. That single difference explains why forests are sturdy and boosting is sharp.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Committee vs relay",
+      "world": "The two ensembles scored on how they build and what they cure. Slide across the properties: they differ on exactly one axis of construction.",
+      "xlab": "property →",
+      "xs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "labels": [
+        "how members build",
+        "what it reduces",
+        "safe to add more",
+        "tuning needed"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "bagging / forest (0=indep,parallel...)", "ys": [ 0, 20, 95, 20 ] },
+        { "name": "boosting (100=sequential...)", "ys": [ 100, 90, 40, 85 ] }
+      ],
+      "knob": { "label": "Property", "min": 0, "max": 3, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "How members build: bagging trains all trees at once, independently; boosting trains them one at a time, each depending on the last. This is THE structural difference.", "tone": "info" },
+        { "max": 1, "text": "What each reduces: bagging averages away variance; boosting corrects away bias. Different diseases, different cures.", "tone": "info" },
+        { "max": 3, "text": "🤯 Consequences follow from the one difference: more forest trees are always safe (parallel average), more boosting rounds eventually overfit (sequential chase), and boosting needs more careful tuning.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Bagging vs boosting", "formula": "bagging: parallel, independent, averages (↓variance) · boosting: sequential, corrective (↓bias)", "text": "Forests = bagging. XGBoost/LightGBM = boosting. Start with a forest for robustness; reach for tuned boosting when you need the extra accuracy." }
+    }
+  },
+  {
+    "q": "The learning rate in gradient boosting is set to 0.1. What does that small number do?",
+    "choices": [
+      "Shrinks each tree's correction so the ensemble improves in small, careful steps",
+      "Drops 10% of the training rows from each tree",
+      "Keeps only the 10% most important features",
+      "Stops training once accuracy reaches 10% error",
+      "Scales the final prediction down to a tenth"
+    ],
+    "explain": "The learning rate multiplies each new tree's contribution before adding it. Small steps (0.1) mean no single tree can dominate, so the ensemble corrects gradually and generalises better — at the cost of needing more rounds to get there.",
+    "simple": "It's how big a bite of each correction you actually swallow. At 0.1 you take only a tenth of what each tree suggests, so you edge toward the answer carefully instead of lurching. Careful steps generalise better but need more of them — the classic trade of learning rate against number of trees.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Small steps, steadier landing",
+      "world": "The same problem boosted at different learning rates (rounds tuned for each). Watch how validation accuracy and overfitting risk trade off.",
+      "xlab": "learning rate →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0.01",
+        "0.05",
+        "0.1",
+        "0.5",
+        "1.0"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "best validation accuracy", "ys": [ 91, 92, 92, 89, 85 ] },
+        { "name": "rounds needed (÷20)", "ys": [ 100, 40, 20, 6, 3 ] }
+      ],
+      "knob": { "label": "Learning rate", "min": 0, "max": 4, "step": 1, "init": 2 },
+      "insights": [
+        { "max": 1, "text": "Tiny rates (0.01) reach great accuracy but need thousands of rounds — careful to a fault, and slow.", "tone": "info" },
+        { "max": 2, "text": "0.1: the common default — small enough to generalise well, not so small it never finishes. Note it doesn't drop rows or features; it scales corrections.", "tone": "info" },
+        { "max": 4, "text": "🤯 Rate 1.0 takes each tree's full correction and lurches, overfitting to 85%. Smaller steps + more trees beats bigger steps + fewer. That's the learning-rate trade.", "tone": "wow" }
+      ],
+      "extreme": { "at": "min" },
+      "reveal": { "name": "Learning rate (shrinkage)", "formula": "add learning_rate × tree · smaller = steadier but more rounds", "text": "Typical values 0.01–0.1, paired with early stopping to choose the round count. Lower rate + more trees is the usual quality recipe." }
+    }
+  },
+  {
+    "q": "Unlike adding trees to a forest, adding boosting rounds CAN overfit. How do you pick when to stop?",
+    "choices": [
+      "Watch a validation score each round and stop when it stops improving — early stopping",
+      "Always stop at exactly 100 rounds",
+      "Stop when training accuracy reaches 100%",
+      "Add rounds until the learning rate reaches zero",
+      "Stop when every tree has the same depth"
+    ],
+    "explain": "Because each round chases the current residuals, late rounds start fitting noise — validation error falls, bottoms out, then rises. Early stopping monitors a held-out score every round and halts at the bottom, choosing the number of trees automatically and honestly.",
+    "simple": "Boosting keeps sharpening, and past a point it sharpens into the noise. So you watch its score on held-back data round by round: while that keeps improving, keep going; when it stalls and starts slipping, stop. That 'stop at the bottom' rule — early stopping — picks the tree count for you, using evidence instead of a guess.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Stop at the bottom",
+      "world": "Training and validation error across boosting rounds. Training keeps falling forever; validation bottoms out then climbs — early stopping catches the turn.",
+      "xlab": "boosting rounds →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "labels": [
+        "20",
+        "80",
+        "180",
+        "300",
+        "500",
+        "900"
+      ],
+      "dec": 1,
+      "yunit": "%",
+      "series": [
+        { "name": "validation error", "ys": [ 16, 13, 12.4, 13, 14.2, 16.5 ] },
+        { "name": "training error", "ys": [ 14, 9, 5, 2.5, 1, 0.3 ] }
+      ],
+      "knob": { "label": "Rounds", "min": 0, "max": 5, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Early rounds: both errors fall together — genuine learning, keep going.", "tone": "info" },
+        { "max": 2, "text": "Around round 180 validation bottoms out at 12.4%. This is where early stopping halts — the honest best number of trees.", "tone": "info" },
+        { "max": 5, "text": "🤯 Past the bottom, training error keeps dropping toward zero while validation CLIMBS — the extra rounds are memorising noise. Early stopping (not a fixed 100, not training=100%) is how you avoid it.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Early stopping", "formula": "monitor validation each round · halt when it stops improving", "text": "XGBoost/LightGBM: early_stopping_rounds with an eval_set. It chooses n_estimators for you, using held-out evidence." }
+    }
+  },
+  {
     "q": "Boosting also builds many models — but sequentially, not in parallel. What does each new member train to do?",
     "choices": [
       "Fix the mistakes the ensemble is still making",
-      "Fit a fresh random sample",
-      "Copy the previous member",
-      "Vote against the majority",
-      "Compress the earlier members"
+      "Fit a fresh independent bootstrap sample",
+      "Reweight the input features by their importance",
+      "Average the predictions of prior members",
+      "Predict the ensemble's confidence scores"
     ],
     "explain": "After each round, boosting looks at what the current ensemble still gets wrong and trains the next weak learner to target exactly those errors. Members are specialists in their predecessors' failures.",
     "simple": "Bagging hires many independent generalists. Boosting hires a chain of specialists: the first does its best, the second studies ONLY what the first got wrong, the third mops up what's still wrong, and so on. The team is built mistake by mistake.",
@@ -48,10 +278,10 @@
     "q": "Bagging and boosting both combine many trees, yet they cure opposite diseases. Which pairing is right?",
     "choices": [
       "Bagging fights variance (instability); boosting fights bias (weakness)",
-      "Bagging fights bias; boosting fights variance",
-      "Both fight only variance",
-      "Both fight only bias",
-      "Neither affects bias or variance"
+      "Bagging fights bias (weakness); boosting fights variance (instability)",
+      "Both cut variance by averaging independent bootstrap fits",
+      "Both cut bias by stacking many progressively deeper trees",
+      "Neither changes bias or variance, only the training speed"
     ],
     "explain": "Bagging averages many overfit (high-variance) models into stability. Boosting stacks many underfit (high-bias) weak learners into strength. Same ingredient — trees — pointed at opposite failure modes.",
     "simple": "Bagging calms down experts who are too excitable: deep trees, averaged. Boosting builds up helpers who are too simple: stumps, accumulated. One removes wobble, the other removes weakness — remember which by what the members look like: deep for bagging, shallow for boosting.",
@@ -96,10 +326,10 @@
     "q": "In GRADIENT boosting specifically, what does each new tree get fitted to?",
     "choices": [
       "The residuals — the gradient of the loss at current predictions",
-      "A bootstrap sample of the labels",
-      "The original labels, reweighted",
-      "The previous tree's structure",
-      "The features, sorted by importance"
+      "A bootstrap resample drawn from the training labels",
+      "The original labels, with the hardest misclassified cases upweighted",
+      "The previous tree's leaf structure and split thresholds",
+      "The features ranked by their split-gain importance"
     ],
     "explain": "For squared error, the loss gradient at each point IS the residual (actual − predicted). Fitting the next tree to residuals is doing gradient descent — in function space, one tree-shaped step at a time.",
     "simple": "After each round, compute how far off you still are on every example — those leftover gaps are the residuals. The next tree's training targets ARE those gaps. Prediction by instalments: each tree pays off a bit more of the remaining debt.",
@@ -140,10 +370,10 @@
     "q": "Gradient boosting's learning rate is set to 0.1 instead of 1.0, so each tree's correction counts only a tenth. Why would anyone slow learning down on purpose?",
     "choices": [
       "Small steps + more trees generalise better than big confident jumps",
-      "It reduces the total number of trees",
-      "It makes each tree deeper",
-      "It speeds up training tenfold",
-      "It prevents residuals from being computed"
+      "Shrinking each step lets far fewer total trees suffice",
+      "It forces every tree to remain a single-split stump learner",
+      "It makes each boosting round train dramatically faster",
+      "It guarantees the validation curve can never bend back upward again"
     ],
     "explain": "Full-strength corrections chase each round's residuals — including their noise — aggressively. Shrunken steps force many trees to agree on a direction before the ensemble commits: regularisation via patience.",
     "simple": "Correcting mistakes at full force means over-correcting the noisy ones. Taking 10%-sized steps means a mistake only really gets fixed if round after round keeps voting to fix it. Slower, humbler — and reliably better on new data.",
@@ -188,10 +418,10 @@
     "q": "Boosting keeps adding trees, and after round 180 validation accuracy starts sliding while training accuracy still climbs. What's the standard response?",
     "choices": [
       "Early stopping — keep the round where validation peaked",
-      "Raise the learning rate to finish faster",
-      "Add deeper trees to compensate",
-      "Remove the validation set",
-      "Restart with fewer features"
+      "Raise the learning rate so training finishes sooner",
+      "Grow progressively deeper trees so later rounds still help",
+      "Raise the per-tree subsample rate for fresh variety",
+      "Discard the validation set and train on everything"
     ],
     "explain": "Boosting reduces bias indefinitely — eventually the only 'errors' left to fix are noise. Monitoring a validation set and stopping (or rolling back to) its best round is the built-in cure.",
     "simple": "The specialist chain eventually runs out of real mistakes and starts 'fixing' the data's random quirks. The honest curve tells you when: it stops improving. Freeze the team at that round — every tree after it is actively making the model worse.",
@@ -241,10 +471,10 @@
     "q": "XGBoost took gradient boosting and made it the competition-winning standard. Which additions are its signature?",
     "choices": [
       "Regularisation inside the tree-building, plus clever engineering (histograms, parallelism, missing-value handling)",
-      "Replacing trees with neural networks",
-      "Removing the learning rate",
-      "Bootstrap sampling of labels",
-      "A fixed depth of exactly 6"
+      "Averaging many fully independent deep trees, built with bootstrap row and column sampling exactly like a random forest",
+      "Replacing the shallow decision trees with small neural networks fitted to residuals each round",
+      "Fixing every tree at depth exactly six and dropping the learning rate to converge much faster",
+      "Relying only on first-order gradients with one global line search shared across all the leaves"
     ],
     "explain": "XGBoost penalises tree complexity (leaf count, leaf weights) inside the split objective itself, uses second-order gradients, and adds serious engineering: histogram splits, per-tree parallelism, native missing-value routing, column subsampling.",
     "simple": "XGBoost is gradient boosting with discipline and a race engine: every new leaf must EARN its place against a built-in complexity tax (so trees stay honest), and the whole thing is engineered to train fast on big data. Same idea as before — industrial grade.",
@@ -289,10 +519,10 @@
     "q": "On 10 million rows, XGBoost-family libraries find splits dramatically faster than classic exact search. What's the core speed trick?",
     "choices": [
       "Bucket feature values into histograms and test bucket edges, not every value",
-      "Skip half the trees at random",
-      "Train on a 1% sample only",
-      "Cache every possible tree in advance",
-      "Use fewer boosting rounds"
+      "Presort each feature column once and reuse that stored ordering for every split",
+      "Evaluate candidate splits on a random one-percent subsample of rows",
+      "Cache each fully grown tree so that later rounds reuse its splits",
+      "Test only the one feature with the highest gain from last round"
     ],
     "explain": "Exact split-finding sorts and scans every unique value of every feature. Histogram methods bin values into ~256 buckets and only test bucket boundaries — hundreds of candidates instead of millions, at negligible accuracy cost.",
     "simple": "To find where to cut a line of 10 million people by height, you don't compare every neighbouring pair — you sort them into 256 height buckets and test the bucket edges. Vastly fewer candidate cuts, near-identical final choice.",
@@ -335,10 +565,10 @@
     "q": "Stochastic gradient boosting sets subsample=0.7, so each tree trains on a random 70% of rows. Why would deliberately showing each tree LESS data help?",
     "choices": [
       "The randomness decorrelates successive trees and acts as a regulariser — validation usually peaks below subsample=1.0",
-      "It's purely a speed trick with no effect on accuracy",
-      "It guarantees each row is seen exactly once",
-      "It prevents trees from being binary",
-      "It replaces the need for a learning rate"
+      "It is purely a speed optimisation and leaves validation accuracy essentially unchanged from the full-data baseline run",
+      "It guarantees that every training row is seen by exactly one tree, so no single example repeats",
+      "It forces each tree to stay strictly binary rather than growing arbitrary multi-way splits per node",
+      "It removes the need for a learning rate, since the sampling already shrinks each correction on its own"
     ],
     "explain": "With subsample=1 every round stares at the exact same residuals and can grind into noise deterministically. Sampling rows (and columns — colsample in XGBoost) makes each corrector see a slightly different picture, which stops the relay fixating on individual noisy points. It's bagging's randomness grafted onto boosting — plus it trains faster.",
     "simple": "A relay of perfectionists studying the same error report will eventually start 'fixing' typos in it — memorising noise. Give each runner a different random 70% of the report and no single noisy point gets obsessed over, because most runners never even see it. The genuine patterns appear in every sample, so they still get fixed.",
@@ -381,10 +611,10 @@
     "q": "Boosting libraries default to shallow trees — depth 3 to 6 — while a random forest happily grows its trees deep. Why does boosting specifically want WEAK learners?",
     "choices": [
       "Each round only needs a small corrective step; deep trees make each round too greedy and the relay overfits fast",
-      "Shallow trees are the only ones that can be summed",
-      "Deep trees can't compute residuals",
-      "It's a memory constraint with no accuracy effect",
-      "Shallow trees train the gradient exactly"
+      "Shallow trees are the only tree shape whose leaf outputs can legitimately be summed across rounds",
+      "Deep trees make it impossible to compute residual gradients, so boosting silently fails to converge",
+      "It is purely a memory-saving constraint on very large datasets, with essentially no effect on the final accuracy",
+      "Shallow trees fit the loss gradient exactly, while deep trees only approximate it per round"
     ],
     "explain": "Boosting's power comes from MANY small corrections compounding — bias falls round by round. A depth-16 tree can nearly memorise the residuals in one round, so there's nothing honest left for later rounds except noise. Forests are the opposite: each deep tree is a full low-bias model, and averaging attacks their variance. Depth 3–6 also caps feature-interaction order, a sensible prior for tabular data.",
     "simple": "Boosting is sculpting: a hundred light chisel taps, each fixing what the last left wrong. Swap the chisel for a sledgehammer (a deep tree) and the first swing does 'everything' — including smashing detail into the noise — and the remaining 99 swings just chase rubble. The forest is a different sport entirely: many finished sculptures, averaged.",
@@ -427,10 +657,10 @@
     "q": "XGBoost, LightGBM, CatBoost — three battle-tested gradient-boosting libraries. They share the same core algorithm, so what actually distinguishes them?",
     "choices": [
       "Engineering trade-offs: LightGBM chases speed on big data, CatBoost handles categoricals natively, XGBoost is the regularised all-rounder",
-      "Completely different loss functions",
-      "Only XGBoost uses decision trees",
-      "LightGBM is bagging, not boosting",
-      "CatBoost only works on images"
+      "Fundamentally different loss functions, since each library internally optimises its own distinct objective that no other library in the trio can support",
+      "Only XGBoost genuinely uses decision trees; LightGBM and CatBoost boost linear models and shallow neural nets",
+      "LightGBM is actually a bagging method, while XGBoost and CatBoost are the only true boosting implementations",
+      "CatBoost is restricted to image and text inputs, while the other two libraries handle only purely numeric tables"
     ],
     "explain": "All three are gradient boosting over CART-style trees with histogram tricks. LightGBM's leaf-wise growth + sampling tricks make it typically fastest on large data. CatBoost's ordered target encoding makes raw categorical columns first-class citizens (and its ordered boosting resists target leakage). XGBoost, the original at scale, remains the most portable, documented, regularisation-rich default. Accuracy when tuned: usually within noise of each other.",
     "simple": "Three makes of the same engine. One is tuned for the motorway (LightGBM: raw speed on big tables), one has an automatic gearbox for messy streets (CatBoost: feed it categorical columns as-is), one is the reliable model every mechanic knows (XGBoost). Pick by your data and constraints — on a tuned benchmark they usually finish within a photo of each other.",

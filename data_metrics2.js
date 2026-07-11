@@ -3,7 +3,7 @@
 
 {
   q: "A churn model validates at 91% on data from your UK customers, then launches in the new German market and scores 74%. The validation wasn't wrong — it answered a different question. Which?",
-  choices: ["How the model performs on data like the validation data — which Germany isn't", "Whether the model was overfit", "Whether the features were scaled", "Whether the threshold was tuned", "Whether the labels were correct"],
+  choices: ["How the model performs on data like the validation data — which Germany isn't", "Whether the model had overfit its UK training rows", "How well the model ranks customers regardless of market", "How the model behaves once its threshold is retuned for Germany", "How the model performs on any fresh data, regardless of which market it later serves"],
   explain: "A validation score is a promise about data drawn from the same population. Deploy onto a different population — new market, new season, new sensors — and the promise simply doesn't apply. Validate on data that looks like deployment.",
   simple: "A driving test passed in a quiet village says little about rush-hour Berlin. The test was fair — it just tested the wrong roads. Before launch, ask the blunt question: does my validation data actually resemble the traffic I'm about to face?",
   widget: {
@@ -31,7 +31,7 @@
 
 {
   q: "You're splitting 2,000 rows into train and validation. A tiny validation set gives noisy scores; a huge one starves training. What's the actual trade-off you're tuning?",
-  choices: ["Precision of the ESTIMATE versus quality of the MODEL", "Speed versus memory", "Bias of the model versus its variance", "Precision versus recall", "Feature count versus row count"],
+  choices: ["Precision of the ESTIMATE versus quality of the MODEL", "Bias of the estimate against the model's variance", "How much the model overfits versus how much it underfits", "Precision of the estimate against its own recall", "The compute you spend versus the accuracy you gain"],
   explain: "Hold out 5% and your score swings points on luck; hold out 50% and you've crippled the model you're measuring. The split size buys estimate-precision with model-quality, and 20–30% (or better, cross-validation) is the usual compromise.",
   simple: "You have one pile of sand for a castle and its photo. Use nearly all sand for the castle and the photo is too blurry to judge it; use half for the photo setup and the castle is a stump. Small datasets escape the dilemma with cross-validation: every grain plays both roles in turn.",
   widget: {
@@ -56,7 +56,7 @@
 
 {
   q: "K-fold cross-validation: you must pick K. K=2 is cheap but pessimistic; leave-one-out (K=n) is exhaustive but expensive and jittery. What does K=5 or 10 buy you?",
-  choices: ["The practical sweet spot: near-honest estimates at a sane compute cost", "Guaranteed higher accuracy", "Immunity to class imbalance", "Exactly one model fit", "The same result as a single split"],
+  choices: ["The practical sweet spot: near-honest estimates at a sane compute cost", "A guarantee the estimate carries essentially zero bias", "The lowest-variance estimate that any choice of K can offer", "Near-honest estimates while refitting the model only a single extra time", "Full immunity to the class imbalance that wrecks a single split"],
   explain: "Tiny K trains on half the data, understating the full-data model. Huge K costs n fits and its folds' scores correlate heavily. K=5–10 trains on 80–90% of rows, costs 5–10 fits, and estimates well — hence the default.",
   simple: "K is how many times you re-deal the cards to check your game. Two deals: quick but each uses half a deck. Two thousand deals: exhausting and the answers barely differ. Five to ten deals: enough to trust the average, cheap enough to actually run. That's the whole debate.",
   widget: {
@@ -81,7 +81,7 @@
 
 {
   q: "You run 5-fold CV twice with different shuffle seeds and get means of 85.2% and 86.4%. Neither run is buggy. What's the professional response?",
-  choices: ["Repeat CV several times and average — the fold assignment is itself a source of noise", "Trust the higher number", "Trust the lower number, to be safe", "Increase K until they agree", "Report whichever came first"],
+  choices: ["Repeat CV several times and average — the fold assignment is itself a source of noise", "Pick the seed whose folds look most balanced, then report that run", "Keep raising K until the two seeded runs finally land on one number", "Average just those two runs; two seeds is more than enough to settle it", "Fix a single shuffle seed across the whole project so every future run reproduces exactly"],
   explain: "Which rows share a fold is random, and it moves the mean by real fractions of a point. RepeatedStratifiedKFold (e.g. 5×5) averages over that randomness too — and tells you the spread that remains.",
   simple: "Shuffling the deck differently deals different hands, and different hands score a bit differently — no one cheated. If a 1-point difference matters to your decision, average over several shuffles. If you can't afford to, treat 1-point differences as weather, not climate.",
   widget: {
@@ -108,7 +108,7 @@
 
 {
   q: "You tune hyperparameters with CV, then report that same CV score as the model's expected performance. A reviewer objects. What's the clean fix?",
-  choices: ["Nested CV — an outer loop scores the WHOLE tuning procedure on data it never touched", "A bigger grid of hyperparameters", "More folds in the same CV", "Averaging the top three scores", "Reporting the training accuracy instead"],
+  choices: ["Nested CV — an outer loop scores the WHOLE tuning procedure on data it never touched", "Search a far larger hyperparameter grid so the winner is truly optimal", "Add many more folds to the same CV until the reported estimate settles", "Hold out one final test set and tune the model straight against it instead", "Average the top few configurations' CV scores together to cancel the selection luck out"],
   explain: "The winning configuration won partly by fitting the CV folds' quirks — its own score is a biased estimate. Nested CV wraps tuning inside an outer loop: each outer fold sees a model tuned WITHOUT it, so the final number is honest.",
   simple: "You ran a contest and now quote the winner's contest score as their future performance — but they won partly by suiting THIS contest. Nested CV holds a second, sealed contest that the whole selection process never saw. Score the procedure, not the lucky winner.",
   widget: {
@@ -135,7 +135,7 @@
 
 {
   q: "An AutoML run tries 2,000 configurations and proudly reports the best validation score: 94.1%. Before any retest, what should you EXPECT about that number?",
-  choices: ["It's inflated — the maximum of 2,000 noisy scores overstates the winner's true skill", "It's exact — validation scores don't lie", "It's an underestimate — AutoML is conservative", "It's meaningless without GPUs", "It equals the training accuracy"],
+  choices: ["It's inflated — the maximum of 2,000 noisy scores overstates the winner's true skill", "It's exact, since validation scores are unbiased no matter how many trials run", "It understates the winner, because AutoML searches unusually cautiously by design", "It's trustworthy, because averaging over 2,000 trials cancels the luck out completely", "It equals the model's training accuracy now that the search has converged"],
   explain: "Each config's score = true skill + luck. Taking the MAX of 2,000 draws systematically selects for positive luck — the winner's true skill is almost surely lower. More trials = more inflation. This is the winner's curse.",
   simple: "Let 2,000 people guess coin flips and the best guesser will look psychic — 60% right! — by luck alone. The more candidates you try, the luckier your champion's score. Expect the retest to come in lower; that's not failure, that's arithmetic.",
   widget: {
@@ -160,7 +160,7 @@
 
 {
   q: "Model A scores 86.1%, model B 85.4% — but A was measured on one random split and B on a different one. Why is this comparison close to worthless?",
-  choices: ["Split luck differs between them — compare on the SAME folds so the luck cancels", "B should have gone first", "Accuracy can't compare models", "The difference is too large to be real", "They used different random seeds, which is forbidden"],
+  choices: ["Split luck differs between them — compare on the SAME folds so the luck cancels", "The 0.7-point gap is far too small for accuracy to ever detect at all", "Using two different random seeds is simply forbidden in a fair benchmark", "Whichever model happened to be evaluated first always holds an unfair edge", "Accuracy is the wrong metric for comparing any two models against each other here"],
   explain: "Each score = skill + that split's luck. On different splits, the luck terms differ by more than 0.7 points — the difference could be entirely luck. Same folds for both models makes the comparison PAIRED: luck hits both equally and subtracts out.",
   simple: "Two runners, two different racecourses, times 0.7% apart — who's faster? No idea: one course was downhill. Put them on the SAME course (same folds) and every bump affects both equally, so the gap you see is the runners, not the roads.",
   widget: {
@@ -185,7 +185,7 @@
 
 {
   q: "Two models have identical AUC — yet the fraud team should still prefer model A. Their ROC curves cross. What's going on?",
-  choices: ["A is better in the low-false-alarm region where the business operates; B wins where nobody operates", "Identical AUC means identical models", "B has more parameters", "The curves were plotted wrong", "AUC is higher for A after rounding"],
+  choices: ["A is better in the low-false-alarm region where the business operates; B wins where nobody operates", "Equal AUC means the two models are effectively identical, so pick either one", "Model B quietly uses more parameters, so simpler model A is the safer bet", "A actually wins at every operating point, so its AUC merely rounded down to a tie", "The crossing must be a plotting artifact, because two honest ROC curves on one dataset can never cross"],
   explain: "AUC averages over ALL thresholds — including absurd ones. Crossing curves mean each model wins in a different region. If policy caps false alarms at 5%, only the low-FPR region matters; judge the curves THERE.",
   simple: "Two cars, same average speed over a whole track — but one is faster in the corners, the other on the straights. If your race is all corners, the average is a distraction. Look at the model's performance in the region you'll actually drive.",
   widget: {
@@ -210,7 +210,7 @@
 
 {
   q: "Your model's overall accuracy is a healthy 89%. Then you slice the errors by customer segment and one slice reads 54%. What did the aggregate number do?",
-  choices: ["Averaged a badly-served subgroup into invisibility", "Proved the slice doesn't matter", "Overstated the errors elsewhere", "Confirmed the labels are wrong", "Nothing — slices always vary this much"],
+  choices: ["Averaged a badly-served subgroup into invisibility", "Confirmed the weak slice is only sampling noise", "Proved every customer segment performs about equally", "Overstated how badly the other segments were doing", "Revealed that the small segment's labels are corrupt"],
   explain: "A small segment can fail catastrophically while barely denting the average. Slicing performance by segment, source, time and class is how real problems — and sometimes real harms — surface from under a good headline number.",
   simple: "A restaurant with a 4.5-star average can still poison every twentieth customer. Averages bury minorities of any kind. The first move of error analysis is always the same: break the score apart and find who the model is failing.",
   widget: {
@@ -235,7 +235,7 @@
 
 {
   q: "The single highest-yield error-analysis activity is also the least glamorous. Which is it?",
-  choices: ["Reading actual misclassified examples until patterns emerge", "Re-running the grid search with finer steps", "Adding more layers or trees", "Rounding the metrics to more decimals", "Rewriting the code in a faster language"],
+  choices: ["Reading actual misclassified examples until patterns emerge", "Rerunning the grid search across a much finer parameter mesh", "Swapping in a deeper network with several more layers", "Rounding the reported metrics to three additional decimals", "Porting the whole training pipeline to a faster language"],
   explain: "Confusion matrices count errors; reading them EXPLAINS errors. Twenty minutes of looking at real failures typically surfaces a labelling glitch, a broken feature, or a missing signal — fixes no hyperparameter can deliver.",
   simple: "Metrics tell you HOW MANY you got wrong; the examples tell you WHY. Open thirty misclassified rows and patterns leap out — 'they're all refunds', 'the dates are American format', 'these labels are just wrong'. Machines count; you diagnose.",
   widget: {
@@ -259,7 +259,7 @@
 
 {
   q: "Model B beats model A by 1.5 points... on a test set of 200 examples. Statistically, what does that difference amount to?",
-  choices: ["Roughly nothing — with n=200 the noise is about ±5 points", "Proof B is better", "Proof A is better (regression to the mean)", "Significance, since 1.5 > 1", "It depends on the algorithms used"],
+  choices: ["Roughly nothing — with n=200 the noise is about ±5 points", "Solid proof that model B is genuinely the stronger one", "Evidence that A is better, by regression to the mean", "A significant win, since 1.5 clears the one-point bar", "Enough to decide, given both ran on the very same test set"],
   explain: "A proportion measured on n examples has standard error ≈ √(p(1−p)/n) — about ±2.6 points per model at n=200, more for a difference. A 1.5-point gap is well inside the noise; you've measured a coin wobble.",
   simple: "Flip a fair coin 200 times and you'll often get 55 heads in a hundred — pure chance. Accuracy on 200 examples wobbles the same way. Small test sets can only detect BIG differences; a 1.5-point gap needs thousands of examples before it means anything.",
   widget: {
@@ -284,7 +284,7 @@
 
 {
   q: "Two models disagree on only 40 of 5,000 test cases: A alone is right on 28 of them, B alone on 12. Which comparison logic do proper paired tests (like McNemar's) use?",
-  choices: ["Only the disagreements count — 28 vs 12 is the entire evidence", "The total accuracies, 86.2% vs 85.9%", "The average of all 5,000 outcomes", "The models' training losses", "The number of parameters in each"],
+  choices: ["Only the disagreements count — 28 vs 12 is the entire evidence", "The two overall accuracies, 86.2% against 85.9%, settle it", "All 5,000 case outcomes averaged into a single paired score", "The 4,960 agreements prove the two models are effectively identical", "The ratio of each model's training loss to its final accuracy"],
   explain: "On the 4,960 cases where both models answer alike, they provide zero information about which is better. McNemar's test throws them away and asks: among disagreements, is the 28–12 split too lopsided for a fair coin? (Here: yes, p≈0.02.)",
   simple: "If two students give identical answers on 4,960 questions, those questions can't rank them. Look only at the 40 where they differ: one student won 28 of those little duels. Forty duels, 70% won by the same side — that's real signal, and it was hiding inside a 0.3-point accuracy gap.",
   widget: {
@@ -308,7 +308,7 @@
 
 {
   q: "Your fraud model's F1 improved from 0.71 to 0.74. The CFO asks what that means. What's the only fully satisfying kind of answer?",
-  choices: ["Translate it: '≈£40k less fraud and 300 fewer wasted reviews per month'", "Explain the harmonic mean carefully", "Promise the F1 will keep rising", "Show the confusion matrix", "Compare it to competitors' F1 scores"],
+  choices: ["Translate it: '≈£40k less fraud and 300 fewer wasted reviews per month'", "Walk them carefully through how the harmonic mean fuses precision and recall", "Reassure them the F1 score will keep climbing over next quarter", "Display the entire confusion matrix and let the raw numbers speak", "Benchmark the 0.74 against rival firms' recently published F1 scores"],
   explain: "Model metrics are internal engineering units. Each TP, FP and FN has an approximate business value — multiply them out and the improvement becomes money, hours, or customers: units the organisation can weigh against costs.",
   simple: "Nobody budgets in F1. But 'catches £40k more fraud and saves 300 review-hours a month' can be weighed against the project's cost in one sentence. The conversion is just counting: each error type, times what it costs, summed. Do the multiplication before the meeting.",
   widget: {
@@ -330,7 +330,7 @@
 
 {
   q: "The team optimised click-through rate offline for six months; CTR rose 30%, but revenue and retention fell. What failed?",
-  choices: ["The proxy — the offline metric stopped agreeing with the business outcome it stood for", "The random seeds", "The size of the test set", "The significance tests", "The model's calibration"],
+  choices: ["The proxy — the offline metric stopped agreeing with the business outcome it stood for", "The random seeds slowly drifted apart across the six months of work", "The offline validation set was simply far too small to trust here", "The model quietly lost its probability calibration somewhere over the six long months of tuning", "The significance tests behind the launch were never actually run at all"],
   explain: "Offline metrics are proxies chosen to correlate with business value. Optimise a proxy hard enough and the correlation breaks — clickbait raises clicks while destroying trust. Proxies need periodic re-validation against the real outcome.",
   simple: "You paid the team by clicks, so you got clicks — from ever-trashier recommendations that made people click today and leave next month. Any stand-in measure, pushed hard enough, stops standing in. Regularly check the proxy still points at the thing you actually want.",
   widget: {
@@ -355,7 +355,7 @@
 
 {
   q: "A missed fraud costs £2,000; a false alarm costs a £50 review. With calibrated probabilities in hand, decision theory gives an OPTIMAL flagging threshold. Roughly where?",
-  choices: ["Very low — about 2.4%, since misses cost 40× more than alarms", "Exactly 50% — probabilities are symmetric", "Very high — about 97.6%, to keep alarms rare", "Wherever F1 is maximised", "At the class balance point"],
+  choices: ["Very low — about 2.4%, since misses cost 40× more than alarms", "Exactly 50%, since predicted probabilities are symmetric by nature", "Very high, near 97.6%, to keep the costly false alarms rare", "Wherever the F1 score happens to reach its peak on the curve", "At the fraud base rate, because that setting balances both classes"],
   explain: "Flag when p × £2,000 > (1−p) × £50 → p > 50/2050 ≈ 2.4%. When one error is 40× dearer, you act on faint suspicion. The formula t = cost_FP/(cost_FP + cost_FN) turns a cost matrix straight into a threshold.",
   simple: "Would you spend £50 to check a 5% chance of losing £2,000? Of course — the expected loss is £100. The break-even works out at about 2.4%: above that, checking is profitable. The 'right' threshold was never a modelling question — it's an expected-value question.",
   widget: {
@@ -380,7 +380,7 @@
 
 {
   q: "Beyond thresholds: with per-case costs, you can compare whole MODELS by a single number that isn't accuracy. Which number?",
-  choices: ["Total expected cost (or saved value) on representative data", "The harmonic mean of all metrics", "Parameter count per pound", "Training time in GPU-hours", "The sum of precision and recall"],
+  choices: ["Total expected cost (or saved value) on representative data", "The harmonic mean of every metric the model reports", "Parameter count divided by the total training cost in pounds", "Total training time measured in GPU-hours consumed", "The plain sum of precision and recall for the model"],
   explain: "Score each model's confusion outcomes with the cost matrix and sum: model A costs £31k/month, model B £26k. One business-true number — it can even justify choosing a model with LOWER accuracy but cheaper mistakes.",
   simple: "Accuracy counts mistakes as if they were all equal; your ledger knows they aren't. Price every mistake, total it up, and compare totals. Sometimes the 'less accurate' model makes cheaper mistakes — and the ledger, not the leaderboard, is what the business feels.",
   widget: {

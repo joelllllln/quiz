@@ -3,7 +3,7 @@
 
 {
   q: "An email arrives containing the words 'FREE', 'winner' and 'meeting'. How does Naive Bayes decide whether it's spam?",
-  choices: ["Combines each word's evidence with the base rate and picks the likelier class", "Counts which class has more emails overall", "Measures the distance to the nearest email", "Checks the email against a rule list", "Averages the labels of similar emails"],
+  choices: ["Combines each word's evidence with the base rate and picks the likelier class", "Adds up how often each suspicious word appears and thresholds the total", "Multiplies each word's evidence together but leaves the base rate out entirely", "Picks whichever class simply owns the most training emails overall", "Finds the single most similar past email and copies over its label"],
   explain: "Naive Bayes starts from the prior (how common spam is) and multiplies in each word's likelihood ratio — how much more often it appears in spam than in legit mail. Biggest resulting probability wins.",
   simple: "It works like a detective adding up clues: start with 'how common is spam anyway?', then let each word push the odds up or down. 'FREE' pushes hard toward spam; 'meeting' pushes back. Multiply all the pushes together and read off the verdict.",
   widget: {
@@ -30,7 +30,7 @@
 
 {
   q: "The 'naive' in Naive Bayes refers to one specific assumption. Which?",
-  choices: ["Features are independent of each other, given the class", "The classes appear equally often", "All features are numeric", "The data has no noise", "Every word matters equally"],
+  choices: ["Features are independent of each other, given the class", "Every feature carries exactly the same predictive weight", "Features stay independent whether or not the class is known", "The prior probabilities of the classes can be safely ignored", "Each feature's values follow a normal bell-shaped curve"],
   explain: "Multiplying likelihood ratios is only strictly valid if each feature adds INDEPENDENT information within a class. Real features correlate — the model naively multiplies anyway.",
   simple: "The model assumes every clue is a separate witness. But 'FREE' and 'FREE!!!' are basically the same witness testifying twice — and naive multiplication counts them twice. That over-trust of repeated evidence is the 'naive' part.",
   widget: {
@@ -56,7 +56,7 @@
 
 {
   q: "A disease affects 1 person in 100. A test multiplies the odds of having it by 20 when positive. Someone tests positive. Roughly how worried should they be?",
-  choices: ["Moderately — the low base rate keeps the probability well under 50%", "Near-certain — the test is strong", "Exactly 95% — the test's strength", "Zero — one test proves nothing", "It's 50/50 after any single test"],
+  choices: ["Moderately — the low base rate keeps the probability well under 50%", "Near-certain - a 20x test leaves very little room for doubt", "About 95% - the strong multiplier essentially becomes the final probability", "Barely at all - one test can never outweigh a truly rare condition", "Fifty-fifty - a single test just splits the odds evenly by default"],
   explain: "Prior odds 1:99, times 20, gives 20:99 — about 17%. Strong evidence applied to a rare condition still leaves the odds against. Ignoring this is the classic base-rate fallacy.",
   simple: "Start honest: before the test, it's 1 against 99. The test multiplies your side by 20 — now it's 20 against 99. That's still less than a 1-in-5 chance. Rare things stay fairly unlikely even after impressive evidence.",
   widget: {
@@ -82,7 +82,7 @@
 
 {
   q: "Where does Naive Bayes get a number like \"'FREE' is 4× more common in spam\" in the first place?",
-  choices: ["By counting word frequencies per class in the training data", "By gradient descent on a loss function", "From a built-in dictionary of spam words", "By measuring distances between emails", "From the analyst, by hand"],
+  choices: ["By counting word frequencies per class in the training data", "By gradient descent on a spam-classification loss function", "From a curated built-in dictionary of known spam trigger words", "By iteratively adjusting weights until validation accuracy peaks", "By measuring how far each email sits from the labelled ones"],
   explain: "Training NB is just counting: 'FREE' appeared in 20% of spam and 5% of legit mail → ratio 4. One pass over the data, no iterations, no optimiser.",
   simple: "Training couldn't be simpler: read every email once and keep tallies. What fraction of spam contains 'FREE'? What fraction of normal mail does? Divide the two — that's the multiplier. The whole model is a table of counts.",
   widget: {
@@ -108,7 +108,7 @@
 
 {
   q: "The word 'blockchain' never appeared in any training spam. A new spam email contains it. What does raw (unsmoothed) Naive Bayes do?",
-  choices: ["Multiplies by zero — one unseen word vetoes everything", "Skips the unknown word gracefully", "Treats it as neutral evidence (×1)", "Asks for more training data", "Crashes with an error"],
+  choices: ["Multiplies by zero — one unseen word vetoes everything", "Treats the unseen word as perfectly neutral evidence, times one", "Ignores the unknown word and scores only the ones it knows", "Quietly assigns the unseen word a small default probability", "Backs off to the class prior for that single missing word"],
   explain: "P('blockchain' | spam) = 0/1000 = 0, and anything × 0 = 0. One never-seen word forces P(spam) to exactly zero, no matter how damning the other 50 words are. Laplace smoothing (+1 to every count) fixes this.",
   simple: "One clue the model has never seen acts like a veto: multiply the odds by zero and the verdict is locked at 'definitely not spam', even if every other word screams spam. The fix is charmingly simple: pretend you saw every word once.",
   widget: {
@@ -134,7 +134,7 @@
 
 {
   q: "A long email has 300 words, each contributing a probability like 0.02. Multiplying 300 such numbers directly causes a practical problem. Which — and what's the standard fix?",
-  choices: ["The product underflows to zero — so add logarithms instead", "The product overflows to infinity — so cap it", "Multiplication is too slow — so sample words", "The order of words gets lost — so use pairs", "Rounding makes it random — so average twice"],
+  choices: ["The product underflows to zero — so add logarithms instead", "The product overflows to infinity - so rescale it downward", "The result loses all its precision - so round each factor first", "The chain is far too slow to compute - so skip the rare words", "The tiny factors all cancel out - so normalise after each step"],
   explain: "0.02³⁰⁰ is around 10⁻⁵¹⁰ — far below what floating point can hold, so it becomes exactly 0. Since log(a×b) = log(a)+log(b), working with sums of logs keeps every digit safe.",
   simple: "Multiply three hundred tiny numbers and your computer eventually rounds the result to plain zero — every email 'scores' zero for every class. The trick: instead of multiplying tiny numbers, ADD their logarithms. Same comparison, no vanishing.",
   widget: {
@@ -159,7 +159,7 @@
 
 {
   q: "You have only 200 labelled documents and 5,000 word-features. Which property makes Naive Bayes a strong first choice here?",
-  choices: ["Its counts need little data — it performs well long before flexible models do", "It ignores features until data is plentiful", "It automatically collects more data", "It reduces the vocabulary to 10 words", "It is the most accurate model at any size"],
+  choices: ["Its counts need little data — it performs well long before flexible models do", "It reaches the best accuracy of any model regardless of dataset size", "It automatically discards any feature it has far too little data to estimate reliably", "Its extra flexibility lets it fit tiny datasets without ever overfitting", "It quietly gathers more unlabelled examples to pad out the small sample"],
   explain: "NB estimates one frequency per word per class — simple, stable statistics that converge fast. Flexible models need far more data before their extra capacity pays off.",
   simple: "Counting is data-cheap: even a small pile of emails gives usable word frequencies. A flexible model with thousands of knobs starves on 200 examples, while the humble counter is already doing honest work.",
   widget: {
@@ -184,7 +184,7 @@
 
 {
   q: "A feature is continuous — say, transaction amount — rather than a word count. How does Gaussian Naive Bayes handle it?",
-  choices: ["Fits a bell curve per class and compares their heights at the value", "Splits the amount into words", "Rounds it to 0 or 1", "Refuses continuous features", "Ranks it against the training set"],
+  choices: ["Fits a bell curve per class and compares their heights at the value", "Buckets the amount into ranges and counts how many land in each", "Rounds the value to the nearest whole number, then counts it", "Ranks the value against all training amounts and takes its percentile", "Assumes every amount is equally likely across the whole range"],
   explain: "Gaussian NB models each class's values for a feature as a normal distribution. For a new value, the likelihood ratio is bell-height(class A) versus bell-height(class B) at that point.",
   simple: "For each class, draw the bell curve of typical values: fraud amounts cluster high, normal amounts cluster low. A new transaction lands somewhere; whichever class's bell is TALLER right there is claiming this value more strongly.",
   widget: {
@@ -209,7 +209,7 @@
 
 {
   q: "Naive Bayes outputs P(spam) for each email. The security team wants to auto-delete only when very sure. What do they control?",
-  choices: ["The decision cutoff on the probability", "The prior counts", "The number of features", "The smoothing constant", "The vocabulary size"],
+  choices: ["The decision cutoff on the probability", "The smoothing constant added to the counts", "The prior spam rate handed to the model", "The size of the word vocabulary used", "The likelihood ratio of each single word"],
   explain: "Same lesson as every probabilistic classifier: the model supplies probabilities, the operator picks the cutoff. Auto-delete might trigger at 99%, a spam-folder move at 70%.",
   simple: "Deleting real mail is a disaster, so act only on near-certainty: auto-delete at 99%+, just flag at 70%. The model didn't change — the team simply placed two lines through its output.",
   widget: {
@@ -231,7 +231,7 @@
 
 {
   q: "Despite its false independence assumption, Naive Bayes often picks the RIGHT class anyway. Why?",
-  choices: ["Picking a winner only needs the ordering right, not the probabilities", "The assumption is usually true after all", "Smoothing repairs the correlations", "It secretly learns feature interactions", "Errors in both directions always cancel"],
+  choices: ["Picking a winner only needs the ordering right, not the probabilities", "The independence assumption turns out to hold across most real-world datasets", "Laplace smoothing quietly repairs the correlations it double-counts", "The errors from double-counting reliably cancel on both sides", "It secretly learns the feature interactions while it counts them up"],
   explain: "Classification only asks which class's score is BIGGER. Double-counted evidence inflates probabilities but often inflates the winner most, leaving the ranking — and the verdict — intact.",
   simple: "To win a race you only need to be in front — the stopwatch can be wrong. NB's probability values are often exaggerated, but the exaggeration usually keeps the right class in front, and the verdict is all we asked for.",
   widget: {

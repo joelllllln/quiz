@@ -1,13 +1,185 @@
 /* K-Means — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).kmeans1 = [
   {
+    "q": "In clustering, what exactly is a 'cluster'?",
+    "choices": [
+      "A group of points more similar to each other than to the rest",
+      "A column of the dataset picked out as important",
+      "A single labelled example used as a reference",
+      "The centre point that all others are measured from",
+      "A rule that predicts a label from the features"
+    ],
+    "explain": "A cluster is a group of data points that resemble one another more than they resemble points outside the group. No labels are involved — the grouping itself is the discovery.",
+    "simple": "It's a natural huddle in the data: points that sit close together, away from other huddles. Nobody labels them 'group A' — the algorithm finds the huddles by similarity alone. That's what makes clustering unsupervised: the groups ARE the answer, not a column you were given.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Huddles in the data",
+      "world": "Points arranged with a tunable gap between two natural groups. Watch how clearly 'clusters' emerge as the gap grows — with no labels anywhere.",
+      "xlab": "gap between the groups →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "none",
+        "small",
+        "clear",
+        "wide",
+        "huge"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "how well two clusters separate", "ys": [ 10, 40, 72, 90, 98 ] }
+      ],
+      "knob": { "label": "Gap", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "No gap: the points are one blob — there simply are no clusters to find, whatever the algorithm does.", "tone": "info" },
+        { "max": 2, "text": "A clear gap: two genuine huddles appear. Points inside each are more alike than points across the gap — the definition of a cluster.", "tone": "info" },
+        { "max": 4, "text": "🤯 Wide gap: two obvious clusters, discovered from similarity alone — no labels, no reference points, no prediction rule. Just groups that stand apart.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Cluster", "formula": "a group of points more similar within than between groups · found without labels", "text": "Clustering is unsupervised: it discovers structure. k-means, hierarchical and DBSCAN just define 'similar' and 'group' differently." }
+    }
+  },
+  {
+    "q": "K-means represents each cluster by a 'centroid'. What is a centroid?",
+    "choices": [
+      "The average position of all the points in that cluster",
+      "The single point closest to the cluster's edge",
+      "The first point that was assigned to the cluster",
+      "The most typical labelled example in the group",
+      "The boundary line separating two clusters"
+    ],
+    "explain": "A centroid is the mean location of a cluster's members — its centre of gravity. k-means summarises each cluster by this one point, and repeatedly moves it to the average of whatever points currently belong to it.",
+    "simple": "It's the cluster's balance point: average all its members' positions and that's the centroid. k-means uses it as the cluster's stand-in — 'you belong to whichever centroid you're nearest'. It isn't a real data point or a boundary; it's the computed middle of the group.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The cluster's centre of gravity",
+      "world": "A cluster of points; watch the centroid sit at their average and shift as the points spread. It is the mean, not any single point.",
+      "xlab": "spread of the points →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "tight",
+        "",
+        "medium",
+        "",
+        "wide"
+      ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "centroid = average position", "ys": [ 5, 5, 5, 5, 5 ] },
+        { "name": "distance to farthest member", "ys": [ 0.5, 1.2, 2.1, 3.4, 5 ] }
+      ],
+      "knob": { "label": "Spread", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Tight cluster: the centroid sits dead centre, close to everyone. It's the mean of the members' positions.", "tone": "info" },
+        { "max": 2, "text": "As the cluster spreads, the centroid stays at the average — it tracks the balance point, not the edge or any first point.", "tone": "info" },
+        { "max": 4, "text": "🤯 However wide the cluster, the centroid is always the mean position. k-means assigns each point to its NEAREST centroid, then recomputes these averages — that loop is the whole algorithm.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Centroid", "formula": "centroid = mean position of a cluster's members", "text": "k-means alternates: assign points to the nearest centroid, then move each centroid to its members' mean. Repeat until stable." }
+    }
+  },
+  {
+    "q": "K-means needs you to set 'k' before it runs. What is k?",
+    "choices": [
+      "The number of clusters you want it to find",
+      "The number of times the algorithm repeats its steps",
+      "The number of features used to measure distance",
+      "The minimum points required to form a cluster",
+      "The radius within which points count as neighbours"
+    ],
+    "explain": "k is simply how many clusters k-means will carve the data into — you must choose it in advance. The algorithm won't tell you the 'right' number; tools like the elbow plot and silhouette score help you pick.",
+    "simple": "k is the number of groups you're asking for — set k=3 and you get three clusters, no more, no less. That's a burden: k-means never discovers the count itself (unlike DBSCAN). You choose k up front, usually with help from an elbow or silhouette plot.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "You choose the number of groups",
+      "world": "The same data clustered at different k. Inertia (spread) always falls as k rises — which is exactly why k can't choose itself.",
+      "xlab": "k (clusters requested) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "6",
+        "8"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "inertia (total spread)", "ys": [ 100, 55, 30, 24, 16, 11 ] }
+      ],
+      "knob": { "label": "k", "min": 0, "max": 5, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "k=1: everything in one cluster, maximum spread. k=2: spread drops sharply — a real gap was found.", "tone": "info" },
+        { "max": 2, "text": "k=3: the 'elbow' — after here, extra clusters barely reduce spread. This is where the natural number often sits.", "tone": "info" },
+        { "max": 5, "text": "🤯 Inertia keeps falling toward zero as k rises (k = every point = zero spread), so it can't pick k. YOU set k; the elbow and silhouette just advise. k is a count of clusters, not iterations, features, or a radius.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "k (number of clusters)", "formula": "you set k in advance · elbow / silhouette help choose it", "text": "sklearn: KMeans(n_clusters=k). Choosing k is the method's main burden; density methods like DBSCAN sidestep it." }
+    }
+  },
+  {
+    "q": "Before running k-means on 'age' (years) and 'income' (pounds), why is scaling the features essential?",
+    "choices": [
+      "Distance is dominated by income's huge range unless features are put on comparable scales",
+      "k-means cannot read two columns of different names at once",
+      "Unscaled features make the centroids impossible to compute",
+      "Scaling is what tells k-means how many clusters to find",
+      "Without scaling the algorithm never stops iterating"
+    ],
+    "explain": "k-means groups by Euclidean distance, and a £30,000 income gap dwarfs a 30-year age gap a million-fold in that sum. Whichever feature has the largest raw units silently dominates every distance — so you standardise first, or the clustering is really just income bands.",
+    "simple": "Distance adds up the feature gaps, and income gaps are in the thousands while age gaps are in the tens. Income shouts, age whispers — so the clusters become income brackets and age barely counts. Scaling both to comparable ranges gives each feature an equal say. It's the most common beginner k-means bug.",
+    "widget": {
+      "type": "scaleFeature",
+      "title": "The feature that shouts",
+      "world": "One customer and four candidates. Who is their 'nearest' — the basis of every cluster? Shrink income's units and watch the answer change, though nobody moved.",
+      "aName": "age",
+      "bName": "income",
+      "target": { "name": "customer X", "a": 30, "b": 40000 },
+      "cands": [
+        { "name": "match A · 31y, £41k", "a": 31, "b": 41000 },
+        { "name": "match B · 63y, £40.4k", "a": 63, "b": 40400 },
+        { "name": "match C · 28y, £47k", "a": 28, "b": 47000 },
+        { "name": "match D · 34y, £53k", "a": 34, "b": 53000 }
+      ],
+      "knob": { "label": "Shrink income units by", "min": 0, "max": 4, "step": 0.25, "init": 0 },
+      "insights": [
+        { "max": 0.5, "text": "Raw units: a 63-year-old ranks 'nearest' to our 30-year-old — their incomes differ by only £400, and age is inaudible.", "tone": "warn" },
+        { "max": 2.5, "text": "As income's units shrink, age finally gets a vote, and the nearest neighbour reshuffles — though not one customer changed.", "tone": "info" },
+        { "max": 4, "text": "🤯 Balanced, the genuinely similar 31-year-old wins. Every centroid and cluster boundary is built from this distance, so scaling silently decides the whole clustering.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Scaling before k-means", "formula": "StandardScaler → each feature contributes comparably to distance", "text": "Any distance-based method (k-means, kNN, DBSCAN) needs it. Pipeline(StandardScaler(), KMeans(...)) should be reflex." }
+    }
+  },
+  {
     "q": "You have 10,000 customers and NO labels of any kind. Clustering promises to 'find the groups'. What is it actually looking for?",
     "choices": [
       "Sets of points that sit close together, far from other sets",
-      "The hidden true labels",
-      "The best decision boundary",
-      "The most profitable customers",
-      "Outliers to delete"
+      "The true class labels the data would secretly have had if labelled",
+      "The boundary that best separates the known target classes",
+      "A straight line of best fit summarising the whole dataset",
+      "The handful of outlier points that ought to be discarded"
     ],
     "explain": "With no labels there is nothing to predict — only structure to discover. Clustering formalises 'group' as geometry: points near each other, separated from other groups. Whether those groups MEAN anything is your job afterwards.",
     "simple": "Supervised learning is marking homework against an answer key. Clustering has no answer key — it just notices that the dots on the map form huddles, and draws a circle round each huddle. What the huddles mean (students? bargain-hunters?) is for you to interpret.",
@@ -51,10 +223,10 @@
     "q": "K-means repeats two moves until nothing changes. Which two?",
     "choices": [
       "Assign each point to its nearest centre, then move each centre to its group's mean",
-      "Split the biggest cluster, then merge the smallest",
-      "Pick k random points, then delete the outliers",
-      "Sort points by density, then cut the tree",
-      "Rotate the axes, then project the points"
+      "Merge the two nearest clusters together, then recompute every pairwise distance",
+      "Grow a cluster around each dense seed, then absorb every neighbour within radius",
+      "Assign k random points as seeds, then discard whichever points look like outliers",
+      "Project points onto their top directions, then rotate the axes to decorrelate them"
     ],
     "explain": "That's the whole algorithm: assignment step (points choose their closest centroid), update step (each centroid jumps to the average of its members). Loop until assignments stop changing.",
     "simple": "Imagine three pizza vans parking in a town. Every household walks to its nearest van; then each van moves to the middle of its own crowd; repeat. After a few rounds nobody switches vans and the vans stop moving — that's k-means, converged.",
@@ -98,10 +270,10 @@
     "q": "Watch k-means' inertia — the total squared distance from points to their centres — across the steps. What does it do, and why does that matter?",
     "choices": [
       "It only ever falls, which guarantees the loop settles",
-      "It rises then falls",
-      "It oscillates forever on some data",
-      "It is constant after step one",
-      "It tracks the number of clusters"
+      "It rises then falls, which is how the elbow in k is found",
+      "It can bounce up and down forever unless you cap iterations",
+      "It holds constant once the first assignment step finishes",
+      "It rises with k, tracking how many clusters you asked for"
     ],
     "explain": "Both moves can only lower inertia: switching to a nearer centre lowers it, and the mean is the point that minimises a group's squared distances. A quantity that only falls and is bounded below must stop changing — convergence, proved in one sentence.",
     "simple": "Inertia is the total 'walking distance' in the pizza-van town. Every re-choice shortens someone's walk; every re-park shortens the crowd's total. A number that can only shrink can't shrink forever — so the shuffling must eventually stop. That's why k-means never loops endlessly.",
@@ -145,10 +317,10 @@
     "q": "K-means needs k chosen in advance. You plot inertia for k = 1…8 and look for the 'elbow'. What are you actually looking for?",
     "choices": [
       "The k where extra clusters stop buying much inertia — diminishing returns",
-      "The k with the lowest inertia (always the biggest k)",
-      "The k where inertia is highest",
-      "The k equal to half the data size",
-      "Any odd k"
+      "The k with the smallest inertia, since lower inertia is always better",
+      "The k where inertia peaks, marking the tightest and purest clusters",
+      "The k that maximises the silhouette score at the curve's single steepest point",
+      "The k near the square root of half the sample count, a common rule"
     ],
     "explain": "Inertia ALWAYS falls as k grows (more centres = shorter distances), hitting zero at k = n. So you can't minimise it. The elbow marks where real structure is exhausted and further clusters just subdivide genuine groups.",
     "simple": "More pizza vans always shortens walks — with a van per house, walks are zero. So 'fewest total steps' is a rigged question. Instead ask: when did adding a van stop helping MUCH? The bend in the curve — the elbow — marks where the town's real neighbourhoods ran out.",
@@ -186,10 +358,10 @@
     "q": "You run k-means with k=2 on two crescent-moon shaped groups. It cuts straight across both moons. What did k-means assume that this data violates?",
     "choices": [
       "Clusters are round-ish blobs around a central point",
-      "Clusters must have equal sizes",
-      "Data must be labelled",
-      "Points must be positive",
-      "There are always exactly three clusters"
+      "Clusters all hold roughly equal numbers of points",
+      "The features are statistically independent of each other",
+      "Every feature was scaled to zero mean and unit variance",
+      "Clusters are separable by a single straight boundary"
     ],
     "explain": "K-means assigns by distance-to-centre, so its clusters are always convex, blob-shaped territories (Voronoi cells). A crescent has no meaningful centre — its own midpoint lies OUTSIDE the shape — so centre-based logic slices it apart.",
     "simple": "K-means thinks every group is a crowd standing around a flagpole. A crescent moon isn't — its 'flagpole' would stand in empty space off the shape. So k-means plants two poles and splits the moons sideways, confidently and completely wrong. Wrong assumption, wrong answer, no error message.",
@@ -231,10 +403,10 @@
     "q": "Run k-means five times with different random starts and you get five different answers, some clearly worse. What's the standard defence?",
     "choices": [
       "Multiple restarts (and k-means++ seeding), keeping the lowest-inertia run",
-      "Always use the first run",
-      "Increase k until runs agree",
-      "Sort the data first",
-      "Use a smaller learning rate"
+      "Raise the iteration cap high until each run is fully guaranteed to converge",
+      "Increase k step by step until the separate runs agree with each other",
+      "Scale every feature first so the random starting seeds stop mattering",
+      "Average together the centroids found across all of the different runs"
     ],
     "explain": "K-means converges to a LOCAL optimum — whichever valley the random start rolls into. Restarting from many seeds and keeping the best inertia (sklearn's n_init) plus smarter seeding (k-means++) makes bad valleys rare.",
     "simple": "Drop a marble on a bumpy landscape and it settles in the nearest dip — not necessarily the deepest one. So drop ten marbles from ten spots and keep the deepest result. k-means++ goes further: it picks starting spots spread far apart, so the marbles begin near the right dips.",
@@ -281,10 +453,10 @@
     "q": "Inertia always falls as k grows, so it can't choose k by itself. The silhouette score can. What does a point's silhouette actually compare?",
     "choices": [
       "Its average distance to its OWN cluster vs to the NEAREST OTHER cluster — so the score peaks at good k instead of always falling",
-      "Its distance to the global mean",
-      "The cluster's size vs the biggest cluster",
-      "Inertia before vs after adding a cluster",
-      "Its distance to the two nearest centroids"
+      "Its distance to the global data mean vs to its own centroid — so clusters sitting nearest the middle of the whole data score highest",
+      "The total inertia before adding a cluster vs after — so the largest drop in inertia flags the ideal number of clusters",
+      "Its distance to the nearest centroid vs to the second-nearest one — so points sitting right on a boundary score the highest",
+      "Its own cluster's size vs the size of the largest cluster — so a balanced, equal-sized clustering earns the top score"
     ],
     "explain": "silhouette = (b − a) / max(a, b), where a = mean distance to own cluster-mates and b = mean distance to the nearest foreign cluster. Near +1: snug at home, far from the neighbours. Near 0: sitting on a border. Negative: probably mis-assigned. Because it rewards separation as well as tightness, splitting a genuine cluster in two HURTS the score — which is exactly why it peaks where inertia just keeps sliding.",
     "simple": "Ask every point two questions: 'how close are you to your own gang?' and 'how close is the next-nearest gang?'. A happy point is snug among its own AND far from the rivals. Split a real gang in half and its members are suddenly suspiciously close to a 'rival' — the score drops. That built-in penalty for over-splitting is what inertia lacks.",
@@ -329,10 +501,10 @@
     "q": "You cluster customers on age (18–70) and income (£15k–£150k) without scaling. What has k-means silently done with these two features?",
     "choices": [
       "Income's huge numeric range dominates every distance — the clusters are income bands with age effectively ignored",
-      "Both features contribute equally by definition",
-      "Age dominates because it comes first",
-      "k-means auto-normalises internally",
-      "The clusters fail to converge"
+      "Age quietly dominates because it takes fewer distinct values — the clusters become age brackets with income ignored",
+      "k-means standardises both features internally, so leaving them unscaled makes no difference to the final clusters",
+      "The two mismatched features cancel out, so the run never converges and simply returns a set of empty clusters",
+      "Both features count equally, since Euclidean distance weights every dimension exactly the same way by design"
     ],
     "explain": "k-means lives entirely on Euclidean distance, and a £30k income gap contributes (30000)² to the squared distance while a 30-year age gap contributes (30)² — a million times less. Whatever feature has the biggest units OWNS the clustering. StandardScaler before KMeans is not a nicety; it decides what 'similar customers' even means.",
     "simple": "Distance adds up feature differences, and income differences are numbers in the tens of thousands while age differences are two digits. It's shouting versus whispering: the algorithm literally cannot hear age. Scale both features to comparable ranges first — otherwise you haven't chosen your clustering, your UNITS have.",
@@ -363,10 +535,10 @@
     "q": "Clustering 10 million rows, full k-means grinds. MiniBatchKMeans finishes in minutes with near-identical clusters. What corner does it cut?",
     "choices": [
       "Each iteration updates centroids using a small random batch instead of every point — tiny quality loss, huge speed-up",
-      "It clusters only the first million rows",
-      "It reduces the data to 2-D first",
-      "It merges similar clusters early",
-      "It skips convergence checking"
+      "It clusters only the first million rows and then assumes every remaining row follows that same distribution exactly afterwards",
+      "It projects the data down to two dimensions first, so each distance is far cheaper at a small accuracy cost",
+      "It merges nearby clusters together early and stops splitting them, trading a little quality for fewer sums",
+      "It drops the convergence check entirely and just runs a fixed tiny number of passes over the full dataset"
     ],
     "explain": "Lloyd's algorithm touches all n points every iteration. MiniBatchKMeans samples a batch (say 1,024 rows), assigns just those, and nudges the affected centroids toward them with a decaying per-centroid learning rate. Each step is noisier but thousands of times cheaper, and over many steps the noise averages out — inertia typically lands within a percent or two of full k-means.",
     "simple": "To find the average opinion of a city you don't interview everyone every day — you poll. Each small random batch tugs the centroids roughly the right way; the tugs are individually sloppy but their errors cancel over hundreds of batches. You trade a sliver of polish for a massive speed-up, which is often the difference between 'runs' and 'doesn't'.",
@@ -409,10 +581,10 @@
     "q": "A 16-million-colour photo is squeezed to 16 colours using k-means, and it still looks surprisingly good. What is the compression scheme?",
     "choices": [
       "Cluster all pixel colours, keep only the 16 centroid colours, and store each pixel as a 4-bit cluster id",
-      "Delete every second pixel",
-      "Store colour differences between neighbours",
-      "Blur then sharpen the image",
-      "Keep the 16 commonest original colours"
+      "Keep the 16 most frequent original colours and snap every other pixel to whichever of those is nearest",
+      "Store each pixel as the colour difference from its left neighbour, so near-flat regions need almost no bits",
+      "Average every four-by-four block of pixels into a single colour, cutting the stored pixel count sixteenfold",
+      "Sort every pixel by hue and keep only one colour out of each sixteen taken along the spectrum"
     ],
     "explain": "Each pixel is a point in 3-D colour space. k=16 k-means finds the 16 colours that best represent the photo's actual palette (better than the 16 most frequent — centroids cover the space), then every pixel stores just its cluster index: 4 bits instead of 24, plus a 16-colour codebook. This is vector quantization — the same replace-each-point-with-its-centroid idea behind classic codecs and modern embedding-index compression.",
     "simple": "The photo uses millions of colours, but MOST are near-duplicates — thirty shades of the same sky blue. k-means finds the 16 shades that stand in best for everyone, then each pixel just points at its nearest stand-in: 'I'm a number 7'. A pointer to a shade is far smaller than the shade itself. That's compression by clustering: keep the representatives, discard the crowd.",
@@ -455,10 +627,10 @@
     "q": "A colleague one-hot encodes city, favourite brand and subscription tier, then runs k-means. The clusters come out as mush. What's structurally wrong?",
     "choices": [
       "Averaging one-hot vectors gives meaningless 'means' (a centroid that's 0.3 London, 0.4 Paris) — k-means needs a space where means make sense; use k-modes or embeddings",
-      "k cannot exceed the number of cities",
-      "One-hot values are too small for distances",
-      "k-means only accepts two features",
-      "Nothing — more iterations will fix it"
+      "One-hot columns are only 0s and 1s, so their squared distances stay far too small for k-means to separate any two customers; you must rescale them upward first",
+      "k-means caps its cluster count at the number of distinct cities, so with three cities it can never form more than three groups; drop the categorical columns",
+      "One-hot coding secretly imposes an order (London < Paris < Tokyo) and k-means clusters along that false ranking; integer-encode the categories instead of one-hot columns",
+      "Adding many binary columns drowns out the numeric ones, so the clusters end up ignoring every continuous feature entirely; standard-scale the numbers first"
     ],
     "explain": "k-means alternates 'assign to nearest centroid' with 'set centroid = MEAN of members'. The mean of one-hot rows isn't a valid category — it's a fractional ghost, and distances to ghosts barely separate anyone (any two different cities are the same √2 apart). k-modes swaps means for modes and Hamming distance for Euclidean; alternatives: Gower distance, k-prototypes for mixed data, or learned embeddings that give categories a genuine geometry.",
     "simple": "k-means' core move is taking averages. What's the average of London, Paris and Tokyo? There isn't one — and the algorithm's answer ('0.3 London + 0.4 Paris + 0.3 Tokyo') is a place nobody lives. Every centroid becomes such a ghost, every distance-to-ghost is equally bland, and the clusters turn to mush. Categorical data needs a method whose core move makes sense for categories — voting for the most common value, not averaging.",
@@ -501,10 +673,10 @@
     "q": "Beyond exploration, k-means has a workhorse use INSIDE supervised pipelines: fit clusters, then hand the classifier extra columns. Which columns, and why do they help?",
     "choices": [
       "The cluster id and/or distances to each centroid — unsupervised structure becomes features a simple model can exploit",
-      "The inertia value repeated per row",
-      "Random noise to prevent overfitting",
-      "The value of k as a constant column",
-      "A copy of the label leaked from training"
+      "The final inertia value copied into every row, handing the model a single summary of how tight the final clustering really was",
+      "A dash of random noise added to each row, which the classifier learns to ignore and therefore overfits less",
+      "The chosen value of k as one constant column, so the model is told how many segments were discovered",
+      "Each point's silhouette score as a feature, so the model knows which rows sit cleanly inside a segment"
     ],
     "explain": "Fit KMeans on the training features (labels never involved), then append transform() outputs: distance-to-each-centroid (k new continuous features) and/or the cluster id. A linear model can't carve 'suburban families vs urban singles' from raw coordinates, but given distances to those discovered prototypes, the segments become linearly separable. Fit inside the CV fold like any transformer to avoid leakage across folds.",
     "simple": "The clusters found in your customer data are real structure — segments that exist whether or not anyone labels them. Telling the classifier 'this row belongs to segment 3, and here's how far it sits from every segment's centre' hands it a map it could never draw itself if it's a simple model. Unsupervised learning here isn't the destination; it's a feature factory for the supervised step.",

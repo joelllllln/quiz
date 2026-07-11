@@ -3,7 +3,7 @@
 
 {
   q: "Logistic regression is 'linear' — but the probability curve is clearly S-shaped. What exactly is linear about it?",
-  choices: ["The LOG-ODDS: logit(p) is a straight-line function of the features", "The probability itself", "The error rate", "The decision threshold", "Nothing — the name is historical"],
+  choices: ["The LOG-ODDS: logit(p) is a straight-line function of the features", "The predicted probability climbs in a straight line as a feature grows", "The sigmoid is genuinely a straight line near the middle", "The raw score converts linearly into the output probability", "The error rate falls linearly as you add training data"],
   explain: "log(p/(1−p)) = w·x + b. The model is a straight line in log-odds space; the sigmoid merely translates that line into probability space, where it looks like an S.",
   simple: "The model thinks in a currency called log-odds, and in that currency it's a perfectly straight line: each unit of a feature adds a fixed amount. The S-shape you see is just the exchange rate back into percentages — straight line in, curve out.",
   widget: {
@@ -28,7 +28,7 @@
 
 {
   q: "Three classes — cat, dog, fox — and logistic regression still works, via softmax. What does softmax guarantee about the three outputs?",
-  choices: ["They're all positive and sum to exactly 1 — a proper probability split", "The largest is always above 90%", "Each is independently between 0 and 1", "They equal the class frequencies", "Exactly one is nonzero"],
+  choices: ["They're all positive and sum to exactly 1 — a proper probability split", "Each of the three outputs lands between 0 and 1 but they need not sum to 1", "The top class always captures more than half the total mass", "They match how frequently each class appears in the data", "They are just the three raw scores rescaled onto 0 to 100"],
   explain: "Multinomial logistic regression scores each class, then softmax exponentiates and normalises: eᶻⁱ/Σeᶻʲ. Raising one class's score necessarily drains the others — the outputs are one budget split three ways.",
   simple: "Softmax turns three raw scores into shares of a single pie. Boost the cat score and the cat slice grows — but ONLY by shrinking dog's and fox's, because the pie is always exactly 100%. That's what makes the outputs readable as 'probability of each class'.",
   widget: {
@@ -54,7 +54,7 @@
 
 {
   q: "Training runs gradient descent on the log-loss. What does each update step actually do to the weights?",
-  choices: ["Nudges them a little in the direction that reduces the loss most steeply", "Sets them directly to their final values", "Randomises them and keeps the best", "Doubles them until loss stops falling", "Rounds them toward zero"],
+  choices: ["Nudges them a little in the direction that reduces the loss most steeply", "Tries many random weight sets on each step and keeps whichever scores best", "Jumps them straight to the values where the loss gradient is zero", "Scales every weight upward until the loss stops improving", "Shrinks each weight toward zero to hold overfitting back"],
   explain: "The gradient says which way the loss slopes; each step moves the weights a learning-rate-sized nudge downhill. Log-loss is convex for logistic regression, so the downhill walk reaches THE global minimum.",
   simple: "Training is walking downhill in fog: feel the slope under your feet (the gradient), take a small step down, repeat. Logistic regression's landscape is one smooth bowl — no fake valleys — so the walk always ends at the true bottom. That's a luxury most models don't get.",
   widget: {
@@ -79,7 +79,7 @@
 
 {
   q: "You switch the penalty from L2 (sum of squared weights) to L1 (sum of absolute weights). What famous behaviour appears?",
-  choices: ["Weights hit EXACTLY zero — the model performs feature selection", "Weights all double", "Training becomes non-convex", "Probabilities exceed 1", "The intercept vanishes"],
+  choices: ["Weights hit EXACTLY zero — the model performs feature selection", "Weights shrink smoothly toward zero but never actually reach it", "The loss surface develops several local minima", "Every surviving weight is pulled to the same value", "Some predicted probabilities begin to exceed 1"],
   explain: "L2 shrinks weights smoothly toward zero but never to it; L1's corner at zero makes exact zeros optimal for weakly-useful features. The surviving nonzero weights ARE a feature selection, done by the optimiser.",
   simple: "L2 is a tax proportional to the square of each opinion — big opinions shrink, small ones linger tiny. L1 taxes the absolute size, which makes 'exactly zero' a genuinely attractive option: weak features get switched off entirely. You get a sparser, more readable model for free.",
   widget: {
@@ -105,7 +105,7 @@
 
 {
   q: "On a perfectly separable dataset, UNregularised logistic regression never quite finishes training. What's happening to the weights?",
-  choices: ["They grow without bound — bigger weights always score a bit better on separable data", "They oscillate around zero", "They converge to exactly 1", "They become complex numbers", "Nothing — training halts instantly"],
+  choices: ["They grow without bound — bigger weights always score a bit better on separable data", "They climb to large but finite values and stop once every point is correctly classified", "They swing back and forth and never settle on a stable direction", "They collapse to zero since the loss has already been minimised", "They freeze the instant the final training error disappears"],
   explain: "With zero training errors, the loss can always be reduced further by scaling the weights up — pushing probabilities toward 0/1. The optimum is 'at infinity'. Any regularisation caps the escape and restores a finite, calibrated solution.",
   simple: "If the data is perfectly separable, the model can always look 'more right' by shouting louder — 99% becomes 99.9% becomes 99.99%, forever. The loss keeps trickling down as weights balloon. Regularisation is the hand on its shoulder: 'you're right, stop shouting.'",
   widget: {
@@ -130,7 +130,7 @@
 
 {
   q: "The fitted model is: log-odds = −3 + 0.8·(years of history). What does the intercept −3 mean, concretely?",
-  choices: ["The baseline log-odds for an applicant with ZERO years — odds of about 1:20", "The model is broken — intercepts can't be negative", "Three features were dropped", "The threshold must be set to 3", "The average years of history"],
+  choices: ["The baseline log-odds for an applicant with ZERO years — odds of about 1:20", "It is the baseline probability of approval, which works out to about minus three", "The log-odds fall by 3 for each extra year of credit history", "Approval requires at least three years of history first", "The intercept simply cancels out the mean of the feature"],
   explain: "Set the feature to zero and the equation reads log-odds = −3, i.e. odds e⁻³ ≈ 1:20, probability ≈ 4.7%. The intercept anchors the baseline; the weights move you away from it per unit of each feature.",
   simple: "The intercept is the model's opinion of a blank applicant — all features at zero. Here: odds 1-to-20 against, roughly 5%. Every year of history then multiplies those odds by e^0.8 ≈ 2.2. Baseline plus multipliers: you can read the whole model aloud from two numbers.",
   widget: {
@@ -157,7 +157,7 @@
 
 {
   q: "Income's weight is 0.00004 and age's weight is 0.3 — a colleague concludes age matters vastly more. Why is that comparison bogus?",
-  choices: ["The features have wildly different scales — weights are per-unit, and a 'unit' of income is one pound", "Age always matters more than income", "Weights can't be compared, ever", "The intercept must be subtracted first", "Income's weight is below machine precision"],
+  choices: ["The features have wildly different scales — weights are per-unit, and a 'unit' of income is one pound", "Income's weight is so small the optimiser has effectively dropped that feature from the model", "Weights across differently-scaled features can never be compared, no matter how much you preprocess them", "The two weights must be summed together before either coefficient can be interpreted at all", "The bigger weight always belongs to whichever feature happened to enter the model first"],
   explain: "A weight is 'log-odds per unit'. One pound is a microscopic unit; one year is a big one. Multiply each weight by its feature's spread (or standardise first) and income may dominate. Raw-weight comparisons measure units, not importance.",
   simple: "Saying income's 0.00004 is 'small' is like saying a car is slow because it moves 0.00003 kilometres per millisecond. Per POUND, of course the effect is tiny — there are a lot of pounds. Standardise the features and the weights become directly comparable: log-odds per typical variation.",
   widget: {
@@ -185,7 +185,7 @@
 
 {
   q: "Fraud is 1% of your data and logistic regression learns to predict tiny probabilities for everyone. What does class_weight='balanced' change inside training?",
-  choices: ["Each rare-class error costs proportionally more in the loss, forcing the model to take fraud seriously", "The features get rebalanced", "The test set is oversampled", "The sigmoid becomes steeper", "The intercept is deleted"],
+  choices: ["Each rare-class error costs proportionally more in the loss, forcing the model to take fraud seriously", "The rare fraud examples are duplicated inside the training set until the two classes are equal in size", "New synthetic fraud rows are generated so that both classes finish with roughly the same count", "The decision threshold is automatically lowered so that far more fraud ends up getting flagged", "The majority legit rows are quietly dropped until the two classes finally match in size"],
   explain: "Balanced weighting scales each example's loss by the inverse of its class frequency — one fraud error ≈ 99 normal errors. The optimum shifts: probabilities for fraud-like cases rise, effectively moving the model's operating balance.",
   simple: "By default the model minimises TOTAL error, and ignoring a 1% class is a great way to do that. Class weights change the prices: each fraud mistake now costs 99×. Same optimiser, new incentives — suddenly the rare class is worth learning. (Note: predicted probabilities then reflect the WEIGHTED world — recalibrate if you need true frequencies.)",
   widget: {
@@ -207,7 +207,7 @@
 
 {
   q: "Among common classifiers, logistic regression's predicted probabilities tend to be unusually trustworthy out of the box. Why?",
-  choices: ["Training minimises log-loss, which is only optimised by honestly calibrated probabilities", "It uses fewer features than other models", "The sigmoid rounds probabilities safely", "It ignores outliers automatically", "It is always underconfident"],
+  choices: ["Training minimises log-loss, which is only optimised by honestly calibrated probabilities", "The sigmoid squashes every output into a range that happens to line up with real frequencies", "A simple linear model is too weak to ever become overconfident in the first place", "Its probabilities are averaged across many sub-models, which cancels the bias out", "It clips extreme probabilities back toward 0.5 so it never overcommits"],
   explain: "Log-loss is a 'proper scoring rule': the expected loss is minimised exactly when predicted probabilities equal true frequencies. The model is literally trained to be calibrated. Trees and SVMs optimise other things and need post-hoc calibration.",
   simple: "Some models are graded on being RIGHT; logistic regression is graded on being HONEST — the log-loss punishes both overconfidence and underconfidence about probability itself. Trained on honesty, it tends to deliver it: when it says 70%, about 70% happen.",
   widget: {
@@ -232,7 +232,7 @@
 
 {
   q: "The true boundary is curved, but you want to keep logistic regression. What's the classic trick?",
-  choices: ["Engineer nonlinear features (x², interactions) — a linear model in a richer space draws curves in the original one", "Raise the decision threshold", "Add more L2 penalty", "Train for more epochs", "Use a bigger intercept"],
+  choices: ["Engineer nonlinear features (x², interactions) — a linear model in a richer space draws curves in the original one", "Run gradient descent for far more epochs so that the straight boundary gradually bends itself to fit the curved data", "Crank the L2 penalty up until the straight boundary is forced to wrap around the curved region", "Lower the decision threshold so the flagged area curls around the true curved class boundary", "Chain several logistic regressions together so their combined cut forms one smooth curve"],
   explain: "The model is linear in its INPUTS — so change the inputs. Add x², x₁·x₂ and friends: the boundary stays a flat plane in the expanded space, but maps back to a curve in the original features. The kernel idea, done by hand, with interpretability intact.",
   simple: "A straight-edge ruler can still draw a circle — on folded paper. Feature engineering folds the paper: give the model 'distance-from-centre' or 'age × income' as columns, and its straight cut through THOSE becomes a curve through the originals. Same trusty model, richer worldview.",
   widget: {

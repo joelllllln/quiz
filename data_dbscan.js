@@ -1,13 +1,196 @@
 /* DBSCAN — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).dbscan1 = [
   {
+    "q": "DBSCAN's first parameter is 'eps'. What does eps mean?",
+    "choices": [
+      "The radius that defines each point's neighbourhood — 'this close counts as near'",
+      "The number of clusters DBSCAN should return",
+      "The minimum size a cluster is allowed to be",
+      "The fraction of points allowed to be noise",
+      "The number of times the algorithm iterates"
+    ],
+    "explain": "eps is the neighbourhood radius: two points are neighbours if they sit within eps of each other. Together with minPts it defines what 'dense' means. Set eps too small and everything is noise; too large and everything merges into one cluster.",
+    "simple": "eps is your definition of 'nearby'. Draw a circle of radius eps around a point, and whoever falls inside is a neighbour. That single distance sets the scale of the whole clustering — it's not a cluster count, a size limit, or an iteration count. It's how far 'near' reaches.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "How far does 'near' reach?",
+      "world": "One dataset clustered at growing eps. Watch it swing from all-noise (radius too small) to one-blob (radius too big).",
+      "xlab": "eps (neighbourhood radius) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "tiny",
+        "small",
+        "right",
+        "large",
+        "huge"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "clusters found", "ys": [ 0, 5, 3, 2, 1 ] },
+        { "name": "points marked noise (%)", "ys": [ 95, 30, 8, 2, 0 ] }
+      ],
+      "knob": { "label": "eps", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Tiny eps: nobody has enough neighbours, so almost everything is noise. 'Near' reaches too short.", "tone": "warn" },
+        { "max": 2, "text": "The right eps: three clean clusters, little noise. The radius matches the data's real spacing.", "tone": "info" },
+        { "max": 4, "text": "🤯 Huge eps: everyone is everyone's neighbour, so it all melts into one cluster. eps sets the SCALE of density — not a cluster count or an iteration count.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "eps (neighbourhood radius)", "formula": "two points are neighbours if their distance ≤ eps", "text": "Read a sensible eps off the 'k-distance plot' — sort each point's distance to its k-th neighbour and find the elbow." }
+    }
+  },
+  {
+    "q": "DBSCAN's second parameter is 'minPts' (or min_samples). What does it set?",
+    "choices": [
+      "How many neighbours a point needs within eps to count as being in a dense region",
+      "The maximum number of points allowed in one cluster",
+      "The number of clusters to search for",
+      "The smallest distance two clusters must keep apart",
+      "The number of features used to measure distance"
+    ],
+    "explain": "minPts is the crowd-size threshold: a point sitting in a region with at least minPts neighbours (within eps) is 'in the dense interior'. eps sets how far you look; minPts sets how many must be there. Together they define density.",
+    "simple": "minPts is how big a crowd has to be before it counts as a crowd. Stand at a point, look within radius eps, and count the neighbours — if there are at least minPts of them, you're in a dense area. eps is the reach; minPts is the headcount. The two together are DBSCAN's whole definition of 'dense'.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "How big must the crowd be?",
+      "world": "Same eps, rising minPts. As the required headcount grows, fewer points qualify as 'dense' and more become noise.",
+      "xlab": "minPts (required neighbours) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "2",
+        "4",
+        "8",
+        "15",
+        "30"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "points in dense interiors (%)", "ys": [ 92, 80, 62, 38, 15 ] },
+        { "name": "points marked noise (%)", "ys": [ 3, 9, 22, 45, 74 ] }
+      ],
+      "knob": { "label": "minPts", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Low minPts: almost any point counts as dense — even thin, straggly regions form clusters.", "tone": "info" },
+        { "max": 2, "text": "Moderate minPts: only genuinely crowded regions qualify, and sparse stragglers become noise.", "tone": "info" },
+        { "max": 4, "text": "🤯 High minPts: the crowd bar is so high that most points are 'noise'. minPts is the headcount for density — not a cluster count or a size cap.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "minPts (density threshold)", "formula": "a point is dense if ≥ minPts neighbours lie within eps", "text": "A common rule of thumb: minPts ≈ 2 × number of features. Raise it to suppress noise, lower it to keep sparse clusters." }
+    }
+  },
+  {
+    "q": "DBSCAN sorts points into three roles. What is a 'core' point?",
+    "choices": [
+      "A point with at least minPts neighbours within eps — sitting inside a dense region",
+      "The single centre of gravity of a cluster",
+      "The first point DBSCAN happens to visit",
+      "A point exactly on the boundary between two clusters",
+      "The densest point in the entire dataset"
+    ],
+    "explain": "A core point has a full crowd around it (≥ minPts neighbours within eps), so it sits in a cluster's dense interior and can grow the cluster outward. Core points are the seeds and engine of every DBSCAN cluster.",
+    "simple": "A core point is one standing in a crowd — enough neighbours nearby to count as dense. These are the cluster's beating heart: DBSCAN starts from a core point and expands outward through other core points. It's not a centroid, not the first point visited, not the single densest point — just any point with a full crowd around it.",
+    "widget": {
+      "type": "dbscanScan",
+      "title": "Core, border, noise",
+      "world": "Widen each point's reach (eps). Points that gather a full crowd (≥ minPts neighbours) become CORE and seed clusters; a couple of lonely stragglers stay noise.",
+      "xlab": "feature 1",
+      "ylab": "feature 2",
+      "minPts": 3,
+      "showEpsAt": 3,
+      "points": [
+        { "x": 2, "y": 6 },
+        { "x": 2.8, "y": 6.8 },
+        { "x": 3.7, "y": 7.2 },
+        { "x": 4.6, "y": 7.3 },
+        { "x": 5.5, "y": 7 },
+        { "x": 6.3, "y": 6.4 },
+        { "x": 7, "y": 5.6 },
+        { "x": 3.5, "y": 3.9 },
+        { "x": 4.3, "y": 3.3 },
+        { "x": 5.2, "y": 3 },
+        { "x": 6.1, "y": 3 },
+        { "x": 7, "y": 3.3 },
+        { "x": 7.8, "y": 3.9 },
+        { "x": 1, "y": 1 }
+      ],
+      "knob": { "label": "Reach radius (eps)", "min": 0.3, "max": 3.5, "step": 0.05, "init": 0.4 },
+      "insights": [
+        { "max": 1, "text": "Small reach: nobody has ≥ 3 neighbours, so there are no core points yet — almost everything is noise.", "tone": "info" },
+        { "max": 2, "text": "As the reach grows, points in the dense bands gather full crowds and turn CORE — those are the dense interiors that seed clusters.", "tone": "info" },
+        { "max": 3.5, "text": "🤯 Core points chain outward into clusters, pulling in their neighbours (border points), while the lone straggler stays noise. Clusters are grown from core points outward — that's why 'core' is the key role.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Core point", "formula": "≥ minPts neighbours within eps → core (dense interior, grows the cluster)", "text": "Border points sit in a core point's neighbourhood but aren't dense themselves; noise points belong to no dense region at all." }
+    }
+  },
+  {
+    "q": "After DBSCAN runs, some points are labelled −1. What does that mean, and why is it a feature?",
+    "choices": [
+      "They're noise — in no dense region — and being allowed to belong to nothing is genuinely useful",
+      "They form a hidden extra cluster numbered −1",
+      "They are the core points that seeded the clusters",
+      "They were skipped because the algorithm ran out of time",
+      "They belong to every cluster at once, so can't be assigned"
+    ],
+    "explain": "−1 is DBSCAN's noise label: points reachable from no dense region. Unlike k-means, which forces every point into some cluster, DBSCAN can say 'this point belongs to nothing' — which is exactly right for outliers and makes it double as an anomaly detector.",
+    "simple": "−1 means 'noise — this point isn't part of any crowd'. That's a strength, not a bug: k-means shoves every outlier into the nearest cluster whether it fits or not, but DBSCAN is allowed to shrug and leave true oddballs unassigned. That honesty is why DBSCAN doubles as an outlier finder.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Allowed to say 'belongs to nothing'",
+      "world": "A dataset with two clusters and scattered outliers, clustered by k-means (forces everyone in) vs DBSCAN (can label noise). Watch how each treats the outliers.",
+      "xlab": "outlier fraction in the data →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0%",
+        "5%",
+        "10%",
+        "20%",
+        "35%"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "DBSCAN: cluster quality", "ys": [ 92, 90, 88, 84, 78 ] },
+        { "name": "k-means: cluster quality", "ys": [ 90, 80, 70, 55, 38 ] }
+      ],
+      "knob": { "label": "Outlier fraction", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "No outliers: both do fine — nobody needs a noise label yet.", "tone": "info" },
+        { "max": 2, "text": "Add outliers and k-means degrades fast — each oddball is forced into a cluster, dragging its centroid. DBSCAN quarantines them as −1.", "tone": "info" },
+        { "max": 4, "text": "🤯 Heavy outliers: DBSCAN holds up because it simply labels the junk −1, while k-means' forced assignments wreck its clusters. 'Belongs to nothing' is the feature.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Noise label (−1)", "formula": "reachable from no dense region → labelled −1 (noise)", "text": "This makes DBSCAN a natural outlier/anomaly detector — the noise set IS the anomalies." }
+    }
+  },
+  {
     "q": "DBSCAN never asks for k. Instead it grows clusters from 'dense' points. What is its definition of a cluster?",
     "choices": [
       "A connected region where points have enough neighbours within a radius",
-      "A group around a central flagpole",
-      "A branch of a merge tree",
-      "Any set of exactly minPts points",
-      "The convex hull of the data"
+      "A ball of points centred on their mean and sized to contain minPts members",
+      "The set of points each nearer to one centroid than to any other one",
+      "A branch pruned from the data's density-based merge dendrogram",
+      "Any maximal group of points all lying within a single eps of each other"
     ],
     "explain": "A core point has ≥ minPts neighbours within radius eps. Core points within reach of each other chain together, plus their borderline hangers-on — the cluster is whatever that flood-fill reaches. Shape doesn't matter; density does.",
     "simple": "DBSCAN's rule: 'you're in a crowd if enough people stand within arm's reach — and your crowd includes everyone reachable through chains of such people.' Crowds can be any shape: crescents, rings, blobs. What matters is packed-together-ness, not roundness.",
@@ -49,10 +232,10 @@
     "q": "DBSCAN takes eps (radius) and minPts (neighbour quota). What happens as you grow eps from tiny to huge?",
     "choices": [
       "Noise → many small clusters → true clusters → everything merges into one",
-      "Clusters shrink steadily",
-      "The cluster count stays fixed",
-      "Points get deleted progressively",
-      "minPts changes automatically"
+      "One giant blob first, then true clusters, then many small ones, then noise",
+      "Clusters keep splitting until every point forms its own cluster",
+      "True clusters appear at once, then slowly shed their noise points",
+      "The number of clusters rises without bound as eps keeps growing"
     ],
     "explain": "Tiny eps: no one qualifies as core — all noise. Growing: dense pockets ignite separately, then knit into the true clusters, then bridge across gaps until one blob swallows all. The right eps lives on the plateau where the count is stable.",
     "simple": "'Arm's reach' defines the crowd. Millimetre arms: everyone is a loner. Metre arms: real huddles appear. Ten-metre arms: the whole street is 'one crowd'. Somewhere in the middle the huddle count stops changing for a while — that plateau is where the truth sits.",
@@ -96,10 +279,10 @@
     "q": "Three of your points end up labelled −1 by DBSCAN. What is it telling you, and why is that a feature rather than a bug?",
     "choices": [
       "They belong to no dense region — explicit outliers, honestly flagged",
-      "The algorithm crashed on them",
-      "They form their own cluster",
-      "They must be duplicates",
-      "Their features are negative"
+      "They are border points DBSCAN could not confidently attach to a cluster",
+      "They are core points whose neighbourhoods happened to overlap heavily",
+      "They were reachable but arrived after the cluster had already closed",
+      "They mark the low-density seams where two clusters meet and cancel"
     ],
     "explain": "K-means forces EVERY point into some cluster, however absurd the fit. DBSCAN has a vocabulary for 'this point is just noise' — which doubles as free anomaly detection and keeps outliers from dragging cluster shapes around.",
     "simple": "Every crowd-finder meets the guy standing alone in a field. K-means shrugs and assigns him to the nearest crowd half a mile away — polluting that crowd's statistics. DBSCAN says the honest thing: 'he's not in a crowd'. Sometimes the loners ARE the finding — fraud, sensor glitches, rare cases.",
@@ -141,10 +324,10 @@
     "q": "Unlike k-means, DBSCAN discovers HOW MANY clusters exist. When is that autonomy most valuable?",
     "choices": [
       "When you genuinely don't know the group count — and it may change over time",
-      "When you need exactly three clusters",
-      "When the data is perfectly round",
-      "When labels are available",
-      "When n is astronomically large"
+      "When you can already supply k and simply want to confirm it independently",
+      "When the clusters must all contain the same number of points",
+      "When the data arrives already sorted by its true group labels",
+      "When you want the fewest possible clusters the data will allow"
     ],
     "explain": "Segmentations, spatial hotspots, event detection: the count IS the unknown. DBSCAN reads it from density, and tomorrow's data can honestly yield a different count — no k to hard-code, no re-tuning ritual.",
     "simple": "Asking 'find me the crime hotspots' shouldn't require announcing how many hotspots exist — that's the question! Density methods let the data volunteer the number. This week: four hotspots. Next month: two. The pipeline doesn't care.",
@@ -190,10 +373,10 @@
     "q": "One tight, dense cluster and one sparse, spread-out cluster share a dataset. Why does this defeat DBSCAN's single eps?",
     "choices": [
       "Any one reach is too big for the tight cluster or too small for the sparse one",
-      "minPts cannot exceed 3",
-      "DBSCAN only finds even numbers of clusters",
-      "Density methods need labels",
-      "The clusters must first be scaled"
+      "The two clusters would need different minPts values, which one run cannot give",
+      "A tight cluster and a sparse one can never be density-reachable from each other",
+      "The sparse cluster's points can never accumulate minPts neighbours at all",
+      "One eps forces both clusters to hold the same number of core points"
     ],
     "explain": "eps is GLOBAL: one density standard for the whole dataset. A reach that keeps the tight cluster separate reads the sparse cluster as scattered noise; a reach generous enough for the sparse one chains everything together. HDBSCAN exists precisely for this.",
     "simple": "One arm's-reach rule for the whole city fails when one neighbourhood parties shoulder-to-shoulder and another spreads across picnic blankets. Strict rule: the picnic 'isn't a crowd'. Loose rule: the whole park merges. No single rule fits both — you need a method that adapts per neighbourhood.",
@@ -238,10 +421,10 @@
     "q": "DBSCAN's eps is notoriously hard to guess. The standard recipe: compute every point's distance to its k-th nearest neighbour, sort those distances, and plot them. What are you looking for?",
     "choices": [
       "The elbow where the sorted curve shoots upward — distances below it are 'inside a cluster', above it 'crossing empty space'; set eps at the bend",
-      "The maximum distance",
-      "The mean distance",
-      "The first distance over 1.0",
-      "The point where the curve crosses zero"
+      "The flat plateau on the left where most distances agree — its height is the typical neighbour gap, so read eps straight off that shelf instead of the bend",
+      "The steepest single point of the climb, where the slope is greatest — that maximum-gradient location marks the densest neighbourhood, and eps is its distance value",
+      "The average of all the sorted k-th-neighbour distances, which balances dense interiors against noisy outliers and gives a robust, data-driven value for eps",
+      "The far-right tail where the curve levels off again — those largest distances are the true outliers, so set eps just below them to capture every point"
     ],
     "explain": "For points inside clusters, the k-th-neighbour distance is small and similar — the flat left part of the sorted curve. Noise points and cluster borders must reach much further — the steep right tail. The bend between regimes estimates the natural neighbourhood radius: eps at the elbow (with min_samples = k, commonly 2×dims) makes cluster interiors dense and gaps sparse, which is exactly DBSCAN's working definition.",
     "simple": "Ask every resident 'how far to your 4th-closest neighbour?'. Townsfolk all answer 'a few doors down' — small, similar numbers. Hermits answer in miles. Sort all the answers and the curve crawls along low, then suddenly rockets — that corner is where town ends and wilderness begins. eps IS that boundary: it's the algorithm's definition of 'walking distance', read off the data instead of guessed.",
@@ -285,10 +468,10 @@
     "q": "Your data has one dense downtown cluster and one sprawling rural cluster. Any single eps either shreds the sprawl or merges the downtown. Which successors fix this, and how?",
     "choices": [
       "HDBSCAN/OPTICS — they sweep ALL density levels and extract clusters per region, instead of enforcing one global eps",
-      "Running DBSCAN twice with the same eps",
-      "Increasing min_samples until it works",
-      "Standardising the features",
-      "Using Manhattan distance"
+      "HDBSCAN/OPTICS — they rescale every feature to unit variance first, so one global eps finally fits both the dense and the sparse cluster",
+      "HDBSCAN/OPTICS — they raise min_samples automatically until the sparse cluster stops fragmenting into isolated noise points",
+      "HDBSCAN/OPTICS — they run DBSCAN on each region with a locally tuned eps, then stitch the partial clusterings back together",
+      "HDBSCAN/OPTICS — they drop the sparse cluster as noise and cluster only the dense region, which any single eps can handle"
     ],
     "explain": "DBSCAN draws one density bar: neighbourhoods denser than eps are clusters, full stop. Varying-density data has no correct single bar. OPTICS orders points by reachability distance, encoding the clustering at EVERY eps at once; HDBSCAN builds the full density hierarchy and keeps the most STABLE clusters per branch — dense downtown and sparse sprawl each judged at their own natural level. HDBSCAN's main knob is just min_cluster_size, far friendlier than eps.",
     "simple": "One eps is one definition of 'crowded' applied to the whole map — but downtown-crowded and countryside-crowded are different things. The fix isn't a cleverer single answer; it's refusing the question: check every crowdedness level, watch which groups persist across many levels, and keep those. Stable-at-many-densities is the new definition of 'real cluster' — and it needs no eps at all.",
@@ -331,10 +514,10 @@
     "q": "DBSCAN on customers with age (18–70) and income (£15k–£150k), unscaled. eps is one number applied to distances. What has income's scale done to the neighbourhoods?",
     "choices": [
       "Distances are ~all income — eps effectively defines income bands, and age plays no part in who counts as neighbours",
-      "Nothing — DBSCAN is scale-free",
-      "Age dominates because its values are smaller",
-      "eps automatically adapts per feature",
-      "The algorithm errors out on mixed scales"
+      "Nothing lasting — DBSCAN rescales each axis internally, so neighbourhoods still weigh age and income equally",
+      "Distances split evenly, so eps must be raised roughly a thousand-fold before anyone counts as a neighbour",
+      "Income's wide range makes every customer a noise point, since no eps leaves anyone with minPts neighbours",
+      "Age dominates because its 18-70 span cycles faster, so eps ends up defining age brackets and income is ignored"
     ],
     "explain": "Same disease as k-means and kNN: Euclidean distance sums squared differences, and income gaps (thousands) drown age gaps (tens) a million-fold. A single eps then slices income alone. Worse, DBSCAN can't even hide it — eps must be a NUMBER in the data's units, so the units decide everything: eps=5000 means '£5000', with age contributing nothing. StandardScaler first, always; then eps lives in comparable, meaningful units.",
     "simple": "eps is a ruler: 'within THIS distance, you're my neighbour'. But the ruler measures age-steps and pound-steps with the same markings, and a single pound is a step while a year is a stride of one. Any usable eps ends up spanning pennies of income and centuries of age — so neighbourhoods are income bands, and the age axis might as well not exist. Scale both features first, and the ruler finally measures 'similarity' instead of 'currency'.",
@@ -365,10 +548,10 @@
     "q": "Naive DBSCAN asks 'who is within eps of me?' for every point against every other point — O(n²). How do real implementations make this fast?",
     "choices": [
       "A spatial index (kd-tree/ball tree) answers each radius query in ~log n, making the whole run ~n log n",
-      "They randomly skip most points",
-      "They cluster a 2-D projection instead",
-      "They cap every neighbourhood at 5 points",
-      "They precompute all n² distances once and reuse them"
+      "They cache all n-squared distances after one pass, turning every later radius query into a constant-time lookup",
+      "They sample a random subset to cluster first, then assign the remaining points to the nearest resulting cluster",
+      "They sort every point along one axis so each radius query scans only a short contiguous window of neighbours",
+      "They reduce the data to two dimensions with PCA, where radius queries over a small grid become far cheaper"
     ],
     "explain": "The only heavy operation in DBSCAN is the radius query. A kd-tree or ball tree partitions space so a query descends a few branches and prunes the rest — ~O(log n) per query instead of O(n), so the full run drops from O(n²) toward O(n log n). sklearn builds the index automatically (algorithm='auto'). Caveat: trees lose their pruning power in high dimensions, where distances concentrate — the curse of dimensionality again.",
     "simple": "Asking 'who lives within 500m of me?' by phoning every person in the country is n calls per resident. A street atlas fixes it: open to your neighbourhood's page and check only that page and its edges. The atlas is the spatial index — build it once, and every DBSCAN neighbourhood query becomes a page lookup instead of a national phone campaign.",
@@ -411,10 +594,10 @@
     "q": "Run DBSCAN twice on the same data with the same settings but shuffled row order, and a few points swap cluster labels. Which points, and why is this considered harmless?",
     "choices": [
       "Border points reachable from TWO clusters go to whichever claimed them first — core points and noise never change, so the structure is stable",
-      "Random core points swap sides",
-      "The noise set changes completely",
-      "It means eps was set wrong",
-      "It's a bug fixed in newer sklearn versions"
+      "Core points near a boundary get reassigned when expansion starts elsewhere — border points and noise are fixed, so the change is cosmetic",
+      "Noise points just outside eps get swept into different clusters depending on scan order — core and border points stay put, so results are stable",
+      "A few core points flip between core and border status as neighbours are visited in a new order — noise is untouched, so it barely moves",
+      "Points exactly eps apart round differently each run, nudging cluster edges — interiors and outliers are safe, so labels stay effectively fixed"
     ],
     "explain": "Whether a point is core (≥ min_samples within eps) or noise (unreachable) depends only on geometry — order can't touch it. The single ambiguity: a border point within eps of core points from two different clusters joins whichever cluster's expansion reaches it first, and expansion order follows row order. Typically a handful of points on the seam between clusters — worth knowing so you don't mistake the flicker for instability, and worth fixing the seed/order if you need byte-identical outputs.",
     "simple": "Two towns expand street by street, and one farmhouse sits exactly on the boundary line between them. Whichever town's surveyor arrives first claims it — shuffle the survey order and the farmhouse changes towns. But the towns themselves — every core resident, every true hermit — are decided by geography, not by who knocked first. A couple of farmhouses flickering on the seam is the entire extent of DBSCAN's randomness.",

@@ -4,10 +4,10 @@
     "q": "KNN's k, a tree's depth, SVM's C, logistic regression's regularisation — what do all of these have in common?",
     "choices": [
       "They're hyperparameters — chosen by you, judged on validation data",
-      "They're learned automatically during training",
-      "They only affect training speed",
-      "They must all be set to their defaults",
-      "They're interchangeable between models"
+      "They're parameters the model fits to the data during training itself",
+      "They're tuned by minimising the loss with gradient descent each step",
+      "They're read straight off the training accuracy as the model learns",
+      "They're fixed constants shared identically across all model types"
     ],
     "explain": "Parameters are learned FROM data (weights, split positions). Hyperparameters are settings ABOUT the learning — the model can't choose them for itself, so you sweep candidates and let held-out data judge.",
     "simple": "Every model has knobs it cannot turn on its own — how flexible to be, how hard to press. You turn them, and the fair judge of each position is data the model never saw. This one ritual — sweep, validate, pick — is half of applied machine learning.",
@@ -54,10 +54,10 @@
     "q": "You have 3 candidate values of C and 4 of gamma. Grid search with 5-fold cross-validation trains how many models — and why is that price worth paying?",
     "choices": [
       "60 — every combination × every fold, for a luck-proof comparison",
-      "12 — one per combination",
-      "7 — one per value",
-      "5 — one per fold",
-      "1 — the best one directly"
+      "12 — one fit per combination, since the folds just reshuffle rows",
+      "35 — the seven distinct values each retried across five random splits",
+      "17 — the twelve combinations plus one extra fit for each of the folds",
+      "20 — the five folds times the four gamma values you swept over"
     ],
     "explain": "3 × 4 = 12 combinations, each scored by 5-fold CV = 60 fits. Expensive — but each combination's score is an average over 5 splits, so the winner won a fair, luck-free tournament.",
     "simple": "Try every combination of knob settings, and score each one five times on rotated held-out slices so no setting wins by a lucky split. It's brute force with good manners — slow, boring, and extremely hard to fool.",
@@ -100,10 +100,10 @@
     "q": "You tuned hyperparameters for forty rounds, always scoring on the same validation set. Its score crept from 88% to 93%. Why does the team keep a THIRD, untouched test set?",
     "choices": [
       "Forty rounds of choices slowly overfit the validation set — only untouched data gives an honest final number",
-      "Three sets are required by convention",
-      "The test set trains the final model",
-      "Validation data expires after 30 uses",
-      "To triple the training data"
+      "Cross-validating across those forty rounds averages the creep away, so a third split really adds nothing",
+      "The final model is retrained on the test set once the validation search has settled on its winning setting",
+      "Validation scores only creep upward here because the held-out set was simply far too small to stay stable",
+      "A third split exists mainly to triple your training rows once the tuning on the other sets has finished"
     ],
     "explain": "Every 'keep this setting' decision leaked a little information about the validation set into your choices. After forty rounds, part of that 93% is memorised validation quirks. The final exam must be data no decision ever touched.",
     "simple": "Grade yourself on the same page of questions forty times, adjusting each time, and your score rises whether or not you're learning. The untouched test set is the sealed exam — opened once, trusted precisely because you never got to adapt to it.",
@@ -133,10 +133,10 @@
     "q": "Across models, regularisation (KNN's bigger k, tree pruning, SVM's small C, logistic's penalty) always does the same job. Which?",
     "choices": [
       "Restrains flexibility so the model fits signal, not noise",
-      "Speeds up training",
-      "Increases training accuracy",
-      "Adds features automatically",
-      "Balances the classes"
+      "Boosts flexibility so the model can chase every training wiggle",
+      "Cuts the training time by shrinking the model's parameter count",
+      "Lifts training accuracy by letting the fit tighten on the data",
+      "Rescales the input features onto a common, comparable range"
     ],
     "explain": "Regularisation deliberately limits how hard a model can contort itself. Training score drops slightly; generalisation usually improves — the model can no longer afford to memorise noise.",
     "simple": "Every model would love to explain every last wiggle in the training data — including the wiggles that are just noise. Regularisation is the leash: short enough to stop noise-chasing, long enough to reach the real pattern. Set the length on validation data.",
@@ -181,10 +181,10 @@
     "q": "Your model underperforms. Before buying more data, you plot scores against training-set size. The two curves have already converged, both around 78%. What does that tell you?",
     "choices": [
       "More data won't help — the model has hit its ceiling; change the model or features",
-      "Double the data immediately",
-      "The validation set is too small",
-      "Training accuracy will soon rise",
-      "The data is mislabeled"
+      "Doubling the training rows should close the gap and lift both curves noticeably higher",
+      "The validation set is clearly too small, so the two curves only converged by accident",
+      "Training accuracy is about to climb again as soon as a few more rows come in",
+      "The labels must be noisy, which is why neither curve manages to reach a higher score"
     ],
     "explain": "Converged learning curves mean the model has extracted everything it can express: its bias is the bottleneck. More rows feed a hunger it doesn't have. A gap between the curves — that's when more data pays.",
     "simple": "The learning curve is a hunger test. Curves still far apart = the model is hungry, feed it rows. Curves already touching at 78% = it's full, and 78% is all this model can digest — improve the recipe (features, model class), not the portion size.",
@@ -229,10 +229,10 @@
     "q": "Fraud is 1% of your training data, and the model learns to ignore it. Which two standard levers push back — before touching the threshold?",
     "choices": [
       "Class weights in the loss, or resampling the training data",
-      "More epochs and a bigger test set",
-      "Feature scaling and PCA",
-      "A deeper model and more dropout",
-      "Removing the fraud rows as outliers"
+      "More epochs on the loss, plus a larger held-out test set",
+      "Feature scaling first, followed by PCA on the inputs",
+      "A deeper network paired with heavier dropout regularisation",
+      "Dropping the rare fraud rows as noisy, unhelpful outliers"
     ],
     "explain": "Class weights make each fraud error cost, say, 99× more in the loss; over/under-sampling rebalances what the model sees. Both force the training process itself to take the rare class seriously.",
     "simple": "The model ignores fraud because ignoring it is cheap: 1% wrong, 99% smug. Make fraud mistakes expensive (weights) or make fraud commonplace in the training diet (resampling) — either way, indifference stops being the winning strategy.",
@@ -278,10 +278,10 @@
     "q": "Team A spends a month swapping in fancier models. Team B spends a week adding one domain feature ('days since last login'). B wins by six points. What's the general lesson?",
     "choices": [
       "Better inputs usually beat better algorithms — features first, models second",
-      "Simple models are always better",
-      "Model swaps never help",
-      "Six points is within noise",
-      "B got lucky"
+      "Simpler models nearly always generalise better than more complex ones do",
+      "Swapping model families almost never changes real-world accuracy at all",
+      "A six-point jump like that sits comfortably inside normal run-to-run noise",
+      "Team B just drew a lucky validation split that flattered its final score"
     ],
     "explain": "Models can only recombine the information you feed them. One feature that directly encodes the signal ('recency') hands every model — even the simplest — what no amount of algorithmic sophistication could reconstruct from weak inputs.",
     "simple": "An algorithm is a chef; features are ingredients. A month of fancier chefs can't rescue a pantry with no seasoning — one right ingredient upgrades every dish at once. When stuck, ask 'what does the model not KNOW?' before 'what smarter model exists?'.",
@@ -320,10 +320,10 @@
     "q": "A pipeline scales features using statistics computed on ALL the data — including the test set — before splitting. Scores look great; production disappoints. What happened?",
     "choices": [
       "Data leakage — test-set information seeped into training through the scaler",
-      "The scaler was too strong",
-      "The test set was too small",
-      "Production data needs no scaling",
-      "The split ratio was wrong"
+      "The scaler was simply too aggressive and squashed the useful signal away",
+      "The test set was far too small to give a stable estimate of accuracy",
+      "Production traffic arrives unscaled, so the model never needed scaling",
+      "The train-test split ratio was wrong, leaving too little data to test on"
     ],
     "explain": "The scaler's means and spreads were computed WITH the test rows, so training silently used facts about data it was supposed to never see. Every preprocessing step must be fitted on training data only.",
     "simple": "It's like glimpsing the exam paper while writing your study notes — even a peek at 'the average answer' helps unfairly. The fix is mechanical: fit every preprocessing step inside the training fold only. Pipelines exist to make that automatic.",
@@ -353,10 +353,10 @@
     "q": "During training you track validation loss after every epoch. It falls, bottoms out at epoch 30, then creeps upward while training loss keeps falling. What's the move?",
     "choices": [
       "Stop at (or roll back to) the validation minimum — early stopping",
-      "Train longer until validation recovers",
-      "Lower the validation set size",
-      "Raise the learning rate",
-      "Ignore it — training loss is what counts"
+      "Keep training until the validation loss turns back down on its own",
+      "Shrink the validation set so its loss curve stops wobbling upward",
+      "Raise the learning rate to push the model past the validation plateau",
+      "Disregard it — only the falling training loss reflects real learning"
     ],
     "explain": "The upward creep is overfitting happening live: the model is now memorising training noise. Early stopping freezes the model at its best-generalising moment — regularisation implemented as a stopwatch.",
     "simple": "Training is like toasting bread: underdone, perfect, burnt — in that order, always. The validation curve tells you the moment of perfect toast. Early stopping is simply taking the toast out then, instead of admiring how 'done' it can get.",
@@ -402,10 +402,10 @@
     "q": "Five diverse models each score 84–88% alone. Averaging their predictions scores 91% — better than every member. What makes that possible?",
     "choices": [
       "Their errors differ — where one stumbles, the others outvote it",
-      "Averaging always adds points",
-      "The best model dominates the average",
-      "The models shared their weights",
-      "It's a rounding artefact"
+      "Averaging predictions reliably adds a few points to any set of models",
+      "The single strongest member quietly dominates the pooled average",
+      "The five models shared weights, letting them reinforce one another",
+      "It is just a rounding artefact of averaging five nearby probabilities"
     ],
     "explain": "Ensembling works when errors are DECORRELATED: each model is wrong on different cases, so the majority is right more often than any individual. Diversity, not individual brilliance, is the fuel.",
     "simple": "Five friends who make DIFFERENT mistakes correct each other; five clones of the best friend just repeat his mistakes louder. That's why ensembles mix model types, features and data views — disagreement among the right answers is harmless; disagreement among the errors is gold.",
@@ -448,10 +448,10 @@
     "q": "First day on a new classification problem. Before any tuning, what two numbers should you establish to anchor everything that follows?",
     "choices": [
       "The majority-class baseline and a simple model's honest score",
-      "The maximum possible accuracy and AUC",
-      "The dataset size and feature count",
-      "The best-case and worst-case latency",
-      "The team's deadline and budget"
+      "The highest accuracy and AUC the problem could ever possibly reach",
+      "The dataset's total row count and its full number of features",
+      "The best-case and worst-case prediction latency you can budget for",
+      "The project's final deadline and its total available compute budget"
     ],
     "explain": "The do-nothing baseline tells you what zero skill looks like; a quick simple model (logistic regression, small tree) tells you what cheap skill looks like. Every later 'improvement' is measured against these anchors — without them, 90% might mean nothing.",
     "simple": "Numbers only mean something next to other numbers. '92% accurate!' — but the always-say-no rock scores 91%, so you've bought one point. Plant the two flags first: what does doing nothing score, what does something trivial score. THEN start climbing.",
@@ -493,10 +493,10 @@
     "q": "Two candidates for a live support-ticket router: model A, 94% accurate at 900 ms per prediction; model B, 92% at 15 ms. The SLA gives you 100 ms. What's the right engineering call?",
     "choices": [
       "Ship B — A's accuracy is worthless if its answers arrive too late",
-      "Ship A — accuracy always wins",
-      "Ship A and relax the SLA",
-      "Ship both and average them",
-      "Ship neither until A gets faster"
+      "Ship A — its two extra accuracy points outweigh any latency cost",
+      "Ship A and negotiate the SLA up to a more forgiving latency limit",
+      "Ship both and average their outputs to split the difference fairly",
+      "Ship neither until A has been distilled back under the time budget"
     ],
     "explain": "A model that violates its latency budget doesn't have 94% accuracy in production — it has 0% availability. Serving constraints (latency, memory, cost) are hard requirements that shortlist the models BEFORE accuracy ranks them.",
     "simple": "The brilliant expert who answers every question in fifteen minutes is useless on a live phone line. Production models are hired for a JOB: right enough, fast enough, cheap enough — in that combined order, not accuracy alone.",

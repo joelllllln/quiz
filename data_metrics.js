@@ -3,7 +3,7 @@
 
 {
   q: "A classifier's predictions are compared against the truth. Every single prediction lands in one of exactly four buckets. Which four?",
-  choices: ["Caught, missed, false alarm, correct pass", "Right, wrong, unsure, skipped", "High, low, over, under", "Train, test, validate, deploy", "Precise, recalled, filtered, flagged"],
+  choices: ["Caught, missed, false alarm, correct pass", "True, false, positive, and negative labels", "Precision, recall, accuracy, and F1 score", "Sensitivity, specificity, fallout, dropout", "Positive, negative, neutral, and unclassified"],
   explain: "True positive (caught it), false negative (missed it), false positive (false alarm), true negative (correctly left alone). Every metric you'll ever meet is built from these four counts.",
   simple: "Think of a guard dog: it can bark at a burglar (caught), sleep through a burglar (missed), bark at the postman (false alarm), or ignore the postman (correct pass). Four buckets — every judgement of any classifier starts by counting them.",
   widget: {
@@ -25,7 +25,7 @@
 
 {
   q: "Your fraud model scores 96% accuracy. Then you learn 96% of all transactions are legitimate. What has the model necessarily proven?",
-  choices: ["Nothing — saying 'legit' every time also scores 96%", "It catches most fraud", "It beats any simpler model", "Its precision is at least 96%", "Its errors are balanced"],
+  choices: ["Nothing — saying 'legit' every time also scores 96%", "It correctly labels the fraud cases at least 96% of the time", "Its precision on the fraud class is also about 96%", "It clearly outperforms a naive majority-class baseline", "Both error types occur at roughly equal rates"],
   explain: "Accuracy = (TP+TN)/all. On 96/4 data, a model that never flags anything gets 96% from true negatives alone. Accuracy on imbalanced data mostly measures the imbalance.",
   simple: "A rock with 'LEGIT' painted on it scores 96% here. Until your model beats the rock, its accuracy is decor. On lopsided data, ask what happened to the rare class — accuracy won't tell you.",
   widget: {
@@ -47,7 +47,7 @@
 
 {
   q: "Of all the emails your filter FLAGGED as spam, what fraction really were spam? Which metric is this?",
-  choices: ["Precision", "Recall", "Accuracy", "F1 score", "Specificity"],
+  choices: ["Precision", "Sensitivity", "F-measure", "Fall-out rate", "Detection rate"],
   explain: "Precision = TP / (TP + FP): of everything flagged, how much was right. It's the 'trustworthiness of the alarm' — high precision means when it fires, you believe it.",
   simple: "Precision answers: 'when the dog barks, is it really a burglar?' A barky dog that cries wolf has low precision. It says nothing about burglars it slept through — that's the other metric's job.",
   widget: {
@@ -69,7 +69,7 @@
 
 {
   q: "Ten emails arrive; four are really spam. Of those four real spams, how many did the filter catch? Which metric asks this?",
-  choices: ["Recall", "Precision", "Accuracy", "Specificity", "Lift"],
+  choices: ["Recall", "Precision", "Miss rate", "Fall-out", "Lift"],
   explain: "Recall = TP / (TP + FN): of the things that were actually positive, the fraction you caught. It's the 'how much slipped past' metric — every miss hurts it directly.",
   simple: "Recall answers: 'of the four real burglars, how many did the dog bark at?' Sleep through one and recall drops to 3/4. It doesn't care how often the dog barked at postmen — only how many burglars got through.",
   widget: {
@@ -91,7 +91,7 @@
 
 {
   q: "You lower the flag cutoff to catch more real cases. As recall rises, what does precision typically do — and why?",
-  choices: ["Falls — the wider net also scoops up more false alarms", "Rises with it — both love aggression", "Stays fixed by definition", "Becomes equal to recall", "Turns negative"],
+  choices: ["Falls — the wider net also scoops up more false alarms", "Rises too, since catching more positives lifts both at once", "Holds steady, because the threshold cancels out of it", "Climbs, as every extra catch is another true positive", "Drops to zero the moment recall reaches 100%"],
   explain: "One knob, two metrics, opposite appetites: aggression catches more positives (recall up) but drags in more negatives (precision down). You choose a point on the trade-off, not a victory over it.",
   simple: "Cast a wider fishing net: you'll catch more of the fish you want (recall up) AND more old boots (precision down). No net size gives you all fish, no boots — you pick the compromise your kitchen can live with.",
   widget: {
@@ -113,7 +113,7 @@
 
 {
   q: "A model has precision 100% but recall 20%. Its F1 score is about 33%, far below the 60% average. Why is F1 built to punish this?",
-  choices: ["A model great at one and awful at the other is awful in practice", "F1 always halves the average", "Recall matters more than precision", "The maths prevents scores above 50%", "F1 rewards only balanced datasets"],
+  choices: ["A model great at one and awful at the other is awful in practice", "It simply averages precision and recall, then halves the result", "It weights recall more heavily than precision by design", "It multiplies the two scores together, so a small one crushes the total", "It caps the score whenever the two inputs disagree sharply"],
   explain: "F1 is the HARMONIC mean, which is dragged toward the smaller number. A pathologically cautious model (perfect precision, terrible recall) shouldn't score 'medium' — F1 makes lopsidedness expensive.",
   simple: "Would you hire a guard who barks only once a year — always correctly — while forty burglars stroll past? The simple average says '60%, not bad'. F1 says 'one great skill can't excuse one useless one' and scores it 33%.",
   widget: {
@@ -135,7 +135,7 @@
 
 {
   q: "Precision 100%, recall 20% again. Arithmetic mean says 60%; harmonic mean (F1) says 33%. What property of the harmonic mean causes the difference?",
-  choices: ["It is dominated by the smaller of the two numbers", "It squares both numbers first", "It ignores precision entirely", "It subtracts the difference", "It rounds down aggressively"],
+  choices: ["It is dominated by the smaller of the two numbers", "It takes the geometric mean of the two values first", "It gives precision and recall unequal weights", "It squares both values before averaging them", "It inverts both values but forgets to invert back"],
   explain: "Harmonic mean = 2PR/(P+R). If R is tiny, the product PR is tiny no matter how big P is — so the result hugs the weak number. Arithmetic mean lets a strong number carry a weak one; harmonic refuses.",
   simple: "Arithmetic averaging lets a 100 rescue a 20. The harmonic mean works like resistors in parallel or speeds over a round trip: the slow leg dominates. Drive 100 mph out and 20 mph back — your average speed is 33, not 60. F1 is that same maths.",
   widget: {
@@ -160,7 +160,7 @@
 
 {
   q: "Two deployments of one cancer-screening model: clinic A hates missed cancers; clinic B is drowning in follow-up costs from false alarms. Who should run which cutoff?",
-  choices: ["A runs a low cutoff (recall first); B runs a higher one (precision first)", "Both run 0.5 — it's the standard", "A runs high, B runs low", "Both run whatever maximises accuracy", "Cutoffs can't differ on one model"],
+  choices: ["A runs a low cutoff (recall first); B runs a higher one (precision first)", "Both should pick whichever single cutoff maximizes overall accuracy", "A raises its cutoff for caution; B lowers its own to catch every case", "They must share one cutoff, then have clinic A re-check the borderline flags", "Both keep 0.5 but change their staffing budgets to cope with errors"],
   explain: "A's nightmare is a false negative → flag aggressively, accept false alarms. B's constraint is false-positive cost → flag conservatively. One model, two cutoffs, both correct FOR THEIR COSTS.",
   simple: "The question 'what's the right cutoff?' is really 'which mistake hurts more HERE?'. Missing cancer is catastrophic → bark at shadows. Follow-ups bankrupting the clinic → only bark when sure. Same dog, different houses, different training.",
   widget: {
@@ -182,7 +182,7 @@
 
 {
   q: "A ROC curve plots a model's behaviour as the cutoff sweeps from strict to lenient. What exactly are its two axes?",
-  choices: ["Catch rate (TPR) against false-alarm rate (FPR)", "Precision against recall", "Accuracy against cutoff", "Errors against training size", "Score against probability"],
+  choices: ["Catch rate (TPR) against false-alarm rate (FPR)", "Recall on the y-axis, precision on the x-axis", "True-positive rate against the decision threshold", "Sensitivity against specificity, not its complement", "Precision against the false-alarm rate (FPR)"],
   explain: "Each cutoff produces one (FPR, TPR) pair; sweeping the cutoff traces the whole curve. Up = catching more real positives; right = false-alarming on more real negatives.",
   simple: "The ROC curve is your model's entire menu of trade-offs on one plot: every point is 'at some cutoff, we catch this % of the real ones while falsely alarming on that % of the innocent'. Moving the cutoff just walks you along the menu.",
   widget: {
@@ -204,7 +204,7 @@
 
 {
   q: "Model A has ROC-AUC 0.93; model B has 0.71. Without picking any threshold, what does that difference tell you?",
-  choices: ["A ranks a random positive above a random negative far more reliably", "A is 22% more accurate", "A has higher precision at 0.5", "B was trained on less data", "A's cutoff is better placed"],
+  choices: ["A ranks a random positive above a random negative far more reliably", "A misclassifies far fewer cases at the standard 0.5 cutoff", "A's accuracy runs about 22 points higher at every cutoff", "A separates the two classes with a wider probability margin overall", "A's precision-recall curve dominates B's at every point"],
   explain: "AUC has a beautiful meaning: pick one random positive and one random negative — AUC is the probability the model scores the positive higher. It measures RANKING quality, before any threshold exists.",
   simple: "Hand the model one real fraud and one legit transaction and ask 'which is which?'. Model A gets that little duel right 93% of the time; B only 71%. AUC is the duel-winning rate — a threshold-free measure of whether the model's scores mean anything.",
   widget: {
@@ -226,7 +226,7 @@
 
 {
   q: "A colleague's model reports ROC-AUC = 0.5. What have they built?",
-  choices: ["A coin-flip — its scores carry no ranking information", "A perfectly calibrated model", "A model with 50% accuracy at best", "An excellent model for balanced data", "A model needing a higher cutoff"],
+  choices: ["A coin-flip — its scores carry no ranking information", "A model that is right on exactly half of its predictions", "A perfectly balanced classifier that errs equally on both classes", "A well-calibrated model whose probabilities are honest", "A model that only needs its cutoff nudged off 0.5"],
   explain: "AUC 0.5 means a random positive outranks a random negative exactly half the time — pure chance. The ROC curve lies on the diagonal. No threshold anywhere along it can rescue uninformative scores.",
   simple: "AUC 0.5 is the duel-winning rate of a shrug. The model's scores might as well be lottery numbers: shown one fraud and one legit case, it picks correctly half the time — same as flipping a coin with a lab coat on.",
   widget: {
@@ -248,7 +248,7 @@
 
 {
   q: "A batch run produced: 8 caught (TP), 2 false alarms (FP), 4 missed (FN), 26 correct passes (TN). Compute the precision.",
-  choices: ["80%", "67%", "40%", "94%", "25%"],
+  choices: ["80%", "67%", "85%", "73%", "57%"],
   explain: "Precision = TP/(TP+FP) = 8/(8+2) = 8/10 = 80%. Only the flagged pile matters: 10 flags, 8 of them right.",
   simple: "Count what the model FLAGGED: 8 real + 2 false = 10 flags. Right flags out of all flags: 8 out of 10 — 80%. (The 4 misses belong to recall's question, not this one.)",
   widget: {
@@ -270,7 +270,7 @@
 
 {
   q: "Same run: 8 caught (TP), 2 false alarms (FP), 4 missed (FN), 26 passes (TN). Compute the recall.",
-  choices: ["67%", "80%", "50%", "89%", "31%"],
+  choices: ["67%", "80%", "73%", "85%", "93%"],
   explain: "Recall = TP/(TP+FN) = 8/(8+4) = 8/12 ≈ 67%. The denominator is everything that was REALLY positive: the 8 you caught plus the 4 you missed.",
   simple: "Count what was REALLY there: 8 caught + 4 missed = 12 real positives. Caught 8 of 12 — two-thirds, 67%. (The 2 false alarms belong to precision's question.)",
   widget: {
@@ -292,7 +292,7 @@
 
 {
   q: "Fraud detection: 1 positive per 1,000 transactions. The team debates which headline metric to track. Which choice respects the imbalance?",
-  choices: ["Precision and recall on the fraud class", "Overall accuracy", "True-negative rate", "Mean score across all rows", "Training log-loss"],
+  choices: ["Precision and recall on the fraud class", "Overall accuracy across all the transactions", "The true-negative rate on the legit class", "Accuracy weighted by each transaction's value", "Mean predicted score across every row"],
   explain: "With 999:1 imbalance, accuracy and TN-rate are ~99.9% for a do-nothing model. Precision and recall interrogate the rare class directly: of our fraud flags, how many are real? Of real frauds, how many do we catch?",
   simple: "When the interesting thing is rare, judge the model ONLY on how it treats the rare thing. Precision and recall never even glance at the ocean of easy negatives — which is exactly what makes them the right lens here.",
   widget: {
@@ -314,7 +314,7 @@
 
 {
   q: "Your model is fixed and deployed. Next quarter, the business doubles the cost it assigns to false alarms. What should change — and what shouldn't?",
-  choices: ["Move the cutoff; the model and its ROC curve stay the same", "Retrain from scratch immediately", "Change the test set", "Recompute the AUC downward", "Nothing at all can change"],
+  choices: ["Move the cutoff; the model and its ROC curve stay the same", "Retrain the model so it raises fewer false alarms now", "Recompute the ROC-AUC with the new cost weights applied", "Gather a fresh test set that reflects the new cost ratio", "Raise the cutoff and refit the model on the new costs together"],
   explain: "Cost changes move you to a different point on the SAME curve — raise the cutoff, trade recall for precision. The model's ranking ability (the curve, the AUC) is untouched by business arithmetic.",
   simple: "The model is the menu; the cutoff is your order. When prices change you order a different dish — you don't burn down the restaurant. Slide along the curve; retrain only when the CURVE itself isn't good enough anywhere.",
   widget: {

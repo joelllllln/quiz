@@ -4,10 +4,10 @@
     "q": "In sklearn you wrap StandardScaler and a classifier into one Pipeline object, then cross-validate the pipeline. What does that buy that separate steps don't?",
     "choices": [
       "The scaler is re-fitted inside each training fold — leakage becomes impossible by construction",
-      "It runs twice as fast",
-      "It removes the need for a test set",
-      "It tunes hyperparameters automatically",
-      "It converts data to NumPy"
+      "It fits the scaler once on the entire dataset up front, then shares those statistics across all folds",
+      "It automatically selects which features are worth scaling and leaves the remaining columns untouched",
+      "It replaces the cross-validation loop with a single internal held-out validation split to save fits",
+      "It tunes the scaler's own hyperparameters jointly with the classifier's during every fold"
     ],
     "explain": "cross_val_score(pipeline) refits EVERY step on each fold's training part only. Scale-then-split done by hand leaks fold statistics; the Pipeline makes the correct order structural, not disciplinary.",
     "simple": "A Pipeline staples the preprocessing to the model so they travel as one unit. Wherever the unit goes — a CV fold, production — the scaler learns only from that context's training data. The leak you'd have to remember to avoid becomes a leak you CAN'T commit.",
@@ -37,10 +37,10 @@
     "q": "Your dataframe mixes numeric columns (scale them) and categorical columns (one-hot them). Which sklearn tool routes each column to its own preprocessing?",
     "choices": [
       "ColumnTransformer",
-      "StandardScaler with a flag",
-      "A second Pipeline",
-      "LabelEncoder on everything",
-      "np.hstack after manual prep"
+      "TransformedTargetRegressor",
+      "FeatureUnion of both transformers",
+      "make_column_selector on its own",
+      "OneHotEncoder with a numeric flag"
     ],
     "explain": "ColumnTransformer applies different transformers to different column sets in parallel — scaler to numerics, encoder to categoricals — and concatenates the results, all fit-safe inside a Pipeline.",
     "simple": "Different columns need different treatment: you don't one-hot a salary or z-score a colour. ColumnTransformer is the mailroom: each column gets routed to the right machine, and everything comes out stitched back together, ready for the model.",
@@ -71,10 +71,10 @@
     "q": "Your search space has 6 hyperparameters. GridSearchCV would need 15,000 fits to cover it. What does RandomizedSearchCV offer instead?",
     "choices": [
       "Sample random combinations — near-best results from a small, fixed budget of fits",
-      "Skip cross-validation to save time",
-      "Search only the first two parameters",
-      "A coarser grid with the same coverage",
-      "Parallel fits with no other change"
+      "Keep sampling combinations until the validation score stops improving, then halt on its own",
+      "Successively halve the candidate set, keeping only the top performers into each next round",
+      "Enumerate the full 15,000-cell grid but evaluate the folds in a shuffled, random order",
+      "Test every combination against a single random fold instead of all five to cut cost"
     ],
     "explain": "Random search samples the space instead of enumerating it: 100 random combinations usually land within a whisker of the full grid's best, because good regions are areas, not single points — and you control the budget exactly.",
     "simple": "A full grid is tasting every dish on a 15,000-item menu. Random search tastes 100 random dishes: you'll almost certainly find something excellent, because excellence isn't hiding in one magic cell — it covers whole regions of the menu.",
@@ -119,10 +119,10 @@
     "q": "cross_val_score(model, X, y, cv=5) returns [0.84, 0.79, 0.86, 0.81, 0.85]. What's the professional way to report this?",
     "choices": [
       "Mean ± spread: 0.83 ± 0.03 — the spread is part of the result",
-      "Just the best fold: 0.86",
-      "Just the worst fold: 0.79, to be safe",
-      "The first fold: 0.84",
-      "The median times the mean"
+      "The mean alone: 0.83 — the spread only matters for regression tasks",
+      "A t-test p-value from the five folds tested against zero accuracy",
+      "The best fold, 0.86, since CV exists to surface the strongest split",
+      "The median fold, more robust to the two low outlier folds"
     ],
     "explain": "The five scores are five estimates of the same quantity; their mean is your best guess and their spread is your uncertainty. Comparing models by best-fold is cherry-picking; ignoring spread makes 0.83 vs 0.84 look meaningful when it isn't.",
     "simple": "Five folds are five measurements of one thing. Report like a scientist: the average, and how much the measurements wobbled. If model A is 83 ± 3 and model B is 84 ± 3, you have NOT found a winner — and knowing that saves you from shipping noise.",
@@ -151,10 +151,10 @@
     "q": "train_test_split(X, y, test_size=0.2, stratify=y) — what does the stratify argument guarantee?",
     "choices": [
       "Both splits keep the original class proportions — vital when a class is rare",
-      "The split is the same on every run",
-      "The test set gets the hardest rows",
-      "Rows are sorted before splitting",
-      "Twenty percent of each FEATURE is held out"
+      "Both splits keep the same feature distributions — vital when the features are skewed",
+      "Each class is oversampled so the training set comes out perfectly balanced",
+      "Rare classes are moved entirely into the training set so the model can learn them",
+      "The test set is drawn only from the majority class to keep the metric stable"
     ],
     "explain": "A purely random 20% cut of data with a 5% minority class can easily grab 2% or 9% of it — or on small data, none. Stratification samples within each class so both splits mirror the true mix.",
     "simple": "Random splitting is a lottery, and rare classes buy few tickets. Stratify deals each class separately — 'give the test set exactly its fair share of frauds' — so your evaluation isn't at the mercy of one unlucky shuffle.",
@@ -187,10 +187,10 @@
     "q": "GridSearchCV(model, params, scoring='recall') and the same search with scoring='accuracy' return DIFFERENT best models. Why is that expected?",
     "choices": [
       "The search optimises whatever you measure — different yardsticks crown different champions",
-      "One of the searches must be buggy",
-      "Recall and accuracy are the same for tuned models",
-      "The random seed changed",
-      "scoring only changes the printout"
+      "GridSearchCV's final refit step silently re-selects the winner on accuracy, not your scoring",
+      "Recall and accuracy rank every candidate identically, so one of the two runs is misconfigured",
+      "The scoring string only relabels the printed number and never changes which model actually wins",
+      "Different random CV folds between the two runs happen to crown two different winning models"
     ],
     "explain": "Hyperparameter search is optimisation against the scoring function. A recall-first yardstick favours aggressive, catch-everything settings; accuracy favours majority-pleasing ones. The scoring argument IS the business objective, encoded.",
     "simple": "Ask 'who's tallest?' and 'who's fastest?' and you crown different athletes — no contradiction. The scoring parameter is the question. Leave it on the default (accuracy) for a fraud problem and you've silently asked the wrong question of 15,000 model fits.",
@@ -233,10 +233,10 @@
     "q": "Some sklearn classifiers offer predict_proba, others decision_function, some both. What's the difference?",
     "choices": [
       "predict_proba returns calibrated-ish probabilities (0–1); decision_function returns raw unbounded scores",
-      "They're aliases for the same output",
-      "decision_function is only for regression",
-      "predict_proba is deprecated",
-      "decision_function returns class labels"
+      "predict_proba outputs the raw class margins; decision_function normalises those margins into the 0–1 range",
+      "decision_function returns probabilities that predict_proba then rounds off into hard 0/1 class labels",
+      "Both return values in 0–1, but decision_function drops the negative-class column to save memory",
+      "predict_proba is only defined for binary tasks; decision_function is its multiclass counterpart"
     ],
     "explain": "decision_function exposes the model's native score (a margin, a log-odds — any real number). predict_proba maps scores into probabilities. Ranking tasks can use either; cost-based thresholds need probabilities.",
     "simple": "decision_function is the model thinking out loud in its native units ('+1.7 margins'); predict_proba is the same opinion translated into percentages. For sorting by risk, either works. For 'act above 30% risk', you need the translation.",
@@ -277,10 +277,10 @@
     "q": "Your gradient-boosted model says '90% confident' but such cases turn out positive only 70% of the time. Which sklearn tool repairs the numbers without retraining the model?",
     "choices": [
       "CalibratedClassifierCV — learn a mapping from claimed to actual probabilities on held-out folds",
-      "GridSearchCV with more iterations",
-      "StandardScaler on the outputs",
-      "A lower decision threshold",
-      "class_weight='balanced'"
+      "IsotonicRegression fit on the model's own training predictions to reshape the probability values",
+      "Refit the model with a sigmoid output layer so its probabilities self-correct while training runs",
+      "Platt scaling applied to the raw scores while reusing the original training data for the fit",
+      "GridSearchCV lowering the decision threshold until claimed rates line up with the actual rates"
     ],
     "explain": "Calibration wraps the fitted model and fits a small corrective curve (sigmoid or isotonic) on out-of-fold predictions: claimed 90% → calibrated ~70%. Ranking is untouched; the probability VALUES become honest.",
     "simple": "The model is a weather forecaster whose '90% chance of rain' days only rain 70% of the time. You don't fire the forecaster — you keep a correction chart: 'when they say 90, hear 70'. CalibratedClassifierCV learns that chart from history.",
@@ -323,10 +323,10 @@
     "q": "A forest's feature_importances_ ranks user_id_hash third most important. Permutation importance on validation data scores it at zero. Which do you believe, and why?",
     "choices": [
       "Permutation — impurity importance over-credits high-cardinality columns the model memorised",
-      "feature_importances_ — it's built into the model",
-      "Neither — importance can't be measured",
-      "Both — average them",
-      "Whichever ranks income first"
+      "feature_importances_ — permutation importance is unreliable whenever the validation features correlate",
+      "feature_importances_ — shuffling validation columns just injects noise that zeroes out genuine signal",
+      "Neither — one leaking ID column proves the whole importance ranking is corrupted and untrustworthy",
+      "Permutation — but only because impurity scores are never normalised to sum to one across features"
     ],
     "explain": "A near-unique ID offers thousands of split points, so trees split on it to memorise rows — earning impurity credit while generalising nothing. Permutation asks the honest question: does shuffling this column hurt VALIDATION performance? For an ID: no.",
     "simple": "The ID column is a cheat sheet: the forest used it to memorise individual rows, and the built-in score rewards the memorising. Permutation runs the real test — scramble the column and see if unseen-data performance drops. Scrambling a cheat sheet costs nothing real.",
@@ -369,10 +369,10 @@
     "q": "sklearn offers VotingClassifier(voting='hard'/'soft') and StackingClassifier. Rank them by how much information each combination strategy uses.",
     "choices": [
       "Hard uses labels only; soft adds probabilities; stacking LEARNS the combination — most informed",
-      "Hard uses the most information of the three",
-      "They use identical information differently named",
-      "Soft voting ignores the base models",
-      "Stacking uses labels only"
+      "Soft voting uses labels only; hard adds probabilities; stacking averages both — the most informed",
+      "All three average the base probabilities and differ only in how those averages get weighted",
+      "Stacking uses labels only; both soft and hard train a meta-model on the base probabilities",
+      "Hard and soft both learn trust weights; stacking just takes a plain unweighted majority vote"
     ],
     "explain": "Hard voting counts predicted labels. Soft voting averages predict_proba — a 51% opinion and a 99% opinion now differ. Stacking goes further: a meta-model TRAINS on the base outputs, learning per-situation trust.",
     "simple": "Three committee designs: a show of hands (hard), a show of hands where you say HOW sure you are (soft), and a chairperson who has studied everyone's track record (stacking). Each step up uses more information — and usually scores a little higher.",
