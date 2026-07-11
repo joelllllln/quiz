@@ -101,33 +101,87 @@
   var DAILY_N = 50;
   function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function dailyQuestions() {
-    var objs = [], origins = [];
-    TOPICS.forEach(function (t) { t.levels.forEach(function (L) { (QUESTIONS[L.qk] || []).forEach(function (q) { objs.push(q); origins.push(t.name); }); }); });
-    var idx = objs.map(function (_, i) { return i; });
-    var rnd = mulberry32(hashStr('datasense-daily::' + today()));
+
+  // Index every question once, tagged with topic name, difficulty level (1/2/3), and whether it's a definition question.
+  var QINDEX = null;
+  function normw(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function isDefStem(s) { return /\bwhat (is|are|does|makes|do)\b/i.test(s) || (/^\s*(in [^,]+,\s*)?(what|which)\b/i.test(s) && /\b(mean|means|called|represents?|measures?)\b/i.test(s)); }
+  function buildIndex() {
+    if (QINDEX) return QINDEX;
+    var P = window.PRIMERS || {};
+    QINDEX = [];
+    TOPICS.forEach(function (t) {
+      var terms = (P[t.key] ? P[t.key].terms : []).map(function (x) { return normw(x.t.split('(')[0].split('/')[0]); });
+      t.levels.forEach(function (L, li) {
+        (QUESTIONS[L.qk] || []).forEach(function (q) {
+          var rn = normw(q.widget && q.widget.reveal && q.widget.reveal.name);
+          var termMatch = terms.some(function (tn) { return tn.length >= 3 && (rn.indexOf(tn) >= 0 || (rn.length >= 3 && tn.indexOf(rn) >= 0)); });
+          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: termMatch && isDefStem(q.q) });
+        });
+      });
+    });
+    return QINDEX;
+  }
+  var DEFAULT_FILTER = { type: 'both', diff: 'all' };
+  function getFilter() {
+    var f; try { f = JSON.parse(localStorage.getItem('ds_daily_filter') || 'null'); } catch (e) { f = null; }
+    if (!f) return { type: 'both', diff: 'all' };
+    return { type: (f.type === 'def' || f.type === 'q') ? f.type : 'both', diff: (f.diff === '1' || f.diff === '2' || f.diff === '3') ? f.diff : 'all' };
+  }
+  function setFilter(f) { try { localStorage.setItem('ds_daily_filter', JSON.stringify(f)); } catch (e) {} }
+  function filterSig(f) { return f.type + ':' + f.diff; }
+  function filterLabel(f) {
+    var t = f.type === 'def' ? 'Definitions' : f.type === 'q' ? 'Applied questions' : 'Definitions & questions';
+    var d = f.diff === 'all' ? 'all levels' : 'Level ' + f.diff;
+    return t + ' · ' + d;
+  }
+  function poolFor(f) {
+    return buildIndex().filter(function (e) {
+      if (f.type === 'def' && !e.def) return false;
+      if (f.type === 'q' && e.def) return false;
+      if (f.diff !== 'all' && e.level !== +f.diff) return false;
+      return true;
+    });
+  }
+  function dailyQuestions(f) {
+    var pool = poolFor(f);
+    var idx = pool.map(function (_, i) { return i; });
+    var rnd = mulberry32(hashStr('datasense-daily::' + today() + '::' + filterSig(f)));
     for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
     idx = idx.slice(0, Math.min(DAILY_N, idx.length));
-    return { qs: idx.map(function (k) { return objs[k]; }), origins: idx.map(function (k) { return origins[k]; }) };
+    return { qs: idx.map(function (k) { return pool[k].q; }), origins: idx.map(function (k) { return pool[k].topic; }) };
   }
-  function loadDaily() {
+  // Daily progress is stored per day, per filter signature: { date, sets: { 'sig': {pos,correct,results,done} } }
+  function readDailyStore() {
     var raw; try { raw = JSON.parse(localStorage.getItem('ds_daily') || 'null'); } catch (e) { raw = null; }
-    if (!raw || raw.date !== today()) return { date: today(), pos: 0, correct: 0, results: [] };
-    return { date: raw.date, pos: raw.pos || 0, correct: raw.correct || 0, results: raw.results || [] };
+    if (!raw || raw.date !== today() || typeof raw.sets !== 'object') return { date: today(), sets: {} };
+    return raw;
+  }
+  function loadDaily(sig) {
+    var store = readDailyStore();
+    var s = store.sets[sig];
+    return s ? { pos: s.pos || 0, correct: s.correct || 0, results: s.results || [] } : { pos: 0, correct: 0, results: [] };
   }
   function saveDaily(done) {
-    try { localStorage.setItem('ds_daily', JSON.stringify({ date: today(), pos: S.i, correct: S.correct, results: S.results, done: !!done })); } catch (e) {}
+    try {
+      var store = readDailyStore();
+      store.sets[S.sig] = { pos: S.i, correct: S.correct, results: S.results, done: !!done };
+      localStorage.setItem('ds_daily', JSON.stringify(store));
+    } catch (e) {}
   }
   function startDaily() {
-    var d = loadDaily();
-    var dq = dailyQuestions();
+    var f = getFilter();
+    var sig = filterSig(f);
+    var d = loadDaily(sig);
+    var dq = dailyQuestions(f);
+    if (!dq.qs.length) return;
     if (d.pos >= dq.qs.length) {
-      S = { daily: true, qs: dq.qs, origins: dq.origins, i: dq.qs.length, correct: d.correct, results: d.results, level: {}, topic: {} };
+      S = { daily: true, sig: sig, qs: dq.qs, origins: dq.origins, i: dq.qs.length, correct: d.correct, results: d.results, level: {}, topic: {} };
       return doneDaily();
     }
     begin({ name: 'Daily 50', no: '★', key: '__daily__' },
       { qk: '__daily__', part: 'Daily 50', name: todayLabel() },
-      { qs: dq.qs, origins: dq.origins, daily: true, startAt: d.pos, startCorrect: d.correct, results: d.results });
+      { qs: dq.qs, origins: dq.origins, daily: true, sig: sig, startAt: d.pos, startCorrect: d.correct, results: d.results });
   }
 
   function rememberHTML(q) {
@@ -154,32 +208,59 @@
         '<div class="mast-foot">Multiple choice · questions & answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>'));
 
-    // ---- Daily 50 challenge + lifetime total ----
-    var d = loadDaily();
-    var dq = dailyQuestions();
-    var dn = dq.qs.length;
-    var doneCount = Math.min(d.pos, dn);
-    var isDone = doneCount >= dn;
-    var btnLabel = isDone ? 'Review today →' : (doneCount > 0 ? 'Continue →' : "Start today's 50 →");
-    var progText = isDone
-      ? ('Completed — ' + d.correct + ' / ' + dn + ' correct today · resets tomorrow')
-      : (doneCount > 0
-        ? (doneCount + ' of ' + dn + ' done · ' + d.correct + ' correct so far')
-        : (dn + ' questions drawn from every topic · resets each day'));
-    var pctW = dn ? Math.round(100 * doneCount / dn) : 0;
-    var daily = h('<section class="daily-card' + (isDone ? ' is-done' : '') + '">' +
-      '<div class="daily-main">' +
-        '<div class="daily-eyebrow">Daily Challenge · ' + esc(todayLabel()) + '</div>' +
-        '<h2 class="daily-title">Daily 50</h2>' +
-        '<p class="daily-prog">' + progText + '</p>' +
-        '<div class="daily-bar"><div style="width:' + pctW + '%"></div></div>' +
-      '</div>' +
-      '<div class="daily-side">' +
-        '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
-        '<button class="btn daily-go">' + btnLabel + '</button>' +
-      '</div></section>');
-    daily.querySelector('.daily-go').onclick = startDaily;
-    app.appendChild(daily);
+    // ---- Daily challenge (filterable) + lifetime total ----
+    renderDaily();
+
+    function renderDaily() {
+      var old = app.querySelector('.daily-card');
+      var f = getFilter();
+      var sig = filterSig(f);
+      var dq = dailyQuestions(f);
+      var d = loadDaily(sig);
+      var dn = dq.qs.length;
+      var doneCount = Math.min(d.pos, dn);
+      var isDone = dn > 0 && doneCount >= dn;
+      var btnLabel = dn === 0 ? 'No questions' : isDone ? 'Review →' : (doneCount > 0 ? 'Continue →' : 'Start ' + dn + ' →');
+      var progText = dn === 0
+        ? 'No questions match this combination — try another.'
+        : isDone
+          ? ('Completed — ' + d.correct + ' / ' + dn + ' correct today · resets tomorrow')
+          : (doneCount > 0
+            ? (doneCount + ' of ' + dn + ' done · ' + d.correct + ' correct so far')
+            : (dn + ' questions · ' + filterLabel(f) + ' · resets each day'));
+      var pctW = dn ? Math.round(100 * doneCount / dn) : 0;
+      function chips(kind, current, opts) {
+        return opts.map(function (o) {
+          return '<button class="filt-chip' + (o.v === current ? ' on' : '') + '" data-' + kind + '="' + o.v + '">' + o.t + '</button>';
+        }).join('');
+      }
+      var daily = h('<section class="daily-card' + (isDone ? ' is-done' : '') + '">' +
+        '<div class="daily-main">' +
+          '<div class="daily-eyebrow">Daily Challenge · ' + esc(todayLabel()) + '</div>' +
+          '<h2 class="daily-title">Daily 50</h2>' +
+          '<div class="daily-filters">' +
+            '<div class="filt-row"><span class="filt-lab">Type</span>' +
+              chips('type', f.type, [{ v: 'both', t: 'Both' }, { v: 'def', t: 'Definitions' }, { v: 'q', t: 'Questions' }]) + '</div>' +
+            '<div class="filt-row"><span class="filt-lab">Level</span>' +
+              chips('diff', f.diff, [{ v: 'all', t: 'All' }, { v: '1', t: '1' }, { v: '2', t: '2' }, { v: '3', t: '3' }]) + '</div>' +
+          '</div>' +
+          '<p class="daily-prog">' + progText + '</p>' +
+          '<div class="daily-bar"><div style="width:' + pctW + '%"></div></div>' +
+        '</div>' +
+        '<div class="daily-side">' +
+          '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
+          '<button class="btn daily-go"' + (dn === 0 ? ' disabled' : '') + '>' + btnLabel + '</button>' +
+        '</div></section>');
+      daily.querySelectorAll('[data-type]').forEach(function (b) {
+        b.onclick = function () { var nf = getFilter(); nf.type = b.getAttribute('data-type'); setFilter(nf); renderDaily(); };
+      });
+      daily.querySelectorAll('[data-diff]').forEach(function (b) {
+        b.onclick = function () { var nf = getFilter(); nf.diff = b.getAttribute('data-diff'); setFilter(nf); renderDaily(); };
+      });
+      var go = daily.querySelector('.daily-go');
+      if (dn > 0) go.onclick = startDaily;
+      if (old) app.replaceChild(daily, old); else app.appendChild(daily);
+    }
 
     GROUPS.forEach(function (g) {
       app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
@@ -251,7 +332,7 @@
       topic: topic, level: level,
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
-      daily: !!opts.daily,
+      daily: !!opts.daily, sig: opts.sig || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
