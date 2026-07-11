@@ -93,6 +93,43 @@
   function bestKey(qk) { return (qk === 'easy' || qk === 'medium' || qk === 'hard') ? 'ds_best_knn_' + qk : 'ds_best_' + qk; }
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+  /* ---------------- lifetime total + daily challenge ---------------- */
+  function getTotal() { return +(localStorage.getItem('ds_total_correct') || 0); }
+  function bumpTotal() { try { localStorage.setItem('ds_total_correct', getTotal() + 1); } catch (e) {} }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function todayLabel() { try { return new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { return today(); } }
+  var DAILY_N = 50;
+  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function dailyQuestions() {
+    var objs = [], origins = [];
+    TOPICS.forEach(function (t) { t.levels.forEach(function (L) { (QUESTIONS[L.qk] || []).forEach(function (q) { objs.push(q); origins.push(t.name); }); }); });
+    var idx = objs.map(function (_, i) { return i; });
+    var rnd = mulberry32(hashStr('datasense-daily::' + today()));
+    for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
+    idx = idx.slice(0, Math.min(DAILY_N, idx.length));
+    return { qs: idx.map(function (k) { return objs[k]; }), origins: idx.map(function (k) { return origins[k]; }) };
+  }
+  function loadDaily() {
+    var raw; try { raw = JSON.parse(localStorage.getItem('ds_daily') || 'null'); } catch (e) { raw = null; }
+    if (!raw || raw.date !== today()) return { date: today(), pos: 0, correct: 0, results: [] };
+    return { date: raw.date, pos: raw.pos || 0, correct: raw.correct || 0, results: raw.results || [] };
+  }
+  function saveDaily(done) {
+    try { localStorage.setItem('ds_daily', JSON.stringify({ date: today(), pos: S.i, correct: S.correct, results: S.results, done: !!done })); } catch (e) {}
+  }
+  function startDaily() {
+    var d = loadDaily();
+    var dq = dailyQuestions();
+    if (d.pos >= dq.qs.length) {
+      S = { daily: true, qs: dq.qs, origins: dq.origins, i: dq.qs.length, correct: d.correct, results: d.results, level: {}, topic: {} };
+      return doneDaily();
+    }
+    begin({ name: 'Daily 50', no: '★', key: '__daily__' },
+      { qk: '__daily__', part: 'Daily 50', name: todayLabel() },
+      { qs: dq.qs, origins: dq.origins, daily: true, startAt: d.pos, startCorrect: d.correct, results: d.results });
+  }
+
   function rememberHTML(q) {
     var r = q.widget && q.widget.reveal;
     if (!r) return '';
@@ -114,8 +151,35 @@
         '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Vols. 1–2 · Supervised & Unsupervised</span></div>' +
         '<h1>DataSense</h1>' +
         '<p class="mast-sub"><b>Machine learning</b>, learned by doing: ' + totalExercises() + ' exercises across supervised classification, clustering and dimensionality reduction. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
-        '<div class="mast-foot">Multiple choice · answers shuffle on every sitting · progress kept in this browser</div>' +
+        '<div class="mast-foot">Multiple choice · questions & answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>'));
+
+    // ---- Daily 50 challenge + lifetime total ----
+    var d = loadDaily();
+    var dq = dailyQuestions();
+    var dn = dq.qs.length;
+    var doneCount = Math.min(d.pos, dn);
+    var isDone = doneCount >= dn;
+    var btnLabel = isDone ? 'Review today →' : (doneCount > 0 ? 'Continue →' : "Start today's 50 →");
+    var progText = isDone
+      ? ('Completed — ' + d.correct + ' / ' + dn + ' correct today · resets tomorrow')
+      : (doneCount > 0
+        ? (doneCount + ' of ' + dn + ' done · ' + d.correct + ' correct so far')
+        : (dn + ' questions drawn from every topic · resets each day'));
+    var pctW = dn ? Math.round(100 * doneCount / dn) : 0;
+    var daily = h('<section class="daily-card' + (isDone ? ' is-done' : '') + '">' +
+      '<div class="daily-main">' +
+        '<div class="daily-eyebrow">Daily Challenge · ' + esc(todayLabel()) + '</div>' +
+        '<h2 class="daily-title">Daily 50</h2>' +
+        '<p class="daily-prog">' + progText + '</p>' +
+        '<div class="daily-bar"><div style="width:' + pctW + '%"></div></div>' +
+      '</div>' +
+      '<div class="daily-side">' +
+        '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
+        '<button class="btn daily-go">' + btnLabel + '</button>' +
+      '</div></section>');
+    daily.querySelector('.daily-go').onclick = startDaily;
+    app.appendChild(daily);
 
     GROUPS.forEach(function (g) {
       app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
@@ -181,8 +245,16 @@
   }
 
   /* ---------------- exercise ---------------- */
-  function begin(topic, level) {
-    S = { topic: topic, level: level, qs: QUESTIONS[level.qk], i: 0, correct: 0, results: [] };
+  function begin(topic, level, opts) {
+    opts = opts || {};
+    S = {
+      topic: topic, level: level,
+      qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
+      origins: opts.origins || null,
+      daily: !!opts.daily,
+      i: opts.startAt || 0, correct: opts.startCorrect || 0,
+      results: opts.results ? opts.results.slice() : []
+    };
     question(false);
   }
 
@@ -196,7 +268,10 @@
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
 
-    var card = h('<article class="qcard"><div class="q-eyebrow">§ ' + S.topic.name + ' · ' + L.part + ' — ' + L.name +
+    var eyebrow = S.daily
+      ? ('§ Daily 50 · ' + esc((S.origins && S.origins[S.i]) || 'Mixed'))
+      : ('§ ' + esc(S.topic.name) + ' · ' + esc(L.part) + ' — ' + esc(L.name));
+    var card = h('<article class="qcard"><div class="q-eyebrow">' + eyebrow +
       (isRetry ? ' · <span class="retry-note">second attempt</span>' : '') + '</div>' +
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
     card.querySelector('.qtext').textContent = q.q;
@@ -241,7 +316,7 @@
     if (!isRetry) S.results.push(right);
 
     if (right) {
-      if (!isRetry) S.correct++;
+      if (!isRetry) { S.correct++; bumpTotal(); }
       card.appendChild(h('<div class="banner good"><span class="b-label">' + (isRetry ? 'Correct on the second attempt ✓' : 'Correct ✓') + '</span>' +
         '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
       var row = h('<div class="next-row"><button class="btn">Next exercise →</button>' +
@@ -335,12 +410,33 @@
 
   function next() {
     S.i++;
+    if (S.daily) saveDaily(S.i >= S.qs.length);
     if (S.i >= S.qs.length) return done();
     question(false);
   }
 
   /* ---------------- report card ---------------- */
+  function doneDaily() {
+    saveDaily(true);
+    var n = S.qs.length, c = S.correct;
+    var pct = n ? c / n : 0;
+    var msg = pct >= 0.9 ? 'A stellar daily. Come back tomorrow for a fresh 50.' :
+      pct >= 0.6 ? 'Solid daily run — every miss came with its own lab.' :
+      'The daily mixes every topic; today\'s misses are tomorrow\'s strengths.';
+    app.innerHTML = '';
+    var card = h('<div class="result-card">' +
+      '<div class="r-eyebrow">Daily 50 · ' + esc(todayLabel()) + '</div>' +
+      '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
+      '<p class="r-msg">' + msg + ' <span class="small">Lifetime correct: <b>' + getTotal() + '</b></span></p>' +
+      '<div class="dots">' + S.results.map(function (r, i) { return '<span class="dot-q ' + (r ? 'ok' : 'no') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+      '<div class="next-row" style="justify-content:center"><button class="btn ghost">Contents</button></div></div>');
+    card.querySelector('.btn.ghost').onclick = home;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
   function done() {
+    if (S.daily) return doneDaily();
     var n = S.qs.length, c = S.correct;
     var L = S.level;
     var prev = +(localStorage.getItem(bestKey(L.qk)) || -1);
