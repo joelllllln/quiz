@@ -1,4 +1,4 @@
-/* K-Means — Part I: Foundations. choices[0] is always correct (shuffled at render). */
+/* K-Means — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).kmeans1 = [
   {
     "q": "You have 10,000 customers and NO labels of any kind. Clustering promises to 'find the groups'. What is it actually looking for?",
@@ -273,157 +273,271 @@
       "extreme": { "at": "max" },
       "reveal": { "name": "Local optima, restarts & k-means++", "formula": "run n_init times from k-means++ seeds → keep lowest inertia", "text": "Guaranteed convergence ≠ guaranteed good answer. Cheap insurance — many starts, smart seeding — is baked into every serious implementation." }
     }
+  }
+];
+
+(window.QUESTIONS = window.QUESTIONS || {}).kmeans2 = [
+  {
+    "q": "Inertia always falls as k grows, so it can't choose k by itself. The silhouette score can. What does a point's silhouette actually compare?",
+    "choices": [
+      "Its average distance to its OWN cluster vs to the NEAREST OTHER cluster — so the score peaks at good k instead of always falling",
+      "Its distance to the global mean",
+      "The cluster's size vs the biggest cluster",
+      "Inertia before vs after adding a cluster",
+      "Its distance to the two nearest centroids"
+    ],
+    "explain": "silhouette = (b − a) / max(a, b), where a = mean distance to own cluster-mates and b = mean distance to the nearest foreign cluster. Near +1: snug at home, far from the neighbours. Near 0: sitting on a border. Negative: probably mis-assigned. Because it rewards separation as well as tightness, splitting a genuine cluster in two HURTS the score — which is exactly why it peaks where inertia just keeps sliding.",
+    "simple": "Ask every point two questions: 'how close are you to your own gang?' and 'how close is the next-nearest gang?'. A happy point is snug among its own AND far from the rivals. Split a real gang in half and its members are suddenly suspiciously close to a 'rival' — the score drops. That built-in penalty for over-splitting is what inertia lacks.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The score that's allowed to say 'worse'",
+      "world": "A dataset with three natural groups, clustered at k = 2…8. Inertia falls forever; watch what the silhouette does instead.",
+      "xlab": "k (clusters asked for) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "labels": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "8"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "silhouette ×100", "ys": [ 55, 71, 62, 48, 41, 33 ] },
+        { "name": "inertia (scaled)", "ys": [ 82, 55, 40, 31, 25, 18 ] }
+      ],
+      "knob": { "label": "k", "min": 0, "max": 5, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "k=2: two natural groups got welded together — points in the welded pair sit far from their own 'cluster-mates', and silhouette feels it.", "tone": "info" },
+        { "max": 1, "text": "k=3: silhouette peaks at 71 — everyone snug at home, rivals far away. Inertia meanwhile just says 'less than k=2', as it would for ANY increase.", "tone": "info" },
+        { "max": 5, "text": "🤯 From k=4 on, silhouette FALLS while inertia keeps rewarding the split: carving real clusters puts members near 'foreign' points that were their gang-mates a moment ago. A score that can go down is a score that can choose.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Silhouette score", "formula": "s = (b − a) / max(a, b) · a = own-cluster dist, b = nearest-other dist", "text": "sklearn.metrics.silhouette_score. Peaks at good k, flags borderline points (s≈0) and mis-assignments (s<0). Costs O(n²) distances — sample on big data." }
+    }
   },
-
-{
-  q: "Inertia always falls as k grows, so it can't choose k by itself. The silhouette score can. What does a point's silhouette actually compare?",
-  choices: ["Its average distance to its OWN cluster vs to the NEAREST OTHER cluster — so the score peaks at good k instead of always falling", "Its distance to the global mean", "The cluster's size vs the biggest cluster", "Inertia before vs after adding a cluster", "Its distance to the two nearest centroids"],
-  explain: "silhouette = (b − a) / max(a, b), where a = mean distance to own cluster-mates and b = mean distance to the nearest foreign cluster. Near +1: snug at home, far from the neighbours. Near 0: sitting on a border. Negative: probably mis-assigned. Because it rewards separation as well as tightness, splitting a genuine cluster in two HURTS the score — which is exactly why it peaks where inertia just keeps sliding.",
-  simple: "Ask every point two questions: 'how close are you to your own gang?' and 'how close is the next-nearest gang?'. A happy point is snug among its own AND far from the rivals. Split a real gang in half and its members are suddenly suspiciously close to a 'rival' — the score drops. That built-in penalty for over-splitting is what inertia lacks.",
-  widget: {
-    type: "curveStatic", title: "The score that's allowed to say 'worse'",
-    world: "A dataset with three natural groups, clustered at k = 2…8. Inertia falls forever; watch what the silhouette does instead.",
-    xlab: "k (clusters asked for) →", xs: [0,1,2,3,4,5], labels: ["2","3","4","5","6","8"], dec: 0, yunit: "",
-    series: [
-      { name: "silhouette ×100",      ys: [55, 71, 62, 48, 41, 33] },
-      { name: "inertia (scaled)",     ys: [82, 55, 40, 31, 25, 18] }
+  {
+    "q": "You cluster customers on age (18–70) and income (£15k–£150k) without scaling. What has k-means silently done with these two features?",
+    "choices": [
+      "Income's huge numeric range dominates every distance — the clusters are income bands with age effectively ignored",
+      "Both features contribute equally by definition",
+      "Age dominates because it comes first",
+      "k-means auto-normalises internally",
+      "The clusters fail to converge"
     ],
-    knob: { label: "k", min: 0, max: 5, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "k=2: two natural groups got welded together — points in the welded pair sit far from their own 'cluster-mates', and silhouette feels it.", tone: "info" },
-      { max: 1, text: "k=3: silhouette peaks at 71 — everyone snug at home, rivals far away. Inertia meanwhile just says 'less than k=2', as it would for ANY increase.", tone: "info" },
-      { max: 5, text: "🤯 From k=4 on, silhouette FALLS while inertia keeps rewarding the split: carving real clusters puts members near 'foreign' points that were their gang-mates a moment ago. A score that can go down is a score that can choose.", tone: "wow" }
+    "explain": "k-means lives entirely on Euclidean distance, and a £30k income gap contributes (30000)² to the squared distance while a 30-year age gap contributes (30)² — a million times less. Whatever feature has the biggest units OWNS the clustering. StandardScaler before KMeans is not a nicety; it decides what 'similar customers' even means.",
+    "simple": "Distance adds up feature differences, and income differences are numbers in the tens of thousands while age differences are two digits. It's shouting versus whispering: the algorithm literally cannot hear age. Scale both features to comparable ranges first — otherwise you haven't chosen your clustering, your UNITS have.",
+    "widget": {
+      "type": "scaleFeature",
+      "title": "The feature that shouts",
+      "world": "One target customer and four candidates. Who counts as their 'nearest' fellow customer? Shrink income's units step by step and watch the answer change hands.",
+      "aName": "age",
+      "bName": "income",
+      "target": { "name": "customer X", "a": 30, "b": 40000 },
+      "cands": [
+        { "name": "match A · 31y, £41k", "a": 31, "b": 41000 },
+        { "name": "match B · 62y, £40.5k", "a": 62, "b": 40500 },
+        { "name": "match C · 29y, £47k", "a": 29, "b": 47000 },
+        { "name": "match D · 33y, £55k", "a": 33, "b": 55000 }
+      ],
+      "knob": { "label": "Shrink income units by", "min": 0, "max": 4, "step": 0.25, "init": 0 },
+      "insights": [
+        { "max": 0.5, "text": "Raw units: match B — a 62-year-old! — ranks as most similar to our 30-year-old, because their incomes differ by only £500. Age was inaudible.", "tone": "warn" },
+        { "max": 2.5, "text": "Shrinking income's units, age starts getting a vote — the ranking reshuffles even though not a single customer changed.", "tone": "info" },
+        { "max": 4, "text": "🤯 Fully rebalanced, match A (31y, £41k) wins — the genuinely similar person. Every k-means centroid and boundary is built from this same distance, so scaling silently decides ALL of it.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Scaling before k-means", "formula": "StandardScaler → each feature contributes comparably to distance", "text": "Any distance-based method (k-means, kNN, DBSCAN, SVM-RBF) inherits this. Pipeline(StandardScaler(), KMeans(...)) should be muscle memory." }
+    }
+  },
+  {
+    "q": "Clustering 10 million rows, full k-means grinds. MiniBatchKMeans finishes in minutes with near-identical clusters. What corner does it cut?",
+    "choices": [
+      "Each iteration updates centroids using a small random batch instead of every point — tiny quality loss, huge speed-up",
+      "It clusters only the first million rows",
+      "It reduces the data to 2-D first",
+      "It merges similar clusters early",
+      "It skips convergence checking"
     ],
-    extreme: { at: "max" },
-    reveal: { name: "Silhouette score", formula: "s = (b − a) / max(a, b) · a = own-cluster dist, b = nearest-other dist",
-      text: "sklearn.metrics.silhouette_score. Peaks at good k, flags borderline points (s≈0) and mis-assignments (s<0). Costs O(n²) distances — sample on big data." }
+    "explain": "Lloyd's algorithm touches all n points every iteration. MiniBatchKMeans samples a batch (say 1,024 rows), assigns just those, and nudges the affected centroids toward them with a decaying per-centroid learning rate. Each step is noisier but thousands of times cheaper, and over many steps the noise averages out — inertia typically lands within a percent or two of full k-means.",
+    "simple": "To find the average opinion of a city you don't interview everyone every day — you poll. Each small random batch tugs the centroids roughly the right way; the tugs are individually sloppy but their errors cancel over hundreds of batches. You trade a sliver of polish for a massive speed-up, which is often the difference between 'runs' and 'doesn't'.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Polling instead of a census",
+      "world": "Full k-means vs MiniBatchKMeans as the dataset grows: speed-up factor and how much worse the minibatch clusters actually are.",
+      "xlab": "dataset size →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "10k",
+        "100k",
+        "1M",
+        "10M",
+        "100M"
+      ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "speed-up (×)", "ys": [ 3, 8, 20, 45, 70 ] },
+        { "name": "inertia gap vs full (%)", "ys": [ 0.4, 0.6, 0.9, 1.3, 1.8 ] }
+      ],
+      "knob": { "label": "Dataset size", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "At 10k rows the speed-up is modest and full k-means is comfortable — no reason to poll when the census is cheap.", "tone": "info" },
+        { "max": 2, "text": "At a million rows: 20× faster for under 1% worse inertia. The batches' noisy tugs have averaged into essentially the same centroids.", "tone": "info" },
+        { "max": 4, "text": "🤯 100M rows: 70× faster, 1.8% worse — and the honest comparison isn't 'slightly worse clusters', it's 'clusters vs no clusters', because the full run stopped fitting in the night. Stochastic beats exact when exact doesn't finish.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "MiniBatchKMeans", "formula": "per batch: assign, then nudge centroids with a decaying learning rate", "text": "sklearn.cluster.MiniBatchKMeans(batch_size=1024). The same stochastic-approximation idea that powers SGD in deep learning, applied to Lloyd's algorithm." }
+    }
+  },
+  {
+    "q": "A 16-million-colour photo is squeezed to 16 colours using k-means, and it still looks surprisingly good. What is the compression scheme?",
+    "choices": [
+      "Cluster all pixel colours, keep only the 16 centroid colours, and store each pixel as a 4-bit cluster id",
+      "Delete every second pixel",
+      "Store colour differences between neighbours",
+      "Blur then sharpen the image",
+      "Keep the 16 commonest original colours"
+    ],
+    "explain": "Each pixel is a point in 3-D colour space. k=16 k-means finds the 16 colours that best represent the photo's actual palette (better than the 16 most frequent — centroids cover the space), then every pixel stores just its cluster index: 4 bits instead of 24, plus a 16-colour codebook. This is vector quantization — the same replace-each-point-with-its-centroid idea behind classic codecs and modern embedding-index compression.",
+    "simple": "The photo uses millions of colours, but MOST are near-duplicates — thirty shades of the same sky blue. k-means finds the 16 shades that stand in best for everyone, then each pixel just points at its nearest stand-in: 'I'm a number 7'. A pointer to a shade is far smaller than the shade itself. That's compression by clustering: keep the representatives, discard the crowd.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "How many shades does a photo need?",
+      "world": "The same photo quantised with k = 2…256 colours: visual quality against file size. Find where the eye stops noticing.",
+      "xlab": "k (palette colours kept) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "2",
+        "8",
+        "16",
+        "64",
+        "256"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "visual quality (0–100)", "ys": [ 38, 72, 85, 94, 98 ] },
+        { "name": "file size (% of original)", "ys": [ 4, 13, 17, 25, 33 ] }
+      ],
+      "knob": { "label": "Palette size k", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "k=2: every pixel snapped to one of two colours — a woodcut print. The codebook is too small for the photo's real variety.", "tone": "info" },
+        { "max": 2, "text": "k=16: 85% quality at 17% of the size. The centroids landed on the photo's true palette — skies, skin, shadows — because that's where the pixel-points cluster.", "tone": "info" },
+        { "max": 4, "text": "🤯 k=256 is nearly indistinguishable at a third of the size. The exact same trick — replace vectors with their centroid's id — now compresses LLM embeddings in vector databases. 1960s idea, 2020s workload.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Vector quantization", "formula": "store: k centroids (codebook) + per point its centroid id", "text": "k-means as compression: centroids = codebook, assignments = the data. Image palettes, audio codecs, and product-quantized vector search all run on it." }
+    }
+  },
+  {
+    "q": "A colleague one-hot encodes city, favourite brand and subscription tier, then runs k-means. The clusters come out as mush. What's structurally wrong?",
+    "choices": [
+      "Averaging one-hot vectors gives meaningless 'means' (a centroid that's 0.3 London, 0.4 Paris) — k-means needs a space where means make sense; use k-modes or embeddings",
+      "k cannot exceed the number of cities",
+      "One-hot values are too small for distances",
+      "k-means only accepts two features",
+      "Nothing — more iterations will fix it"
+    ],
+    "explain": "k-means alternates 'assign to nearest centroid' with 'set centroid = MEAN of members'. The mean of one-hot rows isn't a valid category — it's a fractional ghost, and distances to ghosts barely separate anyone (any two different cities are the same √2 apart). k-modes swaps means for modes and Hamming distance for Euclidean; alternatives: Gower distance, k-prototypes for mixed data, or learned embeddings that give categories a genuine geometry.",
+    "simple": "k-means' core move is taking averages. What's the average of London, Paris and Tokyo? There isn't one — and the algorithm's answer ('0.3 London + 0.4 Paris + 0.3 Tokyo') is a place nobody lives. Every centroid becomes such a ghost, every distance-to-ghost is equally bland, and the clusters turn to mush. Categorical data needs a method whose core move makes sense for categories — voting for the most common value, not averaging.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The average of London and Paris",
+      "world": "Datasets blending numeric and one-hot categorical features, clustered by vanilla k-means vs k-prototypes (means for numbers, modes for categories). Slide the categorical share up.",
+      "xlab": "share of features that are categorical →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0%",
+        "25%",
+        "50%",
+        "75%",
+        "100%"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "k-prototypes cluster quality", "ys": [ 80, 78, 76, 74, 72 ] },
+        { "name": "vanilla k-means quality", "ys": [ 82, 71, 60, 48, 35 ] }
+      ],
+      "knob": { "label": "Categorical share", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "All-numeric: vanilla k-means is at home — means are meaningful, and it even edges ahead of the hybrid.", "tone": "info" },
+        { "max": 2, "text": "Half categorical: k-means has slid 22 points. Its centroids are now half-ghost — fractional cities that separate nobody.", "tone": "warn" },
+        { "max": 4, "text": "🤯 All categorical: k-means at 35 is barely above random, while k-modes-style clustering holds at 72. The lesson generalises: an algorithm's core operation (here, the MEAN) must be meaningful for your data type, or the whole method quietly voids.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "k-means and categorical data", "formula": "centroid = mean ⇒ needs continuous space · categories ⇒ k-modes / k-prototypes / Gower / embeddings", "text": "One-hot + k-means also makes all unequal category pairs equidistant (√2) — no gradation of similarity. Mixed data: k-prototypes; rich data: learn embeddings, then cluster those." }
+    }
+  },
+  {
+    "q": "Beyond exploration, k-means has a workhorse use INSIDE supervised pipelines: fit clusters, then hand the classifier extra columns. Which columns, and why do they help?",
+    "choices": [
+      "The cluster id and/or distances to each centroid — unsupervised structure becomes features a simple model can exploit",
+      "The inertia value repeated per row",
+      "Random noise to prevent overfitting",
+      "The value of k as a constant column",
+      "A copy of the label leaked from training"
+    ],
+    "explain": "Fit KMeans on the training features (labels never involved), then append transform() outputs: distance-to-each-centroid (k new continuous features) and/or the cluster id. A linear model can't carve 'suburban families vs urban singles' from raw coordinates, but given distances to those discovered prototypes, the segments become linearly separable. Fit inside the CV fold like any transformer to avoid leakage across folds.",
+    "simple": "The clusters found in your customer data are real structure — segments that exist whether or not anyone labels them. Telling the classifier 'this row belongs to segment 3, and here's how far it sits from every segment's centre' hands it a map it could never draw itself if it's a simple model. Unsupervised learning here isn't the destination; it's a feature factory for the supervised step.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Clusters as a feature factory",
+      "world": "A logistic regression on a segmented customer dataset, fed increasingly rich k-means-derived features. Same classifier, same raw data — only the added columns change.",
+      "xlab": "features handed to the classifier →",
+      "xs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "labels": [
+        "raw only",
+        "+ cluster id",
+        "+ centroid dists",
+        "+ both"
+      ],
+      "dec": 1,
+      "yunit": "%",
+      "series": [
+        { "name": "validation accuracy", "ys": [ 84, 86.5, 88.2, 88.7 ] }
+      ],
+      "knob": { "label": "Feature set", "min": 0, "max": 3, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Raw features only: the linear model can't bend around the customer segments — 84% is its ceiling on this geometry.", "tone": "info" },
+        { "max": 1, "text": "Adding the cluster id: +2.5 points. One categorical column just told the model which discovered segment each row lives in.", "tone": "info" },
+        { "max": 3, "text": "🤯 Distances to all centroids add nearly 2 more — richer than the id alone, because 'how close to segment 3' carries gradation, not just membership. KMeans.transform() exists precisely for this. Fit it inside the fold, or the distances leak.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Cluster features for supervised models", "formula": "KMeans.transform(X) → k distance columns · labels never touched", "text": "A classic tabular trick: prototypes make non-linear structure linearly reachable. Same pattern powers RBF networks and modern retrieval-augmented features." }
+    }
   }
-},
-
-{
-  q: "You cluster customers on age (18–70) and income (£15k–£150k) without scaling. What has k-means silently done with these two features?",
-  choices: ["Income's huge numeric range dominates every distance — the clusters are income bands with age effectively ignored", "Both features contribute equally by definition", "Age dominates because it comes first", "k-means auto-normalises internally", "The clusters fail to converge"],
-  explain: "k-means lives entirely on Euclidean distance, and a £30k income gap contributes (30000)² to the squared distance while a 30-year age gap contributes (30)² — a million times less. Whatever feature has the biggest units OWNS the clustering. StandardScaler before KMeans is not a nicety; it decides what 'similar customers' even means.",
-  simple: "Distance adds up feature differences, and income differences are numbers in the tens of thousands while age differences are two digits. It's shouting versus whispering: the algorithm literally cannot hear age. Scale both features to comparable ranges first — otherwise you haven't chosen your clustering, your UNITS have.",
-  widget: {
-    type: "scaleFeature", title: "The feature that shouts",
-    world: "One target customer and four candidates. Who counts as their 'nearest' fellow customer? Shrink income's units step by step and watch the answer change hands.",
-    aName: "age", bName: "income",
-    target: { name: "customer X", a: 30, b: 40000 },
-    cands: [
-      { name: "match A · 31y, £41k", a: 31, b: 41000 },
-      { name: "match B · 62y, £40.5k", a: 62, b: 40500 },
-      { name: "match C · 29y, £47k", a: 29, b: 47000 },
-      { name: "match D · 33y, £55k", a: 33, b: 55000 }
-    ],
-    knob: { label: "Shrink income units by", min: 0, max: 4, step: 0.25, init: 0 },
-    insights: [
-      { max: 0.5, text: "Raw units: match B — a 62-year-old! — ranks as most similar to our 30-year-old, because their incomes differ by only £500. Age was inaudible.", tone: "warn" },
-      { max: 2.5, text: "Shrinking income's units, age starts getting a vote — the ranking reshuffles even though not a single customer changed.", tone: "info" },
-      { max: 4, text: "🤯 Fully rebalanced, match A (31y, £41k) wins — the genuinely similar person. Every k-means centroid and boundary is built from this same distance, so scaling silently decides ALL of it.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Scaling before k-means", formula: "StandardScaler → each feature contributes comparably to distance",
-      text: "Any distance-based method (k-means, kNN, DBSCAN, SVM-RBF) inherits this. Pipeline(StandardScaler(), KMeans(...)) should be muscle memory." }
-  }
-},
-
-{
-  q: "Clustering 10 million rows, full k-means grinds. MiniBatchKMeans finishes in minutes with near-identical clusters. What corner does it cut?",
-  choices: ["Each iteration updates centroids using a small random batch instead of every point — tiny quality loss, huge speed-up", "It clusters only the first million rows", "It reduces the data to 2-D first", "It merges similar clusters early", "It skips convergence checking"],
-  explain: "Lloyd's algorithm touches all n points every iteration. MiniBatchKMeans samples a batch (say 1,024 rows), assigns just those, and nudges the affected centroids toward them with a decaying per-centroid learning rate. Each step is noisier but thousands of times cheaper, and over many steps the noise averages out — inertia typically lands within a percent or two of full k-means.",
-  simple: "To find the average opinion of a city you don't interview everyone every day — you poll. Each small random batch tugs the centroids roughly the right way; the tugs are individually sloppy but their errors cancel over hundreds of batches. You trade a sliver of polish for a massive speed-up, which is often the difference between 'runs' and 'doesn't'.",
-  widget: {
-    type: "curveStatic", title: "Polling instead of a census",
-    world: "Full k-means vs MiniBatchKMeans as the dataset grows: speed-up factor and how much worse the minibatch clusters actually are.",
-    xlab: "dataset size →", xs: [0,1,2,3,4], labels: ["10k","100k","1M","10M","100M"], dec: 1, yunit: "",
-    series: [
-      { name: "speed-up (×)",                 ys: [3, 8, 20, 45, 70] },
-      { name: "inertia gap vs full (%)",      ys: [0.4, 0.6, 0.9, 1.3, 1.8] }
-    ],
-    knob: { label: "Dataset size", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "At 10k rows the speed-up is modest and full k-means is comfortable — no reason to poll when the census is cheap.", tone: "info" },
-      { max: 2, text: "At a million rows: 20× faster for under 1% worse inertia. The batches' noisy tugs have averaged into essentially the same centroids.", tone: "info" },
-      { max: 4, text: "🤯 100M rows: 70× faster, 1.8% worse — and the honest comparison isn't 'slightly worse clusters', it's 'clusters vs no clusters', because the full run stopped fitting in the night. Stochastic beats exact when exact doesn't finish.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "MiniBatchKMeans", formula: "per batch: assign, then nudge centroids with a decaying learning rate",
-      text: "sklearn.cluster.MiniBatchKMeans(batch_size=1024). The same stochastic-approximation idea that powers SGD in deep learning, applied to Lloyd's algorithm." }
-  }
-},
-
-{
-  q: "A 16-million-colour photo is squeezed to 16 colours using k-means, and it still looks surprisingly good. What is the compression scheme?",
-  choices: ["Cluster all pixel colours, keep only the 16 centroid colours, and store each pixel as a 4-bit cluster id", "Delete every second pixel", "Store colour differences between neighbours", "Blur then sharpen the image", "Keep the 16 commonest original colours"],
-  explain: "Each pixel is a point in 3-D colour space. k=16 k-means finds the 16 colours that best represent the photo's actual palette (better than the 16 most frequent — centroids cover the space), then every pixel stores just its cluster index: 4 bits instead of 24, plus a 16-colour codebook. This is vector quantization — the same replace-each-point-with-its-centroid idea behind classic codecs and modern embedding-index compression.",
-  simple: "The photo uses millions of colours, but MOST are near-duplicates — thirty shades of the same sky blue. k-means finds the 16 shades that stand in best for everyone, then each pixel just points at its nearest stand-in: 'I'm a number 7'. A pointer to a shade is far smaller than the shade itself. That's compression by clustering: keep the representatives, discard the crowd.",
-  widget: {
-    type: "curveStatic", title: "How many shades does a photo need?",
-    world: "The same photo quantised with k = 2…256 colours: visual quality against file size. Find where the eye stops noticing.",
-    xlab: "k (palette colours kept) →", xs: [0,1,2,3,4], labels: ["2","8","16","64","256"], dec: 0, yunit: "",
-    series: [
-      { name: "visual quality (0–100)",   ys: [38, 72, 85, 94, 98] },
-      { name: "file size (% of original)", ys: [4, 13, 17, 25, 33] }
-    ],
-    knob: { label: "Palette size k", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "k=2: every pixel snapped to one of two colours — a woodcut print. The codebook is too small for the photo's real variety.", tone: "info" },
-      { max: 2, text: "k=16: 85% quality at 17% of the size. The centroids landed on the photo's true palette — skies, skin, shadows — because that's where the pixel-points cluster.", tone: "info" },
-      { max: 4, text: "🤯 k=256 is nearly indistinguishable at a third of the size. The exact same trick — replace vectors with their centroid's id — now compresses LLM embeddings in vector databases. 1960s idea, 2020s workload.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Vector quantization", formula: "store: k centroids (codebook) + per point its centroid id",
-      text: "k-means as compression: centroids = codebook, assignments = the data. Image palettes, audio codecs, and product-quantized vector search all run on it." }
-  }
-},
-
-{
-  q: "A colleague one-hot encodes city, favourite brand and subscription tier, then runs k-means. The clusters come out as mush. What's structurally wrong?",
-  choices: ["Averaging one-hot vectors gives meaningless 'means' (a centroid that's 0.3 London, 0.4 Paris) — k-means needs a space where means make sense; use k-modes or embeddings", "k cannot exceed the number of cities", "One-hot values are too small for distances", "k-means only accepts two features", "Nothing — more iterations will fix it"],
-  explain: "k-means alternates 'assign to nearest centroid' with 'set centroid = MEAN of members'. The mean of one-hot rows isn't a valid category — it's a fractional ghost, and distances to ghosts barely separate anyone (any two different cities are the same √2 apart). k-modes swaps means for modes and Hamming distance for Euclidean; alternatives: Gower distance, k-prototypes for mixed data, or learned embeddings that give categories a genuine geometry.",
-  simple: "k-means' core move is taking averages. What's the average of London, Paris and Tokyo? There isn't one — and the algorithm's answer ('0.3 London + 0.4 Paris + 0.3 Tokyo') is a place nobody lives. Every centroid becomes such a ghost, every distance-to-ghost is equally bland, and the clusters turn to mush. Categorical data needs a method whose core move makes sense for categories — voting for the most common value, not averaging.",
-  widget: {
-    type: "curveStatic", title: "The average of London and Paris",
-    world: "Datasets blending numeric and one-hot categorical features, clustered by vanilla k-means vs k-prototypes (means for numbers, modes for categories). Slide the categorical share up.",
-    xlab: "share of features that are categorical →", xs: [0,1,2,3,4], labels: ["0%","25%","50%","75%","100%"], dec: 0, yunit: "%",
-    series: [
-      { name: "k-prototypes cluster quality", ys: [80, 78, 76, 74, 72] },
-      { name: "vanilla k-means quality",      ys: [82, 71, 60, 48, 35] }
-    ],
-    knob: { label: "Categorical share", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "All-numeric: vanilla k-means is at home — means are meaningful, and it even edges ahead of the hybrid.", tone: "info" },
-      { max: 2, text: "Half categorical: k-means has slid 22 points. Its centroids are now half-ghost — fractional cities that separate nobody.", tone: "warn" },
-      { max: 4, text: "🤯 All categorical: k-means at 35 is barely above random, while k-modes-style clustering holds at 72. The lesson generalises: an algorithm's core operation (here, the MEAN) must be meaningful for your data type, or the whole method quietly voids.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "k-means and categorical data", formula: "centroid = mean ⇒ needs continuous space · categories ⇒ k-modes / k-prototypes / Gower / embeddings",
-      text: "One-hot + k-means also makes all unequal category pairs equidistant (√2) — no gradation of similarity. Mixed data: k-prototypes; rich data: learn embeddings, then cluster those." }
-  }
-},
-
-{
-  q: "Beyond exploration, k-means has a workhorse use INSIDE supervised pipelines: fit clusters, then hand the classifier extra columns. Which columns, and why do they help?",
-  choices: ["The cluster id and/or distances to each centroid — unsupervised structure becomes features a simple model can exploit", "The inertia value repeated per row", "Random noise to prevent overfitting", "The value of k as a constant column", "A copy of the label leaked from training"],
-  explain: "Fit KMeans on the training features (labels never involved), then append transform() outputs: distance-to-each-centroid (k new continuous features) and/or the cluster id. A linear model can't carve 'suburban families vs urban singles' from raw coordinates, but given distances to those discovered prototypes, the segments become linearly separable. Fit inside the CV fold like any transformer to avoid leakage across folds.",
-  simple: "The clusters found in your customer data are real structure — segments that exist whether or not anyone labels them. Telling the classifier 'this row belongs to segment 3, and here's how far it sits from every segment's centre' hands it a map it could never draw itself if it's a simple model. Unsupervised learning here isn't the destination; it's a feature factory for the supervised step.",
-  widget: {
-    type: "curveStatic", title: "Clusters as a feature factory",
-    world: "A logistic regression on a segmented customer dataset, fed increasingly rich k-means-derived features. Same classifier, same raw data — only the added columns change.",
-    xlab: "features handed to the classifier →", xs: [0,1,2,3], labels: ["raw only","+ cluster id","+ centroid dists","+ both"], dec: 1, yunit: "%",
-    series: [
-      { name: "validation accuracy", ys: [84, 86.5, 88.2, 88.7] }
-    ],
-    knob: { label: "Feature set", min: 0, max: 3, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Raw features only: the linear model can't bend around the customer segments — 84% is its ceiling on this geometry.", tone: "info" },
-      { max: 1, text: "Adding the cluster id: +2.5 points. One categorical column just told the model which discovered segment each row lives in.", tone: "info" },
-      { max: 3, text: "🤯 Distances to all centroids add nearly 2 more — richer than the id alone, because 'how close to segment 3' carries gradation, not just membership. KMeans.transform() exists precisely for this. Fit it inside the fold, or the distances leak.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Cluster features for supervised models", formula: "KMeans.transform(X) → k distance columns · labels never touched",
-      text: "A classic tabular trick: prototypes make non-linear structure linearly reachable. Same pattern powers RBF networks and modern retrieval-augmented features." }
-  }
-}
 ];

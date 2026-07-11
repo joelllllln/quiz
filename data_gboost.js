@@ -1,4 +1,4 @@
-/* Gradient Boosting & XGBoost — Part I: Foundations. choices[0] is always correct (shuffled at render). */
+/* Gradient Boosting & XGBoost — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).gb1 = [
   {
     "q": "Boosting also builds many models — but sequentially, not in parallel. What does each new member train to do?",
@@ -233,7 +233,10 @@
       "extreme": { "at": "max" },
       "reveal": { "name": "Early stopping in boosting", "formula": "monitor validation each round → stop after no improvement for N rounds", "text": "Bagging saturates harmlessly; boosting overshoots. That asymmetry is why every boosting library ships early stopping as a first-class feature." }
     }
-  },
+  }
+];
+
+(window.QUESTIONS = window.QUESTIONS || {}).gb2 = [
   {
     "q": "XGBoost took gradient boosting and made it the competition-winning standard. Which additions are its signature?",
     "choices": [
@@ -328,80 +331,143 @@
       "reveal": { "name": "Histogram-based split finding", "formula": "bin each feature into ~256 buckets → test bucket edges only", "text": "The trick that makes LightGBM/XGBoost-hist feasible on huge tabular data — plus column subsampling and native missing-value routing for the full toolkit." }
     }
   },
-
-{
-  q: "Stochastic gradient boosting sets subsample=0.7, so each tree trains on a random 70% of rows. Why would deliberately showing each tree LESS data help?",
-  choices: ["The randomness decorrelates successive trees and acts as a regulariser — validation usually peaks below subsample=1.0", "It's purely a speed trick with no effect on accuracy", "It guarantees each row is seen exactly once", "It prevents trees from being binary", "It replaces the need for a learning rate"],
-  explain: "With subsample=1 every round stares at the exact same residuals and can grind into noise deterministically. Sampling rows (and columns — colsample in XGBoost) makes each corrector see a slightly different picture, which stops the relay fixating on individual noisy points. It's bagging's randomness grafted onto boosting — plus it trains faster.",
-  simple: "A relay of perfectionists studying the same error report will eventually start 'fixing' typos in it — memorising noise. Give each runner a different random 70% of the report and no single noisy point gets obsessed over, because most runners never even see it. The genuine patterns appear in every sample, so they still get fixed.",
-  widget: {
-    type: "curveStatic", title: "Show each corrector less, learn more",
-    world: "The same boosted model at five subsample rates. Watch validation accuracy and the train-validation gap (memorisation) move in opposite directions.",
-    xlab: "subsample (share of rows per tree) →", xs: [0,1,2,3,4], labels: ["0.3","0.5","0.7","0.85","1.0"], dec: 1, yunit: "",
-    series: [
-      { name: "validation accuracy (%)", ys: [88.5, 90, 91, 90.6, 89.5] },
-      { name: "train − val gap (pts)",   ys: [3, 4, 5, 7, 10] }
+  {
+    "q": "Stochastic gradient boosting sets subsample=0.7, so each tree trains on a random 70% of rows. Why would deliberately showing each tree LESS data help?",
+    "choices": [
+      "The randomness decorrelates successive trees and acts as a regulariser — validation usually peaks below subsample=1.0",
+      "It's purely a speed trick with no effect on accuracy",
+      "It guarantees each row is seen exactly once",
+      "It prevents trees from being binary",
+      "It replaces the need for a learning rate"
     ],
-    knob: { label: "subsample", min: 0, max: 4, step: 1, init: 4 },
-    insights: [
-      { max: 0, text: "0.3: each tree sees so little that corrections turn noisy-in-a-bad-way — the relay is passing rumours.", tone: "warn" },
-      { max: 2, text: "0.7: the sweet spot in this run — every real pattern still shows up in every sample, but no single noisy row appears often enough to be memorised.", tone: "info" },
-      { max: 4, text: "🤯 1.0 (no sampling): the gap doubles to 10 points. Determinism let the relay grind into the training set's noise. The fix wasn't more data or fewer rounds — it was showing each tree LESS.", tone: "wow" }
+    "explain": "With subsample=1 every round stares at the exact same residuals and can grind into noise deterministically. Sampling rows (and columns — colsample in XGBoost) makes each corrector see a slightly different picture, which stops the relay fixating on individual noisy points. It's bagging's randomness grafted onto boosting — plus it trains faster.",
+    "simple": "A relay of perfectionists studying the same error report will eventually start 'fixing' typos in it — memorising noise. Give each runner a different random 70% of the report and no single noisy point gets obsessed over, because most runners never even see it. The genuine patterns appear in every sample, so they still get fixed.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Show each corrector less, learn more",
+      "world": "The same boosted model at five subsample rates. Watch validation accuracy and the train-validation gap (memorisation) move in opposite directions.",
+      "xlab": "subsample (share of rows per tree) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0.3",
+        "0.5",
+        "0.7",
+        "0.85",
+        "1.0"
+      ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "validation accuracy (%)", "ys": [ 88.5, 90, 91, 90.6, 89.5 ] },
+        { "name": "train − val gap (pts)", "ys": [ 3, 4, 5, 7, 10 ] }
+      ],
+      "knob": { "label": "subsample", "min": 0, "max": 4, "step": 1, "init": 4 },
+      "insights": [
+        { "max": 0, "text": "0.3: each tree sees so little that corrections turn noisy-in-a-bad-way — the relay is passing rumours.", "tone": "warn" },
+        { "max": 2, "text": "0.7: the sweet spot in this run — every real pattern still shows up in every sample, but no single noisy row appears often enough to be memorised.", "tone": "info" },
+        { "max": 4, "text": "🤯 1.0 (no sampling): the gap doubles to 10 points. Determinism let the relay grind into the training set's noise. The fix wasn't more data or fewer rounds — it was showing each tree LESS.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Stochastic gradient boosting", "formula": "subsample rows (and colsample features) per tree → decorrelated correctors", "text": "Friedman's 1999 addition. In XGBoost/LightGBM: subsample & colsample_bytree, typically 0.6–0.9. Regularisation and a speed-up in one knob." }
+    }
+  },
+  {
+    "q": "Boosting libraries default to shallow trees — depth 3 to 6 — while a random forest happily grows its trees deep. Why does boosting specifically want WEAK learners?",
+    "choices": [
+      "Each round only needs a small corrective step; deep trees make each round too greedy and the relay overfits fast",
+      "Shallow trees are the only ones that can be summed",
+      "Deep trees can't compute residuals",
+      "It's a memory constraint with no accuracy effect",
+      "Shallow trees train the gradient exactly"
     ],
-    extreme: { at: "max" },
-    reveal: { name: "Stochastic gradient boosting", formula: "subsample rows (and colsample features) per tree → decorrelated correctors",
-      text: "Friedman's 1999 addition. In XGBoost/LightGBM: subsample & colsample_bytree, typically 0.6–0.9. Regularisation and a speed-up in one knob." }
+    "explain": "Boosting's power comes from MANY small corrections compounding — bias falls round by round. A depth-16 tree can nearly memorise the residuals in one round, so there's nothing honest left for later rounds except noise. Forests are the opposite: each deep tree is a full low-bias model, and averaging attacks their variance. Depth 3–6 also caps feature-interaction order, a sensible prior for tabular data.",
+    "simple": "Boosting is sculpting: a hundred light chisel taps, each fixing what the last left wrong. Swap the chisel for a sledgehammer (a deep tree) and the first swing does 'everything' — including smashing detail into the noise — and the remaining 99 swings just chase rubble. The forest is a different sport entirely: many finished sculptures, averaged.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Chisels beat sledgehammers, in relays",
+      "world": "Boosted ensembles built from trees of five different depths (rounds tuned fairly for each). Compare validation accuracy with how quickly training accuracy saturates.",
+      "xlab": "depth of each boosted tree →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "validation accuracy", "ys": [ 89, 91, 92, 88, 84 ] },
+        { "name": "training accuracy", "ys": [ 91, 94, 97, 99.5, 100 ] }
+      ],
+      "knob": { "label": "Tree depth", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Depth-1 stumps: even the weakest learner boosts to 89% — compounding tiny corrections is the engine, not tree strength.", "tone": "info" },
+        { "max": 2, "text": "Depth 4: the peak. Each tree can capture small feature interactions, yet still leaves honest work for later rounds.", "tone": "info" },
+        { "max": 4, "text": "🤯 Depth 16: training hits 100% almost immediately — round one memorised the residuals, and every later round modelled noise. Boosting NEEDS its learners weak; that's not a limitation, it's the design.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Weak learners (max_depth 3–6)", "formula": "many small low-variance corrections > one greedy fit", "text": "XGBoost defaults to max_depth=6, LightGBM caps leaves instead (num_leaves≈31). Depth also bounds interaction order: depth d ⇒ at most d features interacting per path." }
+    }
+  },
+  {
+    "q": "XGBoost, LightGBM, CatBoost — three battle-tested gradient-boosting libraries. They share the same core algorithm, so what actually distinguishes them?",
+    "choices": [
+      "Engineering trade-offs: LightGBM chases speed on big data, CatBoost handles categoricals natively, XGBoost is the regularised all-rounder",
+      "Completely different loss functions",
+      "Only XGBoost uses decision trees",
+      "LightGBM is bagging, not boosting",
+      "CatBoost only works on images"
+    ],
+    "explain": "All three are gradient boosting over CART-style trees with histogram tricks. LightGBM's leaf-wise growth + sampling tricks make it typically fastest on large data. CatBoost's ordered target encoding makes raw categorical columns first-class citizens (and its ordered boosting resists target leakage). XGBoost, the original at scale, remains the most portable, documented, regularisation-rich default. Accuracy when tuned: usually within noise of each other.",
+    "simple": "Three makes of the same engine. One is tuned for the motorway (LightGBM: raw speed on big tables), one has an automatic gearbox for messy streets (CatBoost: feed it categorical columns as-is), one is the reliable model every mechanic knows (XGBoost). Pick by your data and constraints — on a tuned benchmark they usually finish within a photo of each other.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Three makes, one engine",
+      "world": "The three libraries scored 0–100 on five practical criteria. Slide across and notice each library owns a different column — and one column where nobody wins.",
+      "xlab": "criterion →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "speed, big data",
+        "raw categoricals",
+        "docs & ecosystem",
+        "tuned accuracy",
+        "small-data defaults"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "LightGBM", "ys": [ 95, 75, 82, 91, 62 ] },
+        { "name": "CatBoost", "ys": [ 72, 97, 74, 91, 85 ] },
+        { "name": "XGBoost", "ys": [ 80, 55, 95, 91, 72 ] }
+      ],
+      "knob": { "label": "Criterion", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "LightGBM owns the speed column (leaf-wise growth, histogram bins, clever sampling); CatBoost owns categoricals — no one-hot, no target-leakage foot-guns.", "tone": "info" },
+        { "max": 3, "text": "Tuned accuracy: 91, 91, 91. On typical tabular data the algorithm is the same; benchmark wins trade places run to run.", "tone": "info" },
+        { "max": 4, "text": "🤯 Small data flips the board again — CatBoost's cautious ordered boosting overfits least out of the box. The real skill isn't crowning one library; it's knowing WHICH column your project lives in.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "The gradient-boosting library landscape", "formula": "same algorithm · different engineering bets", "text": "Defaults: LightGBM for big tables, CatBoost for category-heavy or smaller data, XGBoost as the portable well-trodden path. sklearn's HistGradientBoosting is a capable built-in fourth option." }
+    }
   }
-},
-
-{
-  q: "Boosting libraries default to shallow trees — depth 3 to 6 — while a random forest happily grows its trees deep. Why does boosting specifically want WEAK learners?",
-  choices: ["Each round only needs a small corrective step; deep trees make each round too greedy and the relay overfits fast", "Shallow trees are the only ones that can be summed", "Deep trees can't compute residuals", "It's a memory constraint with no accuracy effect", "Shallow trees train the gradient exactly"],
-  explain: "Boosting's power comes from MANY small corrections compounding — bias falls round by round. A depth-16 tree can nearly memorise the residuals in one round, so there's nothing honest left for later rounds except noise. Forests are the opposite: each deep tree is a full low-bias model, and averaging attacks their variance. Depth 3–6 also caps feature-interaction order, a sensible prior for tabular data.",
-  simple: "Boosting is sculpting: a hundred light chisel taps, each fixing what the last left wrong. Swap the chisel for a sledgehammer (a deep tree) and the first swing does 'everything' — including smashing detail into the noise — and the remaining 99 swings just chase rubble. The forest is a different sport entirely: many finished sculptures, averaged.",
-  widget: {
-    type: "curveStatic", title: "Chisels beat sledgehammers, in relays",
-    world: "Boosted ensembles built from trees of five different depths (rounds tuned fairly for each). Compare validation accuracy with how quickly training accuracy saturates.",
-    xlab: "depth of each boosted tree →", xs: [0,1,2,3,4], labels: ["1","2","4","8","16"], dec: 0, yunit: "%",
-    series: [
-      { name: "validation accuracy", ys: [89, 91, 92, 88, 84] },
-      { name: "training accuracy",   ys: [91, 94, 97, 99.5, 100] }
-    ],
-    knob: { label: "Tree depth", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Depth-1 stumps: even the weakest learner boosts to 89% — compounding tiny corrections is the engine, not tree strength.", tone: "info" },
-      { max: 2, text: "Depth 4: the peak. Each tree can capture small feature interactions, yet still leaves honest work for later rounds.", tone: "info" },
-      { max: 4, text: "🤯 Depth 16: training hits 100% almost immediately — round one memorised the residuals, and every later round modelled noise. Boosting NEEDS its learners weak; that's not a limitation, it's the design.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Weak learners (max_depth 3–6)", formula: "many small low-variance corrections > one greedy fit",
-      text: "XGBoost defaults to max_depth=6, LightGBM caps leaves instead (num_leaves≈31). Depth also bounds interaction order: depth d ⇒ at most d features interacting per path." }
-  }
-},
-
-{
-  q: "XGBoost, LightGBM, CatBoost — three battle-tested gradient-boosting libraries. They share the same core algorithm, so what actually distinguishes them?",
-  choices: ["Engineering trade-offs: LightGBM chases speed on big data, CatBoost handles categoricals natively, XGBoost is the regularised all-rounder", "Completely different loss functions", "Only XGBoost uses decision trees", "LightGBM is bagging, not boosting", "CatBoost only works on images"],
-  explain: "All three are gradient boosting over CART-style trees with histogram tricks. LightGBM's leaf-wise growth + sampling tricks make it typically fastest on large data. CatBoost's ordered target encoding makes raw categorical columns first-class citizens (and its ordered boosting resists target leakage). XGBoost, the original at scale, remains the most portable, documented, regularisation-rich default. Accuracy when tuned: usually within noise of each other.",
-  simple: "Three makes of the same engine. One is tuned for the motorway (LightGBM: raw speed on big tables), one has an automatic gearbox for messy streets (CatBoost: feed it categorical columns as-is), one is the reliable model every mechanic knows (XGBoost). Pick by your data and constraints — on a tuned benchmark they usually finish within a photo of each other.",
-  widget: {
-    type: "curveStatic", title: "Three makes, one engine",
-    world: "The three libraries scored 0–100 on five practical criteria. Slide across and notice each library owns a different column — and one column where nobody wins.",
-    xlab: "criterion →", xs: [0,1,2,3,4], labels: ["speed, big data","raw categoricals","docs & ecosystem","tuned accuracy","small-data defaults"], dec: 0, yunit: "",
-    series: [
-      { name: "LightGBM", ys: [95, 75, 82, 91, 62] },
-      { name: "CatBoost", ys: [72, 97, 74, 91, 85] },
-      { name: "XGBoost",  ys: [80, 55, 95, 91, 72] }
-    ],
-    knob: { label: "Criterion", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "LightGBM owns the speed column (leaf-wise growth, histogram bins, clever sampling); CatBoost owns categoricals — no one-hot, no target-leakage foot-guns.", tone: "info" },
-      { max: 3, text: "Tuned accuracy: 91, 91, 91. On typical tabular data the algorithm is the same; benchmark wins trade places run to run.", tone: "info" },
-      { max: 4, text: "🤯 Small data flips the board again — CatBoost's cautious ordered boosting overfits least out of the box. The real skill isn't crowning one library; it's knowing WHICH column your project lives in.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "The gradient-boosting library landscape", formula: "same algorithm · different engineering bets",
-      text: "Defaults: LightGBM for big tables, CatBoost for category-heavy or smaller data, XGBoost as the portable well-trodden path. sklearn's HistGradientBoosting is a capable built-in fourth option." }
-  }
-}
 ];

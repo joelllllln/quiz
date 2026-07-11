@@ -1,4 +1,4 @@
-/* t-SNE — Part I: Foundations. choices[0] is always correct (shuffled at render). */
+/* t-SNE — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).tsne1 = [
   {
     "q": "t-SNE makes those famous 2-D maps of high-dimensional data. What does it work hardest to preserve?",
@@ -171,131 +171,239 @@
       "extreme": { "at": "max" },
       "reveal": { "name": "PCA for pipelines, t-SNE for eyes", "formula": "PCA: fit once, transform forever · t-SNE: per-dataset visual, no transform", "text": "Match the tool to the job: features and compression → PCA; exploratory pictures → t-SNE/UMAP. Using either for the other's job is a category error." }
     }
+  }
+];
+
+(window.QUESTIONS = window.QUESTIONS || {}).tsne2 = [
+  {
+    "q": "UMAP is t-SNE's younger rival and often its replacement. In practice, what are UMAP's headline advantages — and what stays the same?",
+    "choices": [
+      "Much faster on big data, better at preserving global layout, and can embed NEW points — but distances/densities in the picture are still not literal",
+      "It preserves exact distances, unlike t-SNE",
+      "It needs no hyperparameters at all",
+      "It only works on images",
+      "It is t-SNE with a different name"
+    ],
+    "explain": "UMAP builds a k-neighbour graph and optimises a layout preserving its topology — typically 5–50× faster than t-SNE, scaling to millions of rows, with noticeably more meaningful between-cluster arrangement, and a .transform() to project unseen points (t-SNE must re-fit). But it remains a neighbour-preserving projection: cluster sizes, densities and long-range distances are still artefacts to distrust. n_neighbors plays the perplexity role; min_dist controls how tightly points pack.",
+    "simple": "Same species of tool — squash high-dimensional data into a picture by keeping neighbours together — with three practical upgrades: it finishes while t-SNE is still stretching (big data), the ARRANGEMENT of islands on its map means a bit more, and it can place new arrivals on an existing map instead of redrawing from scratch. What it does NOT upgrade: the map is still a neighbourhood cartoon, not a scale drawing. Read cluster membership, never mileage.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The upgrade that kept the caveat",
+      "world": "t-SNE vs UMAP runtime (minutes, log-ish) as dataset size grows, with UMAP's neighbourhood-preservation quality alongside. Watch which curve becomes unusable first.",
+      "xlab": "dataset size →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1k",
+        "10k",
+        "50k",
+        "200k",
+        "1M"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "t-SNE runtime (min)", "ys": [ 1, 4, 26, 180, 1400 ] },
+        { "name": "UMAP runtime (min)", "ys": [ 1, 1, 3, 9, 42 ] },
+        { "name": "UMAP neighbour quality (%)", "ys": [ 93, 92, 92, 91, 90 ] }
+      ],
+      "knob": { "label": "Dataset size", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Small data: both finish over coffee and produce similar pictures — at this scale the choice barely matters.", "tone": "info" },
+        { "max": 3, "text": "200k rows: three hours vs nine minutes — and UMAP's map can also .transform() tomorrow's data onto today's picture, which t-SNE simply cannot.", "tone": "info" },
+        { "max": 4, "text": "🤯 A million rows: t-SNE needs a day; UMAP, 42 minutes at undiminished quality. Yet the caveat survived every upgrade: neither map's distances or densities are literal. Faster cartoon, same cartoon.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "UMAP vs t-SNE", "formula": "UMAP: k-NN graph + topological layout → speed, global structure, .transform()", "text": "Default choice for big embeddings today (umap-learn). Knobs: n_neighbors ≈ perplexity's role, min_dist = packing tightness. All neighbour-embedding caveats still apply." }
+    }
   },
-
-{
-  q: "UMAP is t-SNE's younger rival and often its replacement. In practice, what are UMAP's headline advantages — and what stays the same?",
-  choices: ["Much faster on big data, better at preserving global layout, and can embed NEW points — but distances/densities in the picture are still not literal", "It preserves exact distances, unlike t-SNE", "It needs no hyperparameters at all", "It only works on images", "It is t-SNE with a different name"],
-  explain: "UMAP builds a k-neighbour graph and optimises a layout preserving its topology — typically 5–50× faster than t-SNE, scaling to millions of rows, with noticeably more meaningful between-cluster arrangement, and a .transform() to project unseen points (t-SNE must re-fit). But it remains a neighbour-preserving projection: cluster sizes, densities and long-range distances are still artefacts to distrust. n_neighbors plays the perplexity role; min_dist controls how tightly points pack.",
-  simple: "Same species of tool — squash high-dimensional data into a picture by keeping neighbours together — with three practical upgrades: it finishes while t-SNE is still stretching (big data), the ARRANGEMENT of islands on its map means a bit more, and it can place new arrivals on an existing map instead of redrawing from scratch. What it does NOT upgrade: the map is still a neighbourhood cartoon, not a scale drawing. Read cluster membership, never mileage.",
-  widget: {
-    type: "curveStatic", title: "The upgrade that kept the caveat",
-    world: "t-SNE vs UMAP runtime (minutes, log-ish) as dataset size grows, with UMAP's neighbourhood-preservation quality alongside. Watch which curve becomes unusable first.",
-    xlab: "dataset size →", xs: [0,1,2,3,4], labels: ["1k","10k","50k","200k","1M"], dec: 0, yunit: "",
-    series: [
-      { name: "t-SNE runtime (min)",         ys: [1, 4, 26, 180, 1400] },
-      { name: "UMAP runtime (min)",          ys: [1, 1, 3, 9, 42] },
-      { name: "UMAP neighbour quality (%)",  ys: [93, 92, 92, 91, 90] }
+  {
+    "q": "Two t-SNE runs on the same data: one comes out as a single dense ball, the other as confetti of micro-fragments. Both used extreme learning rates. Which failure belongs to which extreme?",
+    "choices": [
+      "Too LOW a learning rate under-spreads into a compressed ball; too HIGH tears clusters into scattered shards — modern 'auto' settings avoid both",
+      "Low rate scatters, high rate compresses",
+      "Learning rate only changes runtime",
+      "The ball means the data truly has one cluster",
+      "The shards mean the data has hundreds of clusters"
     ],
-    knob: { label: "Dataset size", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "Small data: both finish over coffee and produce similar pictures — at this scale the choice barely matters.", tone: "info" },
-      { max: 3, text: "200k rows: three hours vs nine minutes — and UMAP's map can also .transform() tomorrow's data onto today's picture, which t-SNE simply cannot.", tone: "info" },
-      { max: 4, text: "🤯 A million rows: t-SNE needs a day; UMAP, 42 minutes at undiminished quality. Yet the caveat survived every upgrade: neither map's distances or densities are literal. Faster cartoon, same cartoon.", tone: "wow" }
+    "explain": "t-SNE is gradient descent on point positions. Steps too small: points can't escape the initial huddle before the optimisation settles — everything stays balled up (often with early exaggeration failing to separate groups). Steps too large: points overshoot every attraction, genuine clusters shatter into fragments. Both pictures LOOK like discoveries — that's the trap. sklearn's learning_rate='auto' (scaled to n) and sensible early-exaggeration defaults make both pathologies rare today.",
+    "simple": "Laying out the map is a physical process: neighbours pull, strangers push, and the learning rate is how big a step each point takes per nudge. Baby steps — nobody gets anywhere, the crowd stays huddled in the middle: one fake blob. Giant leaps — everyone constantly overshoots, groups rip apart: fake confetti. Neither picture is about your data; both are about your step size. When a t-SNE looks bizarre, suspect the optimiser before the biology.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Baby steps and giant leaps",
+      "world": "The same 4-cluster dataset embedded at five learning rates. Track embedding quality and what the picture qualitatively shows — only the middle tells the truth.",
+      "xlab": "learning rate →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "10",
+        "50",
+        "200 (auto-ish)",
+        "1000",
+        "5000"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "neighbourhood preservation (%)", "ys": [ 41, 74, 91, 68, 29 ] },
+        { "name": "visual clusters shown (true: 4)", "ys": [ 1, 3, 4, 7, 23 ] }
+      ],
+      "knob": { "label": "Learning rate", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Rate 10: one ball, quality 41%. The points never escaped their initial huddle — the picture shows the optimiser's laziness, not the data.", "tone": "warn" },
+        { "max": 2, "text": "Around 200 (what learning_rate='auto' lands near for this n): 4 visual clusters, 91% quality — the true structure, findable because steps matched the landscape.", "tone": "info" },
+        { "max": 4, "text": "🤯 Rate 5000: twenty-three 'clusters' — pure shrapnel from overshooting, at 29% quality. Same data produced 1, 4, or 23 clusters depending on ONE knob. Any t-SNE conclusion you can't reproduce across settings isn't a conclusion.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "t-SNE optimisation pathologies", "formula": "rate ≪ → compressed ball · rate ≫ → shattered fragments", "text": "Use learning_rate='auto' and default early exaggeration (sklearn ≥1.1); if a picture looks odd, re-run at other rates before believing it." }
+    }
+  },
+  {
+    "q": "By default t-SNE scatters its initial point positions randomly, and two runs can put the islands in totally different places. What does init='pca' change, and why is it now the recommended default?",
+    "choices": [
+      "Points start at their PCA coordinates, anchoring the global arrangement — runs become reproducible and the large-scale layout inherits real meaning",
+      "It makes t-SNE deterministic by fixing the seed",
+      "It skips the optimisation entirely",
+      "It replaces perplexity",
+      "It converts t-SNE into UMAP"
     ],
-    extreme: { at: "max" },
-    reveal: { name: "UMAP vs t-SNE", formula: "UMAP: k-NN graph + topological layout → speed, global structure, .transform()",
-      text: "Default choice for big embeddings today (umap-learn). Knobs: n_neighbors ≈ perplexity's role, min_dist = packing tightness. All neighbour-embedding caveats still apply." }
+    "explain": "t-SNE's loss barely cares where clusters sit relative to each other, so from a random start that arrangement is frozen accident — run twice, get mirror-image or reshuffled maps. Initialising at the (first two) PCA coordinates seeds the layout with the data's true coarse geometry: things far apart in PCA start far apart and tend to stay so. Kobak & Berens showed this materially improves global-structure preservation; sklearn made init='pca' the default (1.2+). Seeds fix randomness; PCA init fixes MEANING.",
+    "simple": "t-SNE only sweats the neighbourhoods — which points huddle together — and shrugs about where each huddle lands on the page. Started randomly, the islands' positions are dice rolls. Starting from a PCA sketch instead means the page ALREADY holds the data's honest rough geography, and t-SNE then sharpens neighbourhoods on top of it. Result: re-runs agree, and 'these two islands are on opposite shores' finally carries some information instead of being an accident of the seed.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Dice-roll islands vs a sketched map",
+      "world": "Five re-runs (different seeds) with random init vs PCA init, measuring how much each run's GLOBAL island arrangement matches run 1's.",
+      "xlab": "re-run →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "run 1",
+        "run 2",
+        "run 3",
+        "run 4",
+        "run 5"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "PCA init: layout agreement", "ys": [ 100, 96, 95, 97, 96 ] },
+        { "name": "random init: layout agreement", "ys": [ 100, 55, 48, 61, 42 ] }
+      ],
+      "knob": { "label": "Re-run", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Second run, random init: only 55% of the island arrangement survives — clusters are intact but live on different shores. PCA init: 96%.", "tone": "info" },
+        { "max": 3, "text": "The clusters THEMSELVES are stable in both columns — it's specifically the between-cluster geography that random init rolls fresh each time.", "tone": "info" },
+        { "max": 4, "text": "🤯 Five runs: random init averages ~50% layout agreement, PCA init ~96%. If you plan to interpret which islands are near which — at all — the init isn't a detail, it's the licence to do so.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "init='pca'", "formula": "seed positions = PCA coords → global layout anchored to real geometry", "text": "sklearn's default since 1.2 (with learning_rate='auto'). Cheap, strictly better for interpretation; UMAP's spectral init plays the same role." }
+    }
+  },
+  {
+    "q": "The standard recipe for t-SNE on 784-dimensional image data starts with a PCA step down to ~50 dimensions. Why preprocess with the 'rival' method first?",
+    "choices": [
+      "PCA strips noise dimensions and slashes the distance computations — faster AND cleaner embeddings, since t-SNE's distances stop being diluted by noise",
+      "Because t-SNE crashes above 100 dimensions",
+      "To make the picture exactly two-dimensional",
+      "PCA labels the clusters first",
+      "It's cargo cult — the step does nothing"
+    ],
+    "explain": "t-SNE's input is pairwise distances, computed on every dimension. In 784-d, hundreds of near-noise dimensions both cost time and — via the curse of dimensionality — dilute the very neighbour contrasts t-SNE needs. PCA to ~50 keeps the real variance (natural images are intrinsically low-dimensional), denoises the metric, and cuts the distance bill ~16×. They're not rivals but a pipeline: linear PCA does honest bulk reduction, non-linear t-SNE spends its effort on the structure that's actually there. sklearn's docs recommend exactly this.",
+    "simple": "784 columns of pixels are mostly hiss — a few dozen directions carry the actual picture-ness. Asking t-SNE to measure similarity through all that hiss is like judging voices over a crackly line: slow, and the crackle blurs who sounds like whom. PCA is the noise filter: keep the 50 directions where the signal lives, discard the crackle, THEN let t-SNE do its delicate neighbourhood work on a clean line. Cheaper and better, not cheaper but worse.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Filter the hiss, then listen",
+      "world": "t-SNE on 784-d image data, preceded by PCA to various widths. Watch runtime AND embedding quality as the pre-reduction gets more aggressive.",
+      "xlab": "PCA dimensions kept before t-SNE →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "none (784)",
+        "300",
+        "100",
+        "50",
+        "10"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "runtime (min)", "ys": [ 120, 55, 22, 12, 6 ] },
+        { "name": "embedding quality (%)", "ys": [ 86, 88, 90, 90, 82 ] }
+      ],
+      "knob": { "label": "PCA width", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "No pre-reduction: two hours, and quality is actually LOWER than with PCA-50 — the noise dimensions were diluting every distance t-SNE relied on.", "tone": "warn" },
+        { "max": 3, "text": "PCA to 50: ten times faster and quality up to 90%. Nothing of value was lost — images never really had 784 independent dimensions.", "tone": "info" },
+        { "max": 4, "text": "🤯 PCA to 10 finally overshoots: real structure gets crushed and quality drops to 82. The pipeline logic: linear method for honest bulk reduction, non-linear method for the last, hard mile. ~50 is the folklore sweet spot for a reason.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "PCA-then-t-SNE", "formula": "PCA to ~50 dims → t-SNE/UMAP to 2 — denoise + speed, no rivalry", "text": "Standard for images, embeddings, single-cell data. The two methods answer different questions and stack beautifully; sklearn's TSNE docs recommend it explicitly." }
+    }
+  },
+  {
+    "q": "Your t-SNE plot shows five crisp islands and the team is ready to announce 'five customer types'. What must happen before that becomes a claim rather than a picture?",
+    "choices": [
+      "Treat the islands as hypotheses: re-run across seeds and perplexities, and confirm with checks OUTSIDE the picture — labels, held-out features, or cluster validity stats",
+      "Nothing — t-SNE islands are definitive clusters",
+      "Count them again at higher zoom",
+      "Re-colour the plot and re-inspect",
+      "Average the coordinates across runs"
+    ],
+    "explain": "t-SNE is an eager cluster-shower: perplexity and optimisation quirks can carve continuous data into convincing islands (and shatter real groups). Validation ladder: (1) stability — do the same points co-locate across seeds and a perplexity sweep? (2) external evidence — do the islands align with known labels, or differ on features/metadata HELD OUT of the embedding? (3) quantitative — silhouette or a classifier on the ORIGINAL high-dimensional data using the proposed groups. A cluster that only exists at perplexity 30, seed 42, in 2-D, does not exist.",
+    "simple": "The map is an artist's impression, and this artist LOVES drawing islands — sometimes where there's only open water. Before shipping 'five customer types': redraw the map several ways (seeds, perplexities) and check the same customers keep washing up together; then — the real test — step off the map entirely and ask whether the groups differ on facts the map never saw (spending, churn, demographics). Structure that survives outside its own picture is a finding. Structure that doesn't is décor.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Islands or open water?",
+      "world": "The same continuous, cluster-less control data embedded at five perplexities, next to genuinely 4-clustered data. Count the islands each shows — one of these datasets is lying to you.",
+      "xlab": "perplexity →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "2",
+        "5",
+        "30",
+        "100",
+        "500"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "islands shown: cluster-less data", "ys": [ 19, 9, 4, 2, 1 ] },
+        { "name": "islands shown: truly 4-cluster data", "ys": [ 11, 6, 4, 4, 4 ] }
+      ],
+      "knob": { "label": "Perplexity", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Perplexity 2: BOTH datasets shatter into a dozen-plus islands — at tiny perplexity, t-SNE draws archipelagos from anything, including pure noise.", "tone": "warn" },
+        { "max": 2, "text": "Perplexity 30: both show 4 islands. One of them truly has 4 groups; the other is smooth, cluster-less data wearing a convincing costume. The PICTURE cannot tell you which is which.", "tone": "warn" },
+        { "max": 4, "text": "🤯 Sweep on: the real clusters hold at 4 across perplexities while the fake ones melt away to 1. Stability under the sweep — plus evidence from outside the plot — is the difference between a finding and wallpaper.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Validating embedding structure", "formula": "survives seeds + perplexity sweep + external evidence ⇒ believable", "text": "t-SNE/UMAP generate hypotheses; they never confirm them. Confirm on held-out labels/features or validity stats computed in the ORIGINAL space — never in the 2-D picture itself." }
+    }
   }
-},
-
-{
-  q: "Two t-SNE runs on the same data: one comes out as a single dense ball, the other as confetti of micro-fragments. Both used extreme learning rates. Which failure belongs to which extreme?",
-  choices: ["Too LOW a learning rate under-spreads into a compressed ball; too HIGH tears clusters into scattered shards — modern 'auto' settings avoid both", "Low rate scatters, high rate compresses", "Learning rate only changes runtime", "The ball means the data truly has one cluster", "The shards mean the data has hundreds of clusters"],
-  explain: "t-SNE is gradient descent on point positions. Steps too small: points can't escape the initial huddle before the optimisation settles — everything stays balled up (often with early exaggeration failing to separate groups). Steps too large: points overshoot every attraction, genuine clusters shatter into fragments. Both pictures LOOK like discoveries — that's the trap. sklearn's learning_rate='auto' (scaled to n) and sensible early-exaggeration defaults make both pathologies rare today.",
-  simple: "Laying out the map is a physical process: neighbours pull, strangers push, and the learning rate is how big a step each point takes per nudge. Baby steps — nobody gets anywhere, the crowd stays huddled in the middle: one fake blob. Giant leaps — everyone constantly overshoots, groups rip apart: fake confetti. Neither picture is about your data; both are about your step size. When a t-SNE looks bizarre, suspect the optimiser before the biology.",
-  widget: {
-    type: "curveStatic", title: "Baby steps and giant leaps",
-    world: "The same 4-cluster dataset embedded at five learning rates. Track embedding quality and what the picture qualitatively shows — only the middle tells the truth.",
-    xlab: "learning rate →", xs: [0,1,2,3,4], labels: ["10","50","200 (auto-ish)","1000","5000"], dec: 0, yunit: "",
-    series: [
-      { name: "neighbourhood preservation (%)", ys: [41, 74, 91, 68, 29] },
-      { name: "visual clusters shown (true: 4)", ys: [1, 3, 4, 7, 23] }
-    ],
-    knob: { label: "Learning rate", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Rate 10: one ball, quality 41%. The points never escaped their initial huddle — the picture shows the optimiser's laziness, not the data.", tone: "warn" },
-      { max: 2, text: "Around 200 (what learning_rate='auto' lands near for this n): 4 visual clusters, 91% quality — the true structure, findable because steps matched the landscape.", tone: "info" },
-      { max: 4, text: "🤯 Rate 5000: twenty-three 'clusters' — pure shrapnel from overshooting, at 29% quality. Same data produced 1, 4, or 23 clusters depending on ONE knob. Any t-SNE conclusion you can't reproduce across settings isn't a conclusion.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "t-SNE optimisation pathologies", formula: "rate ≪ → compressed ball · rate ≫ → shattered fragments",
-      text: "Use learning_rate='auto' and default early exaggeration (sklearn ≥1.1); if a picture looks odd, re-run at other rates before believing it." }
-  }
-},
-
-{
-  q: "By default t-SNE scatters its initial point positions randomly, and two runs can put the islands in totally different places. What does init='pca' change, and why is it now the recommended default?",
-  choices: ["Points start at their PCA coordinates, anchoring the global arrangement — runs become reproducible and the large-scale layout inherits real meaning", "It makes t-SNE deterministic by fixing the seed", "It skips the optimisation entirely", "It replaces perplexity", "It converts t-SNE into UMAP"],
-  explain: "t-SNE's loss barely cares where clusters sit relative to each other, so from a random start that arrangement is frozen accident — run twice, get mirror-image or reshuffled maps. Initialising at the (first two) PCA coordinates seeds the layout with the data's true coarse geometry: things far apart in PCA start far apart and tend to stay so. Kobak & Berens showed this materially improves global-structure preservation; sklearn made init='pca' the default (1.2+). Seeds fix randomness; PCA init fixes MEANING.",
-  simple: "t-SNE only sweats the neighbourhoods — which points huddle together — and shrugs about where each huddle lands on the page. Started randomly, the islands' positions are dice rolls. Starting from a PCA sketch instead means the page ALREADY holds the data's honest rough geography, and t-SNE then sharpens neighbourhoods on top of it. Result: re-runs agree, and 'these two islands are on opposite shores' finally carries some information instead of being an accident of the seed.",
-  widget: {
-    type: "curveStatic", title: "Dice-roll islands vs a sketched map",
-    world: "Five re-runs (different seeds) with random init vs PCA init, measuring how much each run's GLOBAL island arrangement matches run 1's.",
-    xlab: "re-run →", xs: [0,1,2,3,4], labels: ["run 1","run 2","run 3","run 4","run 5"], dec: 0, yunit: "%",
-    series: [
-      { name: "PCA init: layout agreement",    ys: [100, 96, 95, 97, 96] },
-      { name: "random init: layout agreement", ys: [100, 55, 48, 61, 42] }
-    ],
-    knob: { label: "Re-run", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "Second run, random init: only 55% of the island arrangement survives — clusters are intact but live on different shores. PCA init: 96%.", tone: "info" },
-      { max: 3, text: "The clusters THEMSELVES are stable in both columns — it's specifically the between-cluster geography that random init rolls fresh each time.", tone: "info" },
-      { max: 4, text: "🤯 Five runs: random init averages ~50% layout agreement, PCA init ~96%. If you plan to interpret which islands are near which — at all — the init isn't a detail, it's the licence to do so.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "init='pca'", formula: "seed positions = PCA coords → global layout anchored to real geometry",
-      text: "sklearn's default since 1.2 (with learning_rate='auto'). Cheap, strictly better for interpretation; UMAP's spectral init plays the same role." }
-  }
-},
-
-{
-  q: "The standard recipe for t-SNE on 784-dimensional image data starts with a PCA step down to ~50 dimensions. Why preprocess with the 'rival' method first?",
-  choices: ["PCA strips noise dimensions and slashes the distance computations — faster AND cleaner embeddings, since t-SNE's distances stop being diluted by noise", "Because t-SNE crashes above 100 dimensions", "To make the picture exactly two-dimensional", "PCA labels the clusters first", "It's cargo cult — the step does nothing"],
-  explain: "t-SNE's input is pairwise distances, computed on every dimension. In 784-d, hundreds of near-noise dimensions both cost time and — via the curse of dimensionality — dilute the very neighbour contrasts t-SNE needs. PCA to ~50 keeps the real variance (natural images are intrinsically low-dimensional), denoises the metric, and cuts the distance bill ~16×. They're not rivals but a pipeline: linear PCA does honest bulk reduction, non-linear t-SNE spends its effort on the structure that's actually there. sklearn's docs recommend exactly this.",
-  simple: "784 columns of pixels are mostly hiss — a few dozen directions carry the actual picture-ness. Asking t-SNE to measure similarity through all that hiss is like judging voices over a crackly line: slow, and the crackle blurs who sounds like whom. PCA is the noise filter: keep the 50 directions where the signal lives, discard the crackle, THEN let t-SNE do its delicate neighbourhood work on a clean line. Cheaper and better, not cheaper but worse.",
-  widget: {
-    type: "curveStatic", title: "Filter the hiss, then listen",
-    world: "t-SNE on 784-d image data, preceded by PCA to various widths. Watch runtime AND embedding quality as the pre-reduction gets more aggressive.",
-    xlab: "PCA dimensions kept before t-SNE →", xs: [0,1,2,3,4], labels: ["none (784)","300","100","50","10"], dec: 0, yunit: "",
-    series: [
-      { name: "runtime (min)",                  ys: [120, 55, 22, 12, 6] },
-      { name: "embedding quality (%)",          ys: [86, 88, 90, 90, 82] }
-    ],
-    knob: { label: "PCA width", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "No pre-reduction: two hours, and quality is actually LOWER than with PCA-50 — the noise dimensions were diluting every distance t-SNE relied on.", tone: "warn" },
-      { max: 3, text: "PCA to 50: ten times faster and quality up to 90%. Nothing of value was lost — images never really had 784 independent dimensions.", tone: "info" },
-      { max: 4, text: "🤯 PCA to 10 finally overshoots: real structure gets crushed and quality drops to 82. The pipeline logic: linear method for honest bulk reduction, non-linear method for the last, hard mile. ~50 is the folklore sweet spot for a reason.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "PCA-then-t-SNE", formula: "PCA to ~50 dims → t-SNE/UMAP to 2 — denoise + speed, no rivalry",
-      text: "Standard for images, embeddings, single-cell data. The two methods answer different questions and stack beautifully; sklearn's TSNE docs recommend it explicitly." }
-  }
-},
-
-{
-  q: "Your t-SNE plot shows five crisp islands and the team is ready to announce 'five customer types'. What must happen before that becomes a claim rather than a picture?",
-  choices: ["Treat the islands as hypotheses: re-run across seeds and perplexities, and confirm with checks OUTSIDE the picture — labels, held-out features, or cluster validity stats", "Nothing — t-SNE islands are definitive clusters", "Count them again at higher zoom", "Re-colour the plot and re-inspect", "Average the coordinates across runs"],
-  explain: "t-SNE is an eager cluster-shower: perplexity and optimisation quirks can carve continuous data into convincing islands (and shatter real groups). Validation ladder: (1) stability — do the same points co-locate across seeds and a perplexity sweep? (2) external evidence — do the islands align with known labels, or differ on features/metadata HELD OUT of the embedding? (3) quantitative — silhouette or a classifier on the ORIGINAL high-dimensional data using the proposed groups. A cluster that only exists at perplexity 30, seed 42, in 2-D, does not exist.",
-  simple: "The map is an artist's impression, and this artist LOVES drawing islands — sometimes where there's only open water. Before shipping 'five customer types': redraw the map several ways (seeds, perplexities) and check the same customers keep washing up together; then — the real test — step off the map entirely and ask whether the groups differ on facts the map never saw (spending, churn, demographics). Structure that survives outside its own picture is a finding. Structure that doesn't is décor.",
-  widget: {
-    type: "curveStatic", title: "Islands or open water?",
-    world: "The same continuous, cluster-less control data embedded at five perplexities, next to genuinely 4-clustered data. Count the islands each shows — one of these datasets is lying to you.",
-    xlab: "perplexity →", xs: [0,1,2,3,4], labels: ["2","5","30","100","500"], dec: 0, yunit: "",
-    series: [
-      { name: "islands shown: cluster-less data", ys: [19, 9, 4, 2, 1] },
-      { name: "islands shown: truly 4-cluster data", ys: [11, 6, 4, 4, 4] }
-    ],
-    knob: { label: "Perplexity", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Perplexity 2: BOTH datasets shatter into a dozen-plus islands — at tiny perplexity, t-SNE draws archipelagos from anything, including pure noise.", tone: "warn" },
-      { max: 2, text: "Perplexity 30: both show 4 islands. One of them truly has 4 groups; the other is smooth, cluster-less data wearing a convincing costume. The PICTURE cannot tell you which is which.", tone: "warn" },
-      { max: 4, text: "🤯 Sweep on: the real clusters hold at 4 across perplexities while the fake ones melt away to 1. Stability under the sweep — plus evidence from outside the plot — is the difference between a finding and wallpaper.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Validating embedding structure", formula: "survives seeds + perplexity sweep + external evidence ⇒ believable",
-      text: "t-SNE/UMAP generate hypotheses; they never confirm them. Confirm on held-out labels/features or validity stats computed in the ORIGINAL space — never in the 2-D picture itself." }
-  }
-}
 ];

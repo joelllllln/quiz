@@ -1,4 +1,4 @@
-/* DBSCAN — Part I: Foundations. choices[0] is always correct (shuffled at render). */
+/* DBSCAN — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).dbscan1 = [
   {
     "q": "DBSCAN never asks for k. Instead it grows clusters from 'dense' points. What is its definition of a cluster?",
@@ -230,133 +230,230 @@
       "extreme": { "at": "max" },
       "reveal": { "name": "The varying-density weakness", "formula": "global eps ⇒ one density scale · varying densities → HDBSCAN / OPTICS", "text": "Every clusterer's worldview fails somewhere: k-means on shapes, DBSCAN on mixed densities. Knowing each one's blind spot is what makes you the operator rather than the operated." }
     }
+  }
+];
+
+(window.QUESTIONS = window.QUESTIONS || {}).dbscan2 = [
+  {
+    "q": "DBSCAN's eps is notoriously hard to guess. The standard recipe: compute every point's distance to its k-th nearest neighbour, sort those distances, and plot them. What are you looking for?",
+    "choices": [
+      "The elbow where the sorted curve shoots upward — distances below it are 'inside a cluster', above it 'crossing empty space'; set eps at the bend",
+      "The maximum distance",
+      "The mean distance",
+      "The first distance over 1.0",
+      "The point where the curve crosses zero"
+    ],
+    "explain": "For points inside clusters, the k-th-neighbour distance is small and similar — the flat left part of the sorted curve. Noise points and cluster borders must reach much further — the steep right tail. The bend between regimes estimates the natural neighbourhood radius: eps at the elbow (with min_samples = k, commonly 2×dims) makes cluster interiors dense and gaps sparse, which is exactly DBSCAN's working definition.",
+    "simple": "Ask every resident 'how far to your 4th-closest neighbour?'. Townsfolk all answer 'a few doors down' — small, similar numbers. Hermits answer in miles. Sort all the answers and the curve crawls along low, then suddenly rockets — that corner is where town ends and wilderness begins. eps IS that boundary: it's the algorithm's definition of 'walking distance', read off the data instead of guessed.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Where town ends and wilderness begins",
+      "world": "Every point's 4th-nearest-neighbour distance, sorted ascending. Slide along the sorted points and find the corner where 'a few doors down' becomes 'miles'.",
+      "xlab": "points, sorted by 4th-NN distance →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "labels": [
+        "10%",
+        "30%",
+        "50%",
+        "70%",
+        "85%",
+        "99%"
+      ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "4th-NN distance", "ys": [ 0.28, 0.33, 0.38, 0.48, 0.95, 2.6 ] }
+      ],
+      "knob": { "label": "Position along the sorted curve", "min": 0, "max": 5, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 2, "text": "The flat shelf: half the dataset has its 4th neighbour within ~0.4 — these are cluster interiors, all agreeing on what 'dense' feels like.", "tone": "info" },
+        { "max": 3, "text": "~70% along, the curve starts lifting: border points that have to stretch a little further. Still cluster material.", "tone": "info" },
+        { "max": 5, "text": "🤯 The last 15% rockets from 0.5 to 2.6 — noise points reaching across empty space. eps ≈ 0.5, read straight off the bend. You just replaced a blind guess with a measurement.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "The k-distance plot", "formula": "sort dist-to-kth-neighbour; eps = value at the elbow · min_samples = k (≈ 2·dims)", "text": "sklearn: NearestNeighbors(n_neighbors=k).kneighbors(X), sort column k−1, plot. One picture turns DBSCAN's scariest knob into a reading exercise." }
+    }
   },
-
-{
-  q: "DBSCAN's eps is notoriously hard to guess. The standard recipe: compute every point's distance to its k-th nearest neighbour, sort those distances, and plot them. What are you looking for?",
-  choices: ["The elbow where the sorted curve shoots upward — distances below it are 'inside a cluster', above it 'crossing empty space'; set eps at the bend", "The maximum distance", "The mean distance", "The first distance over 1.0", "The point where the curve crosses zero"],
-  explain: "For points inside clusters, the k-th-neighbour distance is small and similar — the flat left part of the sorted curve. Noise points and cluster borders must reach much further — the steep right tail. The bend between regimes estimates the natural neighbourhood radius: eps at the elbow (with min_samples = k, commonly 2×dims) makes cluster interiors dense and gaps sparse, which is exactly DBSCAN's working definition.",
-  simple: "Ask every resident 'how far to your 4th-closest neighbour?'. Townsfolk all answer 'a few doors down' — small, similar numbers. Hermits answer in miles. Sort all the answers and the curve crawls along low, then suddenly rockets — that corner is where town ends and wilderness begins. eps IS that boundary: it's the algorithm's definition of 'walking distance', read off the data instead of guessed.",
-  widget: {
-    type: "curveStatic", title: "Where town ends and wilderness begins",
-    world: "Every point's 4th-nearest-neighbour distance, sorted ascending. Slide along the sorted points and find the corner where 'a few doors down' becomes 'miles'.",
-    xlab: "points, sorted by 4th-NN distance →", xs: [0,1,2,3,4,5], labels: ["10%","30%","50%","70%","85%","99%"], dec: 2, yunit: "",
-    series: [
-      { name: "4th-NN distance", ys: [0.28, 0.33, 0.38, 0.48, 0.95, 2.6] }
+  {
+    "q": "Your data has one dense downtown cluster and one sprawling rural cluster. Any single eps either shreds the sprawl or merges the downtown. Which successors fix this, and how?",
+    "choices": [
+      "HDBSCAN/OPTICS — they sweep ALL density levels and extract clusters per region, instead of enforcing one global eps",
+      "Running DBSCAN twice with the same eps",
+      "Increasing min_samples until it works",
+      "Standardising the features",
+      "Using Manhattan distance"
     ],
-    knob: { label: "Position along the sorted curve", min: 0, max: 5, step: 1, init: 0 },
-    insights: [
-      { max: 2, text: "The flat shelf: half the dataset has its 4th neighbour within ~0.4 — these are cluster interiors, all agreeing on what 'dense' feels like.", tone: "info" },
-      { max: 3, text: "~70% along, the curve starts lifting: border points that have to stretch a little further. Still cluster material.", tone: "info" },
-      { max: 5, text: "🤯 The last 15% rockets from 0.5 to 2.6 — noise points reaching across empty space. eps ≈ 0.5, read straight off the bend. You just replaced a blind guess with a measurement.", tone: "wow" }
+    "explain": "DBSCAN draws one density bar: neighbourhoods denser than eps are clusters, full stop. Varying-density data has no correct single bar. OPTICS orders points by reachability distance, encoding the clustering at EVERY eps at once; HDBSCAN builds the full density hierarchy and keeps the most STABLE clusters per branch — dense downtown and sparse sprawl each judged at their own natural level. HDBSCAN's main knob is just min_cluster_size, far friendlier than eps.",
+    "simple": "One eps is one definition of 'crowded' applied to the whole map — but downtown-crowded and countryside-crowded are different things. The fix isn't a cleverer single answer; it's refusing the question: check every crowdedness level, watch which groups persist across many levels, and keep those. Stable-at-many-densities is the new definition of 'real cluster' — and it needs no eps at all.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "One density bar vs the whole staircase",
+      "world": "Datasets with increasingly unequal cluster densities, clustered by single-eps DBSCAN (best eps found by search) vs HDBSCAN. Scores measure match with the true groups.",
+      "xlab": "density mismatch between clusters →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "equal",
+        "2×",
+        "5×",
+        "10×",
+        "30×"
+      ],
+      "dec": 0,
+      "yunit": "%",
+      "series": [
+        { "name": "HDBSCAN", "ys": [ 90, 89, 87, 84, 80 ] },
+        { "name": "DBSCAN (best eps)", "ys": [ 91, 84, 68, 52, 35 ] }
+      ],
+      "knob": { "label": "Density mismatch", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Equal densities: plain DBSCAN slightly ahead — one bar suffices when one bar is true, and it's cheaper.", "tone": "info" },
+        { "max": 2, "text": "5× mismatch: even the BEST single eps scores 68 — every candidate either shreds the sparse cluster into noise or floods the dense one into its surroundings.", "tone": "warn" },
+        { "max": 4, "text": "🤯 30× mismatch: 80 vs 35. HDBSCAN never picked an eps — it judged each region at its own density and kept what persisted. When no single setting can be right, sweep the setting and harvest stability.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "HDBSCAN & OPTICS", "formula": "hierarchy over all eps values → keep the most stable clusters", "text": "sklearn ships both (HDBSCAN since 1.3). Default modern choice: HDBSCAN with min_cluster_size — varying density handled, eps abolished." }
+    }
+  },
+  {
+    "q": "DBSCAN on customers with age (18–70) and income (£15k–£150k), unscaled. eps is one number applied to distances. What has income's scale done to the neighbourhoods?",
+    "choices": [
+      "Distances are ~all income — eps effectively defines income bands, and age plays no part in who counts as neighbours",
+      "Nothing — DBSCAN is scale-free",
+      "Age dominates because its values are smaller",
+      "eps automatically adapts per feature",
+      "The algorithm errors out on mixed scales"
     ],
-    extreme: { at: "max" },
-    reveal: { name: "The k-distance plot", formula: "sort dist-to-kth-neighbour; eps = value at the elbow · min_samples = k (≈ 2·dims)",
-      text: "sklearn: NearestNeighbors(n_neighbors=k).kneighbors(X), sort column k−1, plot. One picture turns DBSCAN's scariest knob into a reading exercise." }
+    "explain": "Same disease as k-means and kNN: Euclidean distance sums squared differences, and income gaps (thousands) drown age gaps (tens) a million-fold. A single eps then slices income alone. Worse, DBSCAN can't even hide it — eps must be a NUMBER in the data's units, so the units decide everything: eps=5000 means '£5000', with age contributing nothing. StandardScaler first, always; then eps lives in comparable, meaningful units.",
+    "simple": "eps is a ruler: 'within THIS distance, you're my neighbour'. But the ruler measures age-steps and pound-steps with the same markings, and a single pound is a step while a year is a stride of one. Any usable eps ends up spanning pennies of income and centuries of age — so neighbourhoods are income bands, and the age axis might as well not exist. Scale both features first, and the ruler finally measures 'similarity' instead of 'currency'.",
+    "widget": {
+      "type": "scaleFeature",
+      "title": "A ruler that only reads pounds",
+      "world": "One customer and four candidates. Who falls inside an eps-neighbourhood? Shrink income's units and watch the neighbourhood change occupants.",
+      "aName": "age",
+      "bName": "income",
+      "target": { "name": "customer X", "a": 30, "b": 40000 },
+      "cands": [
+        { "name": "match A · 31y, £41k", "a": 31, "b": 41000 },
+        { "name": "match B · 64y, £40.3k", "a": 64, "b": 40300 },
+        { "name": "match C · 28y, £46k", "a": 28, "b": 46000 },
+        { "name": "match D · 35y, £52k", "a": 35, "b": 52000 }
+      ],
+      "knob": { "label": "Shrink income units by", "min": 0, "max": 4, "step": 0.25, "init": 0 },
+      "insights": [
+        { "max": 0.5, "text": "Raw units: the 64-year-old with a matching income is the 'nearest neighbour' of our 30-year-old. Every DBSCAN neighbourhood inherits this verdict.", "tone": "warn" },
+        { "max": 2.5, "text": "As income's shout fades, age enters the distance — and the neighbourhood roster reshuffles without a single customer moving.", "tone": "info" },
+        { "max": 4, "text": "🤯 Balanced units: the genuinely similar 31-year-old is nearest. Core points, border points, noise — every DBSCAN label downstream flows from these distances, so scaling isn't preprocessing, it's the clustering itself.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Scaling before DBSCAN", "formula": "StandardScaler → eps in comparable units", "text": "All density methods share this: density = points per volume, and volume is meaningless with mixed units. Scale first, THEN read eps off the k-distance plot." }
+    }
+  },
+  {
+    "q": "Naive DBSCAN asks 'who is within eps of me?' for every point against every other point — O(n²). How do real implementations make this fast?",
+    "choices": [
+      "A spatial index (kd-tree/ball tree) answers each radius query in ~log n, making the whole run ~n log n",
+      "They randomly skip most points",
+      "They cluster a 2-D projection instead",
+      "They cap every neighbourhood at 5 points",
+      "They precompute all n² distances once and reuse them"
+    ],
+    "explain": "The only heavy operation in DBSCAN is the radius query. A kd-tree or ball tree partitions space so a query descends a few branches and prunes the rest — ~O(log n) per query instead of O(n), so the full run drops from O(n²) toward O(n log n). sklearn builds the index automatically (algorithm='auto'). Caveat: trees lose their pruning power in high dimensions, where distances concentrate — the curse of dimensionality again.",
+    "simple": "Asking 'who lives within 500m of me?' by phoning every person in the country is n calls per resident. A street atlas fixes it: open to your neighbourhood's page and check only that page and its edges. The atlas is the spatial index — build it once, and every DBSCAN neighbourhood query becomes a page lookup instead of a national phone campaign.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The street atlas",
+      "world": "Radius queries per second (thousands) with brute force vs a kd-tree index, as the dataset grows. Both answer EXACTLY the same queries.",
+      "xlab": "dataset size →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1k",
+        "10k",
+        "100k",
+        "1M",
+        "10M"
+      ],
+      "dec": 1,
+      "yunit": "k/s",
+      "series": [
+        { "name": "kd-tree index", "ys": [ 800, 400, 150, 60, 25 ] },
+        { "name": "brute force", "ys": [ 500, 50, 5, 0.5, 0.05 ] }
+      ],
+      "knob": { "label": "Dataset size", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "At 1k points brute force is actually fine — the index's bookkeeping barely pays for itself on tiny data.", "tone": "info" },
+        { "max": 2, "text": "100k points: 150k vs 5k queries/second. Brute force decays linearly with n; the tree decays like log n — the gap now decides feasibility.", "tone": "info" },
+        { "max": 4, "text": "🤯 10M points: 500× apart — a 20-minute run vs a week. Same algorithm, same answers; the only change is HOW 'who's near me?' gets answered. In high dimensions the tree loses its magic though — then it's approximate indexes or reduce dimensions first.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Spatial indexes for DBSCAN", "formula": "kd-tree / ball tree: radius query in ~O(log n) ⇒ DBSCAN in ~O(n log n)", "text": "sklearn: DBSCAN(algorithm='auto') picks the index for you. Same structures accelerate kNN — one data structure, several algorithms fed." }
+    }
+  },
+  {
+    "q": "Run DBSCAN twice on the same data with the same settings but shuffled row order, and a few points swap cluster labels. Which points, and why is this considered harmless?",
+    "choices": [
+      "Border points reachable from TWO clusters go to whichever claimed them first — core points and noise never change, so the structure is stable",
+      "Random core points swap sides",
+      "The noise set changes completely",
+      "It means eps was set wrong",
+      "It's a bug fixed in newer sklearn versions"
+    ],
+    "explain": "Whether a point is core (≥ min_samples within eps) or noise (unreachable) depends only on geometry — order can't touch it. The single ambiguity: a border point within eps of core points from two different clusters joins whichever cluster's expansion reaches it first, and expansion order follows row order. Typically a handful of points on the seam between clusters — worth knowing so you don't mistake the flicker for instability, and worth fixing the seed/order if you need byte-identical outputs.",
+    "simple": "Two towns expand street by street, and one farmhouse sits exactly on the boundary line between them. Whichever town's surveyor arrives first claims it — shuffle the survey order and the farmhouse changes towns. But the towns themselves — every core resident, every true hermit — are decided by geography, not by who knocked first. A couple of farmhouses flickering on the seam is the entire extent of DBSCAN's randomness.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The farmhouse on the boundary",
+      "world": "DBSCAN re-run six times on the same data, rows shuffled each time. Track what share of each point type changes its label versus run 1.",
+      "xlab": "re-run (shuffled row order) →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "labels": [
+        "run 1",
+        "run 2",
+        "run 3",
+        "run 4",
+        "run 5",
+        "run 6"
+      ],
+      "dec": 1,
+      "yunit": "%",
+      "series": [
+        { "name": "border points changing label", "ys": [ 0, 1.4, 0.9, 1.6, 1.1, 1.3 ] },
+        { "name": "core points changing label", "ys": [ 0, 0, 0, 0, 0, 0 ] },
+        { "name": "noise points changing label", "ys": [ 0, 0, 0, 0, 0, 0 ] }
+      ],
+      "knob": { "label": "Re-run", "min": 0, "max": 5, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Run 2: 1.4% of BORDER points flipped — all of them seam-sitters within eps of two clusters' cores. First-come, first-claimed.", "tone": "info" },
+        { "max": 3, "text": "Across every shuffle, the core and noise rows sit at exactly zero: core-ness and noise-ness are geometric facts, and geometry doesn't care about row order.", "tone": "info" },
+        { "max": 5, "text": "🤯 Six runs, and the entire 'instability' is ~1% of points, all on cluster seams. Compare k-means, where a bad initialisation can rearrange EVERYTHING. Knowing which parts of an algorithm are deterministic tells you what to trust — and what to seed.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "DBSCAN's order dependence", "formula": "border point near 2 clusters → first expansion wins · core & noise: deterministic", "text": "A documented, bounded quirk. If exact reproducibility matters, fix the row order; if a point's flicker matters, it was a seam case your report should flag anyway." }
+    }
   }
-},
-
-{
-  q: "Your data has one dense downtown cluster and one sprawling rural cluster. Any single eps either shreds the sprawl or merges the downtown. Which successors fix this, and how?",
-  choices: ["HDBSCAN/OPTICS — they sweep ALL density levels and extract clusters per region, instead of enforcing one global eps", "Running DBSCAN twice with the same eps", "Increasing min_samples until it works", "Standardising the features", "Using Manhattan distance"],
-  explain: "DBSCAN draws one density bar: neighbourhoods denser than eps are clusters, full stop. Varying-density data has no correct single bar. OPTICS orders points by reachability distance, encoding the clustering at EVERY eps at once; HDBSCAN builds the full density hierarchy and keeps the most STABLE clusters per branch — dense downtown and sparse sprawl each judged at their own natural level. HDBSCAN's main knob is just min_cluster_size, far friendlier than eps.",
-  simple: "One eps is one definition of 'crowded' applied to the whole map — but downtown-crowded and countryside-crowded are different things. The fix isn't a cleverer single answer; it's refusing the question: check every crowdedness level, watch which groups persist across many levels, and keep those. Stable-at-many-densities is the new definition of 'real cluster' — and it needs no eps at all.",
-  widget: {
-    type: "curveStatic", title: "One density bar vs the whole staircase",
-    world: "Datasets with increasingly unequal cluster densities, clustered by single-eps DBSCAN (best eps found by search) vs HDBSCAN. Scores measure match with the true groups.",
-    xlab: "density mismatch between clusters →", xs: [0,1,2,3,4], labels: ["equal","2×","5×","10×","30×"], dec: 0, yunit: "%",
-    series: [
-      { name: "HDBSCAN",             ys: [90, 89, 87, 84, 80] },
-      { name: "DBSCAN (best eps)",   ys: [91, 84, 68, 52, 35] }
-    ],
-    knob: { label: "Density mismatch", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Equal densities: plain DBSCAN slightly ahead — one bar suffices when one bar is true, and it's cheaper.", tone: "info" },
-      { max: 2, text: "5× mismatch: even the BEST single eps scores 68 — every candidate either shreds the sparse cluster into noise or floods the dense one into its surroundings.", tone: "warn" },
-      { max: 4, text: "🤯 30× mismatch: 80 vs 35. HDBSCAN never picked an eps — it judged each region at its own density and kept what persisted. When no single setting can be right, sweep the setting and harvest stability.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "HDBSCAN & OPTICS", formula: "hierarchy over all eps values → keep the most stable clusters",
-      text: "sklearn ships both (HDBSCAN since 1.3). Default modern choice: HDBSCAN with min_cluster_size — varying density handled, eps abolished." }
-  }
-},
-
-{
-  q: "DBSCAN on customers with age (18–70) and income (£15k–£150k), unscaled. eps is one number applied to distances. What has income's scale done to the neighbourhoods?",
-  choices: ["Distances are ~all income — eps effectively defines income bands, and age plays no part in who counts as neighbours", "Nothing — DBSCAN is scale-free", "Age dominates because its values are smaller", "eps automatically adapts per feature", "The algorithm errors out on mixed scales"],
-  explain: "Same disease as k-means and kNN: Euclidean distance sums squared differences, and income gaps (thousands) drown age gaps (tens) a million-fold. A single eps then slices income alone. Worse, DBSCAN can't even hide it — eps must be a NUMBER in the data's units, so the units decide everything: eps=5000 means '£5000', with age contributing nothing. StandardScaler first, always; then eps lives in comparable, meaningful units.",
-  simple: "eps is a ruler: 'within THIS distance, you're my neighbour'. But the ruler measures age-steps and pound-steps with the same markings, and a single pound is a step while a year is a stride of one. Any usable eps ends up spanning pennies of income and centuries of age — so neighbourhoods are income bands, and the age axis might as well not exist. Scale both features first, and the ruler finally measures 'similarity' instead of 'currency'.",
-  widget: {
-    type: "scaleFeature", title: "A ruler that only reads pounds",
-    world: "One customer and four candidates. Who falls inside an eps-neighbourhood? Shrink income's units and watch the neighbourhood change occupants.",
-    aName: "age", bName: "income",
-    target: { name: "customer X", a: 30, b: 40000 },
-    cands: [
-      { name: "match A · 31y, £41k", a: 31, b: 41000 },
-      { name: "match B · 64y, £40.3k", a: 64, b: 40300 },
-      { name: "match C · 28y, £46k", a: 28, b: 46000 },
-      { name: "match D · 35y, £52k", a: 35, b: 52000 }
-    ],
-    knob: { label: "Shrink income units by", min: 0, max: 4, step: 0.25, init: 0 },
-    insights: [
-      { max: 0.5, text: "Raw units: the 64-year-old with a matching income is the 'nearest neighbour' of our 30-year-old. Every DBSCAN neighbourhood inherits this verdict.", tone: "warn" },
-      { max: 2.5, text: "As income's shout fades, age enters the distance — and the neighbourhood roster reshuffles without a single customer moving.", tone: "info" },
-      { max: 4, text: "🤯 Balanced units: the genuinely similar 31-year-old is nearest. Core points, border points, noise — every DBSCAN label downstream flows from these distances, so scaling isn't preprocessing, it's the clustering itself.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Scaling before DBSCAN", formula: "StandardScaler → eps in comparable units",
-      text: "All density methods share this: density = points per volume, and volume is meaningless with mixed units. Scale first, THEN read eps off the k-distance plot." }
-  }
-},
-
-{
-  q: "Naive DBSCAN asks 'who is within eps of me?' for every point against every other point — O(n²). How do real implementations make this fast?",
-  choices: ["A spatial index (kd-tree/ball tree) answers each radius query in ~log n, making the whole run ~n log n", "They randomly skip most points", "They cluster a 2-D projection instead", "They cap every neighbourhood at 5 points", "They precompute all n² distances once and reuse them"],
-  explain: "The only heavy operation in DBSCAN is the radius query. A kd-tree or ball tree partitions space so a query descends a few branches and prunes the rest — ~O(log n) per query instead of O(n), so the full run drops from O(n²) toward O(n log n). sklearn builds the index automatically (algorithm='auto'). Caveat: trees lose their pruning power in high dimensions, where distances concentrate — the curse of dimensionality again.",
-  simple: "Asking 'who lives within 500m of me?' by phoning every person in the country is n calls per resident. A street atlas fixes it: open to your neighbourhood's page and check only that page and its edges. The atlas is the spatial index — build it once, and every DBSCAN neighbourhood query becomes a page lookup instead of a national phone campaign.",
-  widget: {
-    type: "curveStatic", title: "The street atlas",
-    world: "Radius queries per second (thousands) with brute force vs a kd-tree index, as the dataset grows. Both answer EXACTLY the same queries.",
-    xlab: "dataset size →", xs: [0,1,2,3,4], labels: ["1k","10k","100k","1M","10M"], dec: 1, yunit: "k/s",
-    series: [
-      { name: "kd-tree index",  ys: [800, 400, 150, 60, 25] },
-      { name: "brute force",    ys: [500, 50, 5, 0.5, 0.05] }
-    ],
-    knob: { label: "Dataset size", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "At 1k points brute force is actually fine — the index's bookkeeping barely pays for itself on tiny data.", tone: "info" },
-      { max: 2, text: "100k points: 150k vs 5k queries/second. Brute force decays linearly with n; the tree decays like log n — the gap now decides feasibility.", tone: "info" },
-      { max: 4, text: "🤯 10M points: 500× apart — a 20-minute run vs a week. Same algorithm, same answers; the only change is HOW 'who's near me?' gets answered. In high dimensions the tree loses its magic though — then it's approximate indexes or reduce dimensions first.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "Spatial indexes for DBSCAN", formula: "kd-tree / ball tree: radius query in ~O(log n) ⇒ DBSCAN in ~O(n log n)",
-      text: "sklearn: DBSCAN(algorithm='auto') picks the index for you. Same structures accelerate kNN — one data structure, several algorithms fed." }
-  }
-},
-
-{
-  q: "Run DBSCAN twice on the same data with the same settings but shuffled row order, and a few points swap cluster labels. Which points, and why is this considered harmless?",
-  choices: ["Border points reachable from TWO clusters go to whichever claimed them first — core points and noise never change, so the structure is stable", "Random core points swap sides", "The noise set changes completely", "It means eps was set wrong", "It's a bug fixed in newer sklearn versions"],
-  explain: "Whether a point is core (≥ min_samples within eps) or noise (unreachable) depends only on geometry — order can't touch it. The single ambiguity: a border point within eps of core points from two different clusters joins whichever cluster's expansion reaches it first, and expansion order follows row order. Typically a handful of points on the seam between clusters — worth knowing so you don't mistake the flicker for instability, and worth fixing the seed/order if you need byte-identical outputs.",
-  simple: "Two towns expand street by street, and one farmhouse sits exactly on the boundary line between them. Whichever town's surveyor arrives first claims it — shuffle the survey order and the farmhouse changes towns. But the towns themselves — every core resident, every true hermit — are decided by geography, not by who knocked first. A couple of farmhouses flickering on the seam is the entire extent of DBSCAN's randomness.",
-  widget: {
-    type: "curveStatic", title: "The farmhouse on the boundary",
-    world: "DBSCAN re-run six times on the same data, rows shuffled each time. Track what share of each point type changes its label versus run 1.",
-    xlab: "re-run (shuffled row order) →", xs: [0,1,2,3,4,5], labels: ["run 1","run 2","run 3","run 4","run 5","run 6"], dec: 1, yunit: "%",
-    series: [
-      { name: "border points changing label", ys: [0, 1.4, 0.9, 1.6, 1.1, 1.3] },
-      { name: "core points changing label",   ys: [0, 0, 0, 0, 0, 0] },
-      { name: "noise points changing label",  ys: [0, 0, 0, 0, 0, 0] }
-    ],
-    knob: { label: "Re-run", min: 0, max: 5, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "Run 2: 1.4% of BORDER points flipped — all of them seam-sitters within eps of two clusters' cores. First-come, first-claimed.", tone: "info" },
-      { max: 3, text: "Across every shuffle, the core and noise rows sit at exactly zero: core-ness and noise-ness are geometric facts, and geometry doesn't care about row order.", tone: "info" },
-      { max: 5, text: "🤯 Six runs, and the entire 'instability' is ~1% of points, all on cluster seams. Compare k-means, where a bad initialisation can rearrange EVERYTHING. Knowing which parts of an algorithm are deterministic tells you what to trust — and what to seed.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "DBSCAN's order dependence", formula: "border point near 2 clusters → first expansion wins · core & noise: deterministic",
-      text: "A documented, bounded quirk. If exact reproducibility matters, fix the row order; if a point's flicker matters, it was a seam case your report should flag anyway." }
-  }
-}
 ];

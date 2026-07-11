@@ -1,4 +1,4 @@
-/* PCA — Part I: Foundations. choices[0] is always correct (shuffled at render). */
+/* PCA — Parts I & II. choices[0] is always correct (shuffled at render). */
 (window.QUESTIONS = window.QUESTIONS || {}).pca1 = [
   {
     "q": "Your dataset has 300 columns. Before any modelling, why would you deliberately throw dimensions away?",
@@ -229,7 +229,10 @@
       "extreme": { "at": "max" },
       "reveal": { "name": "PCA's linearity limit", "formula": "PCA = rotation + truncation — curved manifolds need nonlinear maps", "text": "PCA answers 'which straight directions matter?'. When the truth is curved — spirals, arcs, rolled-up sheets — the honest answer is 'none alone', and you reach for nonlinear reducers." }
     }
-  },
+  }
+];
+
+(window.QUESTIONS = window.QUESTIONS || {}).pca2 = [
   {
     "q": "You compress 100 sensor channels to 12 principal components and reconstruct. The reconstruction is imperfect — yet often CLEANER than the original. How?",
     "choices": [
@@ -354,106 +357,188 @@
       "reveal": { "name": "PCA in pipelines", "formula": "make_pipeline(StandardScaler(), PCA(n_components=0.9), model) — fit on train only", "text": "The course's most repeated lesson closes its final topic. Preprocessing is part of the model; evaluate them as one sealed unit — always." }
     }
   },
-
-{
-  q: "PCA on body measurements returns a first component with loadings: height 0.52, weight 0.55, arm span 0.50, shoe size 0.42, hair colour 0.03. How do you read this component?",
-  choices: ["As an 'overall body size' axis — all the size features load together with the same sign, hair colour contributes nothing", "As proof height causes weight", "As a cluster of tall people", "As an error — loadings must sum to 1", "As the least important direction"],
-  explain: "A component IS its loadings: the recipe of original features it blends. Several features loading strongly with the same sign = they rise together, and the component tracks their shared cause ('size'). Near-zero loadings = that feature is irrelevant to this axis. Mixed signs would read as a contrast (e.g. 'long-limbed vs stocky'). Naming components from their loading patterns is how PCA becomes interpretation, not just compression.",
-  simple: "Each component comes with a recipe card: how much of every original feature it stirs in. This one says 'roughly equal parts height, weight, arm span, shoe size — hold the hair colour'. Everything on the card grows together, so the axis is measuring whatever makes ALL of them grow: body size. Read the card, name the axis — that's the skill.",
-  widget: {
-    type: "curveStatic", title: "Reading the recipe card",
-    world: "PC1's loading on each original feature. Slide across the features and watch which ones the component actually blends — and which it ignores.",
-    xlab: "original feature →", xs: [0,1,2,3,4], labels: ["height","weight","arm span","shoe size","hair colour"], dec: 2, yunit: "",
-    series: [
-      { name: "PC1 loading", ys: [0.52, 0.55, 0.50, 0.42, 0.03] },
-      { name: "PC2 loading", ys: [0.30, -0.35, 0.45, -0.28, 0.05] }
+  {
+    "q": "PCA on body measurements returns a first component with loadings: height 0.52, weight 0.55, arm span 0.50, shoe size 0.42, hair colour 0.03. How do you read this component?",
+    "choices": [
+      "As an 'overall body size' axis — all the size features load together with the same sign, hair colour contributes nothing",
+      "As proof height causes weight",
+      "As a cluster of tall people",
+      "As an error — loadings must sum to 1",
+      "As the least important direction"
     ],
-    knob: { label: "Feature", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "Height and weight load ~0.5 each, same sign: PC1 rises when BOTH rise. Whatever it measures, they share it.", tone: "info" },
-      { max: 3, text: "Arm span and shoe size join at the same sign too — four size features, one shared axis. PC1 has earned the name 'body size'.", tone: "info" },
-      { max: 4, text: "🤯 Hair colour: 0.03 — invisible to PC1. And look at PC2: SAME features but with mixed signs (+height, −weight, +arm span): a 'lanky vs stocky' CONTRAST. Same recipe format, opposite kind of story — signs matter as much as sizes.", tone: "wow" }
+    "explain": "A component IS its loadings: the recipe of original features it blends. Several features loading strongly with the same sign = they rise together, and the component tracks their shared cause ('size'). Near-zero loadings = that feature is irrelevant to this axis. Mixed signs would read as a contrast (e.g. 'long-limbed vs stocky'). Naming components from their loading patterns is how PCA becomes interpretation, not just compression.",
+    "simple": "Each component comes with a recipe card: how much of every original feature it stirs in. This one says 'roughly equal parts height, weight, arm span, shoe size — hold the hair colour'. Everything on the card grows together, so the axis is measuring whatever makes ALL of them grow: body size. Read the card, name the axis — that's the skill.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Reading the recipe card",
+      "world": "PC1's loading on each original feature. Slide across the features and watch which ones the component actually blends — and which it ignores.",
+      "xlab": "original feature →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "height",
+        "weight",
+        "arm span",
+        "shoe size",
+        "hair colour"
+      ],
+      "dec": 2,
+      "yunit": "",
+      "series": [
+        { "name": "PC1 loading", "ys": [ 0.52, 0.55, 0.5, 0.42, 0.03 ] },
+        { "name": "PC2 loading", "ys": [ 0.3, -0.35, 0.45, -0.28, 0.05 ] }
+      ],
+      "knob": { "label": "Feature", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Height and weight load ~0.5 each, same sign: PC1 rises when BOTH rise. Whatever it measures, they share it.", "tone": "info" },
+        { "max": 3, "text": "Arm span and shoe size join at the same sign too — four size features, one shared axis. PC1 has earned the name 'body size'.", "tone": "info" },
+        { "max": 4, "text": "🤯 Hair colour: 0.03 — invisible to PC1. And look at PC2: SAME features but with mixed signs (+height, −weight, +arm span): a 'lanky vs stocky' CONTRAST. Same recipe format, opposite kind of story — signs matter as much as sizes.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "Component loadings", "formula": "PC = Σ (loading_i × feature_i) — the recipe defines the meaning", "text": "sklearn: pca.components_[k]. Same-sign block = shared factor; mixed signs = contrast; near-zero = irrelevant. Name your components or they're just coordinates." }
+    }
+  },
+  {
+    "q": "On one dataset PC1 captures 50% of the variance; on another it captures 99.5%. What property of the FEATURES drives how much variance one component can absorb?",
+    "choices": [
+      "Their correlation — the more the features move together, the more of the total variance a single shared axis can soak up",
+      "The number of rows",
+      "The units of the first feature",
+      "How many classes the labels have",
+      "The random seed of the solver"
     ],
-    extreme: { at: "max" },
-    reveal: { name: "Component loadings", formula: "PC = Σ (loading_i × feature_i) — the recipe defines the meaning",
-      text: "sklearn: pca.components_[k]. Same-sign block = shared factor; mixed signs = contrast; near-zero = irrelevant. Name your components or they're just coordinates." }
+    "explain": "PCA is a redundancy harvester. Uncorrelated features each carry independent information — no single direction can represent them, so variance spreads across many components. Highly correlated features are near-copies of one underlying signal, and the component aligned with that signal absorbs almost everything. That's why PCA compresses sensor arrays and pixel images so well (massive redundancy) and does little for carefully engineered, decorrelated feature sets.",
+    "simple": "Think of features as interview questions. If every question probes something different, you can't summarise the interview in one number. If ten questions are re-wordings of 'how big is it?', one number nails all ten. PCA's compression is exactly a measure of how much your features repeat each other — slide the correlation up and watch one axis swallow the dataset.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Redundancy is compressibility",
+      "world": "Ten features with adjustable mutual correlation, PCA applied. Watch how much of the total variance PC1 alone captures — and how many components you'd need to keep 95%.",
+      "xlab": "correlation between the features →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "0.0",
+        "0.3",
+        "0.6",
+        "0.9",
+        "0.99"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "variance in PC1 (%)", "ys": [ 10, 37, 64, 91, 99 ] },
+        { "name": "components for 95% (count)", "ys": [ 10, 8, 5, 2, 1 ] }
+      ],
+      "knob": { "label": "Feature correlation", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Zero correlation: PC1 holds 10% — exactly 1/10th. No shared signal exists, so no direction is special, and 'compression' would just delete information.", "tone": "info" },
+        { "max": 2, "text": "At 0.6 correlation, PC1 already absorbs nearly two-thirds, and 95% of the data fits in 5 components instead of 10 — the redundancy is being harvested.", "tone": "info" },
+        { "max": 4, "text": "🤯 At 0.99, ONE axis carries 99% of ten features. PCA didn't create that compression — it just found the one signal your ten features were all echoing. Compressibility is a fact about the data; PCA merely reveals it.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "PCA eats correlation", "formula": "shared signal → one dominant eigenvalue → few components suffice", "text": "Quick self-test: if your scree plot has no elbow, your features weren't redundant and PCA has little to offer. If PC1 towers, your dataset was secretly low-dimensional." }
+    }
+  },
+  {
+    "q": "A fraud team compresses normal transactions with PCA (keeping a few components), then reconstructs each incoming transaction and measures the reconstruction error. Why does this catch anomalies?",
+    "choices": [
+      "The components encode how NORMAL data varies — normal points survive the compress-reconstruct round trip, anomalies lose what makes them odd and come back distorted",
+      "PCA clusters the fraud cases together",
+      "Reconstruction error equals the class label",
+      "Anomalies have larger raw feature values",
+      "It doesn't — PCA is supervised"
+    ],
+    "explain": "Fit PCA on normal data only. The kept components span the subspace of normal variation; whatever a transaction has OUTSIDE that subspace is discarded on projection. Normal points barely lie outside it → tiny error. An anomaly deviates in directions normal data never uses → its projection snaps back to the nearest 'normal-looking' point, and the distance between original and reconstruction is precisely its abnormality score. Threshold that error and you have an unsupervised fraud alarm.",
+    "simple": "PCA learns a stencil of normal. Compressing a transaction means tracing it with the stencil; reconstructing means redrawing it from that tracing. Normal transactions redraw almost perfectly — the stencil was made for them. A weird transaction can't be traced with the stencil, so its redrawing comes back 'normalised' — and the gap between the original and the redraw is exactly HOW weird it was. No fraud labels needed; normal data defined its own alarm.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "The stencil of normal",
+      "world": "PCA fitted on normal transactions, keeping more or fewer components. Compare the reconstruction error of typical points vs known anomalies — the GAP is the alarm's signal.",
+      "xlab": "components kept →",
+      "xs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "labels": [
+        "1",
+        "2",
+        "5",
+        "10",
+        "20"
+      ],
+      "dec": 1,
+      "yunit": "",
+      "series": [
+        { "name": "anomaly reconstruction error", "ys": [ 40, 35, 28, 22, 12 ] },
+        { "name": "normal reconstruction error", "ys": [ 8, 5, 2, 1, 0.5 ] }
+      ],
+      "knob": { "label": "Components kept", "min": 0, "max": 4, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 1, "text": "Few components: normal points reconstruct at error ~5, anomalies at ~35 — a 7× gap. The stencil is strict, and only normal shapes fit it.", "tone": "info" },
+        { "max": 2, "text": "5 components: the sweet spot here — normal error nearly zero, anomaly error still high. Threshold anywhere in the gap and the alarm works.", "tone": "info" },
+        { "max": 4, "text": "🤯 20 components: the stencil is now so detailed it can trace the anomalies too — their error falls to 12 and the gap narrows. Keeping MORE of the data made the alarm WORSE. The components you throw away were the detector.", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "PCA reconstruction-error anomaly detection", "formula": "score(x) = ‖x − reconstruct(project(x))‖ — big = abnormal", "text": "Fit on normal data; keep few components; threshold the error on a validation set. The same idea, upgraded with autoencoders, powers modern anomaly detection." }
+    }
+  },
+  {
+    "q": "Vanilla PCA chokes: one dataset is 10M rows and won't fit in memory, another needs eigenvectors of a 20k-feature matrix, a third has structure that's curved, not linear. Which toolbox variants map to these three walls?",
+    "choices": [
+      "IncrementalPCA for out-of-core batches, randomized SVD for huge matrices, KernelPCA for curved structure",
+      "There is only one PCA — the walls are fatal",
+      "t-SNE, UMAP and k-means respectively",
+      "StandardScaler fixes all three",
+      "Deeper trees, more trees, and boosting"
+    ],
+    "explain": "Same objective, three engines. IncrementalPCA consumes data in mini-batches, updating components as it streams — nothing ever needs to fit in RAM. svd_solver='randomized' approximates just the top-k components via random projections instead of a full eigendecomposition — sklearn auto-picks it for big matrices when you ask for few components. KernelPCA applies the kernel trick so 'directions of maximal variance' can be measured in an implicit non-linear feature space — curved manifolds unroll. Know the walls, know which engine.",
+    "simple": "One idea — find the directions where the data varies most — and three engineering escapes for when the naive recipe hits a wall. Data too big for memory? Feed it in spoonfuls (Incremental). Matrix too big to fully decompose? Estimate just the top few directions with clever randomness (randomized). Structure bends? Do PCA in a stretched space where the bend is straight (Kernel). Slide through the scenarios and match the engine.",
+    "widget": {
+      "type": "curveStatic",
+      "title": "Three walls, three engines",
+      "world": "Four PCA engines scored (0–100: from fails to excels) against four scenarios. Slide across the scenarios and watch a different engine top each one.",
+      "xlab": "scenario →",
+      "xs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "labels": [
+        "fits in RAM",
+        "10M rows, no RAM",
+        "20k features, top-10 PCs",
+        "curved manifold"
+      ],
+      "dec": 0,
+      "yunit": "",
+      "series": [
+        { "name": "vanilla PCA", "ys": [ 95, 5, 40, 20 ] },
+        { "name": "IncrementalPCA", "ys": [ 85, 92, 45, 20 ] },
+        { "name": "randomized SVD", "ys": [ 90, 30, 95, 20 ] },
+        { "name": "KernelPCA", "ys": [ 60, 5, 15, 90 ] }
+      ],
+      "knob": { "label": "Scenario", "min": 0, "max": 3, "step": 1, "init": 0 },
+      "insights": [
+        { "max": 0, "text": "Comfortable data: vanilla PCA wins — exact, fast, no moving parts. The variants exist for the walls, not for every day.", "tone": "info" },
+        { "max": 2, "text": "Out-of-core streaming is IncrementalPCA's column; 'huge matrix, few components wanted' is randomized SVD's — it never computes the thousands of components you'd throw away.", "tone": "info" },
+        { "max": 3, "text": "🤯 Curved structure: the linear engines all score ~20 — no straight axis captures a spiral — while KernelPCA's implicit feature space unrolls it. One objective, four engines: pick by which wall you're facing, and note the costs (KernelPCA is O(n²) memory — its own wall).", "tone": "wow" }
+      ],
+      "extreme": { "at": "max" },
+      "reveal": { "name": "The PCA variant toolbox", "formula": "IncrementalPCA · svd_solver='randomized' · KernelPCA(kernel='rbf')", "text": "sklearn picks randomized automatically for large inputs with small n_components. TruncatedSVD is the sibling for sparse text matrices (no centering). Vanilla first; variants at the walls." }
+    }
   }
-},
-
-{
-  q: "On one dataset PC1 captures 50% of the variance; on another it captures 99.5%. What property of the FEATURES drives how much variance one component can absorb?",
-  choices: ["Their correlation — the more the features move together, the more of the total variance a single shared axis can soak up", "The number of rows", "The units of the first feature", "How many classes the labels have", "The random seed of the solver"],
-  explain: "PCA is a redundancy harvester. Uncorrelated features each carry independent information — no single direction can represent them, so variance spreads across many components. Highly correlated features are near-copies of one underlying signal, and the component aligned with that signal absorbs almost everything. That's why PCA compresses sensor arrays and pixel images so well (massive redundancy) and does little for carefully engineered, decorrelated feature sets.",
-  simple: "Think of features as interview questions. If every question probes something different, you can't summarise the interview in one number. If ten questions are re-wordings of 'how big is it?', one number nails all ten. PCA's compression is exactly a measure of how much your features repeat each other — slide the correlation up and watch one axis swallow the dataset.",
-  widget: {
-    type: "curveStatic", title: "Redundancy is compressibility",
-    world: "Ten features with adjustable mutual correlation, PCA applied. Watch how much of the total variance PC1 alone captures — and how many components you'd need to keep 95%.",
-    xlab: "correlation between the features →", xs: [0,1,2,3,4], labels: ["0.0","0.3","0.6","0.9","0.99"], dec: 0, yunit: "",
-    series: [
-      { name: "variance in PC1 (%)",        ys: [10, 37, 64, 91, 99] },
-      { name: "components for 95% (count)", ys: [10, 8, 5, 2, 1] }
-    ],
-    knob: { label: "Feature correlation", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Zero correlation: PC1 holds 10% — exactly 1/10th. No shared signal exists, so no direction is special, and 'compression' would just delete information.", tone: "info" },
-      { max: 2, text: "At 0.6 correlation, PC1 already absorbs nearly two-thirds, and 95% of the data fits in 5 components instead of 10 — the redundancy is being harvested.", tone: "info" },
-      { max: 4, text: "🤯 At 0.99, ONE axis carries 99% of ten features. PCA didn't create that compression — it just found the one signal your ten features were all echoing. Compressibility is a fact about the data; PCA merely reveals it.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "PCA eats correlation", formula: "shared signal → one dominant eigenvalue → few components suffice",
-      text: "Quick self-test: if your scree plot has no elbow, your features weren't redundant and PCA has little to offer. If PC1 towers, your dataset was secretly low-dimensional." }
-  }
-},
-
-{
-  q: "A fraud team compresses normal transactions with PCA (keeping a few components), then reconstructs each incoming transaction and measures the reconstruction error. Why does this catch anomalies?",
-  choices: ["The components encode how NORMAL data varies — normal points survive the compress-reconstruct round trip, anomalies lose what makes them odd and come back distorted", "PCA clusters the fraud cases together", "Reconstruction error equals the class label", "Anomalies have larger raw feature values", "It doesn't — PCA is supervised"],
-  explain: "Fit PCA on normal data only. The kept components span the subspace of normal variation; whatever a transaction has OUTSIDE that subspace is discarded on projection. Normal points barely lie outside it → tiny error. An anomaly deviates in directions normal data never uses → its projection snaps back to the nearest 'normal-looking' point, and the distance between original and reconstruction is precisely its abnormality score. Threshold that error and you have an unsupervised fraud alarm.",
-  simple: "PCA learns a stencil of normal. Compressing a transaction means tracing it with the stencil; reconstructing means redrawing it from that tracing. Normal transactions redraw almost perfectly — the stencil was made for them. A weird transaction can't be traced with the stencil, so its redrawing comes back 'normalised' — and the gap between the original and the redraw is exactly HOW weird it was. No fraud labels needed; normal data defined its own alarm.",
-  widget: {
-    type: "curveStatic", title: "The stencil of normal",
-    world: "PCA fitted on normal transactions, keeping more or fewer components. Compare the reconstruction error of typical points vs known anomalies — the GAP is the alarm's signal.",
-    xlab: "components kept →", xs: [0,1,2,3,4], labels: ["1","2","5","10","20"], dec: 1, yunit: "",
-    series: [
-      { name: "anomaly reconstruction error", ys: [40, 35, 28, 22, 12] },
-      { name: "normal reconstruction error",  ys: [8, 5, 2, 1, 0.5] }
-    ],
-    knob: { label: "Components kept", min: 0, max: 4, step: 1, init: 0 },
-    insights: [
-      { max: 1, text: "Few components: normal points reconstruct at error ~5, anomalies at ~35 — a 7× gap. The stencil is strict, and only normal shapes fit it.", tone: "info" },
-      { max: 2, text: "5 components: the sweet spot here — normal error nearly zero, anomaly error still high. Threshold anywhere in the gap and the alarm works.", tone: "info" },
-      { max: 4, text: "🤯 20 components: the stencil is now so detailed it can trace the anomalies too — their error falls to 12 and the gap narrows. Keeping MORE of the data made the alarm WORSE. The components you throw away were the detector.", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "PCA reconstruction-error anomaly detection", formula: "score(x) = ‖x − reconstruct(project(x))‖ — big = abnormal",
-      text: "Fit on normal data; keep few components; threshold the error on a validation set. The same idea, upgraded with autoencoders, powers modern anomaly detection." }
-  }
-},
-
-{
-  q: "Vanilla PCA chokes: one dataset is 10M rows and won't fit in memory, another needs eigenvectors of a 20k-feature matrix, a third has structure that's curved, not linear. Which toolbox variants map to these three walls?",
-  choices: ["IncrementalPCA for out-of-core batches, randomized SVD for huge matrices, KernelPCA for curved structure", "There is only one PCA — the walls are fatal", "t-SNE, UMAP and k-means respectively", "StandardScaler fixes all three", "Deeper trees, more trees, and boosting"],
-  explain: "Same objective, three engines. IncrementalPCA consumes data in mini-batches, updating components as it streams — nothing ever needs to fit in RAM. svd_solver='randomized' approximates just the top-k components via random projections instead of a full eigendecomposition — sklearn auto-picks it for big matrices when you ask for few components. KernelPCA applies the kernel trick so 'directions of maximal variance' can be measured in an implicit non-linear feature space — curved manifolds unroll. Know the walls, know which engine.",
-  simple: "One idea — find the directions where the data varies most — and three engineering escapes for when the naive recipe hits a wall. Data too big for memory? Feed it in spoonfuls (Incremental). Matrix too big to fully decompose? Estimate just the top few directions with clever randomness (randomized). Structure bends? Do PCA in a stretched space where the bend is straight (Kernel). Slide through the scenarios and match the engine.",
-  widget: {
-    type: "curveStatic", title: "Three walls, three engines",
-    world: "Four PCA engines scored (0–100: from fails to excels) against four scenarios. Slide across the scenarios and watch a different engine top each one.",
-    xlab: "scenario →", xs: [0,1,2,3], labels: ["fits in RAM","10M rows, no RAM","20k features, top-10 PCs","curved manifold"], dec: 0, yunit: "",
-    series: [
-      { name: "vanilla PCA",     ys: [95, 5, 40, 20] },
-      { name: "IncrementalPCA",  ys: [85, 92, 45, 20] },
-      { name: "randomized SVD",  ys: [90, 30, 95, 20] },
-      { name: "KernelPCA",       ys: [60, 5, 15, 90] }
-    ],
-    knob: { label: "Scenario", min: 0, max: 3, step: 1, init: 0 },
-    insights: [
-      { max: 0, text: "Comfortable data: vanilla PCA wins — exact, fast, no moving parts. The variants exist for the walls, not for every day.", tone: "info" },
-      { max: 2, text: "Out-of-core streaming is IncrementalPCA's column; 'huge matrix, few components wanted' is randomized SVD's — it never computes the thousands of components you'd throw away.", tone: "info" },
-      { max: 3, text: "🤯 Curved structure: the linear engines all score ~20 — no straight axis captures a spiral — while KernelPCA's implicit feature space unrolls it. One objective, four engines: pick by which wall you're facing, and note the costs (KernelPCA is O(n²) memory — its own wall).", tone: "wow" }
-    ],
-    extreme: { at: "max" },
-    reveal: { name: "The PCA variant toolbox", formula: "IncrementalPCA · svd_solver='randomized' · KernelPCA(kernel='rbf')",
-      text: "sklearn picks randomized automatically for large inputs with small n_components. TruncatedSVD is the sibling for sparse text matrices (no centering). Vanilla first; variants at the walls." }
-  }
-}
 ];
