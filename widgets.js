@@ -1178,15 +1178,16 @@
         var plot = makePlot(cfg, 340, 250);
         var colored = idx >= (cfg.colorFrom == null ? 0 : cfg.colorFrom);
         // decision boundary line, drawn under the points
-        if (cfg.boundary && idx >= cfg.boundary.from) {
+        if (cfg.boundary && idx >= cfg.boundary.from && Array.isArray(cfg.boundary.line) && cfg.boundary.line.length >= 4) {
           var b = cfg.boundary.line;
           plot.svg.appendChild(sv('line', { x1: plot.sx(b[0]), y1: plot.sy(b[1]), x2: plot.sx(b[2]), y2: plot.sy(b[3]), stroke: C.ink, 'stroke-width': 2, 'stroke-dasharray': '5 4' }));
         }
         // points (optionally migrating from a scattered start to a settled layout)
-        cfg.points.forEach(function (p, i) {
+        (cfg.points || []).forEach(function (p, i) {
           var sp = cfg.scatter && cfg.scatter[i];
-          var x = sp ? lerp(sp.x, p.x, t) : p.x, y = sp ? lerp(sp.y, p.y, t) : p.y;
-          var ringed = cfg.rings && idx >= cfg.rings.from && cfg.rings.idx.indexOf(i) >= 0;
+          var useSp = sp && typeof sp.x === 'number' && typeof sp.y === 'number';
+          var x = useSp ? lerp(sp.x, p.x, t) : p.x, y = useSp ? lerp(sp.y, p.y, t) : p.y;
+          var ringed = cfg.rings && idx >= cfg.rings.from && (cfg.rings.idx || []).indexOf(i) >= 0;
           plot.svg.appendChild(sv('circle', {
             cx: plot.sx(x), cy: plot.sy(y), r: ringed ? 7.5 : 6,
             fill: colored ? GROUP_COLORS[p.g % GROUP_COLORS.length] : '#b9c2cc',
@@ -1194,7 +1195,7 @@
           }));
         });
         // centroids / prototypes: big ringed markers
-        if (cfg.centroids && idx >= cfg.centroids.from) {
+        if (cfg.centroids && idx >= cfg.centroids.from && Array.isArray(cfg.centroids.at)) {
           cfg.centroids.at.forEach(function (c0) {
             var cx = plot.sx(c0.x), cy = plot.sy(c0.y), col = GROUP_COLORS[(c0.g || 0) % GROUP_COLORS.length];
             plot.svg.appendChild(sv('circle', { cx: cx, cy: cy, r: 9, fill: col, stroke: C.ink, 'stroke-width': 2 }));
@@ -1225,13 +1226,15 @@
       render: function (stage, v, ui) {
         stage.innerHTML = '';
         var idx = Math.round(v);
+        if (!Array.isArray(cfg.cats) || !Array.isArray(cfg.frames)) { ui.setReadout((cfg.readouts && cfg.readouts[idx]) || ''); return; }
         var vals = cfg.frames[idx] || cfg.frames[cfg.frames.length - 1];
+        if (!Array.isArray(vals)) vals = [];
         var W = 340, H = 230, pad = 34, base = H - pad;
         var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
         svg.appendChild(sv('line', { x1: pad, y1: base, x2: W - 12, y2: base, stroke: C.line }));
         var n = cfg.cats.length, gap = (W - pad - 20) / n, bw = gap * 0.6;
         cfg.cats.forEach(function (cat, i) {
-          var val = vals[i], h = Math.max(0, (val / ymax) * (base - 18));
+          var val = +vals[i] || 0, h = Math.max(0, (val / ymax) * (base - 18));
           var x = pad + i * gap + (gap - bw) / 2;
           svg.appendChild(sv('rect', { x: x, y: base - h, width: bw, height: h, fill: GROUP_COLORS[i % GROUP_COLORS.length], rx: 1 }));
           var vt = sv('text', { x: x + bw / 2, y: base - h - 4, 'font-size': 10.5, 'font-weight': 600, 'text-anchor': 'middle', fill: C.ink }); vt.textContent = fmt(val, cfg.dec == null ? 0 : cfg.dec) + (cfg.yunit || ''); svg.appendChild(vt);
@@ -1250,6 +1253,7 @@
       render: function (stage, v, ui) {
         stage.innerHTML = '';
         var idx = Math.round(v);
+        if (!Array.isArray(cfg.nodes)) { ui.setReadout((cfg.steps && cfg.steps[idx] && cfg.steps[idx].readout) || ''); return; }
         var shown = (cfg.steps && cfg.steps[idx] && cfg.steps[idx].show) || cfg.nodes.map(function (n) { return n.id; });
         var W = 340, H = 220;
         var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
