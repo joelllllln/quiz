@@ -73,34 +73,16 @@
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
   // Index every question once, tagged with topic name, difficulty level (1/2/3), and whether it's a definition question.
+  // "Definition" is an EXPLICIT curated set (window.DEFS from data_defs.js) — not a heuristic guess.
   var QINDEX = null;
-  function normw(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-  // A "definition" question asks what a named concept IS/MEANS — not what happens in a scenario.
-  // Guards reject computations, second-person scenarios, and behavioural "what does X become/do/predict" stems.
-  function isDefStem(s) {
-    s = (s || '').trim();
-    if (/\bwork it out\b|\bcompute\b|\bcalculate\b/i.test(s)) return false;
-    if (/\bwhat\s+(is|are)\s+(it|they|that|this)\s*\?/i.test(s)) return false;
-    if (/\bwhat\s+(is|are)\s+the\s+([a-z-]+\s+){0,2}(biggest|smallest|right|best|standard|classic|canonical|main|only|diagnosis|cause|reason|sequence|way|method|procedure|scheme|encoding|answer|culprit|move|problem|fix|remedy|cure|catch|trade|mechanism)\b/i.test(s)) return false;
-    if (/\binterconvert\b/i.test(s)) return false;
-    if (/\bwhat\s+is\b[^?]{0,50}\bdoing\b/i.test(s)) return false;
-    if (/\bwhat\s+(does|do|will|did|would)\b[^?]{0,70}\b(become|becomes|predict|produce|do to|expect|forbid|trade|trading|tell you|amount to|look like|happen|protect|typically do|really do|really trading|mean for)\b/i.test(s)) return false;
-    if (/\byou\s+(set|shrink|sweep|lower|raise|push|crank|turn|switch|delete|forgot|plot|report)\b/i.test(s)) return false;
-    var body = s.replace(/^in\s+[^,]{1,45},\s+/i, '').trim();
-    if (/^what\s+(is|are)\b/i.test(body)) return true;
-    if (/\bwhat\s+(is|are)\s+(a\s|an\s|the\s|'|"|‘|meant\s+by\b|happening\b)/i.test(s)) return true;
-    if (/\bwhat\s+(is|are)\s+[\w-]+\s*\?/i.test(s)) return true;
-    if (/\bwhat\s+(does|do)\s+[^?]{0,45}\b(mean|means|measure|measures|represent|represents)\b/i.test(s)) return true;
-    return false;
-  }
   function buildIndex() {
     if (QINDEX) return QINDEX;
     QINDEX = [];
     TOPICS.forEach(function (t) {
       t.levels.forEach(function (L, li) {
         (QUESTIONS[L.qk] || []).forEach(function (q) {
-          // Definitions live in Foundations (Level 1); higher levels are applied/scenario questions.
-          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: li === 0 && isDefStem(q.q) });
+          // A question is a "definition" iff it is in the explicit curated set (data_defs.js) — no heuristic guessing.
+          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: !!(window.DEFS && window.DEFS[q.q]) });
         });
       });
     });
