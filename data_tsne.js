@@ -216,14 +216,14 @@
   {
     "q": "t-SNE produces a 2-D 'embedding' of the data. What is an embedding?",
     "choices": [
-      "A low-dimensional layout placing similar items near each other",
+      "Each item turned into coordinates in a low-dimensional space, positioned so similar items land near each other",
       "A copy of the dataset saved in a compressed file",
       "A single number summarising each data point",
       "The list of features ranked by importance",
       "A model trained to predict the 2-D coordinates"
     ],
-    "explain": "An embedding is an arrangement of the data in a low-dimensional space (usually 2-D) built so that items close in the original space stay close in the layout. It's a map of similarity — the picture t-SNE and UMAP are famous for.",
-    "simple": "An embedding is a map. Every data point gets a spot in 2-D, positioned so that things which were similar in the original high-dimensional data end up near each other on the map. Read it like a map of neighbourhoods — who's close to whom. It's not a zip file, not one number per point, not a feature ranking.",
+    "explain": "An embedding represents each item as coordinates — a short vector of numbers — in a low-dimensional space, arranged so that items similar in the original data sit close together. Distance in that space is the whole point: near = alike. t-SNE draws a 2-D embedding you can look at; word2vec learns word embeddings in ~300 dimensions you compute with. Same idea either way: complex thing → point in space, closeness = similarity.",
+    "simple": "An embedding turns each item — a data point, a word, an image — into a short list of numbers, which is just a point in space. The trick is that similar things get placed close together, so distance means 'alike'. t-SNE squeezes that down to 2-D so your eye can read the neighbourhoods; other embeddings (like word2vec) use more dimensions you do maths on rather than look at. It's not a zip file, not one single number per point, and not a ranking of features.",
     "widget": {
       "type": "curveStatic",
       "title": "A map of similarity",
@@ -255,7 +255,7 @@
         { "max": 4, "text": "🤯 Finished, 93% of each point's true neighbours sit nearby on the 2-D map. That similarity-preserving layout IS the embedding — a map, not a file or a ranking.", "tone": "wow" }
       ],
       "extreme": { "at": "max" },
-      "reveal": { "name": "Embedding", "formula": "low-D layout where similar items are placed near each other", "text": "t-SNE and UMAP make embeddings for the eye. Read cluster membership from them — but not exact sizes or distances." }
+      "reveal": { "name": "Embedding", "formula": "each item → coordinates in a low-D space; distance = similarity", "text": "t-SNE/UMAP make 2-D embeddings for the eye; word2vec-style embeddings use many dimensions you compute with. Same deal: closeness encodes similarity." }
     }
   },
   {

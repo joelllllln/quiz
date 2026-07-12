@@ -72,6 +72,11 @@ input[type=range]{accent-color:var(--cobalt)}
 .daily-card .btn.daily-go{background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 rgba(0,0,0,.25)}
 .daily-card .btn.daily-go[disabled]{opacity:.5;cursor:default;box-shadow:none}
 .daily-card.is-done .btn.daily-go{background:var(--ink);color:var(--paper)}
+.daily-btns{display:flex;flex-direction:column;gap:8px}
+.daily-card .btn.daily-more{background:transparent;color:var(--paper);border:1px solid rgba(251,251,247,.5);box-shadow:none;font-size:.82rem;padding:8px 14px}
+.daily-card .btn.daily-more:hover{border-color:var(--paper);background:rgba(251,251,247,.08)}
+.daily-card .btn.daily-more[disabled]{opacity:.4;cursor:default}
+.daily-card.is-done .btn.daily-more{border-color:rgba(251,251,247,.6)}
 .daily-filters{display:flex;flex-direction:column;gap:8px;margin:2px 0 12px}
 .filt-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .filt-lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;width:44px;flex:none}

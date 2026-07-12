@@ -68,7 +68,9 @@
   function bumpTotal() { try { localStorage.setItem('ds_total_correct', getTotal() + 1); } catch (e) {} }
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function todayLabel() { try { return new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { return today(); } }
-  var DAILY_N = 50;
+  var DAILY_OPTS = [5, 10, 25, 50];
+  function dailyN() { var n; try { n = +localStorage.getItem('ds_daily_n'); } catch (e) {} return DAILY_OPTS.indexOf(n) >= 0 ? n : 10; }
+  function setDailyN(n) { try { localStorage.setItem('ds_daily_n', String(n)); } catch (e) {} }
   function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -116,7 +118,7 @@
     var idx = pool.map(function (_, i) { return i; });
     var rnd = mulberry32(hashStr('datasense-daily::' + today() + '::' + filterSig(f)));
     for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
-    idx = idx.slice(0, Math.min(DAILY_N, idx.length));
+    idx = idx.slice(0, Math.min(dailyN(), idx.length));
     return { qs: idx.map(function (k) { return pool[k].q; }), origins: idx.map(function (k) { return pool[k].topic; }) };
   }
   // Daily progress is stored per day, per filter signature: { date, sets: { 'sig': {pos,correct,results,done} } }
@@ -147,9 +149,22 @@
       S = { daily: true, sig: sig, qs: dq.qs, origins: dq.origins, i: dq.qs.length, correct: d.correct, results: d.results, level: {}, topic: {} };
       return doneDaily();
     }
-    begin({ name: 'Daily 50', no: '★', key: '__daily__' },
-      { qk: '__daily__', part: 'Daily 50', name: todayLabel() },
-      { qs: dq.qs, origins: dq.origins, mixed: true, modeLabel: 'Daily 50', daily: true, sig: sig, startAt: d.pos, startCorrect: d.correct, results: d.results });
+    begin({ name: 'Daily', no: '★', key: '__daily__' },
+      { qk: '__daily__', part: 'Daily ' + dq.qs.length, name: todayLabel() },
+      { qs: dq.qs, origins: dq.origins, mixed: true, modeLabel: 'Daily ' + dq.qs.length, daily: true, sig: sig, startAt: d.pos, startCorrect: d.correct, results: d.results });
+  }
+
+  // "Keep going": an extra, untracked batch from the same filter pool — a fresh
+  // random draw each time, so you can do as many as you like past the daily.
+  function startMore() {
+    var f = getFilter();
+    var pool = poolFor(f);
+    if (!pool.length) return;
+    var idx = shuffle(pool.map(function (_, i) { return i; }));
+    idx = idx.slice(0, Math.min(dailyN(), idx.length));
+    begin({ name: 'Keep going', no: '★', key: '__more__' },
+      { qk: '__more__', part: 'Keep going', name: todayLabel() },
+      { qs: idx.map(function (k) { return pool[k].q; }), origins: idx.map(function (k) { return pool[k].topic; }), mixed: true, modeLabel: 'Keep going', more: true });
   }
 
   /* ---------------- per-card history + adaptive review ---------------- */
@@ -367,11 +382,14 @@
           return '<button class="filt-chip' + (o.v === current ? ' on' : '') + '" data-' + kind + '="' + o.v + '">' + o.t + '</button>';
         }).join('');
       }
+      var curN = dailyN();
       var daily = h('<section class="daily-card' + (isDone ? ' is-done' : '') + '">' +
         '<div class="daily-main">' +
           '<div class="daily-eyebrow">Daily Challenge · ' + esc(todayLabel()) + '</div>' +
-          '<h2 class="daily-title">Daily 50</h2>' +
+          '<h2 class="daily-title">Daily ' + curN + '</h2>' +
           '<div class="daily-filters">' +
+            '<div class="filt-row"><span class="filt-lab">Per day</span>' +
+              chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">Type</span>' +
               chips('type', f.type, [{ v: 'both', t: 'Both' }, { v: 'def', t: 'Definitions' }, { v: 'q', t: 'Questions' }]) + '</div>' +
             (f.type === 'def' ? '' :
@@ -383,8 +401,14 @@
         '</div>' +
         '<div class="daily-side">' +
           '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
-          '<button class="btn daily-go"' + (dn === 0 ? ' disabled' : '') + '>' + btnLabel + '</button>' +
+          '<div class="daily-btns">' +
+            '<button class="btn daily-go"' + (dn === 0 ? ' disabled' : '') + '>' + btnLabel + '</button>' +
+            '<button class="btn daily-more"' + (dn === 0 ? ' disabled' : '') + '>Keep going →</button>' +
+          '</div>' +
         '</div></section>');
+      daily.querySelectorAll('[data-num]').forEach(function (b) {
+        b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderDaily(); };
+      });
       daily.querySelectorAll('[data-type]').forEach(function (b) {
         b.onclick = function () { var nf = getFilter(); nf.type = b.getAttribute('data-type'); setFilter(nf); renderDaily(); };
       });
@@ -393,6 +417,8 @@
       });
       var go = daily.querySelector('.daily-go');
       if (dn > 0) go.onclick = startDaily;
+      var more = daily.querySelector('.daily-more');
+      if (dn > 0) more.onclick = startMore;
       if (old) app.replaceChild(daily, old); else app.appendChild(daily);
     }
 
@@ -572,7 +598,7 @@
       topic: topic, level: level,
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
-      daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites,
+      daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites, more: !!opts.more,
       modeLabel: opts.modeLabel || '', sig: opts.sig || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
@@ -782,16 +808,32 @@
     saveDaily(true);
     var n = S.qs.length, c = S.correct;
     var pct = n ? c / n : 0;
-    var msg = pct >= 0.9 ? 'A stellar daily. Come back tomorrow for a fresh 50.' :
+    var msg = pct >= 0.9 ? 'A stellar daily — today\'s target is done. Fancy a few more?' :
       pct >= 0.6 ? 'Solid daily run — every miss came with its own lab.' :
       'The daily mixes every topic; today\'s misses are tomorrow\'s strengths.';
     app.innerHTML = '';
     var card = h('<div class="result-card">' +
-      '<div class="r-eyebrow">Daily 50 · ' + esc(todayLabel()) + '</div>' +
+      '<div class="r-eyebrow">Daily ' + n + ' · ' + esc(todayLabel()) + '</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
       '<p class="r-msg">' + msg + ' <span class="small">Lifetime correct: <b>' + getTotal() + '</b></span></p>' +
       dotsHTML(S.results) +
-      '<div class="next-row" style="justify-content:center"><button class="btn ghost">Contents</button></div></div>');
+      '<div class="next-row" style="justify-content:center"><button class="btn">Keep going →</button><button class="btn ghost">Contents</button></div></div>');
+    card.querySelector('.btn').onclick = startMore;
+    card.querySelector('.btn.ghost').onclick = home;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
+  function doneMore() {
+    var n = S.qs.length, c = S.correct;
+    app.innerHTML = '';
+    var card = h('<div class="result-card">' +
+      '<div class="r-eyebrow">Keep going · ' + n + ' extra · ' + esc(todayLabel()) + '</div>' +
+      '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
+      '<p class="r-msg">Extra practice beyond today\'s daily — this counts toward your history and lifetime total. <span class="small">Lifetime correct: <b>' + getTotal() + '</b></span></p>' +
+      dotsHTML(S.results) +
+      '<div class="next-row" style="justify-content:center"><button class="btn">Keep going →</button><button class="btn ghost">Contents</button></div></div>');
+    card.querySelector('.btn').onclick = startMore;
     card.querySelector('.btn.ghost').onclick = home;
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -830,6 +872,7 @@
   function done() {
     if (S.practice) return donePractice();
     if (S.daily) return doneDaily();
+    if (S.more) return doneMore();
     if (S.favourites) return doneFav();
     var n = S.qs.length, c = S.correct;
     var L = S.level;
