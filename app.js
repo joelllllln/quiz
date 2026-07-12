@@ -82,7 +82,7 @@
       t.levels.forEach(function (L, li) {
         (QUESTIONS[L.qk] || []).forEach(function (q) {
           // A question is a "definition" iff it is in the explicit curated set (data_defs.js) — no heuristic guessing.
-          QINDEX.push({ q: q, topic: t.name, level: li + 1, def: !!(window.DEFS && window.DEFS[q.q]) });
+          QINDEX.push({ q: q, topic: t.name, key: t.key, level: li + 1, def: !!(window.DEFS && window.DEFS[q.q]) });
         });
       });
     });
@@ -179,6 +179,14 @@
     buildIndex().forEach(function (e) { s[cardStatus(e.q)]++; });
     return s;
   }
+  function masteryByTopic() {
+    var by = {};
+    buildIndex().forEach(function (e) {
+      var m = by[e.key] || (by[e.key] = { key: e.key, topic: e.topic, total: 0, learnt: 0, learning: 0, struggling: 0, new: 0 });
+      m.total++; m[cardStatus(e.q)]++;
+    });
+    return TOPICS.map(function (t) { return by[t.key] || { key: t.key, topic: t.name, total: 0, learnt: 0, learning: 0, struggling: 0, new: 0 }; });
+  }
   function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
   function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
 
@@ -196,6 +204,88 @@
     begin({ name: 'Favourites', no: '★', key: '__favs__' },
       { qk: '__favs__', part: 'Favourites', name: '' },
       { qs: sel.map(function (e) { return e.q; }), origins: sel.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Favourites', favourites: true });
+  }
+
+  /* ---------------- flashcards (concept → definition, flip to test) ---------------- */
+  var FLASH = null;
+  function normkey(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function flashDeck() {
+    if (FLASH) return FLASH;
+    var seen = {}, deck = [];
+    buildIndex().forEach(function (e) {
+      var r = e.q.widget && e.q.widget.reveal;
+      if (!r || !r.name) return;
+      var nk = normkey(r.name);
+      if (seen[nk]) return; seen[nk] = 1;
+      deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key });
+    });
+    FLASH = deck; return deck;
+  }
+  function startFlashcards(topicKey) {
+    var deck = shuffle(flashDeck().filter(function (c) { return !topicKey || c.key === topicKey; }));
+    if (!deck.length) return;
+    var i = 0, flipped = false;
+    function draw() {
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+        '<div class="ruler"><div style="width:' + (100 * i / deck.length) + '%"></div></div>' +
+        '<span class="exmeta">Card <b>' + (i + 1) + '</b> of ' + deck.length + '</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var c = deck[i];
+      var opts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+        return '<option value="' + t.key + '"' + (t.key === topicKey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
+      }).join('');
+      var view = h('<div class="flash-view">' +
+        '<select class="flash-topic">' + opts + '</select>' +
+        '<div class="flash-stage"><button class="flash-card' + (flipped ? ' flipped' : '') + '" aria-label="Flip card">' +
+          '<div class="flash-face flash-front"><span class="flash-tag">Concept</span><div class="flash-term"></div><span class="flash-hint">tap to reveal the definition</span></div>' +
+          '<div class="flash-face flash-back"><span class="flash-tag">Definition</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div><span class="flash-topictag">' + esc(c.topic) + '</span></div>' +
+        '</button></div>' +
+        '<div class="flash-controls"><button class="btn ghost flash-prev">← Prev</button><button class="btn flash-flip">Flip</button><button class="btn ghost flash-next">Next →</button></div>' +
+        '<button class="flash-shuffle">↻ Shuffle deck</button>' +
+      '</div>');
+      view.querySelector('.flash-term').textContent = c.front;
+      view.querySelector('.flash-def').textContent = c.back;
+      if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
+      var fc = view.querySelector('.flash-card');
+      function flip() { flipped = !flipped; fc.classList.toggle('flipped', flipped); }
+      fc.onclick = flip;
+      view.querySelector('.flash-flip').onclick = function (ev) { ev.stopPropagation(); flip(); };
+      view.querySelector('.flash-prev').onclick = function () { i = (i - 1 + deck.length) % deck.length; flipped = false; draw(); };
+      view.querySelector('.flash-next').onclick = function () { i = (i + 1) % deck.length; flipped = false; draw(); };
+      view.querySelector('.flash-shuffle').onclick = function () { deck = shuffle(deck); i = 0; flipped = false; draw(); };
+      view.querySelector('.flash-topic').onchange = function () { startFlashcards(this.value); };
+      app.appendChild(view);
+      window.scrollTo(0, 0);
+    }
+    draw();
+  }
+
+  /* ---------------- back up / restore progress (all localStorage lives only in this browser) ---------------- */
+  function exportProgress() {
+    var data = {};
+    for (var j = 0; j < localStorage.length; j++) { var k = localStorage.key(j); if (k && k.indexOf('ds_') === 0) data[k] = localStorage.getItem(k); }
+    var payload = { app: 'DataSense', version: 1, exported: new Date().toISOString(), data: data };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'datasense-progress-' + today() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+  function importProgress(file, done) {
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var obj = JSON.parse(r.result), data = obj && obj.data;
+        if (!data || typeof data !== 'object') throw new Error('bad');
+        var n = 0;
+        Object.keys(data).forEach(function (k) { if (k.indexOf('ds_') === 0) { localStorage.setItem(k, data[k]); n++; } });
+        done(n);
+      } catch (e) { done(-1); }
+    };
+    r.onerror = function () { done(-1); };
+    r.readAsText(file);
   }
 
   var PRACTICE_N = 20;
@@ -249,8 +339,10 @@
 
     // ---- Daily challenge (filterable) + lifetime total ----
     renderDaily();
+    renderMastery();
     renderPractice();
     renderFavourites();
+    renderFlash();
 
     function renderDaily() {
       var old = app.querySelector('.daily-card');
@@ -356,6 +448,58 @@
       app.appendChild(fav);
     }
 
+    function renderMastery() {
+      var rows = masteryByTopic();
+      var mastered = 0, total = 0;
+      rows.forEach(function (r) { mastered += r.learnt; total += r.total; });
+      var sec = h('<section class="mastery-card">' +
+        '<div class="review-eyebrow">Your progress</div>' +
+        '<h2 class="review-title">Mastery map</h2>' +
+        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' cards mastered · tap a topic to study it</p>' +
+        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
+        '<div class="mm-list"></div></section>');
+      var list = sec.querySelector('.mm-list');
+      function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
+      rows.forEach(function (r, idx) {
+        var pct = r.total ? Math.round(100 * r.learnt / r.total) : 0;
+        var row = h('<button class="mm-row">' +
+          '<span class="mm-name">' + esc(r.topic) + '</span>' +
+          '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
+          '<span class="mm-pct">' + pct + '%</span></button>');
+        row.onclick = function () { start(TOPICS[idx], TOPICS[idx].levels[0]); };
+        list.appendChild(row);
+      });
+      app.appendChild(sec);
+    }
+
+    function renderFlash() {
+      var sec = h('<section class="flash-launch">' +
+        '<div class="fl-info"><span class="fl-icon">⚡</span>' +
+        '<div><div class="fl-title">Flashcards</div>' +
+        '<div class="fl-sub">' + flashDeck().length + ' concepts · flip to test yourself</div></div></div>' +
+        '<button class="btn ghost fl-go">Study →</button></section>');
+      sec.querySelector('.fl-go').onclick = function () { startFlashcards(''); };
+      app.appendChild(sec);
+    }
+
+    function renderBackup() {
+      var sec = h('<section class="data-card">' +
+        '<div class="dc-text"><b>Back up your progress</b><span>Your streaks, mastery and favourites live only in this browser. Export a file to keep them safe or move to another device.</span></div>' +
+        '<div class="dc-btns"><button class="dc-btn dc-export">⬇ Export</button><button class="dc-btn dc-import">⬆ Restore</button>' +
+        '<input type="file" accept="application/json,.json" class="dc-file" hidden></div></section>');
+      sec.querySelector('.dc-export').onclick = exportProgress;
+      var file = sec.querySelector('.dc-file');
+      sec.querySelector('.dc-import').onclick = function () { file.click(); };
+      file.onchange = function () {
+        if (!file.files || !file.files[0]) return;
+        importProgress(file.files[0], function (n) {
+          if (n >= 0) { alert('Progress restored (' + n + ' items). Reloading.'); location.reload(); }
+          else alert('Could not read that file — is it a DataSense backup?');
+        });
+      };
+      app.appendChild(sec);
+    }
+
     GROUPS.forEach(function (g) {
       app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
       g.keys.forEach(function (tk) {
@@ -390,6 +534,8 @@
         '<p class="t-desc">' + t.desc + '</p><span class="stamp">In preparation</span></div>'));
     });
     app.appendChild(grid);
+
+    renderBackup();
   }
 
   /* ---------------- ground definitions primer ---------------- */
