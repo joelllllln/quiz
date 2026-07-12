@@ -239,8 +239,10 @@
       { qs: sel.map(function (e) { return e.q; }), origins: sel.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Smart Review', practice: true });
   }
 
+  // A question's visual may be overridden by a better-matched widget (data_widgets_*.js), keyed by stem.
+  function widgetFor(q) { return (window.WIDGETS && window.WIDGETS[q.q]) || q.widget; }
   function rememberHTML(q) {
-    var r = q.widget && q.widget.reveal;
+    var r = widgetFor(q) && widgetFor(q).reveal;
     if (!r) return '';
     return '<div class="remember"><span class="r-tag">Remember</span><b>' + r.name + '</b>' +
       (r.formula ? '<span class="r-formula">' + r.formula + '</span>' : '') + '</div>';
@@ -481,7 +483,7 @@
     if (q.fig && window.renderFigure) {
       var figHost = document.createElement('div');
       card.insertBefore(figHost, box);
-      renderFigure(figHost, q.widget, q.fig.at, q.fig.cap);
+      renderFigure(figHost, widgetFor(q), q.fig.at, q.fig.cap);
     }
     var order = shuffle(q.choices.map(function (_, i) { return i; }));
     var btns = [];
@@ -545,7 +547,7 @@
       var row = h('<div class="next-row"><button class="btn">Next exercise →</button>' +
         (isRetry ? '' : '<button class="btn ghost">Open the lab anyway</button>') + '</div>');
       row.children[0].onclick = next;
-      if (row.children[1]) row.children[1].onclick = function () { row.children[1].remove(); renderWidget(card, q.widget); };
+      if (row.children[1]) row.children[1].onclick = function () { row.children[1].remove(); renderWidget(card, widgetFor(q)); };
       card.appendChild(row);
       return;
     }
@@ -565,7 +567,7 @@
     card.appendChild(h('<div class="plain"><span class="p-label">The answer, in plain English</span>' +
       '<div class="p-answer">' + esc(q.choices[0]) + '</div>' +
       (q.simple ? '<p>' + q.simple + '</p>' : '') + '</div>'));
-    renderWidget(card, q.widget);
+    renderWidget(card, widgetFor(q));
     var toCheck = h('<div class="next-row"><button class="btn">Break it down →</button></div>');
     toCheck.children[0].onclick = function () {
       toCheck.remove();

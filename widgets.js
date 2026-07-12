@@ -1165,6 +1165,119 @@
     };
   };
 
+  /* ================= pointCloud — a 2-D map of points: feature space, clusters, boundary, centroids, embedding ================= */
+  var GROUP_COLORS = [C.c0, C.c1, C.good, '#a24bd6', '#e0a100', '#e05c9a'];
+  TYPES.pointCloud = function (cfg) {
+    var maxV = +cfg.knob.max || 1;
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    return {
+      valText: function (v) { return (cfg.stageLabels && cfg.stageLabels[Math.round(v)]) || ('step ' + Math.round(v)); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var idx = Math.round(v), t = v / maxV;
+        var plot = makePlot(cfg, 340, 250);
+        var colored = idx >= (cfg.colorFrom == null ? 0 : cfg.colorFrom);
+        // decision boundary line, drawn under the points
+        if (cfg.boundary && idx >= cfg.boundary.from) {
+          var b = cfg.boundary.line;
+          plot.svg.appendChild(sv('line', { x1: plot.sx(b[0]), y1: plot.sy(b[1]), x2: plot.sx(b[2]), y2: plot.sy(b[3]), stroke: C.ink, 'stroke-width': 2, 'stroke-dasharray': '5 4' }));
+        }
+        // points (optionally migrating from a scattered start to a settled layout)
+        cfg.points.forEach(function (p, i) {
+          var sp = cfg.scatter && cfg.scatter[i];
+          var x = sp ? lerp(sp.x, p.x, t) : p.x, y = sp ? lerp(sp.y, p.y, t) : p.y;
+          var ringed = cfg.rings && idx >= cfg.rings.from && cfg.rings.idx.indexOf(i) >= 0;
+          plot.svg.appendChild(sv('circle', {
+            cx: plot.sx(x), cy: plot.sy(y), r: ringed ? 7.5 : 6,
+            fill: colored ? GROUP_COLORS[p.g % GROUP_COLORS.length] : '#b9c2cc',
+            stroke: ringed ? C.ink : 'rgba(31,41,51,.35)', 'stroke-width': ringed ? 2.6 : 1
+          }));
+        });
+        // centroids / prototypes: big ringed markers
+        if (cfg.centroids && idx >= cfg.centroids.from) {
+          cfg.centroids.at.forEach(function (c0) {
+            var cx = plot.sx(c0.x), cy = plot.sy(c0.y), col = GROUP_COLORS[(c0.g || 0) % GROUP_COLORS.length];
+            plot.svg.appendChild(sv('circle', { cx: cx, cy: cy, r: 9, fill: col, stroke: C.ink, 'stroke-width': 2 }));
+            plot.svg.appendChild(sv('circle', { cx: cx, cy: cy, r: 13, fill: 'none', stroke: col, 'stroke-width': 1.5, opacity: 0.6 }));
+          });
+        }
+        // an unlabelled query point
+        if (cfg.query) {
+          var qx = plot.sx(cfg.query.x), qy = plot.sy(cfg.query.y);
+          plot.svg.appendChild(sv('rect', { x: qx - 7, y: qy - 7, width: 14, height: 14, fill: C.query, stroke: C.ink, 'stroke-width': 1.5, transform: 'rotate(45 ' + qx + ' ' + qy + ')' }));
+        }
+        stage.appendChild(plot.svg);
+        if (cfg.groups && colored) {
+          stage.insertAdjacentHTML('beforeend', '<div class="legend">' + cfg.groups.map(function (nm, i) {
+            return '<span><span class="sw" style="background:' + GROUP_COLORS[i % GROUP_COLORS.length] + '"></span>' + nm + '</span>';
+          }).join('') + '</div>');
+        }
+        ui.setReadout((cfg.readouts && cfg.readouts[idx]) || '');
+      }
+    };
+  };
+
+  /* ================= barCompare — bars for a categorical / quantity comparison that changes with the knob ================= */
+  TYPES.barCompare = function (cfg) {
+    var ymax = cfg.ymax || 100;
+    return {
+      valText: function (v) { return (cfg.stageLabels && cfg.stageLabels[Math.round(v)]) || String(Math.round(v)); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var idx = Math.round(v);
+        var vals = cfg.frames[idx] || cfg.frames[cfg.frames.length - 1];
+        var W = 340, H = 230, pad = 34, base = H - pad;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        svg.appendChild(sv('line', { x1: pad, y1: base, x2: W - 12, y2: base, stroke: C.line }));
+        var n = cfg.cats.length, gap = (W - pad - 20) / n, bw = gap * 0.6;
+        cfg.cats.forEach(function (cat, i) {
+          var val = vals[i], h = Math.max(0, (val / ymax) * (base - 18));
+          var x = pad + i * gap + (gap - bw) / 2;
+          svg.appendChild(sv('rect', { x: x, y: base - h, width: bw, height: h, fill: GROUP_COLORS[i % GROUP_COLORS.length], rx: 1 }));
+          var vt = sv('text', { x: x + bw / 2, y: base - h - 4, 'font-size': 10.5, 'font-weight': 600, 'text-anchor': 'middle', fill: C.ink }); vt.textContent = fmt(val, cfg.dec == null ? 0 : cfg.dec) + (cfg.yunit || ''); svg.appendChild(vt);
+          var lt = sv('text', { x: x + bw / 2, y: base + 14, 'font-size': 10, 'text-anchor': 'middle', fill: C.ink3 }); lt.textContent = cat; svg.appendChild(lt);
+        });
+        stage.appendChild(svg);
+        ui.setReadout((cfg.readouts && cfg.readouts[idx]) || '');
+      }
+    };
+  };
+
+  /* ================= flow — a labelled boxes-and-arrows schematic that reveals stage by stage ================= */
+  TYPES.flow = function (cfg) {
+    return {
+      valText: function (v) { return (cfg.stageLabels && cfg.stageLabels[Math.round(v)]) || ('stage ' + Math.round(v)); },
+      render: function (stage, v, ui) {
+        stage.innerHTML = '';
+        var idx = Math.round(v);
+        var shown = (cfg.steps && cfg.steps[idx] && cfg.steps[idx].show) || cfg.nodes.map(function (n) { return n.id; });
+        var W = 340, H = 220;
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+        var defs = sv('defs', {}); var mk = sv('marker', { id: 'fa', markerWidth: 9, markerHeight: 9, refX: 7, refY: 4, orient: 'auto' });
+        mk.appendChild(sv('path', { d: 'M0 0 L8 4 L0 8 z', fill: C.ink3 })); defs.appendChild(mk); svg.appendChild(defs);
+        function nx(x) { return 24 + x / 10 * (W - 48); } function ny(y) { return 20 + y / 10 * (H - 40); }
+        var byId = {}; cfg.nodes.forEach(function (n) { byId[n.id] = n; });
+        (cfg.edges || []).forEach(function (e) {
+          if (shown.indexOf(e.from) < 0 || shown.indexOf(e.to) < 0) return;
+          var a = byId[e.from], b = byId[e.to]; if (!a || !b) return;
+          var ax = nx(a.x), ay = ny(a.y), bx = nx(b.x), by = ny(b.y);
+          var dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+          ax += dx / len * 26; ay += dy / len * 15; bx -= dx / len * 30; by -= dy / len * 15;
+          svg.appendChild(sv('line', { x1: ax, y1: ay, x2: bx, y2: by, stroke: C.ink3, 'stroke-width': 1.5, 'marker-end': 'url(#fa)' }));
+        });
+        cfg.nodes.forEach(function (n) {
+          if (shown.indexOf(n.id) < 0) return;
+          var x = nx(n.x), y = ny(n.y), col = n.group == null ? C.ink : GROUP_COLORS[n.group % GROUP_COLORS.length];
+          var tw = Math.max(48, n.label.length * 6.4 + 16);
+          svg.appendChild(sv('rect', { x: x - tw / 2, y: y - 13, width: tw, height: 26, rx: 4, fill: '#fff', stroke: col, 'stroke-width': 1.7 }));
+          var t = sv('text', { x: x, y: y + 4, 'font-size': 10.5, 'text-anchor': 'middle', fill: C.ink }); t.textContent = n.label; svg.appendChild(t);
+        });
+        stage.appendChild(svg);
+        ui.setReadout((cfg.steps && cfg.steps[idx] && cfg.steps[idx].readout) || '');
+      }
+    };
+  };
+
   /* ================= static figure: render a widget's stage at a fixed value (for question exhibits) ================= */
   window.renderFigure = function (container, cfg, at, caption) {
     var maker = TYPES[cfg.type];
