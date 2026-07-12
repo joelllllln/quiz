@@ -16,6 +16,18 @@ const scriptBlocks = scripts.map(src => {
 }).join('\n');
 
 let out = html;
+// Strip PWA-only bits: they reference sibling files that don't exist in the
+// single-file artifact (the Artifact tool sets its own favicon/title).
+[
+  /<link rel="manifest"[^>]*>\n?/,
+  /<link rel="icon"[^>]*>\n?/g,
+  /<link rel="apple-touch-icon"[^>]*>\n?/,
+  /<meta name="apple-mobile-web-app-[^"]*"[^>]*>\n?/g,
+  /<meta name="mobile-web-app-capable"[^>]*>\n?/,
+  /<meta name="application-name"[^>]*>\n?/,
+  /<script>\s*\/\* PWA:[\s\S]*?\}\(\)\);\s*<\/script>\n?/,
+].forEach(re => { out = out.replace(re, () => ''); });
+
 // Use function replacements everywhere so `$`/`$$` in content is never
 // treated as a String.replace special pattern.
 // Replace the <link ... fonts.css> with an inline <style>
