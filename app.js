@@ -724,15 +724,19 @@
 
   function quickCheck(q, card) {
     var checks = buildChecks(q);
+    if (!checks.length) { question(true); return; }
     var wrap = h('<div class="checks"></div>');
-    var answered = 0;
-    checks.forEach(function (c, ci) {
-      var cc = h('<div class="check-card"><div class="check-label">Step ' + (ci + 1) + ' of ' + checks.length + '</div>' +
+    card.appendChild(wrap);
+    var idx = 0;
+    // Reveal the ground-up ladder ONE step at a time — the next step appears only once you've answered the current.
+    function renderStep() {
+      var c = checks[idx];
+      var cc = h('<div class="check-card"><div class="check-label">Step ' + (idx + 1) + ' of ' + checks.length + '</div>' +
         '<div class="check-q"></div><div class="check-opts"></div></div>');
       cc.querySelector('.check-q').textContent = c.q;
       var opts = cc.querySelector('.check-opts');
       var order = shuffle(c.options.map(function (_, i) { return i; }));
-      var obtns = [];
+      var obtns = [], advanced = false;
       order.forEach(function (orig) {
         var b = document.createElement('button');
         b.className = 'check-opt';
@@ -746,8 +750,11 @@
             else if (x.b === b) { x.b.classList.add('co-wrong'); x.b.querySelector('.co-mark').textContent = '✗'; }
             else x.b.classList.add('co-dim');
           });
-          answered++;
-          if (answered === checks.length) {
+          if (advanced) return;
+          advanced = true;
+          idx++;
+          if (idx < checks.length) { renderStep(); }
+          else {
             var retry = h('<div class="next-row"><button class="btn">Take the question again →</button></div>');
             retry.children[0].onclick = function () { question(true); };
             wrap.appendChild(retry);
@@ -758,10 +765,9 @@
         opts.appendChild(b);
       });
       wrap.appendChild(cc);
-    });
-    if (!checks.length) { question(true); return; }
-    card.appendChild(wrap);
-    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      cc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    renderStep();
   }
 
   function next() {
