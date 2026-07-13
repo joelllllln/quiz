@@ -354,6 +354,66 @@
       { qs: pool.map(function (e) { return e.q; }), origins: pool.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Study', more: true });
   }
 
+  /* ---------------- search / lookup ---------------- */
+  var SEARCHIDX = null;
+  function searchIdx() {
+    if (SEARCHIDX) return SEARCHIDX;
+    SEARCHIDX = buildIndex().map(function (e) {
+      var wf = widgetFor(e.q), rev = wf && wf.reveal;
+      var hay = (e.q.q + ' ' + (e.q.choices ? e.q.choices.join(' ') : '') + ' ' + (e.q.explain || '') + ' ' +
+        (e.q.simple || '') + ' ' + ((rev && rev.name) || '') + ' ' + ((rev && rev.text) || '')).toLowerCase();
+      return { e: e, hay: hay, name: ((rev && rev.name) || '').toLowerCase(), stem: e.q.q.toLowerCase() };
+    });
+    return SEARCHIDX;
+  }
+  function searchHits(term) {
+    var toks = term.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!toks.length) return [];
+    var out = [];
+    searchIdx().forEach(function (r) {
+      if (!toks.every(function (t) { return r.hay.indexOf(t) >= 0; })) return;
+      var score = 0;
+      toks.forEach(function (t) {
+        if (r.name.indexOf(t) >= 0) score += 6;
+        if (r.stem.indexOf(t) >= 0) score += 3;
+      });
+      if (window.DEFS && window.DEFS[r.e.q.q]) score += 2;
+      out.push({ e: r.e, score: score });
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    return out.map(function (o) { return o.e; });
+  }
+  // Reference view for a single concept: the answer, plain English, the lab, and a practice button.
+  function showConcept(q, topic) {
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Lookup · ' + esc(topic) + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var isDef = !!(window.DEFS && window.DEFS[q.q]);
+    var card = h('<article class="qcard concept-card">' +
+      '<div class="q-eyebrow">' + (isDef ? 'Definition' : 'Concept') + ' · ' + esc(topic) + '</div>' +
+      '<h2 class="qtext"></h2>' +
+      '<div class="concept-answer"><span class="ca-lab">Answer</span><div class="ca-text"></div>' + (q.simple ? '<p class="ca-simple"></p>' : '') + '</div>' +
+      '<div class="explain concept-explain"></div></article>');
+    card.querySelector('.qtext').textContent = q.q;
+    card.querySelector('.ca-text').textContent = q.choices[0];
+    if (q.simple) card.querySelector('.ca-simple').textContent = q.simple;
+    card.querySelector('.concept-explain').innerHTML = q.explain || '';
+    renderWidget(card, widgetFor(q));
+    var row = h('<div class="next-row"><button class="btn cc-practice">Practice this →</button><button class="btn ghost cc-fav"></button></div>');
+    row.querySelector('.cc-practice').onclick = function () {
+      begin({ name: 'Lookup', no: '🔎', key: '__look__' }, { qk: '__look__', part: 'Practice', name: '' },
+        { qs: [q], origins: [topic], mixed: true, modeLabel: 'Practice', more: true });
+    };
+    var favBtn = row.querySelector('.cc-fav');
+    function setFav() { favBtn.textContent = isFav(q) ? '★ Saved' : '☆ Save'; }
+    setFav();
+    favBtn.onclick = function () { toggleFav(q); setFav(); };
+    card.appendChild(row);
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
   /* ---------------- open writing: final test, marked /5 by Claude Haiku ---------------- */
   function apiKey() { try { return localStorage.getItem('ds_api_key') || ''; } catch (e) { return ''; } }
   function setApiKey(v) { try { if (v) localStorage.setItem('ds_api_key', v); else localStorage.removeItem('ds_api_key'); } catch (e) {} }
@@ -577,10 +637,40 @@
       '</header>'));
 
     // ---- Daily challenge (filterable) + lifetime total ----
+    renderSearch();
     renderMastery();
     renderStudy();
     renderPractice();
     renderFavourites();
+
+    // Search everything: type a term, jump straight to any concept, definition or lab.
+    function renderSearch() {
+      var sec = h('<section class="search-card">' +
+        '<input class="search-in" type="search" placeholder="Search topics, definitions, answers…" autocomplete="off" spellcheck="false" aria-label="Search everything">' +
+        '<div class="search-results" hidden></div></section>');
+      var input = sec.querySelector('.search-in');
+      var box = sec.querySelector('.search-results');
+      function run() {
+        var term = input.value.trim();
+        if (term.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
+        var hits = searchHits(term).slice(0, 30);
+        box.hidden = false;
+        if (!hits.length) { box.innerHTML = '<div class="sr-empty">No matches for “' + esc(term) + '”.</div>'; return; }
+        box.innerHTML = '';
+        hits.forEach(function (e) {
+          var wf = widgetFor(e.q), rev = wf && wf.reveal;
+          var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
+          var kind = isDef ? 'Definition' : (rev && rev.name ? rev.name : 'Concept');
+          var row = h('<button class="sr-row"><span class="sr-q"></span>' +
+            '<span class="sr-meta">' + esc(kind) + ' · ' + esc(e.topic) + '</span></button>');
+          row.querySelector('.sr-q').textContent = e.q.q;
+          row.onclick = function () { showConcept(e.q, e.topic); };
+          box.appendChild(row);
+        });
+      }
+      input.oninput = run;
+      app.appendChild(sec);
+    }
 
     // One picker: choose the study format (Multiple choice / Written / Definitions),
     // the topic scope, and how many. Smart Review stays a separate card below.
