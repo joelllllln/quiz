@@ -45,7 +45,9 @@
     { key: 'msel', no: '19', name: 'Model Selection', desc: 'Choose and tune the right model without fooling yourself.',
       levels: [{ qk: 'msel1', part: 'Part I', name: 'Foundations' }, { qk: 'msel2', part: 'Part II', name: 'Practice' }, { qk: 'msel3', part: 'Part III', name: 'Advanced Study' }] },
     { key: 'xgb', no: '20', name: 'XGBoost', desc: 'Regularised gradient boosting, engineered for speed and accuracy.',
-      levels: [{ qk: 'xgb1', part: 'Part I', name: 'Foundations' }, { qk: 'xgb2', part: 'Part II', name: 'Practice' }, { qk: 'xgb3', part: 'Part III', name: 'Advanced Study' }] }
+      levels: [{ qk: 'xgb1', part: 'Part I', name: 'Foundations' }, { qk: 'xgb2', part: 'Part II', name: 'Practice' }, { qk: 'xgb3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'scen', no: '21', name: 'Applied Scenarios', desc: 'Real situations, real trade-offs: pick the model, metric and fix that fit.',
+      levels: [{ qk: 'scen1', part: 'Part I', name: 'Clear Calls' }, { qk: 'scen2', part: 'Part II', name: 'Weighing Trade-offs' }, { qk: 'scen3', part: 'Part III', name: 'Subtle Traps' }] }
   ];
   var GROUPS = [
     { label: 'Start here — the groundwork', keys: ['found'] },
@@ -53,7 +55,8 @@
     { label: 'Ensemble methods', keys: ['rf', 'gboost', 'stacking', 'xgb'] },
     { label: 'Features & model choice', keys: ['feng', 'fsel', 'msel'] },
     { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
-    { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] }
+    { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] },
+    { label: 'Putting it together', keys: ['scen'] }
   ];
   var UPCOMING = [
     { name: 'Regression', desc: 'Predicting quantities, done properly.' },
@@ -187,7 +190,7 @@
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
     r.seen++;
     if (right) r.box = Math.min(5, r.box + 1);
-    else { r.wrong++; r.box = Math.max(0, r.box - 2); }
+    else { r.wrong++; r.box = Math.max(0, r.box - 2); r.lastWrong = dayNum(); }
     r.last = dayNum();
     c[id] = r; saveCards();
   }
@@ -339,8 +342,201 @@
     draw();
   }
 
+  /* ---------------- type the term: read the definition, recall the name ---------------- */
+  // Forgiving match: exact after normalising, near-miss (1 edit) for longer terms, or the term's
+  // significant words all present. Typing recall is harder than recognising, so we grade kindly.
+  function editDist(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 99;
+    var m = a.length, n = b.length, d = [];
+    for (var i = 0; i <= m; i++) { d[i] = [i]; }
+    for (var j = 1; j <= n; j++) d[0][j] = j;
+    for (i = 1; i <= m; i++) for (j = 1; j <= n; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[m][n];
+  }
+  function termMatches(guess, target) {
+    var g = normkey(guess), t = normkey(target);
+    if (!g) return false;
+    if (g === t) return true;
+    if (t.length >= 6 && editDist(g, t) <= (t.length >= 10 ? 2 : 1)) return true;
+    // accept "k nearest neighbours" for "k-Nearest Neighbours (k-NN)" style targets
+    var words = target.toLowerCase().replace(/\(.*?\)/g, '').split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2; });
+    if (words.length >= 2 && words.every(function (w) { return g.indexOf(normkey(w)) >= 0; })) return true;
+    return false;
+  }
+  function startTypeIt(topicKey) {
+    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15; })).slice(0, 10);
+    if (!deck.length) return;
+    var i = 0, score = 0;
+    function draw() {
+      var c = deck[i];
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Type the term · <b>' + (i + 1) + '</b> of ' + deck.length + ' · <b>' + score + '</b> right</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var card = h('<article class="qcard type-card">' +
+        '<div class="q-eyebrow">Type the term · ' + esc(c.topic) + '</div>' +
+        '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
+        '<label class="type-lab" for="type-in">Which term is this?</label>' +
+        '<form class="type-form"><input id="type-in" class="type-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type the term…">' +
+        '<button class="btn type-go" type="submit">Check</button></form>' +
+        '<div class="type-result" hidden></div></article>');
+      card.querySelector('.type-deftext').textContent = c.back;
+      if (c.formula) card.querySelector('.type-formula').textContent = c.formula;
+      var form = card.querySelector('.type-form');
+      var input = card.querySelector('.type-in');
+      var result = card.querySelector('.type-result');
+      var answered = false;
+      form.onsubmit = function (ev) {
+        ev.preventDefault();
+        if (answered) return;
+        answered = true;
+        var right = termMatches(input.value, c.front);
+        input.disabled = true;
+        card.querySelector('.type-go').disabled = true;
+        if (right) score++;
+        recordConcept(c.front, right ? 'right' : 'wrong');
+        result.hidden = false;
+        result.className = 'type-result ' + (right ? 'tr-good' : 'tr-bad');
+        result.innerHTML = '<span class="tr-mark">' + (right ? '✓ That\'s it' : '✗ Not quite') + '</span>' +
+          '<div class="tr-term"></div>' +
+          '<div class="next-row"><button class="btn tr-next">' + (i + 1 < deck.length ? 'Next definition →' : 'See the score →') + '</button></div>';
+        result.querySelector('.tr-term').textContent = c.front;
+        result.querySelector('.tr-next').onclick = function () {
+          i++;
+          if (i < deck.length) return draw();
+          app.innerHTML = '';
+          var doneCard = h('<div class="result-card"><div class="r-eyebrow">Type the term · ' + deck.length + ' definitions</div>' +
+            '<div class="score-big">' + score + ' <small>/ ' + deck.length + '</small></div>' +
+            '<p class="r-msg">Recalling a term cold is harder than recognising it — every one of these strengthened your learning map.</p>' +
+            '<div class="next-row" style="justify-content:center"><button class="btn">Another round</button><button class="btn ghost">Contents</button></div></div>');
+          doneCard.querySelector('.btn').onclick = function () { startTypeIt(topicKey); };
+          doneCard.querySelector('.btn.ghost').onclick = home;
+          app.appendChild(doneCard);
+        };
+        input.blur();
+      };
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+      setTimeout(function () { input.focus(); }, 50);
+    }
+    draw();
+  }
+
+  /* ---------------- matching: pair terms with definitions, then order algorithm steps ---------------- */
+  function startMatching(topicKey) {
+    var pool = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15; }));
+    var orders = shuffle((window.ORDERS || []).filter(function (o) { return !topicKey || o.key === topicKey; })).slice(0, 2);
+    var PAIRS = 5, ROUNDS = Math.min(3, Math.floor(pool.length / PAIRS));
+    if (!ROUNDS && !orders.length) return;
+    var round = 0, orderIdx = 0, totalRight = 0, totalPairs = 0;
+    function trim(s) { return s.length > 110 ? s.slice(0, 107).replace(/\s+\S*$/, '') + '…' : s; }
+    function drawMatch() {
+      var cards = pool.slice(round * PAIRS, round * PAIRS + PAIRS);
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Match · round <b>' + (round + 1) + '</b> of ' + (ROUNDS + (orders.length ? orders.length : 0)) + '</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var sec = h('<article class="qcard match-card"><div class="q-eyebrow">Match each term to its definition</div>' +
+        '<div class="match-cols"><div class="match-terms"></div><div class="match-defs"></div></div>' +
+        '<p class="match-note">Tap a term, then tap its definition.</p></article>');
+      var termsEl = sec.querySelector('.match-terms'), defsEl = sec.querySelector('.match-defs');
+      var selTerm = null, solved = 0, errs = {};
+      shuffle(cards.slice()).forEach(function (c) {
+        var b = h('<button class="match-item mi-term" type="button"></button>');
+        b.textContent = c.front;
+        b._c = c;
+        b.onclick = function () {
+          if (b.classList.contains('mi-done')) return;
+          termsEl.querySelectorAll('.mi-term').forEach(function (x) { x.classList.remove('mi-sel'); });
+          b.classList.add('mi-sel'); selTerm = b;
+        };
+        termsEl.appendChild(b);
+      });
+      shuffle(cards.slice()).forEach(function (c) {
+        var b = h('<button class="match-item mi-def" type="button"></button>');
+        b.textContent = trim(c.back);
+        b._c = c;
+        b.onclick = function () {
+          if (b.classList.contains('mi-done') || !selTerm) return;
+          var t = selTerm._c;
+          if (t === b._c) {
+            selTerm.classList.remove('mi-sel'); selTerm.classList.add('mi-done'); b.classList.add('mi-done');
+            selTerm.disabled = true; b.disabled = true;
+            var right = !errs[normkey(t.front)];
+            recordConcept(t.front, right ? 'right' : 'wrong');
+            totalPairs++; if (right) totalRight++;
+            selTerm = null; solved++;
+            if (solved === cards.length) setTimeout(nextStage, 450);
+          } else {
+            errs[normkey(t.front)] = 1;
+            b.classList.add('mi-shake'); selTerm.classList.add('mi-shake');
+            setTimeout(function () { b.classList.remove('mi-shake'); if (selTerm) selTerm.classList.remove('mi-shake'); }, 350);
+          }
+        };
+        defsEl.appendChild(b);
+      });
+      app.appendChild(sec);
+      window.scrollTo(0, 0);
+    }
+    function drawOrder() {
+      var o = orders[orderIdx];
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Order the steps · ' + esc(o.title) + '</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var sec = h('<article class="qcard order-card"><div class="q-eyebrow">Put the steps in order</div>' +
+        '<h2 class="order-title">' + esc(o.title) + '</h2>' +
+        '<p class="match-note">Tap the steps in the order they happen — first step first.</p>' +
+        '<div class="order-list"></div><div class="order-done" hidden></div></article>');
+      var list = sec.querySelector('.order-list');
+      var expected = 0, wrongTaps = 0;
+      shuffle(o.steps.map(function (s, i) { return { s: s, i: i }; })).forEach(function (it) {
+        var b = h('<button class="order-item" type="button"><span class="oi-no"></span><span class="oi-text"></span></button>');
+        b.querySelector('.oi-text').textContent = it.s;
+        b.onclick = function () {
+          if (b.classList.contains('oi-done')) return;
+          if (it.i === expected) {
+            b.classList.add('oi-done');
+            b.querySelector('.oi-no').textContent = (expected + 1);
+            expected++;
+            if (expected === o.steps.length) {
+              logActivity();
+              var d = sec.querySelector('.order-done');
+              d.hidden = false;
+              d.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Ordered ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Perfect order ✓') + '</span>Every step in its place.</div>' +
+                '<div class="next-row"><button class="btn od-next">Continue →</button></div>';
+              d.querySelector('.od-next').onclick = function () { orderIdx++; nextStage(); };
+            }
+          } else {
+            wrongTaps++;
+            b.classList.add('mi-shake');
+            setTimeout(function () { b.classList.remove('mi-shake'); }, 350);
+          }
+        };
+        list.appendChild(b);
+      });
+      app.appendChild(sec);
+      window.scrollTo(0, 0);
+    }
+    function nextStage() {
+      round++;
+      if (round <= ROUNDS - 1) return drawMatch();
+      if (orderIdx < orders.length) return drawOrder();
+      app.innerHTML = '';
+      var doneCard = h('<div class="result-card"><div class="r-eyebrow">Match &amp; order</div>' +
+        '<div class="score-big">' + totalRight + ' <small>/ ' + totalPairs + ' first-try</small></div>' +
+        '<p class="r-msg">Pairs matched' + (orders.length ? ' and algorithm steps put in order' : '') + ' — all of it feeds your learning map.</p>' +
+        '<div class="next-row" style="justify-content:center"><button class="btn">Another round</button><button class="btn ghost">Contents</button></div></div>');
+      doneCard.querySelector('.btn').onclick = function () { startMatching(topicKey); };
+      doneCard.querySelector('.btn.ghost').onclick = home;
+      app.appendChild(doneCard);
+    }
+    if (ROUNDS) drawMatch(); else drawOrder();
+  }
+
   /* ---------------- unified study picker: one control, pick the mode ---------------- */
-  function getStudyMode() { var m = localStorage.getItem('ds_study_mode'); return (m === 'written' || m === 'defs') ? m : 'mc'; }
+  function getStudyMode() { var m = localStorage.getItem('ds_study_mode'); return (m === 'written' || m === 'defs' || m === 'type' || m === 'match') ? m : 'mc'; }
   function setStudyMode(m) { try { localStorage.setItem('ds_study_mode', m); } catch (e) {} }
   function getStudyTopic() { return localStorage.getItem('ds_study_topic') || ''; }
   function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
@@ -588,11 +784,22 @@
   }
 
   var PRACTICE_N = 20;
+  // SM-2-style scheduling: each box has a target review interval; a card's priority grows with
+  // how OVERDUE it is relative to that interval, its lifetime lapse rate, and — most urgently —
+  // whether it failed in the last few days. Weak recent failures surface first, solid old cards last.
+  var BOX_INTERVAL = [0.5, 1, 3, 7, 14, 30]; // days per box 0..5
   function practiceSelect(mix) {
     var c = loadCards(), day = dayNum();
     var known = [], neu = [];
     buildIndex().forEach(function (e) { var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
-    known.forEach(function (k) { k.p = (5 - k.r.box) * 8 + Math.min(20, day - k.r.last) + Math.random() * 4; });
+    known.forEach(function (k) {
+      var r = k.r;
+      var overdue = (day - r.last) / BOX_INTERVAL[Math.max(0, Math.min(5, r.box))];  // 1 = exactly due
+      var lapse = r.seen ? (r.wrong / r.seen) : 0;                                    // lifetime failure rate
+      var sinceFail = (r.lastWrong != null) ? (day - r.lastWrong) : 999;
+      var recentFail = sinceFail <= 1 ? 14 : sinceFail <= 3 ? 9 : sinceFail <= 7 ? 4 : 0;
+      k.p = Math.min(30, overdue * 10) + lapse * 15 + recentFail + (5 - r.box) * 2 + Math.random() * 2;
+    });
     known.sort(function (a, b) { return b.p - a.p; });
     neu = shuffle(neu);
     var N = PRACTICE_N;
@@ -619,6 +826,215 @@
       (r.formula ? '<span class="r-formula">' + r.formula + '</span>' : '') + '</div>';
   }
 
+  /* ---------------- why the wrong answers are wrong (data_why_*.js, keyed by stem) ---------------- */
+  function whyFor(q) {
+    var w = window.WHYNOT && window.WHYNOT[q.q];
+    return (w && w.length === q.choices.length - 1) ? w : null;
+  }
+  // Collapsible list: every distractor with its one-line flaw. chosenOrig highlights the learner's pick.
+  function whyOthersEl(q, chosenOrig, open) {
+    var w = whyFor(q); if (!w) return null;
+    var wrap = h('<div class="whywrap"><button class="why-toggle" type="button">Why the other options are wrong <span class="wt-arrow">▸</span></button><div class="why-list" hidden></div></div>');
+    var list = wrap.querySelector('.why-list');
+    q.choices.slice(1).forEach(function (c, i) {
+      var mine = chosenOrig === i + 1;
+      var row = h('<div class="why-row' + (mine ? ' why-mine' : '') + '">' +
+        (mine ? '<span class="why-yours">your pick</span>' : '') +
+        '<div class="why-opt"></div><div class="why-reason"></div></div>');
+      row.querySelector('.why-opt').textContent = c;
+      row.querySelector('.why-reason').textContent = w[i];
+      list.appendChild(row);
+    });
+    var btn = wrap.querySelector('.why-toggle');
+    btn.onclick = function () {
+      list.hidden = !list.hidden;
+      btn.querySelector('.wt-arrow').textContent = list.hidden ? '▸' : '▾';
+    };
+    if (open) btn.onclick();
+    return wrap;
+  }
+  // Inline flaw for the specific option the learner just picked (first miss, before the retry).
+  function whyPickEl(q, chosenOrig) {
+    var w = whyFor(q); if (!w || chosenOrig < 1) return null;
+    var el = h('<div class="why-pick"><span class="p-label">Why your pick misses</span><div class="wp-opt"></div><p class="wp-why"></p></div>');
+    el.querySelector('.wp-opt').textContent = q.choices[chosenOrig];
+    el.querySelector('.wp-why').textContent = w[chosenOrig - 1];
+    return el;
+  }
+
+  /* ---------------- AI tutor: re-explain any answer simpler or deeper (user's own key) ---------------- */
+  function rewriteExplain(q, mode, cb) {
+    var key = apiKey();
+    if (!key) { cb({ error: 'nokey' }); return; }
+    var sys = mode === 'simpler'
+      ? "You are a warm machine-learning tutor. Re-explain the idea for a complete beginner: everyday words, one concrete everyday analogy, no jargon unless you define it in-line. 120 words maximum. Output plain text only."
+      : "You are a rigorous machine-learning tutor. Go one level deeper on the idea for a curious beginner: add the key nuance, edge case or formula intuition the short explanation leaves out. Stay concrete. 160 words maximum. Output plain text only.";
+    var user = "QUESTION:\n" + q.q + "\n\nCORRECT ANSWER:\n" + q.choices[0] + "\n\nCURRENT EXPLANATION:\n" + (q.explain || '').replace(/<[^>]+>/g, '') +
+      "\n\n" + (mode === 'simpler' ? "Re-explain this even more simply." : "Explain this more deeply.");
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 500, system: sys, messages: [{ role: 'user', content: user }] })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { cb({ error: (res.j && res.j.error && res.j.error.message) || ('Request failed (HTTP ' + res.status + ')') }); return; }
+        var txt = '';
+        (res.j.content || []).forEach(function (b) { if (b.type === 'text') txt += b.text; });
+        if (!txt.trim()) { cb({ error: 'Empty response.' }); return; }
+        cb({ text: txt.trim() });
+      })
+      .catch(function () { cb({ error: 'You appear to be offline.' }); });
+  }
+  function aiExplainEl(q) {
+    var el = h('<div class="eli5"><div class="eli5-btns"><span class="eli5-lab">AI tutor</span>' +
+      '<button class="eli5-btn" type="button" data-m="simpler">Even simpler, please</button>' +
+      '<button class="eli5-btn" type="button" data-m="deeper">Go deeper</button></div>' +
+      '<div class="eli5-out" hidden></div></div>');
+    var out = el.querySelector('.eli5-out');
+    el.querySelectorAll('.eli5-btn').forEach(function (b) {
+      b.onclick = function () {
+        var mode = b.getAttribute('data-m');
+        if (!apiKey()) {
+          out.hidden = false;
+          out.innerHTML = '<span class="eli5-note">Add your Claude API key (Study → Written mode) to unlock the AI tutor.</span>';
+          return;
+        }
+        out.hidden = false;
+        out.innerHTML = '<span class="eli5-note">Thinking…</span>';
+        el.querySelectorAll('.eli5-btn').forEach(function (x) { x.disabled = true; });
+        rewriteExplain(q, mode, function (res) {
+          el.querySelectorAll('.eli5-btn').forEach(function (x) { x.disabled = false; });
+          if (res.error) { out.innerHTML = '<span class="eli5-note">' + esc(res.error === 'nokey' ? 'No API key saved.' : res.error) + '</span>'; return; }
+          out.innerHTML = '<div class="eli5-tag">' + (mode === 'simpler' ? 'Simpler take' : 'Deeper dive') + '</div><p class="eli5-text"></p>';
+          out.querySelector('.eli5-text').textContent = res.text;
+        });
+      };
+    });
+    return el;
+  }
+
+  /* ---------------- theme & text size (accessibility) ---------------- */
+  function getTheme() { var t = localStorage.getItem('ds_theme'); return (t === 'light' || t === 'dark') ? t : 'auto'; }
+  function setTheme(t) { try { localStorage.setItem('ds_theme', t); } catch (e) {} applyTheme(); }
+  function applyTheme() {
+    var pref = getTheme();
+    var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+  function getFont() { var v = +(localStorage.getItem('ds_font')); return (v === 1 || v === 2) ? v : 0; }
+  function setFont(v) { try { localStorage.setItem('ds_font', v); } catch (e) {} applyFont(); }
+  function applyFont() { document.documentElement.style.fontSize = [100, 110, 122][getFont()] + '%'; }
+
+  /* ---------------- flags (one-off achievements) ---------------- */
+  function loadFlags() { try { return JSON.parse(localStorage.getItem('ds_flags') || '{}') || {}; } catch (e) { return {}; } }
+  function setFlag(k) { try { var f = loadFlags(); if (!f[k]) { f[k] = 1; localStorage.setItem('ds_flags', JSON.stringify(f)); } } catch (e) {} }
+  function checkSessionFlags() {
+    if (S.results && S.results.length >= 10 && S.results.every(function (r) { return r === true; })) setFlag('perfect10');
+  }
+
+  /* ---------------- badges & milestones ---------------- */
+  function computeBadges() {
+    var cards = loadCards(), ids = Object.keys(cards);
+    var total = getTotal();
+    var written = 0, anyReady = 0, mastered = 0;
+    ids.forEach(function (id) { var r = cards[id]; if (r.wrote) written++; if (r.box >= 4) anyReady++; if (r.box >= 4 && r.wrote) mastered++; });
+    var act = loadActivity();
+    var d = new Date(); d.setHours(0, 0, 0, 0);
+    var cur = 0; if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
+    while (act[fmtDay(d)]) { cur++; d.setDate(d.getDate() - 1); }
+    var byTopic = masteryByTopic();
+    var topicsDone = byTopic.filter(function (r) { return r.total > 0 && r.learnt === r.total; }).length;
+    var topicsTouched = byTopic.filter(function (r) { return r.total > 0 && (r.total - r.new) > 0; }).length;
+    var topicsWithQs = byTopic.filter(function (r) { return r.total > 0; }).length;
+    var groupDone = GROUPS.some(function (g) {
+      var rs = byTopic.filter(function (r) { return g.keys.indexOf(r.key) >= 0 && r.total > 0; });
+      return rs.length && rs.every(function (r) { return r.learnt === r.total; });
+    });
+    var flags = loadFlags();
+    function b(id, icon, name, desc, earned, prog) { return { id: id, icon: icon, name: name, desc: desc, earned: !!earned, prog: prog || '' }; }
+    function p(nowV, target) { return Math.min(nowV, target) + '/' + target; }
+    return [
+      b('first', '✏️', 'First marks', 'Answer your first question correctly', total >= 1, p(total, 1)),
+      b('c50', '📈', 'Half century', '50 lifetime correct answers', total >= 50, p(total, 50)),
+      b('c250', '🎯', 'Sharpshooter', '250 lifetime correct answers', total >= 250, p(total, 250)),
+      b('c1000', '🏆', 'The thousand', '1,000 lifetime correct answers', total >= 1000, p(total, 1000)),
+      b('s3', '🔥', 'Warming up', 'Study 3 days in a row', cur >= 3, p(cur, 3)),
+      b('s7', '⚡', 'One full week', 'Study 7 days in a row', cur >= 7, p(cur, 7)),
+      b('s30', '🌟', 'The habit', 'Study 30 days in a row', cur >= 30, p(cur, 30)),
+      b('ready10', '🧠', 'Solid ground', '10 concepts at ready or better', anyReady >= 10, p(anyReady, 10)),
+      b('m1', '🎓', 'First mastery', 'Master a concept (strong recall + written)', mastered >= 1, p(mastered, 1)),
+      b('m25', '📚', 'Scholar', 'Master 25 concepts', mastered >= 25, p(mastered, 25)),
+      b('m100', '🧙', 'The professor', 'Master 100 concepts', mastered >= 100, p(mastered, 100)),
+      b('w1', '🖋️', 'In your own words', 'Pass your first written test', written >= 1, p(written, 1)),
+      b('w25', '📝', 'Essayist', 'Pass 25 written tests', written >= 25, p(written, 25)),
+      b('topic1', '🗺️', 'Territory claimed', 'Master every concept in one topic', topicsDone >= 1, p(topicsDone, 1)),
+      b('group1', '👑', 'Section complete', 'Master an entire section of the manual', groupDone, groupDone ? '1/1' : '0/1'),
+      b('explorer', '🧭', 'Explorer', 'Try every topic at least once', topicsTouched >= topicsWithQs && topicsWithQs > 0, p(topicsTouched, topicsWithQs)),
+      b('perfect', '💯', 'Perfect paper', 'Score 100% on a session of 10+ questions', flags.perfect10, flags.perfect10 ? '1/1' : '0/1'),
+      b('fav5', '⭐', 'Curator', 'Save 5 favourite questions', favCount() >= 5, p(favCount(), 5))
+    ];
+  }
+
+  /* ---------------- CSV export (per-question progress, human-readable) ---------------- */
+  function exportStatsCSV() {
+    var cards = loadCards();
+    function cell(s) { s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+    var rows = [['topic', 'level', 'question', 'status', 'box', 'times_seen', 'times_wrong', 'written', 'is_definition'].join(',')];
+    buildIndex().forEach(function (e) {
+      var r = cards[cardId(e.q)] || {};
+      rows.push([cell(e.topic), e.level, cell(e.q.q), cardStatus(e.q), r.box || 0, r.seen || 0, r.wrong || 0, r.wrote ? 'yes' : 'no', e.def ? 'yes' : 'no'].join(','));
+    });
+    var blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'datasense-stats-' + today() + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ---------------- compare pages: side-by-side for commonly confused pairs ---------------- */
+  function showCompare(idx) {
+    var all = window.COMPARES || [];
+    var c = all[idx]; if (!c) return;
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Don’t confuse these · ' + (idx + 1) + ' of ' + all.length + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var card = h('<article class="qcard compare-card">' +
+      '<div class="q-eyebrow">Side by side</div>' +
+      '<h2 class="cmp-title"></h2><p class="cmp-tagline"></p>' +
+      '<div class="cmp-heads"><div class="cmp-head cmp-a"><b></b><p></p></div><div class="cmp-head cmp-b"><b></b><p></p></div></div>' +
+      '<div class="cmp-rows"></div>' +
+      '<div class="cmp-callout cmp-confusion"><span class="p-label">The mix-up</span><p></p></div>' +
+      '<div class="cmp-callout cmp-rule"><span class="p-label">Rule of thumb</span><p></p></div></article>');
+    card.querySelector('.cmp-title').textContent = c.title;
+    card.querySelector('.cmp-tagline').textContent = c.tagline;
+    card.querySelector('.cmp-a b').textContent = c.a.name;
+    card.querySelector('.cmp-a p').textContent = c.a.oneLiner;
+    card.querySelector('.cmp-b b').textContent = c.b.name;
+    card.querySelector('.cmp-b p').textContent = c.b.oneLiner;
+    var rowsEl = card.querySelector('.cmp-rows');
+    (c.rows || []).forEach(function (r) {
+      var row = h('<div class="cmp-row"><div class="cmp-dim"></div><div class="cmp-cells"><div class="cmp-cell cmp-ca"></div><div class="cmp-cell cmp-cb"></div></div></div>');
+      row.querySelector('.cmp-dim').textContent = r.dim;
+      row.querySelector('.cmp-ca').textContent = r.a;
+      row.querySelector('.cmp-cb').textContent = r.b;
+      rowsEl.appendChild(row);
+    });
+    card.querySelector('.cmp-confusion p').textContent = c.confusion;
+    card.querySelector('.cmp-rule p').textContent = c.rule;
+    var nav = h('<div class="next-row"><button class="btn ghost cmp-prev">← Previous pair</button><button class="btn cmp-next">Next pair →</button></div>');
+    nav.querySelector('.cmp-prev').onclick = function () { showCompare((idx - 1 + all.length) % all.length); };
+    nav.querySelector('.cmp-next').onclick = function () { showCompare((idx + 1) % all.length); };
+    card.appendChild(nav);
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
   /* ---------------- contents page ---------------- */
   function totalExercises() {
     var n = 0;
@@ -627,14 +1043,23 @@
   }
   function home() {
     app.innerHTML = '';
-    app.appendChild(h(
+    var mast = h(
       '<header class="masthead">' +
         '<div class="mast-rules"></div>' +
-        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span>Vols. 1–2 · Supervised & Unsupervised</span></div>' +
+        '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span class="mast-tools">' +
+          '<button class="mt-btn mt-theme" type="button" title="Theme"></button>' +
+          '<button class="mt-btn mt-font" type="button" title="Text size"></button></span></div>' +
         '<h1>DataSense</h1>' +
         '<p class="mast-sub"><b>Machine learning</b>, learned by doing: ' + totalExercises() + ' exercises across supervised classification, clustering and dimensionality reduction. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
         '<div class="mast-foot">Multiple choice · questions & answers shuffle on every sitting · progress kept in this browser</div>' +
-      '</header>'));
+      '</header>');
+    var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font');
+    function themeLabel() { var t = getTheme(); themeBtn.textContent = t === 'auto' ? '◐ auto' : (t === 'light' ? '☀ light' : '☾ dark'); }
+    function fontLabel() { fontBtn.textContent = ['A', 'A+', 'A++'][getFont()]; }
+    themeLabel(); fontLabel();
+    themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
+    fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
+    app.appendChild(mast);
 
     // ---- Daily challenge (filterable) + lifetime total ----
     renderSearch();
@@ -642,33 +1067,77 @@
     renderStudy();
     renderPractice();
     renderFavourites();
+    renderCompares();
+
+    // Side-by-side pages for the pairs beginners mix up (data_compare.js).
+    function renderCompares() {
+      var all = window.COMPARES || [];
+      if (!all.length) return;
+      var sec = h('<section class="cmp-index"><div class="review-eyebrow">Quick reference</div>' +
+        '<h2 class="review-title">Don’t confuse these</h2>' +
+        '<p class="mm-sub">Side-by-side pages for the pairs everyone mixes up at first.</p>' +
+        '<div class="cmp-chips"></div></section>');
+      var chipsEl = sec.querySelector('.cmp-chips');
+      all.forEach(function (c, i) {
+        var chip = h('<button class="cmp-chip" type="button"></button>');
+        chip.textContent = c.title;
+        chip.onclick = function () { showCompare(i); };
+        chipsEl.appendChild(chip);
+      });
+      app.appendChild(sec);
+    }
 
     // Search everything: type a term, jump straight to any concept, definition or lab.
+    // Results group by topic; ↑/↓ move the highlight, Enter opens, Esc clears, '/' focuses.
     function renderSearch() {
       var sec = h('<section class="search-card">' +
-        '<input class="search-in" type="search" placeholder="Search topics, definitions, answers…" autocomplete="off" spellcheck="false" aria-label="Search everything">' +
+        '<input class="search-in" type="search" placeholder="Search topics, definitions, answers…  (press /)" autocomplete="off" spellcheck="false" aria-label="Search everything">' +
         '<div class="search-results" hidden></div></section>');
       var input = sec.querySelector('.search-in');
       var box = sec.querySelector('.search-results');
+      var active = -1;
+      function rows() { return [].slice.call(box.querySelectorAll('.sr-row')); }
+      function setActive(n) {
+        var rs = rows();
+        if (!rs.length) return;
+        if (active >= 0 && rs[active]) rs[active].classList.remove('sr-active');
+        active = (n + rs.length) % rs.length;
+        rs[active].classList.add('sr-active');
+        rs[active].scrollIntoView({ block: 'nearest' });
+      }
       function run() {
+        active = -1;
         var term = input.value.trim();
         if (term.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
         var hits = searchHits(term).slice(0, 30);
         box.hidden = false;
         if (!hits.length) { box.innerHTML = '<div class="sr-empty">No matches for “' + esc(term) + '”.</div>'; return; }
         box.innerHTML = '';
+        var lastTopic = null;
         hits.forEach(function (e) {
+          if (e.topic !== lastTopic) {
+            box.appendChild(h('<div class="sr-group">' + esc(e.topic) + '</div>'));
+            lastTopic = e.topic;
+          }
           var wf = widgetFor(e.q), rev = wf && wf.reveal;
           var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
           var kind = isDef ? 'Definition' : (rev && rev.name ? rev.name : 'Concept');
           var row = h('<button class="sr-row"><span class="sr-q"></span>' +
-            '<span class="sr-meta">' + esc(kind) + ' · ' + esc(e.topic) + '</span></button>');
+            '<span class="sr-meta">' + esc(kind) + '</span></button>');
           row.querySelector('.sr-q').textContent = e.q.q;
           row.onclick = function () { showConcept(e.q, e.topic); };
           box.appendChild(row);
         });
       }
       input.oninput = run;
+      input.onkeydown = function (ev) {
+        if (ev.key === 'ArrowDown') { ev.preventDefault(); setActive(active + 1); }
+        else if (ev.key === 'ArrowUp') { ev.preventDefault(); setActive(active - 1); }
+        else if (ev.key === 'Enter') {
+          var rs = rows();
+          if (rs.length) { ev.preventDefault(); rs[active >= 0 ? active : 0].click(); }
+        } else if (ev.key === 'Escape') { input.value = ''; run(); input.blur(); }
+      };
       app.appendChild(sec);
     }
 
@@ -691,6 +1160,8 @@
       var desc, startLabel;
       if (mode === 'mc') { desc = curN + ' multiple-choice questions · ' + esc(scopeLabel); startLabel = 'Start ' + curN + ' →'; }
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
+      else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel); startLabel = 'Start typing →'; }
+      else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel); startLabel = 'Start matching →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel); startLabel = 'Study cards →'; }
       var sec = h('<section class="study-card">' +
         '<div class="daily-main">' +
@@ -698,9 +1169,9 @@
           '<h2 class="daily-title">Study</h2>' +
           '<div class="daily-filters">' +
             '<div class="filt-row"><span class="filt-lab">Mode</span>' +
-              chips('mode', mode, [{ v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }]) + '</div>' +
+              chips('mode', mode, [{ v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }]) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
-            (mode === 'defs' ? '' :
+            (mode !== 'mc' && mode !== 'written' ? '' :
             '<div class="filt-row"><span class="filt-lab">How many</span>' +
               chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>') +
           '</div>' +
@@ -720,6 +1191,8 @@
       sec.querySelector('.study-go').onclick = function () {
         if (mode === 'mc') startQuiz(tkey, curN);
         else if (mode === 'written') startWriting(tkey);
+        else if (mode === 'type') startTypeIt(tkey);
+        else if (mode === 'match') startMatching(tkey);
         else startFlashcards(tkey, true);
       };
       if (old) app.replaceChild(sec, old); else app.appendChild(sec);
@@ -792,9 +1265,12 @@
       function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
       rows.forEach(function (r, idx) {
         var pct = r.total ? Math.round(100 * r.learnt / r.total) : 0;
+        var pL = r.total ? (100 * r.learnt / r.total) : 0;
+        var pR = r.total ? (100 * (r.learnt + r.ready) / r.total) : 0;
         var row = h('<button class="mm-row">' +
           '<span class="mm-name">' + esc(r.topic) + '</span>' +
           '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-ready', r.ready) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
+          '<span class="mm-ring" style="background:conic-gradient(#1F7A1F 0 ' + pL + '%,#C7A400 ' + pL + '% ' + pR + '%,var(--rule) ' + pR + '% 100%)" title="' + pct + '% mastered"><i></i></span>' +
           '<span class="mm-pct">' + pct + '%</span></button>');
         row.onclick = function () { start(TOPICS[idx], TOPICS[idx].levels[0]); };
         list.appendChild(row);
@@ -881,9 +1357,10 @@
     function renderBackup() {
       var sec = h('<section class="data-card">' +
         '<div class="dc-text"><b>Back up your progress</b><span>Your streaks, mastery and favourites live only in this browser. Export a file to keep them safe or move to another device.</span></div>' +
-        '<div class="dc-btns"><button class="dc-btn dc-export">⬇ Export</button><button class="dc-btn dc-import">⬆ Restore</button>' +
+        '<div class="dc-btns"><button class="dc-btn dc-export">⬇ Backup (JSON)</button><button class="dc-btn dc-csv">⬇ Stats (CSV)</button><button class="dc-btn dc-import">⬆ Restore</button>' +
         '<input type="file" accept="application/json,.json" class="dc-file" hidden></div></section>');
       sec.querySelector('.dc-export').onclick = exportProgress;
+      sec.querySelector('.dc-csv').onclick = exportStatsCSV;
       var file = sec.querySelector('.dc-file');
       sec.querySelector('.dc-import').onclick = function () { file.click(); };
       file.onchange = function () {
@@ -933,7 +1410,28 @@
 
     app.appendChild(h('<div class="sec-label">Your analytics</div>'));
     renderStats();
+    renderBadges();
     renderBackup();
+
+    function renderBadges() {
+      var badges = computeBadges();
+      var earned = badges.filter(function (b) { return b.earned; }).length;
+      var sec = h('<section class="badge-card"><div class="review-eyebrow">Milestones</div>' +
+        '<h2 class="review-title">Badges</h2>' +
+        '<p class="mm-sub"><b>' + earned + '</b> of ' + badges.length + ' earned</p>' +
+        '<div class="badge-grid"></div></section>');
+      var grid = sec.querySelector('.badge-grid');
+      badges.forEach(function (b) {
+        var el = h('<div class="badge ' + (b.earned ? 'bd-earned' : 'bd-locked') + '">' +
+          '<span class="bd-icon">' + b.icon + '</span><span class="bd-name"></span><span class="bd-desc"></span>' +
+          (b.earned ? '' : '<span class="bd-prog"></span>') + '</div>');
+        el.querySelector('.bd-name').textContent = b.name;
+        el.querySelector('.bd-desc').textContent = b.desc;
+        if (!b.earned) el.querySelector('.bd-prog').textContent = b.prog;
+        grid.appendChild(el);
+      });
+      app.appendChild(sec);
+    }
   }
 
   /* ---------------- ground definitions primer ---------------- */
@@ -1070,6 +1568,8 @@
       if (!isRetry) { S.correct++; bumpTotal(); }
       card.appendChild(h('<div class="banner good"><span class="b-label">' + (isRetry ? 'Correct on the second attempt ✓' : 'Correct ✓') + '</span>' +
         '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
+      var ww = whyOthersEl(q, null, false); if (ww) card.appendChild(ww);
+      card.appendChild(aiExplainEl(q));
       var row = h('<div class="next-row"><button class="btn">Next exercise →</button>' +
         (isRetry ? '' : '<button class="btn ghost">Open the lab anyway</button>') + '</div>');
       row.children[0].onclick = next;
@@ -1082,14 +1582,17 @@
       revealCorrect(btns);
       card.appendChild(h('<div class="banner good"><span class="b-label">The answer</span>' + esc(q.choices[0]) +
         '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
+      var ww2 = whyOthersEl(q, chosen, true); if (ww2) card.appendChild(ww2);
+      card.appendChild(aiExplainEl(q));
       var row2 = h('<div class="next-row"><button class="btn">Next exercise →</button></div>');
       row2.children[0].onclick = next;
       card.appendChild(row2);
       return;
     }
 
-    // first attempt, wrong → plain-English answer → lab → build-up (break the answer down) → retry
+    // first attempt, wrong → why THEIR pick fails → plain-English answer → lab → build-up → retry
     card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Here\'s the answer in plain English. Then work the lab, build the answer up step by step, and take the question again.</div>'));
+    var wp = whyPickEl(q, chosen); if (wp) card.appendChild(wp);
     card.appendChild(h('<div class="plain"><span class="p-label">The answer, in plain English</span>' +
       '<div class="p-answer">' + esc(q.choices[0]) + '</div>' +
       (q.simple ? '<p>' + q.simple + '</p>' : '') + '</div>'));
@@ -1242,6 +1745,7 @@
   }
 
   function done() {
+    checkSessionFlags();
     if (S.practice) return donePractice();
     if (S.daily) return doneDaily();
     if (S.more) return doneMore();
@@ -1268,5 +1772,17 @@
     app.appendChild(card);
   }
 
+  applyTheme(); applyFont();
+  if (window.matchMedia) {
+    try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (getTheme() === 'auto') applyTheme(); }); } catch (e) {}
+  }
+  // '/' focuses the home search from anywhere on the contents page
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== '/' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    var s = document.querySelector('.search-in');
+    if (s) { ev.preventDefault(); s.focus(); }
+  });
   home();
 })();
