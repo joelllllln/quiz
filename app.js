@@ -191,6 +191,39 @@
     r.last = dayNum();
     c[id] = r; saveCards();
   }
+  function recordSeen(q) {
+    var c = loadCards(), id = cardId(q);
+    var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
+    r.seen++; r.last = dayNum(); c[id] = r; saveCards();
+  }
+  // Every study mode feeds the SAME per-card memory. Quizzes act on one question;
+  // flashcards and the open-writing test act on a whole CONCEPT — so they update
+  // every question that teaches that concept, and mastery/Smart Review/daily all
+  // move together as one learning map.
+  var CONCEPTIDX = null;
+  function conceptIndex() {
+    if (CONCEPTIDX) return CONCEPTIDX;
+    var idx = {};
+    buildIndex().forEach(function (e) {
+      var names = [];
+      if (e.q.widget && e.q.widget.reveal && e.q.widget.reveal.name) names.push(e.q.widget.reveal.name);
+      var wf = widgetFor(e.q);
+      if (wf && wf.reveal && wf.reveal.name) names.push(wf.reveal.name);
+      names.forEach(function (n) { var k = normkey(n); (idx[k] || (idx[k] = [])).push(e.q); });
+    });
+    CONCEPTIDX = idx; return idx;
+  }
+  // outcome: 'right' (box up), 'wrong' (box down), 'seen' (touched, no box change)
+  function recordConcept(name, outcome) {
+    var qs = conceptIndex()[normkey(name)];
+    if (!qs || !qs.length) return 0;
+    var uniq = {}, n = 0;
+    qs.forEach(function (q) {
+      var id = cardId(q); if (uniq[id]) return; uniq[id] = 1; n++;
+      if (outcome === 'seen') recordSeen(q); else recordCard(q, outcome === 'right');
+    });
+    return n;
+  }
   function cardStatus(q) {
     var r = loadCards()[cardId(q)];
     if (!r || !r.seen) return 'new';
@@ -266,7 +299,9 @@
           '<div class="flash-face flash-front"><span class="flash-tag">Concept</span><div class="flash-term"></div><span class="flash-hint">tap to reveal the definition</span></div>' +
           '<div class="flash-face flash-back"><span class="flash-tag">Definition</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div><span class="flash-topictag">' + esc(c.topic) + '</span></div>' +
         '</button></div>' +
-        '<div class="flash-controls"><button class="btn ghost flash-prev">← Prev</button><button class="btn flash-flip">Flip</button><button class="btn ghost flash-next">Next →</button></div>' +
+        '<div class="flash-controls"><button class="btn ghost flash-prev">← Prev</button><button class="btn flash-flip">Flip</button><button class="btn ghost flash-next">Skip →</button></div>' +
+        '<div class="flash-rate"><span class="fr-lab">How well did you know it?</span>' +
+          '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Review again</button></div>' +
         '<button class="flash-shuffle">↻ Shuffle deck</button>' +
       '</div>');
       view.querySelector('.flash-term').textContent = c.front;
@@ -274,10 +309,15 @@
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
       var fc = view.querySelector('.flash-card');
       function flip() { flipped = !flipped; fc.classList.toggle('flipped', flipped); }
+      function advance() { i = (i + 1) % deck.length; flipped = false; draw(); }
       fc.onclick = flip;
       view.querySelector('.flash-flip').onclick = function (ev) { ev.stopPropagation(); flip(); };
       view.querySelector('.flash-prev').onclick = function () { i = (i - 1 + deck.length) % deck.length; flipped = false; draw(); };
-      view.querySelector('.flash-next').onclick = function () { i = (i + 1) % deck.length; flipped = false; draw(); };
+      view.querySelector('.flash-next').onclick = function () { recordConcept(c.front, 'seen'); advance(); };
+      // Self-rating feeds the shared learning map: 'Got it' strengthens every question
+      // that teaches this concept; 'Review again' marks it for spaced review.
+      view.querySelector('.fr-good').onclick = function () { recordConcept(c.front, 'right'); advance(); };
+      view.querySelector('.fr-again').onclick = function () { recordConcept(c.front, 'wrong'); advance(); };
       view.querySelector('.flash-shuffle').onclick = function () { deck = shuffle(deck); i = 0; flipped = false; draw(); };
       view.querySelector('.flash-topic').onchange = function () { startFlashcards(this.value); };
       app.appendChild(view);
@@ -420,6 +460,9 @@
           result.querySelector('.wr-modeltext').textContent = reference;
           result.querySelector('.wr-next').onclick = nextPrompt;
           result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
+          // Feed the shared learning map: a strong written explanation strengthens the
+          // concept's cards, a weak one flags them for review — same model the quizzes use.
+          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'));
           if (res.score >= 4) bumpTotal();
         });
       }
@@ -635,7 +678,7 @@
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' cards mastered · tap a topic to study it</p>' +
+        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · quizzes, flashcards &amp; writing all build this · tap a topic to study it</p>' +
         '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
