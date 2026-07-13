@@ -1057,6 +1057,52 @@
     window.scrollTo(0, 0);
   }
 
+  /* ---------------- study notes: bite-sized revision, read in order ---------------- */
+  function notesTopics() { return TOPICS.filter(function (t) { return window.NOTES && window.NOTES[t.key]; }); }
+  function showNotes(topicKey) {
+    var list = notesTopics();
+    if (!list.length) return;
+    var idx = 0; list.forEach(function (t, i) { if (t.key === topicKey) idx = i; });
+    var t = list[idx], n = window.NOTES[t.key];
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Study notes · ' + (idx + 1) + ' of ' + list.length + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var jump = '<select class="notes-jump">' + list.map(function (x, i) {
+      return '<option value="' + x.key + '"' + (i === idx ? ' selected' : '') + '>' + esc((x.no ? x.no + ' · ' : '') + x.name) + '</option>';
+    }).join('') + '</select>';
+    var card = h('<article class="qcard notes-card-read">' +
+      '<div class="q-eyebrow">Revision notes · ' + esc(t.no || '') + '</div>' +
+      '<h2 class="notes-h"></h2>' +
+      (n.intro ? '<p class="notes-intro"></p>' : '') +
+      '<div class="notes-jumprow"><span class="filt-lab">Jump to</span>' + jump + '</div>' +
+      '<div class="notes-body"></div></article>');
+    card.querySelector('.notes-h').textContent = n.name;
+    if (n.intro) card.querySelector('.notes-intro').textContent = n.intro;
+    var body = card.querySelector('.notes-body');
+    (n.groups || []).forEach(function (g) {
+      var gEl = h('<section class="note-group"><h3 class="note-group-h"></h3><div class="note-items"></div></section>');
+      gEl.querySelector('.note-group-h').textContent = g.h;
+      var itemsEl = gEl.querySelector('.note-items');
+      (g.items || []).forEach(function (it) {
+        var iEl = h('<div class="note-item"><div class="ni-t"></div><div class="ni-d"></div>' + (it.f ? '<div class="ni-f"></div>' : '') + '</div>');
+        iEl.querySelector('.ni-t').textContent = it.t;
+        iEl.querySelector('.ni-d').textContent = it.d;
+        if (it.f) iEl.querySelector('.ni-f').textContent = it.f;
+        itemsEl.appendChild(iEl);
+      });
+      body.appendChild(gEl);
+    });
+    var nav = h('<div class="next-row"><button class="btn ghost notes-prev">← ' + esc(list[(idx - 1 + list.length) % list.length].name) + '</button>' +
+      '<button class="btn notes-next">' + esc(list[(idx + 1) % list.length].name) + ' →</button></div>');
+    nav.querySelector('.notes-prev').onclick = function () { showNotes(list[(idx - 1 + list.length) % list.length].key); };
+    nav.querySelector('.notes-next').onclick = function () { showNotes(list[(idx + 1) % list.length].key); };
+    card.appendChild(nav);
+    card.querySelector('.notes-jump').onchange = function () { showNotes(this.value); };
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
   /* ---------------- contents page ---------------- */
   function totalExercises() {
     var n = 0;
@@ -1089,7 +1135,28 @@
     renderStudy();
     renderPractice();
     renderFavourites();
+    renderNotes();
     renderCompares();
+
+    // Bite-sized revision notes covering every topic, in order (data_notes_*.js).
+    function renderNotes() {
+      var list = notesTopics();
+      if (!list.length) return;
+      var sec = h('<section class="notes-card"><div class="review-eyebrow">Quick reference</div>' +
+        '<h2 class="review-title">Study notes</h2>' +
+        '<p class="mm-sub">Short revision notes covering every topic in order, in tiny chunks. Read straight through or jump to any topic.</p>' +
+        '<div class="notes-chips"></div>' +
+        '<div class="next-row"><button class="btn notes-read-all">Read from the top →</button></div></section>');
+      var chipsEl = sec.querySelector('.notes-chips');
+      list.forEach(function (tp) {
+        var chip = h('<button class="cmp-chip note-chip" type="button"></button>');
+        chip.textContent = (tp.no ? tp.no + ' · ' : '') + tp.name;
+        chip.onclick = function () { showNotes(tp.key); };
+        chipsEl.appendChild(chip);
+      });
+      sec.querySelector('.notes-read-all').onclick = function () { showNotes(list[0].key); };
+      app.appendChild(sec);
+    }
 
     // Side-by-side pages for the pairs beginners mix up (data_compare.js).
     function renderCompares() {

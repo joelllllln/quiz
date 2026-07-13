@@ -195,6 +195,22 @@ input[type=range]{accent-color:var(--cobalt)}
 .cmp-rule{background:var(--green-soft);border-left:3px solid var(--green)}
 .cmp-callout p{margin:4px 0 0;line-height:1.5}
 @media(max-width:520px){.cmp-heads,.cmp-cells{grid-template-columns:1fr}}
+/* study notes */
+.notes-card{margin:14px 0 4px;background:var(--sheet);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px}
+.notes-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.note-chip{text-align:left}
+.notes-card-read .notes-h{font-family:var(--serif);font-size:1.6rem;margin:2px 0 6px}
+.notes-intro{color:var(--ink-2);line-height:1.5;margin:0 0 14px}
+.notes-jumprow{display:flex;align-items:center;gap:8px;margin:0 0 18px;flex-wrap:wrap}
+.notes-jump{font-family:var(--mono);font-size:.8rem;padding:7px 10px;border:1px solid var(--rule);border-radius:2px;background:var(--sheet);color:var(--ink);max-width:100%}
+.note-group{margin:0 0 20px}
+.note-group-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cobalt);border-bottom:1px solid var(--rule);padding-bottom:5px;margin-bottom:10px}
+.note-items{display:flex;flex-direction:column;gap:10px}
+.note-item{border-left:3px solid var(--rule);padding:2px 0 2px 12px}
+.ni-t{font-weight:700;font-size:.92rem;line-height:1.35}
+.ni-d{color:var(--ink-2);line-height:1.5;font-size:.9rem;margin-top:2px;overflow-wrap:anywhere}
+.ni-f{font-family:var(--mono);font-size:.78rem;color:var(--ink);background:var(--cobalt-soft);border-radius:2px;padding:3px 8px;margin-top:5px;display:inline-block;overflow-wrap:anywhere;max-width:100%}
+@media(max-width:520px){.notes-card{padding:16px 18px}.notes-card-read .notes-h{font-size:1.4rem}}
 /* badges */
 .badge-card{background:var(--sheet);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px;margin:14px 0 4px}
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
@@ -689,6 +705,12 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_scen_unsup.js"></script>
 <script src="data_order.js"></script>
 <script src="data_compare.js"></script>
+<script src="data_notes_a.js"></script>
+<script src="data_notes_b.js"></script>
+<script src="data_notes_c.js"></script>
+<script src="data_notes_d.js"></script>
+<script src="data_notes_e.js"></script>
+<script src="data_notes_f.js"></script>
 <script src="data_why_found.js"></script>
 <script src="data_why_knn.js"></script>
 <script src="data_why_logreg_bayes.js"></script>
