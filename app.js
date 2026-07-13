@@ -579,6 +579,13 @@
     });
     return bestScore >= 4 ? best : null;
   }
+  var LEARN_GENERIC = ['what it is', 'why it works', 'the idea', 'the setup', 'in short', 'the point', 'the core idea', 'watch out', 'the gotcha', 'the catch', 'the twist', 'the extra twist', 'the trade-off', 'the tradeoff', 'when to use it', 'when to use', 'strengths', 'weakness', 'weaknesses', 'how it works', 'the mechanism', 'the result', 'reading the result'];
+  // The concept a note is really about: its own label if specific, otherwise the matched concept or its section heading.
+  function noteSubject(n, concept) {
+    var t = (n.t || '').toLowerCase().trim();
+    if (LEARN_GENERIC.indexOf(t) >= 0) return concept ? concept.front : (n.group || n.t);
+    return n.t;
+  }
   function learnSequence(topicKey, testType) {
     var seq = [];
     notesTopics().forEach(function (t) {
@@ -595,15 +602,13 @@
         var wf = widgetFor(e.q), nm = wf && wf.reveal && wf.reveal.name;
         if (nm) { var k = normkey(nm); (byConcept[k] || (byConcept[k] = [])).push(e.q); }
       });
-      var lastConcept = '';
       notes.forEach(function (n) {
         seq.push({ type: 'read', note: n });
-        var c = matchConcept(n, cards);
-        if (!c) return;                                  // no confident match → read-only, never a mismatched test
-        var ck = normkey(c.front);
-        if (ck === lastConcept) return;                  // don't test the same concept twice in a row
-        lastConcept = ck;
-        var conceptQs = byConcept[ck] || [];
+        var concept = matchConcept(n, cards);            // for MC lookup + mastery recording
+        var conceptQs = concept ? (byConcept[normkey(concept.front)] || []) : [];
+        // The recall test is built FROM THIS NOTE: same term, same explanation you just read.
+        var testCard = { front: noteSubject(n, concept), back: n.d, formula: n.f || '', topic: n.topic,
+          record: concept ? concept.front : null, level: concept ? concept.level : 0 };
         var pick = testType;
         if (pick === 'mix') {
           var opts = ['card'];
@@ -612,8 +617,8 @@
           pick = opts[Math.floor(Math.random() * opts.length)];
         }
         if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: conceptQs[Math.floor(Math.random() * conceptQs.length)], topic: t.name });
-        else if (pick === 'written') seq.push({ type: 'written', card: c });
-        else seq.push({ type: 'card', card: c });
+        else if (pick === 'written') seq.push({ type: 'written', card: testCard });
+        else seq.push({ type: 'card', card: testCard });
       });
     });
     return seq;
@@ -695,9 +700,9 @@
     function drawWritten(step) {
       var c = step.card;
       var reference = (c.formula ? c.formula + ' — ' : '') + c.back;
-      var prompt = 'What is ' + c.front + '?';
+      var prompt = 'In your own words, explain: ' + c.front;
       var view = h('<article class="qcard learn-writeq">' +
-        '<div class="q-eyebrow">Explain it in your own words · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
+        '<div class="q-eyebrow">Explain what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div>' +
         '<h2 class="write-prompt"></h2>' +
         '<textarea class="write-ta" rows="5" placeholder="Write your explanation here… then press Mark it."></textarea>' +
         '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost lw-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
@@ -731,7 +736,7 @@
           result.querySelector('.wr-modeltext').textContent = reference;
           result.querySelector('.wr-next').onclick = advance;
           result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
-          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
+          recordConcept(c.record || c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
           if (res.score >= 4) bumpTotal();
         });
       }
@@ -742,9 +747,9 @@
     function drawCard(c) {
       var flipped = false;
       var view = h('<article class="qcard learn-cardq">' +
-        '<div class="q-eyebrow">Recall · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
+        '<div class="q-eyebrow">Recall what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div>' +
         '<div class="flash-stage"><button class="flash-card" aria-label="Flip card">' +
-          '<div class="flash-face flash-front"><span class="flash-tag">Do you remember?</span><div class="flash-term"></div><span class="flash-hint">tap to reveal</span></div>' +
+          '<div class="flash-face flash-front"><span class="flash-tag">Can you explain it?</span><div class="flash-term"></div><span class="flash-hint">tap to reveal</span></div>' +
           '<div class="flash-face flash-back"><span class="flash-tag">Answer</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div></div>' +
         '</button></div>' +
         '<div class="flash-rate" hidden><span class="fr-lab">Did you get it?</span>' +
@@ -759,8 +764,8 @@
       function reveal() { if (flipped) return; flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; }
       fc.onclick = reveal;
       revealRow.querySelector('.btn').onclick = reveal;
-      view.querySelector('.fr-good').onclick = function () { seen++; known++; recordConcept(c.front, 'right'); advance(); };
-      view.querySelector('.fr-again').onclick = function () { seen++; recordConcept(c.front, 'wrong'); advance(); };
+      view.querySelector('.fr-good').onclick = function () { seen++; known++; recordConcept(c.record || c.front, 'right'); advance(); };
+      view.querySelector('.fr-again').onclick = function () { seen++; recordConcept(c.record || c.front, 'wrong'); advance(); };
       app.appendChild(view);
     }
     function finish() {
