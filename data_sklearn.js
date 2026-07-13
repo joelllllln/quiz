@@ -311,7 +311,7 @@
       "Retrain it on more data so its raw accuracy climbs as high as possible",
       "Shrink its coefficients so the model leans less on any single feature"
     ],
-    "explain": "A calibrated model's confidence matches reality: among all cases it labels '70% likely', about 70% truly are positive. Many classifiers (SVMs, boosted trees) output distorted scores, so CalibratedClassifierCV wraps them and remaps those scores using held-out data. Calibration changes the probabilities, not the ranking or the accuracy.",
+    "explain": "A calibrated model's confidence matches reality: among all cases it labels '70% likely', about 70% truly are positive. Many classifiers (SVMs, boosted trees) output distorted scores, so CalibratedClassifierCV wraps them and remaps those scores using held-out data. Calibration changes the probabilities but keeps the ranking, so ROC-AUC is unchanged — though the accuracy at a fixed 0.5 cut-off can shift, since the score that now maps to 0.5 has moved.",
     "simple": "A weather forecaster who says '70% rain' should see rain on about 70% of such days - otherwise their confidence is meaningless. Calibration retrains that forecaster's sense of confidence so the numbers can be trusted, without changing which days they think are wetter.",
     "widget": {
       "type": "curveStatic",
