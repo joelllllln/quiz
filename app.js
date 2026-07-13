@@ -557,9 +557,12 @@
     if (ROUNDS) drawMatch(); else drawOrder();
   }
 
-  /* ---------------- read + recall: read a note, then recall one flashcard, over and over ---------------- */
-  // Interleave a topic's bite-sized notes (in order) with its flashcards: read → recall → read → recall.
-  function learnSequence(topicKey) {
+  /* ---------------- read + recall: read a note, then test yourself, over and over ---------------- */
+  // The test after each note can be a flashcard, a multiple-choice question, an open written
+  // answer (marked by Claude), or a mix — the learner chooses in the Study picker.
+  function getLearnTest() { var v = localStorage.getItem('ds_learn_test'); return (v === 'card' || v === 'mc' || v === 'written') ? v : 'mix'; }
+  function setLearnTest(v) { try { localStorage.setItem('ds_learn_test', v); } catch (e) {} }
+  function learnSequence(topicKey, testType) {
     var seq = [];
     notesTopics().forEach(function (t) {
       if (topicKey && t.key !== topicKey) return;
@@ -569,15 +572,29 @@
       });
       if (!notes.length) return;
       var cards = shuffle(flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); }));
-      notes.forEach(function (n, idx) {
+      var qs = shuffle(buildIndex().filter(function (e) { return e.key === t.key && diffOk(e.level); }));
+      var ci = 0, qi = 0, wi = 0;
+      notes.forEach(function (n) {
         seq.push({ type: 'read', note: n });
-        if (cards.length) seq.push({ type: 'card', card: cards[idx % cards.length] });
+        var pick = testType;
+        if (pick === 'mix') {
+          var opts = [];
+          if (qs.length) opts.push('mc');
+          if (cards.length) opts.push('card');
+          if (cards.length && apiKey()) opts.push('written');
+          pick = opts.length ? opts[Math.floor(Math.random() * opts.length)] : null;
+        }
+        if (pick === 'mc' && qs.length) seq.push({ type: 'mc', q: qs[qi++ % qs.length].q, topic: t.name });
+        else if (pick === 'written' && cards.length) seq.push({ type: 'written', card: cards[wi++ % cards.length] });
+        else if (pick === 'card' && cards.length) seq.push({ type: 'card', card: cards[ci++ % cards.length] });
+        else if (cards.length) seq.push({ type: 'card', card: cards[ci++ % cards.length] });
+        else if (qs.length) seq.push({ type: 'mc', q: qs[qi++ % qs.length].q, topic: t.name });
       });
     });
     return seq;
   }
   function startLearn(topicKey) {
-    var seq = learnSequence(topicKey);
+    var seq = learnSequence(topicKey, getLearnTest());
     if (!seq.length) return noContent('Read + recall');
     var i = 0, seen = 0, known = 0;
     function advance() { i++; if (i >= seq.length) return finish(); draw(); }
@@ -592,19 +609,110 @@
       app.innerHTML = '';
       app.appendChild(bar());
       var step = seq[i];
-      if (step.type === 'read') drawRead(step.note); else drawCard(step.card);
+      if (step.type === 'read') drawRead(step.note);
+      else if (step.type === 'mc') drawMC(step);
+      else if (step.type === 'written') drawWritten(step);
+      else drawCard(step.card);
       window.scrollTo(0, 0);
+    }
+    function nextLabel() {
+      var nx = seq[i + 1];
+      if (!nx) return 'Next →';
+      if (nx.type === 'mc') return 'Answer a question →';
+      if (nx.type === 'written') return 'Explain it →';
+      if (nx.type === 'card') return 'Recall a card →';
+      return 'Next →';
     }
     function drawRead(n) {
       var card = h('<article class="qcard learn-read">' +
         '<div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div>' +
         '<div class="note-item lr-item"><div class="ni-t"></div><div class="ni-d"></div>' + (n.f ? '<div class="ni-f"></div>' : '') + '</div>' +
-        '<div class="next-row"><button class="btn lr-next">' + (seq[i + 1] && seq[i + 1].type === 'card' ? 'Recall a card →' : 'Next →') + '</button></div></article>');
+        '<div class="next-row"><button class="btn lr-next">' + nextLabel() + '</button></div></article>');
       card.querySelector('.ni-t').textContent = n.t;
       card.querySelector('.ni-d').textContent = n.d;
       if (n.f) card.querySelector('.ni-f').textContent = n.f;
       card.querySelector('.lr-next').onclick = advance;
       app.appendChild(card);
+    }
+    // Multiple-choice test step: same correctness rules as the main quiz, kept lightweight.
+    function drawMC(step) {
+      var q = step.q;
+      var card = h('<article class="qcard learn-mcq">' +
+        '<div class="q-eyebrow">Quick check · ' + esc(step.topic) + '</div>' +
+        '<h2 class="qtext"></h2><div class="choices"></div></article>');
+      card.querySelector('.qtext').textContent = q.q;
+      var box = card.querySelector('.choices');
+      var order = shuffle(q.choices.map(function (_, ix) { return ix; }));
+      var btns = [], answered = false;
+      order.forEach(function (orig, pos) {
+        var b = document.createElement('button'); b.className = 'choice';
+        var letter = document.createElement('span'); letter.className = 'ch-letter'; letter.textContent = LETTERS[pos];
+        var tx = document.createElement('span'); tx.className = 'ch-text'; tx.textContent = q.choices[orig];
+        b.appendChild(letter); b.appendChild(tx);
+        b.onclick = function () { pick(orig, b); };
+        btns.push({ b: b, orig: orig }); box.appendChild(b);
+      });
+      function pick(orig, btn) {
+        if (answered) return; answered = true;
+        var right = orig === 0;
+        btns.forEach(function (x) { x.b.disabled = true; if (x.orig === 0) x.b.classList.add('is-correct'); else if (x.b === btn) x.b.classList.add('picked-wrong'); else x.b.classList.add('dim'); });
+        recordCard(q, right); logActivity(); seen++; if (right) { known++; bumpTotal(); }
+        card.appendChild(h('<div class="banner ' + (right ? 'good' : 'bad') + '"><span class="b-label">' + (right ? 'Correct ✓' : 'Not quite') + '</span>' +
+          (right ? '' : '<div class="plain"><span class="p-label">The answer</span><div class="p-answer">' + esc(q.choices[0]) + '</div></div>') +
+          '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
+        var ww = whyOthersEl(q, orig, false); if (ww) card.appendChild(ww);
+        var row = h('<div class="next-row"><button class="btn">Continue →</button></div>');
+        row.children[0].onclick = advance; card.appendChild(row);
+      }
+      app.appendChild(card);
+    }
+    // Open written test step: explain the concept; Claude Haiku marks it /5 (needs the user's key).
+    function drawWritten(step) {
+      var c = step.card;
+      var reference = (c.formula ? c.formula + ' — ' : '') + c.back;
+      var prompt = 'What is ' + c.front + '?';
+      var view = h('<article class="qcard learn-writeq">' +
+        '<div class="q-eyebrow">Explain it in your own words · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
+        '<h2 class="write-prompt"></h2>' +
+        '<textarea class="write-ta" rows="5" placeholder="Write your explanation here… then press Mark it."></textarea>' +
+        '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost lw-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
+        '<div class="write-result" hidden></div></article>');
+      view.querySelector('.write-prompt').textContent = prompt;
+      var ta = view.querySelector('.write-ta'), result = view.querySelector('.write-result'), mark = view.querySelector('.write-mark');
+      view.querySelector('.lw-skip').onclick = advance;
+      view.querySelector('.write-key-link').onclick = function () { showKeyPanel(result); };
+      function runMark() {
+        if (!apiKey()) { showKeyPanel(result, 'You need a Claude API key to mark writing.'); return; }
+        mark.disabled = true; ta.disabled = true;
+        result.hidden = false; result.className = 'write-result';
+        result.innerHTML = '<div class="wr-load">Marking your answer with Claude Haiku…</div>';
+        gradeWriting(prompt, reference, ta.value, function (res) {
+          if (res.error) {
+            mark.disabled = false; ta.disabled = false;
+            if (res.error === 'nokey') { showKeyPanel(result); return; }
+            if (res.error === 'offline') { result.innerHTML = '<div class="wr-err">No connection — marking needs the internet. The rest of DataSense works fully offline.</div>'; return; }
+            result.innerHTML = '<div class="wr-err"><span>' + esc(res.error) + '</span> <button class="btn ghost wr-retry">Try again</button></div>';
+            result.querySelector('.wr-retry').onclick = runMark;
+            return;
+          }
+          var pct = res.score * 20; seen++; if (res.score >= 4) known++;
+          result.innerHTML =
+            '<div class="wr-scorerow"><div class="wr-score sc-' + res.score + '"><span class="wr-num">' + res.score + '</span><span class="wr-den">/ 5</span></div>' +
+            '<div class="wr-meter"><div class="wr-fill sc-' + res.score + '" style="width:' + pct + '%"></div></div></div>' +
+            '<div class="wr-fb"></div>' +
+            '<div class="wr-model"><span class="wr-mtag">The answer</span><span class="wr-modeltext"></span></div>' +
+            '<div class="next-row"><button class="btn wr-next">Continue →</button><button class="btn ghost wr-redo">Rewrite</button></div>';
+          result.querySelector('.wr-fb').textContent = res.feedback;
+          result.querySelector('.wr-modeltext').textContent = reference;
+          result.querySelector('.wr-next').onclick = advance;
+          result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
+          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
+          if (res.score >= 4) bumpTotal();
+        });
+      }
+      mark.onclick = runMark;
+      app.appendChild(view);
+      setTimeout(function () { ta.focus(); }, 60);
     }
     function drawCard(c) {
       var flipped = false;
@@ -1349,7 +1457,7 @@
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
       else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start typing →'; }
       else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start matching →'; }
-      else if (mode === 'learn') { desc = 'Read a note, then recall a card — over and over · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start learning →'; }
+      else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; desc = 'Read a note, then test yourself with ' + ltName + ' — over and over · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
       desc += ' <span class="study-avail">' + avail + ' available</span>';
       var sec = h('<section class="study-card">' +
@@ -1362,6 +1470,9 @@
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
             '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
+            (mode === 'learn' ?
+            '<div class="filt-row"><span class="filt-lab">Test with</span>' +
+              chips('ltest', getLearnTest(), [{ v: 'mix', t: 'Mixed' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'card', t: 'Flashcards' }]) + '</div>' : '') +
             (mode !== 'mc' && mode !== 'written' ? '' :
             '<div class="filt-row"><span class="filt-lab">How many</span>' +
               chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>') +
@@ -1380,6 +1491,9 @@
       });
       sec.querySelectorAll('[data-diff]').forEach(function (b) {
         b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(); };
+      });
+      sec.querySelectorAll('[data-ltest]').forEach(function (b) {
+        b.onclick = function () { setLearnTest(b.getAttribute('data-ltest')); renderStudy(); };
       });
       sec.querySelector('.study-topic').onchange = function () { setStudyTopic(this.value); renderStudy(); };
       sec.querySelector('.study-go').onclick = function () {
