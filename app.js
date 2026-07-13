@@ -557,8 +557,95 @@
     if (ROUNDS) drawMatch(); else drawOrder();
   }
 
+  /* ---------------- read + recall: read a note, then recall one flashcard, over and over ---------------- */
+  // Interleave a topic's bite-sized notes (in order) with its flashcards: read → recall → read → recall.
+  function learnSequence(topicKey) {
+    var seq = [];
+    notesTopics().forEach(function (t) {
+      if (topicKey && t.key !== topicKey) return;
+      var notes = [];
+      (window.NOTES[t.key].groups || []).forEach(function (g) {
+        (g.items || []).forEach(function (it) { notes.push({ t: it.t, d: it.d, f: it.f, group: g.h, topic: t.name }); });
+      });
+      if (!notes.length) return;
+      var cards = shuffle(flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); }));
+      notes.forEach(function (n, idx) {
+        seq.push({ type: 'read', note: n });
+        if (cards.length) seq.push({ type: 'card', card: cards[idx % cards.length] });
+      });
+    });
+    return seq;
+  }
+  function startLearn(topicKey) {
+    var seq = learnSequence(topicKey);
+    if (!seq.length) return noContent('Read + recall');
+    var i = 0, seen = 0, known = 0;
+    function advance() { i++; if (i >= seq.length) return finish(); draw(); }
+    function bar() {
+      var b = h('<div class="exbar"><button class="back">← Contents</button>' +
+        '<div class="ruler"><div style="width:' + (100 * i / seq.length) + '%"></div></div>' +
+        '<span class="exmeta">Read + recall · <b>' + (i + 1) + '</b> of ' + seq.length + '</span></div>');
+      b.querySelector('.back').onclick = home;
+      return b;
+    }
+    function draw() {
+      app.innerHTML = '';
+      app.appendChild(bar());
+      var step = seq[i];
+      if (step.type === 'read') drawRead(step.note); else drawCard(step.card);
+      window.scrollTo(0, 0);
+    }
+    function drawRead(n) {
+      var card = h('<article class="qcard learn-read">' +
+        '<div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div>' +
+        '<div class="note-item lr-item"><div class="ni-t"></div><div class="ni-d"></div>' + (n.f ? '<div class="ni-f"></div>' : '') + '</div>' +
+        '<div class="next-row"><button class="btn lr-next">' + (seq[i + 1] && seq[i + 1].type === 'card' ? 'Recall a card →' : 'Next →') + '</button></div></article>');
+      card.querySelector('.ni-t').textContent = n.t;
+      card.querySelector('.ni-d').textContent = n.d;
+      if (n.f) card.querySelector('.ni-f').textContent = n.f;
+      card.querySelector('.lr-next').onclick = advance;
+      app.appendChild(card);
+    }
+    function drawCard(c) {
+      var flipped = false;
+      var view = h('<article class="qcard learn-cardq">' +
+        '<div class="q-eyebrow">Recall · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
+        '<div class="flash-stage"><button class="flash-card" aria-label="Flip card">' +
+          '<div class="flash-face flash-front"><span class="flash-tag">Do you remember?</span><div class="flash-term"></div><span class="flash-hint">tap to reveal</span></div>' +
+          '<div class="flash-face flash-back"><span class="flash-tag">Answer</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div></div>' +
+        '</button></div>' +
+        '<div class="flash-rate" hidden><span class="fr-lab">Did you get it?</span>' +
+          '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Not yet</button></div>' +
+        '<div class="next-row lr-reveal"><button class="btn">Show the answer →</button></div></article>');
+      view.querySelector('.flash-term').textContent = c.front;
+      view.querySelector('.flash-def').textContent = c.back;
+      if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
+      var fc = view.querySelector('.flash-card');
+      var rate = view.querySelector('.flash-rate');
+      var revealRow = view.querySelector('.lr-reveal');
+      function reveal() { if (flipped) return; flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; }
+      fc.onclick = reveal;
+      revealRow.querySelector('.btn').onclick = reveal;
+      view.querySelector('.fr-good').onclick = function () { seen++; known++; recordConcept(c.front, 'right'); advance(); };
+      view.querySelector('.fr-again').onclick = function () { seen++; recordConcept(c.front, 'wrong'); advance(); };
+      app.appendChild(view);
+    }
+    function finish() {
+      app.innerHTML = '';
+      var card = h('<div class="result-card"><div class="r-eyebrow">Read + recall · complete</div>' +
+        '<div class="score-big">' + known + ' <small>/ ' + seen + ' recalled</small></div>' +
+        '<p class="r-msg">You read the notes and tested yourself on each — the strongest way to make it stick. It all fed your learning map.</p>' +
+        '<div class="next-row" style="justify-content:center"><button class="btn">Go again</button><button class="btn ghost">Contents</button></div></div>');
+      card.querySelector('.btn').onclick = function () { startLearn(topicKey); };
+      card.querySelector('.btn.ghost').onclick = home;
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+    }
+    draw();
+  }
+
   /* ---------------- unified study picker: one control, pick the mode ---------------- */
-  function getStudyMode() { var m = localStorage.getItem('ds_study_mode'); return (m === 'written' || m === 'defs' || m === 'type' || m === 'match') ? m : 'mc'; }
+  function getStudyMode() { var m = localStorage.getItem('ds_study_mode'); return (m === 'written' || m === 'defs' || m === 'type' || m === 'match' || m === 'learn') ? m : 'mc'; }
   function setStudyMode(m) { try { localStorage.setItem('ds_study_mode', m); } catch (e) {} }
   function getStudyTopic() { return localStorage.getItem('ds_study_topic') || ''; }
   function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
@@ -1248,6 +1335,7 @@
         if (mode === 'mc') return buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); }).length;
         if (mode === 'written') return writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); }).length;
         if (mode === 'defs') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); }).length;
+        if (mode === 'learn') { var c = 0; notesTopics().forEach(function (t) { if (tkey && t.key !== tkey) return; (window.NOTES[t.key].groups || []).forEach(function (g) { c += (g.items || []).length; }); }); return c; }
         return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
       }
       var avail = studyCount();
@@ -1261,6 +1349,7 @@
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
       else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start typing →'; }
       else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start matching →'; }
+      else if (mode === 'learn') { desc = 'Read a note, then recall a card — over and over · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start learning →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
       desc += ' <span class="study-avail">' + avail + ' available</span>';
       var sec = h('<section class="study-card">' +
@@ -1269,7 +1358,7 @@
           '<h2 class="daily-title">Study</h2>' +
           '<div class="daily-filters">' +
             '<div class="filt-row"><span class="filt-lab">Mode</span>' +
-              chips('mode', mode, [{ v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }]) + '</div>' +
+              chips('mode', mode, [{ v: 'learn', t: 'Read + recall' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }]) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
             '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
@@ -1298,6 +1387,7 @@
         else if (mode === 'written') startWriting(tkey);
         else if (mode === 'type') startTypeIt(tkey);
         else if (mode === 'match') startMatching(tkey);
+        else if (mode === 'learn') startLearn(tkey);
         else startFlashcards(tkey, true);
       };
       if (old) app.replaceChild(sec, old); else app.appendChild(sec);
