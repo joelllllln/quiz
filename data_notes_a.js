@@ -34,15 +34,15 @@
       ] },
       { h: "Judging a model honestly", items: [
         { t: "Accuracy hides mistakes", d: "One accuracy number crushes two very different errors together, so a '95% accurate' filter can still bin your real emails." },
-        { t: "Precision and recall", d: "Report both, or their F1 blend.", f: "precision = correct/all flags · recall = caught/all real" },
+        { t: "Precision and recall", d: "Two error-specific scores: precision is how many of your flagged cases were actually right; recall is how many of the real cases you managed to catch. F1 blends them.", f: "precision = correct/all flags · recall = caught/all real" },
         { t: "Baselines", d: "A score means nothing alone. A model's worth is how far it beats the best dumb rule (majority class, last value).", f: "value = score − baseline score" },
         { t: "Classification vs regression", d: "Predicting a finite category is classification; predicting a continuous quantity is regression." }
       ] },
       { h: "Watch out for", items: [
         { t: "Data leakage", d: "Split first, fit all preprocessing on train only. Sneaking test info into training gives a rosy score that collapses in production." },
         { t: "Correlation vs causation", d: "Models learn P(y|x) — what tends to co-occur — not the effect of CHANGING x. Don't read a weight as a lever to pull." },
-        { t: "Class imbalance", d: "With a rare positive class, reweight or resample and evaluate on the minority; plain accuracy rewards ignoring it." },
-        { t: "Distribution shift", d: "The world drifts and models decay. Monitor inputs, predictions and live metrics, then retrain on alert or schedule." }
+        { t: "Class imbalance", d: "When one class vastly outnumbers the other (say 1% fraud, 99% normal). Reweight or resample and evaluate on the minority, since plain accuracy rewards ignoring it." },
+        { t: "Distribution shift", d: "When live data no longer matches the distribution the model trained on, so its accuracy silently decays. Monitor inputs and live metrics, then retrain on alert or schedule." }
       ] }
     ]
   };
@@ -53,7 +53,7 @@
     groups: [
       { h: "The idea", items: [
         { t: "Similar things are near", d: "Plot every example as a point, one axis per feature. Things alike in their features land close together." },
-        { t: "Feature space", d: "The space of those points is where all of kNN happens; there is no equation to fit, only geometry." },
+        { t: "Feature space", d: "The n-dimensional space where each axis is one feature and every example is a single point. k-NN reasons about it purely geometrically — by distances between points." },
         { t: "Ask the neighbours", d: "To label a new point, find the training points closest to it — their labels are evidence about its label." },
         { t: "Lazy learning", d: "kNN does no work at training time; it just stores the data. All the effort is at prediction time, searching for neighbours." }
       ] },

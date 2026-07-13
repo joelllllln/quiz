@@ -112,13 +112,13 @@
       ] },
       { h: "Support vectors", items: [
         { t: "What they are", d: "The points sitting right on the street's kerb. These few points alone fix the boundary; every other point could vanish and it would not move." },
-        { t: "Sparse model", d: "If only 900 of 50,000 points are support vectors, the deployed model depends on just those 900. Prediction stays lean." },
+        { t: "Sparse model", d: "The fitted model keeps only the support vectors and discards every other training point, so it stays small. If just 900 of 50,000 points qualify, prediction uses only those 900." },
         { t: "Why margin generalises", d: "A wider margin leaves more slack, so small shifts in a new point are less likely to push it across the boundary, aiding future accuracy." }
       ] },
       { h: "Soft margin and C", items: [
         { t: "Soft margin", d: "Real data is messy, so SVM allows a few points inside the street or misclassified in exchange for a wider, steadier boundary overall." },
         { t: "The C dial", d: "C sets strictness. Big C punishes every violation for a narrow street that risks overfitting; small C tolerates violations for a wider, smoother one." },
-        { t: "Class imbalance", d: "If a rare class gets ignored, class_weight makes its violations cost more, pulling the boundary back off it." }
+        { t: "Class imbalance", d: "When one class has far more training points than the other, the boundary drifts toward the majority and ignores the rare class. class_weight makes the rare class's violations cost more, pulling it back." }
       ] },
       { h: "Kernels", items: [
         { t: "The problem", d: "When one class rings the other, no straight line separates them. A richer space is needed where a curve becomes a straight cut." },

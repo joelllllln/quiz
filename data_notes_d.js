@@ -41,7 +41,7 @@
         { t: "Cyclical encoding", d: "Encode a cyclic value as sine and cosine so its ends sit next to each other — 23:00 and 00:00 become adjacent on a circle.", f: "hour → (sin θ, cos θ)" }
       ] },
       { h: "Handling messy categories & text", items: [
-        { t: "High-cardinality problem", d: "One-hot on 5,000 unique IDs makes 5,000 sparse, mostly-zero columns — huge and starved of examples. Use hashing or target encoding instead." },
+        { t: "High-cardinality problem", d: "A category column with a huge number of distinct values (e.g. user IDs). One-hot then makes thousands of sparse, mostly-zero columns, starved of examples — use hashing or target encoding." },
         { t: "Rare-category grouping", d: "Fold categories seen only a few times into one 'Other' bucket for stable, well-populated columns and fewer overfitting or unseen-value issues." },
         { t: "Feature hashing", d: "Hash categories into a fixed number of columns, so width stays constant at any cardinality. Cheap on memory, at the cost of rare collisions.", f: "category → hash → fixed # cols" },
         { t: "TF-IDF", d: "Weight each word by how often it appears here times how rare it is across all documents. Common words fade, distinctive ones stand out.", f: "weight = TF × IDF" }
@@ -130,7 +130,7 @@
         { t: "More folds, steadier estimate", d: "Higher k means more training data per run and less wobble between runs, but more compute. k=10 is a popular sweet spot." },
         { t: "Compare with cross-validation", d: "A 2-point win on one 80/20 split can flip on another. Compare average CV scores across folds, not a single lucky slice." },
         { t: "Stratified k-fold", d: "Build each fold to keep the whole dataset's class proportions, so no fold loses the rare class. The sensible default for classification." },
-        { t: "Time-series split", d: "For forecasting, never shuffle — it leaks the future into training. Always train on the past and validate on later data.", f: "train on past, test on future" }
+        { t: "Time-series split", d: "A split that respects time order: train on earlier data, validate on later data. Never shuffle for forecasting — that leaks the future into training.", f: "train on past, test on future" }
       ] },
       { h: "Tuning hyperparameters", items: [
         { t: "Hyperparameter", d: "A setting you choose before training, like tree depth or the k in k-NN. The model does not learn it; you pick it." },

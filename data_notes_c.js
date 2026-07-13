@@ -63,7 +63,7 @@
         { t: "Residual", d: "What is still wrong: actual minus predicted. Each new tree trains on these leftovers, not on the original labels.", f: "residual = actual − predicted" },
         { t: "One boosting round", d: "Measure the current errors, fit a small tree to them, add it to the ensemble. Repeat hundreds of times." },
         { t: "Why 'gradient'", d: "The residuals a tree fits are the negative GRADIENT of the loss, so boosting is gradient descent performed in function space." },
-        { t: "Loss is a plug-in", d: "Squared error chases raw errors (outliers scream); absolute error chases only signs (outliers whisper); Huber switches between them." }
+        { t: "Loss is a plug-in", d: "The loss is a swappable component: boosting works with any differentiable loss, and your choice defines what counts as error — squared error chases outliers, absolute error shrugs them off, Huber blends both." }
       ] },
       { h: "Boosting vs bagging", items: [
         { t: "The structural difference", d: "Bagging trains trees independently in parallel and averages; boosting trains them in sequence, each fixing the previous errors." },

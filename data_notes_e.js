@@ -9,7 +9,7 @@
     groups: [
       { h: "The foundation", items: [
         { t: "Four outcomes", d: "Every yes/no prediction is a true positive (caught), false negative (missed), false positive (false alarm) or true negative (correctly ignored).", f: "TP · FN · FP · TN" },
-        { t: "Confusion matrix", d: "Those four counts laid out in a 2×2 grid — the complete record of what the model did. Every metric below is just arithmetic on these cells." },
+        { t: "Confusion matrix", d: "The 2×2 table of the four outcome counts — TP, FP, FN, TN — arranged by predicted vs actual. It is the complete record of what the model did; every metric below is arithmetic on these cells." },
         { t: "The threshold", d: "A probabilistic model outputs a score; the threshold is the cutoff for calling 'yes'. You set it after training — it is policy, not learned.", f: "predict yes when score ≥ t" },
         { t: "Threshold moves errors", d: "Lower the cutoff and you flag more (recall up, precision usually down); raise it and you flag fewer. One dial trades one error type for the other." }
       ] },
@@ -42,7 +42,7 @@
       { h: "Beyond the basics: MCC & calibration", items: [
         { t: "Matthews correlation (MCC)", d: "A single balanced score using all four cells: 0 is chance, +1 perfect, −1 fully inverted. Robust when classes are imbalanced.", f: "MCC = correlation(ŷ, y)" },
         { t: "Calibration", d: "Whether stated confidence matches reality: of cases called '70%', about 70% should turn out positive. Rank skill and calibration are separate." },
-        { t: "Proper scoring rules", d: "Log-loss and Brier score reward honest probabilities, penalising both over- and under-confidence.", f: "Brier = (p − y)²" }
+        { t: "Proper scoring rules", d: "A metric optimised only by reporting your true probabilities, so it rewards honest confidence and penalises both over- and under-confidence. Log-loss and Brier score are the standard pair.", f: "Brier = (p − y)²" }
       ] },
       { h: "Choosing & trusting the number", items: [
         { t: "Match metric to cost", d: "Pick the operating point that minimises real cost, weighting each error by its domain price.", f: "flag when p > cost_FP / (cost_FP + cost_FN)" },
@@ -73,7 +73,7 @@
         { t: "Hyperparameter", d: "A setting YOU choose before training (k, depth, C, learning rate), as opposed to the parameters training learns from data." },
         { t: "Grid search", d: "Try every combination on a grid with cross-validation, keep the best. 3 values × 4 values × 5 folds = 60 fits — thorough but pricey." },
         { t: "Random search", d: "Sample combinations at random. Covers wide, high-dimensional spaces surprisingly well because only a few knobs usually matter." },
-        { t: "Regularisation", d: "The one lever across models — bigger k, tree pruning, small C, weight penalties — all trade a little training fit for better generalisation." }
+        { t: "Regularisation", d: "Any technique that penalises model complexity to curb overfitting — bigger k, tree pruning, small C, weight penalties — trading a little training fit for better generalisation. The lever shared across models." }
       ] },
       { h: "Smarter search", items: [
         { t: "Nested CV", d: "Outer folds score the whole tuned procedure; inner folds do the choosing. Fixes the optimistic bias of reporting the winner's own CV score." },

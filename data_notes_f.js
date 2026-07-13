@@ -52,7 +52,7 @@
     groups: [
       { h: "The idea", items: [
         { t: "Agglomerative = bottom-up", d: "Every point starts alone; the two closest clusters merge, again and again, until a single cluster remains." },
-        { t: "The base ruler", d: "It first needs a distance between two points — for numeric features, the straight-line (Euclidean) distance.", f: "Euclidean = straight-line gap across all features" },
+        { t: "Point-to-point distance", d: "The base distance metric between two individual points — for numeric features, the straight-line (Euclidean) distance. Every linkage rule is built on top of it.", f: "Euclidean = straight-line gap across all features" },
         { t: "No k up front", d: "Unlike k-means, you never pre-set the number of clusters. The whole tree is built first; you choose k afterwards." },
         { t: "The divisive alternative", d: "The mirror image: start with everything in one cluster and repeatedly split. Agglomerative (merging) is the common choice." }
       ] },
