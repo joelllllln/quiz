@@ -288,15 +288,37 @@
       if (!r || !r.name) return;
       var nk = normkey(r.name);
       var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
-      if (at[nk] != null) { if (isDef) deck[at[nk]].def = true; return; }
+      if (at[nk] != null) {
+        var d = deck[at[nk]];
+        if (isDef) d.def = true;
+        if (e.level < d.level) d.level = e.level;   // a card's difficulty = the easiest level it appears in
+        return;
+      }
       at[nk] = deck.length;
-      deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key, def: isDef });
+      deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key, def: isDef, level: e.level });
     });
     FLASH = deck; return deck;
   }
+  // Difficulty filter shared by every study mode. 0 = all levels, else 1/2/3.
+  function getStudyDiff() { var d = +(localStorage.getItem('ds_study_diff')); return (d === 1 || d === 2 || d === 3) ? d : 0; }
+  function setStudyDiff(d) { try { localStorage.setItem('ds_study_diff', d || 0); } catch (e) {} }
+  function diffOk(lvl) { var d = getStudyDiff(); return !d || lvl === d; }
+  function diffTag(lvl) { return '<span class="lvl-pip lvl-' + lvl + '" title="Difficulty ' + lvl + ' of 3">L' + lvl + '</span>'; }
+  // Friendly stop when a topic+difficulty combination has nothing to study.
+  function noContent(label) {
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">' + esc(label) + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    app.appendChild(h('<article class="qcard"><h2 class="qtext">Nothing here yet</h2>' +
+      '<p class="t-desc">No ' + esc(label.toLowerCase()) + ' match that topic and difficulty. Try “All levels” or a different topic.</p>' +
+      '<div class="next-row"><button class="btn nc-back">← Back to Study</button></div></article>'));
+    app.querySelector('.nc-back').onclick = home;
+    window.scrollTo(0, 0);
+  }
   function startFlashcards(topicKey, defsOnly) {
-    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def); }));
-    if (!deck.length) return;
+    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def) && diffOk(c.level); }));
+    if (!deck.length) return noContent('Flashcards');
     var i = 0, flipped = false;
     function draw() {
       app.innerHTML = '';
@@ -312,8 +334,8 @@
       var view = h('<div class="flash-view">' +
         '<select class="flash-topic">' + opts + '</select>' +
         '<div class="flash-stage"><button class="flash-card' + (flipped ? ' flipped' : '') + '" aria-label="Flip card">' +
-          '<div class="flash-face flash-front"><span class="flash-tag">Concept</span><div class="flash-term"></div><span class="flash-hint">tap to reveal the definition</span></div>' +
-          '<div class="flash-face flash-back"><span class="flash-tag">Definition</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div><span class="flash-topictag">' + esc(c.topic) + '</span></div>' +
+          '<div class="flash-face flash-front"><span class="flash-tag">Concept ' + diffTag(c.level) + '</span><div class="flash-term"></div><span class="flash-hint">tap to reveal the definition</span></div>' +
+          '<div class="flash-face flash-back"><span class="flash-tag">Definition</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div><span class="flash-topictag">' + esc(c.topic) + ' ' + diffTag(c.level) + '</span></div>' +
         '</button></div>' +
         '<div class="flash-controls"><button class="btn ghost flash-prev">← Prev</button><button class="btn flash-flip">Flip</button><button class="btn ghost flash-next">Skip →</button></div>' +
         '<div class="flash-rate"><span class="fr-lab">How well did you know it?</span>' +
@@ -365,8 +387,8 @@
     return false;
   }
   function startTypeIt(topicKey) {
-    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15; })).slice(0, 10);
-    if (!deck.length) return;
+    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); })).slice(0, 10);
+    if (!deck.length) return noContent('Type-the-term cards');
     var i = 0, score = 0;
     function draw() {
       var c = deck[i];
@@ -375,7 +397,7 @@
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var card = h('<article class="qcard type-card">' +
-        '<div class="q-eyebrow">Type the term · ' + esc(c.topic) + '</div>' +
+        '<div class="q-eyebrow">Type the term · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
         '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
         '<label class="type-lab" for="type-in">Which term is this?</label>' +
         '<form class="type-form"><input id="type-in" class="type-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type the term…">' +
@@ -425,10 +447,10 @@
 
   /* ---------------- matching: pair terms with definitions, then order algorithm steps ---------------- */
   function startMatching(topicKey) {
-    var pool = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15; }));
-    var orders = shuffle((window.ORDERS || []).filter(function (o) { return !topicKey || o.key === topicKey; })).slice(0, 2);
+    var pool = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }));
+    var orders = shuffle((window.ORDERS || []).filter(function (o) { return (!topicKey || o.key === topicKey) && diffOk(o.level || 1); })).slice(0, 2);
     var PAIRS = 5, ROUNDS = Math.min(3, Math.floor(pool.length / PAIRS));
-    if (!ROUNDS && !orders.length) return;
+    if (!ROUNDS && !orders.length) return noContent('Match & order sets');
     var round = 0, orderIdx = 0, totalRight = 0, totalPairs = 0;
     function trim(s) { return s.length > 110 ? s.slice(0, 107).replace(/\s+\S*$/, '') + '…' : s; }
     function drawMatch() {
@@ -485,7 +507,7 @@
       var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Order the steps · ' + esc(o.title) + '</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
-      var sec = h('<article class="qcard order-card"><div class="q-eyebrow">Put the steps in order</div>' +
+      var sec = h('<article class="qcard order-card"><div class="q-eyebrow">Put the steps in order ' + diffTag(o.level || 1) + '</div>' +
         '<h2 class="order-title">' + esc(o.title) + '</h2>' +
         '<p class="match-note">Tap the steps in the order they happen — first step first.</p>' +
         '<div class="order-list"></div><div class="order-done" hidden></div></article>');
@@ -542,8 +564,8 @@
   function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
   // Multiple-choice study: N questions from the chosen topic scope (or all), fresh each time.
   function startQuiz(topicKey, n) {
-    var pool = buildIndex().filter(function (e) { return !topicKey || e.key === topicKey; });
-    if (!pool.length) return;
+    var pool = buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level); });
+    if (!pool.length) return noContent('Questions');
     pool = shuffle(pool).slice(0, Math.min(n, pool.length));
     begin({ name: 'Study', no: '✎', key: '__study__' },
       { qk: '__study__', part: 'Study', name: todayLabel() },
@@ -580,14 +602,14 @@
     return out.map(function (o) { return o.e; });
   }
   // Reference view for a single concept: the answer, plain English, the lab, and a practice button.
-  function showConcept(q, topic) {
+  function showConcept(q, topic, level) {
     app.innerHTML = '';
     var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Lookup · ' + esc(topic) + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     var isDef = !!(window.DEFS && window.DEFS[q.q]);
     var card = h('<article class="qcard concept-card">' +
-      '<div class="q-eyebrow">' + (isDef ? 'Definition' : 'Concept') + ' · ' + esc(topic) + '</div>' +
+      '<div class="q-eyebrow">' + (isDef ? 'Definition' : 'Concept') + ' · ' + esc(topic) + (level ? ' ' + diffTag(level) : '') + '</div>' +
       '<h2 class="qtext"></h2>' +
       '<div class="concept-answer"><span class="ca-lab">Answer</span><div class="ca-text"></div>' + (q.simple ? '<p class="ca-simple"></p>' : '') + '</div>' +
       '<div class="explain concept-explain"></div></article>');
@@ -683,8 +705,8 @@
     if (clr) clr.onclick = function () { setApiKey(''); container.innerHTML = '<div class="wr-ok">Key removed.</div>'; };
   }
   function startWriting(topicKey) {
-    var deck = shuffle(writingDeck().filter(function (c) { return !topicKey || c.key === topicKey; }));
-    if (!deck.length) return;
+    var deck = shuffle(writingDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && diffOk(c.level); }));
+    if (!deck.length) return noContent('Writing prompts');
     var i = 0;
     function draw() {
       app.innerHTML = '';
@@ -1123,9 +1145,9 @@
           var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
           var kind = isDef ? 'Definition' : (rev && rev.name ? rev.name : 'Concept');
           var row = h('<button class="sr-row"><span class="sr-q"></span>' +
-            '<span class="sr-meta">' + esc(kind) + '</span></button>');
+            '<span class="sr-meta">' + esc(kind) + ' ' + diffTag(e.level) + '</span></button>');
           row.querySelector('.sr-q').textContent = e.q.q;
-          row.onclick = function () { showConcept(e.q, e.topic); };
+          row.onclick = function () { showConcept(e.q, e.topic, e.level); };
           box.appendChild(row);
         });
       }
@@ -1147,22 +1169,33 @@
       var old = app.querySelector('.study-card');
       var mode = getStudyMode();
       var tkey = getStudyTopic();
+      var diff = getStudyDiff();
       var curN = dailyN();
       function chips(kind, current, opts) {
         return opts.map(function (o) {
           return '<button class="filt-chip' + (o.v === current ? ' on' : '') + '" data-' + kind + '="' + o.v + '">' + o.t + '</button>';
         }).join('');
       }
+      // How many items the current mode + topic + difficulty actually yields.
+      function studyCount() {
+        if (mode === 'mc') return buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); }).length;
+        if (mode === 'written') return writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); }).length;
+        if (mode === 'defs') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); }).length;
+        return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
+      }
+      var avail = studyCount();
       var topicOpts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
         return '<option value="' + t.key + '"' + (t.key === tkey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
       }).join('');
       var scopeLabel = tkey ? (function () { var nm = tkey; TOPICS.forEach(function (t) { if (t.key === tkey) nm = t.name; }); return nm; })() : 'all topics';
+      var diffLabel = diff ? 'level ' + diff : 'all levels';
       var desc, startLabel;
-      if (mode === 'mc') { desc = curN + ' multiple-choice questions · ' + esc(scopeLabel); startLabel = 'Start ' + curN + ' →'; }
-      else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
-      else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel); startLabel = 'Start typing →'; }
-      else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel); startLabel = 'Start matching →'; }
-      else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel); startLabel = 'Study cards →'; }
+      if (mode === 'mc') { desc = curN + ' multiple-choice questions · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start ' + curN + ' →'; }
+      else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
+      else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start typing →'; }
+      else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start matching →'; }
+      else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
+      desc += ' <span class="study-avail">' + avail + ' available</span>';
       var sec = h('<section class="study-card">' +
         '<div class="daily-main">' +
           '<div class="daily-eyebrow">Study · ' + esc(todayLabel()) + '</div>' +
@@ -1171,6 +1204,8 @@
             '<div class="filt-row"><span class="filt-lab">Mode</span>' +
               chips('mode', mode, [{ v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }]) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
+            '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
+              chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
             (mode !== 'mc' && mode !== 'written' ? '' :
             '<div class="filt-row"><span class="filt-lab">How many</span>' +
               chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>') +
@@ -1179,13 +1214,16 @@
         '</div>' +
         '<div class="daily-side">' +
           '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
-          '<div class="daily-btns"><button class="btn daily-go study-go">' + startLabel + '</button></div>' +
+          '<div class="daily-btns"><button class="btn daily-go study-go"' + (avail ? '' : ' disabled') + '>' + startLabel + '</button></div>' +
         '</div></section>');
       sec.querySelectorAll('[data-mode]').forEach(function (b) {
         b.onclick = function () { setStudyMode(b.getAttribute('data-mode')); renderStudy(); };
       });
       sec.querySelectorAll('[data-num]').forEach(function (b) {
         b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderStudy(); };
+      });
+      sec.querySelectorAll('[data-diff]').forEach(function (b) {
+        b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(); };
       });
       sec.querySelector('.study-topic').onchange = function () { setStudyTopic(this.value); renderStudy(); };
       sec.querySelector('.study-go').onclick = function () {
