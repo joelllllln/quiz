@@ -37,12 +37,21 @@
     { key: 'pca', no: '15', name: 'PCA', desc: 'Find the directions that carry the story; drop the rest.',
       levels: [{ qk: 'pca1', part: 'Part I', name: 'Foundations' }, { qk: 'pca2', part: 'Part II', name: 'Practice' }, { qk: 'pca3', part: 'Part III', name: 'Advanced Study' }] },
     { key: 'tsne', no: '16', name: 't-SNE', desc: 'Flatten high-dimensional data into honest-if-you-read-them-right maps.',
-      levels: [{ qk: 'tsne1', part: 'Part I', name: 'Foundations' }, { qk: 'tsne2', part: 'Part II', name: 'Practice' }, { qk: 'tsne3', part: 'Part III', name: 'Advanced Study' }] }
+      levels: [{ qk: 'tsne1', part: 'Part I', name: 'Foundations' }, { qk: 'tsne2', part: 'Part II', name: 'Practice' }, { qk: 'tsne3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'feng', no: '17', name: 'Feature Engineering', desc: 'Turn raw columns into features a model can actually use.',
+      levels: [{ qk: 'feng1', part: 'Part I', name: 'Foundations' }, { qk: 'feng2', part: 'Part II', name: 'Practice' }, { qk: 'feng3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'fsel', no: '18', name: 'Feature Selection', desc: 'Keep the columns that carry signal; drop the rest.',
+      levels: [{ qk: 'fsel1', part: 'Part I', name: 'Foundations' }, { qk: 'fsel2', part: 'Part II', name: 'Practice' }, { qk: 'fsel3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'msel', no: '19', name: 'Model Selection', desc: 'Choose and tune the right model without fooling yourself.',
+      levels: [{ qk: 'msel1', part: 'Part I', name: 'Foundations' }, { qk: 'msel2', part: 'Part II', name: 'Practice' }, { qk: 'msel3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'xgb', no: '20', name: 'XGBoost', desc: 'Regularised gradient boosting, engineered for speed and accuracy.',
+      levels: [{ qk: 'xgb1', part: 'Part I', name: 'Foundations' }, { qk: 'xgb2', part: 'Part II', name: 'Practice' }, { qk: 'xgb3', part: 'Part III', name: 'Advanced Study' }] }
   ];
   var GROUPS = [
     { label: 'Start here — the groundwork', keys: ['found'] },
     { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm'] },
-    { label: 'Ensemble methods', keys: ['rf', 'gboost', 'stacking'] },
+    { label: 'Ensemble methods', keys: ['rf', 'gboost', 'stacking', 'xgb'] },
+    { label: 'Features & model choice', keys: ['feng', 'fsel', 'msel'] },
     { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
     { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] }
   ];
