@@ -226,6 +226,7 @@
       if (wrote) { var r = loadCards()[id]; if (r) r.wrote = 1; }
     });
     if (wrote) saveCards();
+    if (n) logActivity();
     return n;
   }
   function cardStatus(q) {
@@ -251,6 +252,11 @@
   }
   function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
   function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
+
+  /* ---------------- activity log (for consistency analytics) ---------------- */
+  function loadActivity() { try { return JSON.parse(localStorage.getItem('ds_activity') || '{}') || {}; } catch (e) { return {}; } }
+  function logActivity() { try { var a = loadActivity(), d = today(); a[d] = (a[d] || 0) + 1; localStorage.setItem('ds_activity', JSON.stringify(a)); } catch (e) {} }
+  function fmtDay(dt) { return dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2); }
 
   /* ---------------- favourites ---------------- */
   var FAVS = null;
@@ -706,6 +712,82 @@
       app.appendChild(sec);
     }
 
+    function renderStats() {
+      var cards = loadCards();
+      var ids = Object.keys(cards);
+      var sum = masterySummary();
+      var totalConcepts = sum.learnt + sum.ready + sum.learning + sum.struggling + sum.new;
+      var attempts = 0, wrong = 0, written = 0;
+      ids.forEach(function (id) { var r = cards[id]; attempts += (r.seen || 0); wrong += (r.wrong || 0); if (r.wrote) written++; });
+      var acc = attempts ? Math.round(100 * (attempts - wrong) / attempts) : 0;
+
+      // consistency: streaks + heatmap over the last N weeks
+      var act = loadActivity();
+      var WEEKS = 20;
+      var end = new Date(); end.setHours(0, 0, 0, 0);
+      var cur = 0; var d = new Date(end);
+      if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1); // grace: today not done yet
+      while (act[fmtDay(d)]) { cur++; d.setDate(d.getDate() - 1); }
+      var sortedDays = Object.keys(act).sort();
+      var best = 0, run = 0, prev = null;
+      sortedDays.forEach(function (ds) {
+        if (prev && (Date.parse(ds) - Date.parse(prev)) === 86400000) run++; else run = 1;
+        if (run > best) best = run; prev = ds;
+      });
+      var activeDays = sortedDays.length;
+
+      function tile(num, lab, cls) {
+        return '<div class="stat-tile ' + (cls || '') + '"><span class="st-num">' + num + '</span><span class="st-lab">' + lab + '</span></div>';
+      }
+      var tiles =
+        tile(cur + (cur === 1 ? ' day' : ' days'), 'current streak', 'st-streak') +
+        tile(best + (best === 1 ? ' day' : ' days'), 'best streak', '') +
+        tile(activeDays, 'days studied', '') +
+        tile(getTotal(), 'lifetime correct', '') +
+        tile(sum.learnt, 'mastered', 'st-good') +
+        tile(written, 'written /5', '') +
+        tile(acc + '%', 'accuracy', '');
+
+      // heatmap grid: columns = weeks (Sun→Sat), shaded by activity bucket
+      var start = new Date(end); start.setDate(start.getDate() - (WEEKS * 7 - 1)); start.setDate(start.getDate() - start.getDay());
+      function bucket(c) { return c <= 0 ? 0 : c <= 2 ? 1 : c <= 5 ? 2 : c <= 10 ? 3 : 4; }
+      var cols = '', cursor = new Date(start);
+      var monthRow = '', lastMonth = -1;
+      while (cursor <= end) {
+        var cells = '';
+        var colMonth = cursor.getMonth();
+        for (var r = 0; r < 7; r++) {
+          var ds = fmtDay(cursor);
+          if (cursor > end) { cells += '<i class="hc hc-empty"></i>'; }
+          else { var c = act[ds] || 0; cells += '<i class="hc hl' + bucket(c) + '" title="' + ds + ': ' + c + '"></i>'; }
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        var mlab = (colMonth !== lastMonth) ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][colMonth] : '';
+        lastMonth = colMonth;
+        monthRow += '<span class="hm-lab">' + mlab + '</span>';
+        cols += '<div class="hcol">' + cells + '</div>';
+      }
+
+      // overall mastery bar
+      function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
+      var barTotal = totalConcepts || 1;
+      var bar = seg('mm-learnt', sum.learnt) + seg('mm-ready', sum.ready) + seg('mm-learning', sum.learning) + seg('mm-strug', sum.struggling) + seg('mm-new', sum.new);
+
+      var sec = h('<section class="stats-card">' +
+        '<div class="review-eyebrow">Your analytics</div>' +
+        '<h2 class="review-title">Progress &amp; consistency</h2>' +
+        '<div class="stat-tiles">' + tiles + '</div>' +
+        '<div class="heat-block"><div class="heat-head"><span>Consistency · last ' + WEEKS + ' weeks</span>' +
+          '<span class="heat-legend">less <i class="hc hl0"></i><i class="hc hl1"></i><i class="hc hl2"></i><i class="hc hl3"></i><i class="hc hl4"></i> more</span></div>' +
+          '<div class="heat-scroll"><div class="heat-months">' + monthRow + '</div><div class="heat-grid">' + cols + '</div></div></div>' +
+        '<div class="stat-mm"><div class="stat-mm-head"><span>Overall mastery</span><span>' + sum.learnt + ' / ' + barTotal + ' mastered</span></div>' +
+          '<div class="mm-bar stat-mm-bar">' + bar + '</div>' +
+          '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered ' + sum.learnt + '</span><span><i class="mm-dot mm-ready"></i>ready ' + sum.ready + '</span><span><i class="mm-dot mm-learning"></i>learning ' + sum.learning + '</span><span><i class="mm-dot mm-strug"></i>struggling ' + sum.struggling + '</span><span><i class="mm-dot mm-new"></i>new ' + sum.new + '</span></div>' +
+        '</div>' +
+      '</section>');
+      app.appendChild(sec);
+    }
+
     function renderBackup() {
       var sec = h('<section class="data-card">' +
         '<div class="dc-text"><b>Back up your progress</b><span>Your streaks, mastery and favourites live only in this browser. Export a file to keep them safe or move to another device.</span></div>' +
@@ -759,6 +841,8 @@
     });
     app.appendChild(grid);
 
+    app.appendChild(h('<div class="sec-label">Your analytics</div>'));
+    renderStats();
     renderBackup();
   }
 
@@ -890,7 +974,7 @@
     var right = chosen === 0;
     var sr = card.querySelector('.skip-row'); if (sr) sr.remove();
     markAll(btns, btn, right);
-    if (!isRetry) { S.results.push(right); recordCard(q, right); }
+    if (!isRetry) { S.results.push(right); recordCard(q, right); logActivity(); }
 
     if (right) {
       if (!isRetry) { S.correct++; bumpTotal(); }

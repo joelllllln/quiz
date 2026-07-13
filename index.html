@@ -181,6 +181,28 @@ input[type=range]{accent-color:var(--cobalt)}
 .mm-name{flex:0 0 34%;font-family:var(--serif);font-size:.98rem;font-weight:600}
 .mm-bar{flex:1;display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--grid)}
 .mm-seg{display:block;height:100%}.mm-seg.mm-learnt{background:var(--green)}.mm-seg.mm-ready{background:#C7A400}.mm-seg.mm-learning{background:var(--cobalt)}.mm-seg.mm-strug{background:var(--red)}.mm-seg.mm-new{background:var(--rule)}
+/* personal analytics + consistency */
+.stats-card{background:var(--sheet);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px;margin:4px 0}
+.stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:12px 0 6px}
+.stat-tile{background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:12px 10px;text-align:center}
+.stat-tile .st-num{display:block;font-family:var(--serif);font-weight:700;font-size:1.5rem;line-height:1.05;font-variant-numeric:tabular-nums}
+.stat-tile .st-lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.stat-tile.st-streak{background:rgba(0,131,0,.08);border-color:var(--green)}.stat-tile.st-streak .st-num{color:var(--green)}
+.stat-tile.st-good .st-num{color:var(--green)}
+.heat-block{margin:18px 0 6px}
+.heat-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:8px;gap:12px;flex-wrap:wrap}
+.heat-legend{display:flex;align-items:center;gap:3px}
+.heat-scroll{overflow-x:auto;padding-bottom:4px}
+.heat-months{display:flex;height:12px;margin-left:0}
+.hm-lab{display:inline-block;width:14px;font-family:var(--mono);font-size:.58rem;color:var(--ink-3);white-space:nowrap}
+.heat-grid{display:flex;gap:3px}
+.hcol{display:flex;flex-direction:column;gap:3px}
+.hc{width:11px;height:11px;border-radius:2px;display:inline-block;flex:none}
+.hc.hl0{background:var(--grid)}.hc.hl1{background:rgba(0,131,0,.28)}.hc.hl2{background:rgba(0,131,0,.5)}.hc.hl3{background:rgba(0,131,0,.75)}.hc.hl4{background:var(--green)}
+.hc.hc-empty{background:transparent}
+.stat-mm{margin-top:16px}
+.stat-mm-head{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+.stat-mm-bar{height:14px}
 .mm-pct{flex:0 0 34px;text-align:right;font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--ink-2)}
 @media(max-width:520px){.mm-name{flex-basis:40%;font-size:.9rem}}
 /* flashcards launcher */
