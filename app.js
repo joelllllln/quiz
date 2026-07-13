@@ -562,6 +562,23 @@
   // answer (marked by Claude), or a mix — the learner chooses in the Study picker.
   function getLearnTest() { var v = localStorage.getItem('ds_learn_test'); return (v === 'card' || v === 'mc' || v === 'written') ? v : 'mix'; }
   function setLearnTest(v) { try { localStorage.setItem('ds_learn_test', v); } catch (e) {} }
+  // Match a note to the concept it is actually about, so the test that follows tests THAT concept.
+  var LEARN_STOP = ['the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'its', 'you', 'your', 'from', 'into', 'not', 'but', 'how', 'why', 'what', 'when', 'one', 'two', 'per', 'via', 'use', 'used', 'uses', 'each', 'they', 'them', 'has', 'have', 'can', 'all', 'any', 'set', 'get'];
+  function learnTokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && LEARN_STOP.indexOf(w) < 0; }); }
+  function matchConcept(note, cards) {
+    var nt = normkey(note.t), ntTok = learnTokens(note.t + ' ' + (note.group || '')), ndTok = learnTokens(note.d || '');
+    var best = null, bestScore = 0;
+    cards.forEach(function (c) {
+      var fk = normkey(c.front), ftok = learnTokens(c.front), s = 0;
+      if (fk && fk === nt) s += 10;
+      if (fk && nt && (nt.indexOf(fk) >= 0 || fk.indexOf(nt) >= 0)) s += 4;
+      if (ftok.length && ftok.every(function (w) { return ntTok.indexOf(w) >= 0; })) s += 6;
+      if (ftok.length && ftok.every(function (w) { return ndTok.indexOf(w) >= 0; })) s += 4;
+      ftok.forEach(function (w) { if (ntTok.indexOf(w) >= 0) s += 3; else if (ndTok.indexOf(w) >= 0) s += 1; });
+      if (s > bestScore) { bestScore = s; best = c; }
+    });
+    return bestScore >= 4 ? best : null;
+  }
   function learnSequence(topicKey, testType) {
     var seq = [];
     notesTopics().forEach(function (t) {
@@ -571,24 +588,32 @@
         (g.items || []).forEach(function (it) { notes.push({ t: it.t, d: it.d, f: it.f, group: g.h, topic: t.name }); });
       });
       if (!notes.length) return;
-      var cards = shuffle(flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); }));
-      var qs = shuffle(buildIndex().filter(function (e) { return e.key === t.key && diffOk(e.level); }));
-      var ci = 0, qi = 0, wi = 0;
+      var cards = flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); });
+      // Questions for this topic, grouped by the concept each one teaches (its reveal name).
+      var byConcept = {};
+      buildIndex().filter(function (e) { return e.key === t.key && diffOk(e.level); }).forEach(function (e) {
+        var wf = widgetFor(e.q), nm = wf && wf.reveal && wf.reveal.name;
+        if (nm) { var k = normkey(nm); (byConcept[k] || (byConcept[k] = [])).push(e.q); }
+      });
+      var lastConcept = '';
       notes.forEach(function (n) {
         seq.push({ type: 'read', note: n });
+        var c = matchConcept(n, cards);
+        if (!c) return;                                  // no confident match → read-only, never a mismatched test
+        var ck = normkey(c.front);
+        if (ck === lastConcept) return;                  // don't test the same concept twice in a row
+        lastConcept = ck;
+        var conceptQs = byConcept[ck] || [];
         var pick = testType;
         if (pick === 'mix') {
-          var opts = [];
-          if (qs.length) opts.push('mc');
-          if (cards.length) opts.push('card');
-          if (cards.length && apiKey()) opts.push('written');
-          pick = opts.length ? opts[Math.floor(Math.random() * opts.length)] : null;
+          var opts = ['card'];
+          if (conceptQs.length) opts.push('mc');
+          if (apiKey()) opts.push('written');
+          pick = opts[Math.floor(Math.random() * opts.length)];
         }
-        if (pick === 'mc' && qs.length) seq.push({ type: 'mc', q: qs[qi++ % qs.length].q, topic: t.name });
-        else if (pick === 'written' && cards.length) seq.push({ type: 'written', card: cards[wi++ % cards.length] });
-        else if (pick === 'card' && cards.length) seq.push({ type: 'card', card: cards[ci++ % cards.length] });
-        else if (cards.length) seq.push({ type: 'card', card: cards[ci++ % cards.length] });
-        else if (qs.length) seq.push({ type: 'mc', q: qs[qi++ % qs.length].q, topic: t.name });
+        if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: conceptQs[Math.floor(Math.random() * conceptQs.length)], topic: t.name });
+        else if (pick === 'written') seq.push({ type: 'written', card: c });
+        else seq.push({ type: 'card', card: c });
       });
     });
     return seq;
