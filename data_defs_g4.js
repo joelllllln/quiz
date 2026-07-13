@@ -345,62 +345,6 @@
   /* ===================== perf1 (10) ===================== */
 
   add("perf1", {
-    q: "In machine learning, what is overfitting?",
-    choices: [
-      "When a model fits the training data too closely, capturing its noise, so it performs far worse on new, unseen data",
-      "When a model is too simple to capture the underlying pattern, doing poorly even on the training data",
-      "When the training and test sets accidentally share the same examples",
-      "When features are rescaled to have zero mean and unit variance before training",
-      "When several models are combined by averaging their predictions"
-    ],
-    explain: "Overfitting happens when a model learns the training set's quirks and random noise as if they were real signal, so it scores very well on training data but poorly on data it has not seen. It usually stems from too much model complexity relative to the amount of data. Regularization, more data, and simpler models are common cures.",
-    simple: "It is when a model memorises the practice questions instead of learning the subject, so it aces the practice test but flunks the real one.",
-    widget: {
-      type: "curveStatic", title: "Training up, validation down",
-      world: "Increasing model complexity and watching accuracy on held-out validation data rise, peak, then fall.",
-      xlab: "model complexity →", xs: [0,1,2,3,4], labels: ["simple","mild","balanced","complex","extreme"], dec: 0, yunit: "%",
-      series: [ { name: "validation accuracy (%)", ys: [72, 84, 90, 80, 65] } ],
-      knob: { label: "Model complexity", min: 0, max: 4, step: 1, init: 0 },
-      insights: [
-        { max: 1, text: "A simple model leaves room to improve on both training and new data.", tone: "info" },
-        { max: 3, text: "Up to a point, more complexity helps validation accuracy too — the model is learning real signal.", tone: "info" },
-        { max: 4, text: "🤯 Past the peak, training accuracy keeps rising but validation accuracy falls: the model is memorising noise. That collapse IS overfitting.", tone: "wow" }
-      ],
-      extreme: { at: "max" },
-      reveal: { name: "Overfitting", formula: "great on training data · poor on unseen data",
-        text: "Learning the noise instead of the signal; fails to generalise." }
-    }
-  });
-
-  add("perf1", {
-    q: "In machine learning, what is underfitting?",
-    choices: [
-      "When a model is too simple to capture the underlying pattern, so it performs poorly even on the training data",
-      "When a model fits the training data's noise so closely that it fails on new data",
-      "When the test set accidentally leaks into the training process",
-      "When each feature is scaled to zero mean and unit variance before training",
-      "When predictions are averaged across many separate models"
-    ],
-    explain: "Underfitting occurs when a model lacks the capacity or flexibility to represent the true relationship in the data, so it does badly on both training and test sets. It reflects high bias — overly simple assumptions. Adding features, increasing model complexity, or reducing regularization typically helps.",
-    simple: "It is when a model is too basic to grasp the pattern, so it does poorly everywhere — even on the data it was trained on.",
-    widget: {
-      type: "curveStatic", title: "Too simple to learn",
-      world: "Starting from a far-too-simple model and adding just enough complexity to capture the real pattern.",
-      xlab: "model complexity →", xs: [0,1,2,3,4], labels: ["far too simple","too simple","adequate","rich","balanced"], dec: 0, yunit: "%",
-      series: [ { name: "training accuracy (%)", ys: [55, 66, 80, 88, 91] } ],
-      knob: { label: "Model complexity", min: 0, max: 4, step: 1, init: 0 },
-      insights: [
-        { max: 1, text: "A far-too-simple model can barely fit even the training data — accuracy is stuck low.", tone: "info" },
-        { max: 3, text: "Adding capacity lets the model start to capture the real relationship, so training accuracy rises.", tone: "info" },
-        { max: 4, text: "🤯 The early flat, low performance — bad even on training data — IS underfitting: too little capacity for the pattern.", tone: "wow" }
-      ],
-      extreme: { at: "max" },
-      reveal: { name: "Underfitting", formula: "too simple · high bias · poor even on training data",
-        text: "The model cannot capture the pattern; add capacity or features." }
-    }
-  });
-
-  add("perf1", {
     q: "In machine learning, what is a train/validation/test split?",
     choices: [
       "Dividing the data into three parts: one to train on, one to tune choices on, and one held back untouched to estimate final performance",
