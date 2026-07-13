@@ -277,6 +277,150 @@
     draw();
   }
 
+  /* ---------------- open writing: final test, marked /5 by Claude Haiku ---------------- */
+  function apiKey() { try { return localStorage.getItem('ds_api_key') || ''; } catch (e) { return ''; } }
+  function setApiKey(v) { try { if (v) localStorage.setItem('ds_api_key', v); else localStorage.removeItem('ds_api_key'); } catch (e) {} }
+  function writingDeck() {
+    return flashDeck().filter(function (c) { return c.back && c.back.length > 20; });
+  }
+  // Marks a free-text answer against the reference. Calls Claude Haiku directly from the
+  // browser (the user supplies their own key; it never leaves this browser except to Anthropic).
+  function gradeWriting(concept, reference, answer, cb) {
+    var key = apiKey();
+    if (!key) { cb({ error: 'nokey' }); return; }
+    var sys = "You are a supportive but rigorous machine-learning tutor marking a beginner's free-text answer. " +
+      "The learner is meeting this material for the first time. Grade their answer out of 5 for how correct and complete it is versus the reference answer. " +
+      "Award partial credit generously for partially-right answers, but be honest — a blank, off-topic, or pure-guess answer scores 0 or 1. " +
+      "Keep feedback warm, specific and short: what they got right, what is missing or wrong, and one concrete tip to improve.";
+    var user = "CONCEPT TO EXPLAIN:\n" + concept + "\n\nREFERENCE ANSWER (the ground truth):\n" + reference +
+      "\n\nLEARNER'S ANSWER:\n" + (answer && answer.trim() ? answer.trim() : '(blank)') + "\n\nMark the learner's answer.";
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 400,
+        system: sys,
+        messages: [{ role: 'user', content: user }],
+        output_config: { format: { type: 'json_schema', schema: {
+          type: 'object',
+          properties: { score: { type: 'integer' }, feedback: { type: 'string' } },
+          required: ['score', 'feedback'],
+          additionalProperties: false
+        } } }
+      })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
+      .then(function (res) {
+        var j = res.j || {};
+        if (!res.ok) { cb({ error: (j.error && j.error.message) || ('Request failed (HTTP ' + res.status + ')') }); return; }
+        if (j.stop_reason === 'refusal') { cb({ error: 'The marker declined to answer that one.' }); return; }
+        var txt = '';
+        (j.content || []).forEach(function (b) { if (b.type === 'text') txt += b.text; });
+        try {
+          var out = JSON.parse(txt);
+          cb({ score: Math.max(0, Math.min(5, Math.round(+out.score))), feedback: String(out.feedback || '') });
+        } catch (e) { cb({ error: 'Could not read the marker response.' }); }
+      })
+      .catch(function () { cb({ error: 'offline' }); });
+  }
+  function showKeyPanel(container, note) {
+    container.hidden = false;
+    container.className = 'write-result';
+    container.innerHTML =
+      '<div class="wr-key">' +
+        '<b>Connect Claude to mark your writing</b>' +
+        '<p class="wr-keynote">' + (note ? esc(note) + ' ' : '') +
+          'The open-writing test sends your answer to Anthropic’s Claude API to be marked. Paste your own API key (from console.anthropic.com) — it is stored only in this browser and used only for marking.</p>' +
+        '<input class="wr-keyin" type="password" placeholder="sk-ant-…" autocomplete="off">' +
+        '<div class="wr-keyrow"><button class="btn wr-keysave">Save key</button>' +
+          (apiKey() ? '<button class="btn ghost wr-keyclear">Remove key</button>' : '') + '</div>' +
+      '</div>';
+    var input = container.querySelector('.wr-keyin');
+    input.value = apiKey();
+    container.querySelector('.wr-keysave').onclick = function () {
+      setApiKey(input.value.trim());
+      container.innerHTML = '<div class="wr-ok">Key saved. Write your answer, then press “Mark it”.</div>';
+    };
+    var clr = container.querySelector('.wr-keyclear');
+    if (clr) clr.onclick = function () { setApiKey(''); container.innerHTML = '<div class="wr-ok">Key removed.</div>'; };
+  }
+  function startWriting(topicKey) {
+    var deck = shuffle(writingDeck().filter(function (c) { return !topicKey || c.key === topicKey; }));
+    if (!deck.length) return;
+    var i = 0;
+    function draw() {
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+        '<div class="ruler"><div style="width:' + (100 * i / deck.length) + '%"></div></div>' +
+        '<span class="exmeta">Prompt <b>' + (i + 1) + '</b> of ' + deck.length + '</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var c = deck[i];
+      var reference = (c.formula ? c.formula + ' — ' : '') + c.back;
+      var prompt = 'What is ' + c.front + '?';
+      var opts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+        return '<option value="' + t.key + '"' + (t.key === topicKey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
+      }).join('');
+      var view = h('<div class="write-view">' +
+        '<select class="write-topic">' + opts + '</select>' +
+        '<div class="write-card">' +
+          '<span class="write-eyebrow">Final test · explain it in your own words · ' + esc(c.topic) + '</span>' +
+          '<h2 class="write-prompt"></h2>' +
+          '<textarea class="write-ta" rows="6" placeholder="Write your explanation here… then press Mark it."></textarea>' +
+          '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost write-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
+          '<div class="write-result" hidden></div>' +
+        '</div>' +
+        '<button class="flash-shuffle write-newset">↻ New set</button>' +
+      '</div>');
+      view.querySelector('.write-prompt').textContent = prompt;
+      var ta = view.querySelector('.write-ta');
+      var result = view.querySelector('.write-result');
+      var mark = view.querySelector('.write-mark');
+      function nextPrompt() { i = (i + 1) % deck.length; draw(); }
+      view.querySelector('.write-skip').onclick = nextPrompt;
+      view.querySelector('.write-newset').onclick = function () { deck = shuffle(deck); i = 0; draw(); };
+      view.querySelector('.write-topic').onchange = function () { startWriting(this.value); };
+      view.querySelector('.write-key-link').onclick = function () { showKeyPanel(result); };
+      function runMark() {
+        if (!apiKey()) { showKeyPanel(result, 'You need a Claude API key to mark writing.'); return; }
+        mark.disabled = true; ta.disabled = true;
+        result.hidden = false; result.className = 'write-result';
+        result.innerHTML = '<div class="wr-load">Marking your answer with Claude Haiku…</div>';
+        gradeWriting(prompt, reference, ta.value, function (res) {
+          if (res.error) {
+            mark.disabled = false; ta.disabled = false;
+            if (res.error === 'nokey') { showKeyPanel(result); return; }
+            if (res.error === 'offline') { result.innerHTML = '<div class="wr-err">No connection — marking needs the internet. The rest of DataSense works fully offline.</div>'; return; }
+            result.innerHTML = '<div class="wr-err"><span>' + esc(res.error) + '</span> <button class="btn ghost wr-retry">Try again</button></div>';
+            result.querySelector('.wr-retry').onclick = runMark;
+            return;
+          }
+          var pct = res.score * 20;
+          result.innerHTML =
+            '<div class="wr-scorerow"><div class="wr-score sc-' + res.score + '"><span class="wr-num">' + res.score + '</span><span class="wr-den">/ 5</span></div>' +
+            '<div class="wr-meter"><div class="wr-fill sc-' + res.score + '" style="width:' + pct + '%"></div></div></div>' +
+            '<div class="wr-fb"></div>' +
+            '<div class="wr-model"><span class="wr-mtag">The answer</span><span class="wr-modeltext"></span></div>' +
+            '<div class="next-row"><button class="btn wr-next">Next prompt →</button><button class="btn ghost wr-redo">Rewrite</button></div>';
+          result.querySelector('.wr-fb').textContent = res.feedback;
+          result.querySelector('.wr-modeltext').textContent = reference;
+          result.querySelector('.wr-next').onclick = nextPrompt;
+          result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
+          if (res.score >= 4) bumpTotal();
+        });
+      }
+      mark.onclick = runMark;
+      app.appendChild(view);
+      window.scrollTo(0, 0);
+    }
+    draw();
+  }
+
   /* ---------------- back up / restore progress (all localStorage lives only in this browser) ---------------- */
   function exportProgress() {
     var data = {};
@@ -358,6 +502,7 @@
     renderPractice();
     renderFavourites();
     renderFlash();
+    renderWriting();
 
     function renderDaily() {
       var old = app.querySelector('.daily-card');
@@ -505,6 +650,17 @@
         '<div class="fl-sub">' + flashDeck().length + ' concepts · flip to test yourself</div></div></div>' +
         '<button class="btn ghost fl-go">Study →</button></section>');
       sec.querySelector('.fl-go').onclick = function () { startFlashcards(''); };
+      app.appendChild(sec);
+    }
+
+    function renderWriting() {
+      var n = writingDeck().length;
+      var sec = h('<section class="write-launch">' +
+        '<div class="wl-info"><span class="wl-icon">✍️</span>' +
+        '<div><div class="wl-title">Open Writing · Final test</div>' +
+        '<div class="wl-sub">Explain a concept in your own words — Claude marks it <b>/5</b> with feedback' + (apiKey() ? '' : ' · needs your API key') + '</div></div></div>' +
+        '<button class="btn ghost wl-go">Start →</button></section>');
+      sec.querySelector('.wl-go').onclick = function () { startWriting(''); };
       app.appendChild(sec);
     }
 
