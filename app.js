@@ -213,36 +213,41 @@
     });
     CONCEPTIDX = idx; return idx;
   }
-  // outcome: 'right' (box up), 'wrong' (box down), 'seen' (touched, no box change)
-  function recordConcept(name, outcome) {
+  // outcome: 'right' (box up), 'wrong' (box down), 'seen' (touched, no box change).
+  // wrote=true records that the learner explained it in their own words (the written test) —
+  // which is REQUIRED to reach 'mastered'. Multiple choice alone can only reach 'ready'.
+  function recordConcept(name, outcome, wrote) {
     var qs = conceptIndex()[normkey(name)];
     if (!qs || !qs.length) return 0;
     var uniq = {}, n = 0;
     qs.forEach(function (q) {
       var id = cardId(q); if (uniq[id]) return; uniq[id] = 1; n++;
       if (outcome === 'seen') recordSeen(q); else recordCard(q, outcome === 'right');
+      if (wrote) { var r = loadCards()[id]; if (r) r.wrote = 1; }
     });
+    if (wrote) saveCards();
     return n;
   }
   function cardStatus(q) {
     var r = loadCards()[cardId(q)];
     if (!r || !r.seen) return 'new';
-    if (r.box >= 4) return 'learnt';
+    if (r.box >= 4 && r.wrote) return 'learnt';   // mastered: strong recall AND written in own words
+    if (r.box >= 4) return 'ready';               // solid on multiple choice — write it to master it
     if (r.wrong > 0 && r.box <= 1) return 'struggling';
     return 'learning';
   }
   function masterySummary() {
-    var s = { learnt: 0, learning: 0, struggling: 0, new: 0 };
+    var s = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 };
     buildIndex().forEach(function (e) { s[cardStatus(e.q)]++; });
     return s;
   }
   function masteryByTopic() {
     var by = {};
     buildIndex().forEach(function (e) {
-      var m = by[e.key] || (by[e.key] = { key: e.key, topic: e.topic, total: 0, learnt: 0, learning: 0, struggling: 0, new: 0 });
+      var m = by[e.key] || (by[e.key] = { key: e.key, topic: e.topic, total: 0, learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 });
       m.total++; m[cardStatus(e.q)]++;
     });
-    return TOPICS.map(function (t) { return by[t.key] || { key: t.key, topic: t.name, total: 0, learnt: 0, learning: 0, struggling: 0, new: 0 }; });
+    return TOPICS.map(function (t) { return by[t.key] || { key: t.key, topic: t.name, total: 0, learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 }; });
   }
   function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
   function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
@@ -268,18 +273,20 @@
   function normkey(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
   function flashDeck() {
     if (FLASH) return FLASH;
-    var seen = {}, deck = [];
+    var at = {}, deck = [];
     buildIndex().forEach(function (e) {
       var r = e.q.widget && e.q.widget.reveal;
       if (!r || !r.name) return;
       var nk = normkey(r.name);
-      if (seen[nk]) return; seen[nk] = 1;
-      deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key });
+      var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
+      if (at[nk] != null) { if (isDef) deck[at[nk]].def = true; return; }
+      at[nk] = deck.length;
+      deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key, def: isDef });
     });
     FLASH = deck; return deck;
   }
-  function startFlashcards(topicKey) {
-    var deck = shuffle(flashDeck().filter(function (c) { return !topicKey || c.key === topicKey; }));
+  function startFlashcards(topicKey, defsOnly) {
+    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def); }));
     if (!deck.length) return;
     var i = 0, flipped = false;
     function draw() {
@@ -324,6 +331,21 @@
       window.scrollTo(0, 0);
     }
     draw();
+  }
+
+  /* ---------------- unified study picker: one control, pick the mode ---------------- */
+  function getStudyMode() { var m = localStorage.getItem('ds_study_mode'); return (m === 'written' || m === 'defs') ? m : 'mc'; }
+  function setStudyMode(m) { try { localStorage.setItem('ds_study_mode', m); } catch (e) {} }
+  function getStudyTopic() { return localStorage.getItem('ds_study_topic') || ''; }
+  function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
+  // Multiple-choice study: N questions from the chosen topic scope (or all), fresh each time.
+  function startQuiz(topicKey, n) {
+    var pool = buildIndex().filter(function (e) { return !topicKey || e.key === topicKey; });
+    if (!pool.length) return;
+    pool = shuffle(pool).slice(0, Math.min(n, pool.length));
+    begin({ name: 'Study', no: '✎', key: '__study__' },
+      { qk: '__study__', part: 'Study', name: todayLabel() },
+      { qs: pool.map(function (e) { return e.q; }), origins: pool.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Study', more: true });
   }
 
   /* ---------------- open writing: final test, marked /5 by Claude Haiku ---------------- */
@@ -460,9 +482,9 @@
           result.querySelector('.wr-modeltext').textContent = reference;
           result.querySelector('.wr-next').onclick = nextPrompt;
           result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
-          // Feed the shared learning map: a strong written explanation strengthens the
-          // concept's cards, a weak one flags them for review — same model the quizzes use.
-          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'));
+          // Feed the shared learning map. A strong written explanation (>=4/5) both
+          // strengthens the concept AND unlocks 'mastered' — the ONLY way to master it.
+          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
           if (res.score >= 4) bumpTotal();
         });
       }
@@ -549,74 +571,62 @@
       '</header>'));
 
     // ---- Daily challenge (filterable) + lifetime total ----
-    renderDaily();
     renderMastery();
+    renderStudy();
     renderPractice();
     renderFavourites();
-    renderFlash();
-    renderWriting();
 
-    function renderDaily() {
-      var old = app.querySelector('.daily-card');
-      var f = getFilter();
-      var sig = filterSig(f);
-      var dq = dailyQuestions(f);
-      var d = loadDaily(sig);
-      var dn = dq.qs.length;
-      var doneCount = Math.min(d.pos, dn);
-      var isDone = dn > 0 && doneCount >= dn;
-      var btnLabel = dn === 0 ? 'No questions' : isDone ? 'Review →' : (doneCount > 0 ? 'Continue →' : 'Start ' + dn + ' →');
-      var progText = dn === 0
-        ? 'No questions match this combination — try another.'
-        : isDone
-          ? ('Completed — ' + d.correct + ' / ' + dn + ' correct today · resets tomorrow')
-          : (doneCount > 0
-            ? (doneCount + ' of ' + dn + ' done · ' + d.correct + ' correct so far')
-            : (dn + ' questions · ' + filterLabel(f) + ' · resets each day'));
-      var pctW = dn ? Math.round(100 * doneCount / dn) : 0;
+    // One picker: choose the study format (Multiple choice / Written / Definitions),
+    // the topic scope, and how many. Smart Review stays a separate card below.
+    function renderStudy() {
+      var old = app.querySelector('.study-card');
+      var mode = getStudyMode();
+      var tkey = getStudyTopic();
+      var curN = dailyN();
       function chips(kind, current, opts) {
         return opts.map(function (o) {
           return '<button class="filt-chip' + (o.v === current ? ' on' : '') + '" data-' + kind + '="' + o.v + '">' + o.t + '</button>';
         }).join('');
       }
-      var curN = dailyN();
-      var daily = h('<section class="daily-card' + (isDone ? ' is-done' : '') + '">' +
+      var topicOpts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+        return '<option value="' + t.key + '"' + (t.key === tkey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
+      }).join('');
+      var scopeLabel = tkey ? (function () { var nm = tkey; TOPICS.forEach(function (t) { if (t.key === tkey) nm = t.name; }); return nm; })() : 'all topics';
+      var desc, startLabel;
+      if (mode === 'mc') { desc = curN + ' multiple-choice questions · ' + esc(scopeLabel); startLabel = 'Start ' + curN + ' →'; }
+      else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
+      else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel); startLabel = 'Study cards →'; }
+      var sec = h('<section class="study-card">' +
         '<div class="daily-main">' +
-          '<div class="daily-eyebrow">Daily Challenge · ' + esc(todayLabel()) + '</div>' +
-          '<h2 class="daily-title">Daily ' + curN + '</h2>' +
+          '<div class="daily-eyebrow">Study · ' + esc(todayLabel()) + '</div>' +
+          '<h2 class="daily-title">Study</h2>' +
           '<div class="daily-filters">' +
-            '<div class="filt-row"><span class="filt-lab">Per day</span>' +
-              chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>' +
-            '<div class="filt-row"><span class="filt-lab">Type</span>' +
-              chips('type', f.type, [{ v: 'both', t: 'Both' }, { v: 'def', t: 'Definitions' }, { v: 'q', t: 'Questions' }]) + '</div>' +
-            (f.type === 'def' ? '' :
-            '<div class="filt-row"><span class="filt-lab">Level</span>' +
-              chips('diff', f.diff, [{ v: 'all', t: 'All' }, { v: '1', t: '1' }, { v: '2', t: '2' }, { v: '3', t: '3' }]) + '</div>') +
+            '<div class="filt-row"><span class="filt-lab">Mode</span>' +
+              chips('mode', mode, [{ v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }]) + '</div>' +
+            '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
+            (mode === 'defs' ? '' :
+            '<div class="filt-row"><span class="filt-lab">How many</span>' +
+              chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>') +
           '</div>' +
-          '<p class="daily-prog">' + progText + '</p>' +
-          '<div class="daily-bar"><div style="width:' + pctW + '%"></div></div>' +
+          '<p class="daily-prog">' + desc + '</p>' +
         '</div>' +
         '<div class="daily-side">' +
           '<div class="daily-stat"><span class="ds-num">' + getTotal() + '</span><span class="ds-lab">lifetime<br>correct</span></div>' +
-          '<div class="daily-btns">' +
-            '<button class="btn daily-go"' + (dn === 0 ? ' disabled' : '') + '>' + btnLabel + '</button>' +
-            '<button class="btn daily-more"' + (dn === 0 ? ' disabled' : '') + '>Keep going →</button>' +
-          '</div>' +
+          '<div class="daily-btns"><button class="btn daily-go study-go">' + startLabel + '</button></div>' +
         '</div></section>');
-      daily.querySelectorAll('[data-num]').forEach(function (b) {
-        b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderDaily(); };
+      sec.querySelectorAll('[data-mode]').forEach(function (b) {
+        b.onclick = function () { setStudyMode(b.getAttribute('data-mode')); renderStudy(); };
       });
-      daily.querySelectorAll('[data-type]').forEach(function (b) {
-        b.onclick = function () { var nf = getFilter(); nf.type = b.getAttribute('data-type'); setFilter(nf); renderDaily(); };
+      sec.querySelectorAll('[data-num]').forEach(function (b) {
+        b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderStudy(); };
       });
-      daily.querySelectorAll('[data-diff]').forEach(function (b) {
-        b.onclick = function () { var nf = getFilter(); nf.diff = b.getAttribute('data-diff'); setFilter(nf); renderDaily(); };
-      });
-      var go = daily.querySelector('.daily-go');
-      if (dn > 0) go.onclick = startDaily;
-      var more = daily.querySelector('.daily-more');
-      if (dn > 0) more.onclick = startMore;
-      if (old) app.replaceChild(daily, old); else app.appendChild(daily);
+      sec.querySelector('.study-topic').onchange = function () { setStudyTopic(this.value); renderStudy(); };
+      sec.querySelector('.study-go').onclick = function () {
+        if (mode === 'mc') startQuiz(tkey, curN);
+        else if (mode === 'written') startWriting(tkey);
+        else startFlashcards(tkey, true);
+      };
+      if (old) app.replaceChild(sec, old); else app.appendChild(sec);
     }
 
     function renderPractice() {
@@ -639,7 +649,8 @@
         '<div class="review-eyebrow">Adaptive · spaced repetition</div>' +
         '<h2 class="review-title">Smart Review</h2>' +
         '<div class="mast-badges">' +
-          '<span class="mb mb-learnt"><b>' + sum.learnt + '</b> learnt</span>' +
+          '<span class="mb mb-learnt"><b>' + sum.learnt + '</b> mastered</span>' +
+          '<span class="mb mb-ready"><b>' + sum.ready + '</b> ready to write</span>' +
           '<span class="mb mb-learning"><b>' + sum.learning + '</b> learning</span>' +
           '<span class="mb mb-strug"><b>' + sum.struggling + '</b> struggling</span>' +
           '<span class="mb mb-new"><b>' + sum.new + '</b> new</span>' +
@@ -678,8 +689,8 @@
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · quizzes, flashcards &amp; writing all build this · tap a topic to study it</p>' +
-        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
+        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · a concept is <b>mastered</b> only once you\'ve explained it in your own words in the written test — multiple choice alone reaches <b>ready</b></p>' +
+        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-ready"></i>ready — write it</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
       function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
@@ -687,32 +698,11 @@
         var pct = r.total ? Math.round(100 * r.learnt / r.total) : 0;
         var row = h('<button class="mm-row">' +
           '<span class="mm-name">' + esc(r.topic) + '</span>' +
-          '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
+          '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-ready', r.ready) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
           '<span class="mm-pct">' + pct + '%</span></button>');
         row.onclick = function () { start(TOPICS[idx], TOPICS[idx].levels[0]); };
         list.appendChild(row);
       });
-      app.appendChild(sec);
-    }
-
-    function renderFlash() {
-      var sec = h('<section class="flash-launch">' +
-        '<div class="fl-info"><span class="fl-icon">⚡</span>' +
-        '<div><div class="fl-title">Flashcards</div>' +
-        '<div class="fl-sub">' + flashDeck().length + ' concepts · flip to test yourself</div></div></div>' +
-        '<button class="btn ghost fl-go">Study →</button></section>');
-      sec.querySelector('.fl-go').onclick = function () { startFlashcards(''); };
-      app.appendChild(sec);
-    }
-
-    function renderWriting() {
-      var n = writingDeck().length;
-      var sec = h('<section class="write-launch">' +
-        '<div class="wl-info"><span class="wl-icon">✍️</span>' +
-        '<div><div class="wl-title">Open Writing · Final test</div>' +
-        '<div class="wl-sub">Explain a concept in your own words — Claude marks it <b>/5</b> with feedback' + (apiKey() ? '' : ' · needs your API key') + '</div></div></div>' +
-        '<button class="btn ghost wl-go">Start →</button></section>');
-      sec.querySelector('.wl-go').onclick = function () { startWriting(''); };
       app.appendChild(sec);
     }
 
@@ -1054,7 +1044,7 @@
     var card = h('<div class="result-card">' +
       '<div class="r-eyebrow">Smart Review · adaptive session</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
-      '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
+      '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · ready to write <b>' + sum.ready + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
       dotsHTML(S.results) +
       '<div class="next-row" style="justify-content:center"><button class="btn">Another session</button><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn').onclick = startPractice;

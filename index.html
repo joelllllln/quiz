@@ -97,6 +97,11 @@ input[type=range]{accent-color:var(--cobalt)}
 .filt-chip.on{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600}
 .daily-card.is-done .filt-chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 @media(max-width:520px){.daily-card{padding:16px 18px}.daily-side{width:100%;justify-content:space-between}.daily-title{font-size:1.6rem}.filt-lab{width:auto}}
+/* unified study picker (shares the dark daily-card look) */
+.study-card{display:flex;justify-content:space-between;align-items:stretch;gap:20px;flex-wrap:wrap;margin:22px 0 4px;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px}
+.study-card .btn.daily-go{background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 rgba(0,0,0,.25)}
+.study-topic{font-family:var(--mono);font-size:.78rem;padding:6px 10px;border:1px solid rgba(251,251,247,.4);border-radius:99px;background:var(--ink);color:var(--paper)}
+@media(max-width:520px){.study-card{padding:16px 18px}}
 
 /* ---------- smart review (adaptive) ---------- */
 .review-card{margin:14px 0 4px;background:var(--sheet);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px}
@@ -106,6 +111,7 @@ input[type=range]{accent-color:var(--cobalt)}
 .mast-badges .mb{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);border:1px solid var(--rule);border-radius:99px;padding:4px 11px}
 .mast-badges .mb b{font-family:var(--serif);font-size:.9rem;color:var(--ink)}
 .mast-badges .mb-learnt{border-color:var(--green);background:var(--green-soft)}
+.mast-badges .mb-ready{border-color:#C7A400;background:rgba(199,164,0,.12)}
 .mast-badges .mb-strug{border-color:var(--red);background:var(--red-soft)}
 .mast-badges .mb-learning{border-color:var(--cobalt);background:var(--cobalt-soft)}
 .dial-wrap{margin-bottom:16px}
@@ -168,13 +174,13 @@ input[type=range]{accent-color:var(--cobalt)}
 .mm-legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 6px;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .mm-legend span{display:flex;align-items:center;gap:5px}
 .mm-dot{width:9px;height:9px;border-radius:2px;display:inline-block}
-.mm-learnt{background:var(--green)}.mm-learning{background:var(--cobalt)}.mm-strug{background:var(--red)}.mm-new{background:var(--rule)}
+.mm-learnt{background:var(--green)}.mm-ready{background:#C7A400}.mm-learning{background:var(--cobalt)}.mm-strug{background:var(--red)}.mm-new{background:var(--rule)}
 .mm-list{display:flex;flex-direction:column;margin-top:4px}
 .mm-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 2px;border-top:1px solid var(--rule);background:none}
 .mm-row:hover .mm-name{color:var(--cobalt)}
 .mm-name{flex:0 0 34%;font-family:var(--serif);font-size:.98rem;font-weight:600}
 .mm-bar{flex:1;display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--grid)}
-.mm-seg{display:block;height:100%}.mm-seg.mm-learnt{background:var(--green)}.mm-seg.mm-learning{background:var(--cobalt)}.mm-seg.mm-strug{background:var(--red)}.mm-seg.mm-new{background:var(--rule)}
+.mm-seg{display:block;height:100%}.mm-seg.mm-learnt{background:var(--green)}.mm-seg.mm-ready{background:#C7A400}.mm-seg.mm-learning{background:var(--cobalt)}.mm-seg.mm-strug{background:var(--red)}.mm-seg.mm-new{background:var(--rule)}
 .mm-pct{flex:0 0 34px;text-align:right;font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--ink-2)}
 @media(max-width:520px){.mm-name{flex-basis:40%;font-size:.9rem}}
 /* flashcards launcher */
@@ -477,6 +483,10 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_steps_dbscan.js"></script>
 <script src="data_steps_pca.js"></script>
 <script src="data_steps_tsne.js"></script>
+<script src="data_steps_feng.js"></script>
+<script src="data_steps_fsel.js"></script>
+<script src="data_steps_msel.js"></script>
+<script src="data_steps_xgb.js"></script>
 <script src="data_widgets_found.js"></script>
 <script src="data_widgets_knn.js"></script>
 <script src="data_widgets_logreg.js"></script>
