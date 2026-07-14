@@ -665,6 +665,18 @@
     });
     return bestScore >= 4 ? best : null;
   }
+  // Of a concept's questions, the one whose wording overlaps the note you just read the most —
+  // so the multiple-choice step tests THAT note, not a random sibling question of the concept.
+  function bestQuestionForNote(note, qs) {
+    var ntok = learnTokens(note.t + ' ' + (note.d || ''));
+    var best = qs[0], bestScore = -1;
+    qs.forEach(function (q) {
+      var qtok = learnTokens(q.q + ' ' + ((q.choices && q.choices[0]) || '') + ' ' + (q.explain || ''));
+      var s = 0; qtok.forEach(function (w) { if (ntok.indexOf(w) >= 0) s++; });
+      if (s > bestScore) { bestScore = s; best = q; }
+    });
+    return best;
+  }
   function learnSequence(topicKey, testType) {
     var seq = [];
     notesTopics().forEach(function (t) {
@@ -698,7 +710,7 @@
           if (apiKey()) opts.push('written');
           pick = opts[Math.floor(Math.random() * opts.length)];
         }
-        if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: conceptQs[Math.floor(Math.random() * conceptQs.length)], topic: t.name });
+        if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: bestQuestionForNote(n, conceptQs), topic: t.name, note: n });
         else if (pick === 'written') seq.push({ type: 'written', card: testCard });
         else seq.push({ type: 'card', card: testCard });
       });
@@ -755,7 +767,7 @@
     function drawMC(step) {
       begin({ name: 'Read + recall', no: '✎', key: '__learn__' },
         { qk: '__learn__', part: 'Read + recall', name: step.topic },
-        { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall',
+        { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall', learnNote: step.note,
           learnNext: function (correct) { seen++; if (correct) known++; advance(); } });
     }
     // Open written test step: explain the concept; Claude Haiku marks it /5 (needs the user's key).
@@ -1906,7 +1918,7 @@
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
       daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites, more: !!opts.more,
-      modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null,
+      modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null, learnNote: opts.learnNote || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
@@ -1933,6 +1945,11 @@
       '</div>' +
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
     card.querySelector('.qtext').textContent = q.q;
+    if (S.learnNote) {
+      var recall = h('<div class="lr-recall"><span class="lr-recall-tag">You just read</span><span class="lr-recall-t"></span></div>');
+      recall.querySelector('.lr-recall-t').textContent = S.learnNote.t;
+      card.insertBefore(recall, card.querySelector('.qtext'));
+    }
     var favBtn = card.querySelector('.fav-btn');
     favBtn.onclick = function () {
       var on = toggleFav(q);
