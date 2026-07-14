@@ -299,10 +299,10 @@
     "q": "Each principal component comes with 'loadings'. What do loadings tell you?",
     "choices": [
       "How much each original feature contributes to that component — its recipe",
-      "How many data points fall on the component",
-      "The accuracy the component gives a classifier",
-      "The order in which components were computed",
-      "The distance between the two nearest points"
+      "How many of the original data points happen to fall exactly on the component",
+      "The classification accuracy that this one component alone gives a classifier",
+      "The order in which the individual components were originally computed",
+      "The straight-line distance between the two single nearest points in the data"
     ],
     "explain": "A component is a weighted blend of the original features, and the loadings are those weights — the recipe. Several features loading strongly with the same sign means they rise together and the component tracks their shared theme; that's how you NAME a component.",
     "simple": "Loadings are the component's recipe card: how much of each original feature it stirs in. If height, weight and arm-span all load heavily and positively on a component, you can name it 'body size'. Loadings turn an abstract direction into something interpretable — they're weights, not point counts or accuracy scores.",

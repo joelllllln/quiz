@@ -232,9 +232,9 @@
     q: "In machine learning, what is an ROC curve?",
     choices: [
       "A plot of the true-positive rate against the false-positive rate as the decision threshold is varied across its range",
-      "A square table listing the raw counts of true positives, false positives, false negatives, and true negatives",
+      "A square table simply listing the raw counts of true positives, false positives, false negatives, and true negatives",
       "A curve showing the training loss steadily falling as the total number of gradient-descent steps increases",
-      "The harmonic mean of precision and recall summarised together as one single balanced number between zero and one",
+      "The harmonic mean of precision and recall summarised together as one single balanced number lying between zero and one",
       "A plot of overall model error against model complexity showing where underfitting gives way to overfitting"
     ],
     explain: "The ROC (Receiver Operating Characteristic) curve traces a classifier's true-positive rate versus its false-positive rate as the decision threshold sweeps from strict to lenient. Each threshold gives one point; connecting them shows the whole trade-off between catching positives and raising false alarms. The area under it (AUC) summarises overall ranking quality, with 1.0 perfect and 0.5 no better than chance.",
@@ -260,10 +260,10 @@
     q: "In machine learning, what is the bias-variance tradeoff?",
     choices: [
       "The tension whereby simpler models risk high bias (underfitting) and complex ones risk high variance (overfitting), with total error lowest in between",
-      "The mistaken rule that a model's training error must always exactly equal its own test error once enough training data has finally been collected",
+      "The mistaken rule that a model's own training error must always exactly equal its own held-out test error once enough training data has finally been collected",
       "The forced choice between optimising precision at the direct expense of recall whenever you set a single fixed decision threshold on a classifier",
       "The engineering balance between how fast a model can be trained and how much memory it ends up consuming at prediction time in production",
-      "The conceptual difference between a general learning algorithm and the one specific fitted model that it happens to produce from a training dataset"
+      "The conceptual difference between a general learning algorithm and the one single specific fitted model that it happens to produce from a training dataset"
     ],
     explain: "A model's expected error decomposes into bias (error from overly simple assumptions that underfit) and variance (error from sensitivity to the particular training sample, which overfits), plus irreducible noise. Reducing one tends to raise the other: increasing complexity cuts bias but inflates variance. The best generalisation comes from the complexity that minimises their sum.",
     simple: "Too simple a model misses the real pattern (high bias); too complex a model chases every wiggle in the training data and fails on new data (high variance). The trick is finding the middle ground where total error is smallest.",
@@ -288,9 +288,9 @@
     q: "In machine learning, what is cross-validation?",
     choices: [
       "A resampling method that rotates the data through several train/test splits and averages the scores to estimate performance reliably",
-      "A penalty term added directly to the loss function that shrinks large weights in order to prevent the model overfitting",
+      "A penalty term added directly onto the loss function that shrinks large weights in order to prevent the model from overfitting badly",
       "The single fixed split of the data into exactly one training set and one held-out test set that is used just the once",
-      "The iterative procedure of repeatedly stepping the model weights downhill along the computed gradient of the loss surface",
+      "The iterative procedure of repeatedly stepping the model weights a little downhill along the computed gradient of the whole loss surface",
       "A square table cross-tabulating a classifier's predicted class labels against the genuinely true labels cell by cell"
     ],
     explain: "Cross-validation estimates how well a model generalises by splitting the data into k folds, training on k−1 of them and testing on the remaining one, then rotating so every fold serves as the test set once. Averaging the k scores gives a more stable, less luck-dependent estimate than a single train/test split, and it uses all the data for both roles.",
@@ -317,9 +317,9 @@
     choices: [
       "Adding a penalty on model complexity (such as the size of the weights) to the loss so the model generalises better and overfits less",
       "Rescaling every input feature so that it has zero mean and unit variance across the data before any training begins",
-      "Rotating the whole dataset through several different train/test splits and then averaging all of the resulting scores",
+      "Rotating the whole dataset repeatedly through several different train/test splits and then averaging all of the resulting scores together",
       "Combining the separate predictions of many independently trained models into one single aggregated overall prediction",
-      "Converting a single categorical column into several distinct 0/1 indicator columns, using exactly one column per category"
+      "Converting a single categorical column into several distinct new 0/1 indicator columns, using exactly one separate column per category"
     ],
     explain: "Regularization discourages a model from becoming too complex by adding a penalty term to the loss — commonly the sum of squared weights (L2/ridge) or absolute weights (L1/lasso). This shrinks the weights toward zero, trading a little extra training error for better performance on unseen data. It is one of the main tools for combating overfitting.",
     simple: "It is a leash on the model: you fine it for getting too complicated, which stops it from memorising quirks in the training data. A slightly humbler model usually does better on new data.",

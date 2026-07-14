@@ -543,10 +543,10 @@
     q: "In logistic regression, what is the sigmoid (logistic) function?",
     choices: [
       "An S-shaped function that squashes any real number into a value between 0 and 1",
-      "A function that sums the absolute differences of two vectors",
-      "A function that returns the most common class among neighbours",
-      "A function that scales features to zero mean and unit variance",
-      "A straight-line function mapping inputs directly to outputs"
+      "A function that sums the absolute coordinate differences of two vectors, giving the L1 distance",
+      "A function that returns the single most common class label among the nearest neighbours",
+      "A function that scales each feature to have zero mean and exactly unit variance before fitting",
+      "A straight-line linear function mapping the inputs directly to unbounded numeric outputs"
     ],
     explain: "The sigmoid, σ(z) = 1 / (1 + e^-z), maps the unbounded linear score z into the interval (0, 1), so it can be read as a probability. It is near 0 for very negative z, near 1 for very positive z, and 0.5 at z = 0. It is what converts logistic regression's linear score into a probability.",
     simple: "It is an S-shaped squasher: feed it any number and it hands back something between 0 and 1. Big positive numbers come out near 1, big negatives near 0, and zero comes out at one-half.",
@@ -566,10 +566,10 @@
     q: "In logistic regression, what is the decision threshold?",
     choices: [
       "The probability cutoff above which a case is assigned to the positive class",
-      "The weighted sum of features before the sigmoid is applied",
-      "The rate at which the model updates its weights",
-      "The number of features included in the model",
-      "The intercept term added to the linear score"
+      "The raw weighted sum of all the features computed before the sigmoid is ever applied",
+      "The learning rate that controls how fast the model updates its weights each step",
+      "The total number of input features that are included in the fitted model",
+      "The constant intercept or bias term that is added onto the linear score"
     ],
     explain: "Logistic regression outputs a probability; the decision threshold (default 0.5) is the value above which the prediction becomes the positive class. Raising or lowering it trades off precision and recall to suit the application. It converts a continuous probability into a hard class decision.",
     simple: "The model gives a probability, and the threshold is the line you draw to say 'above this, call it positive'. Move the line and you change how cautious the model is.",
@@ -589,10 +589,10 @@
     q: "In logistic regression, what is a coefficient (weight)?",
     choices: [
       "A learned number multiplying a feature that sets how strongly it pushes the prediction",
-      "The probability the model assigns to the positive class",
-      "The cutoff used to convert a probability into a class",
-      "The count of training examples in each class",
-      "The distance between two examples in feature space"
+      "The final probability the model assigns to the positive class after the sigmoid",
+      "The decision-threshold cutoff value used to convert a predicted probability into a hard class label",
+      "The raw count of training examples that happen to belong to each individual class",
+      "The measured distance between two separate examples in the model's feature space"
     ],
     explain: "Each feature has a coefficient (weight) learned during training; the model multiplies the feature by its coefficient and sums the results to form the linear score. A larger magnitude means the feature has more influence, and the sign tells which class it favours. In log-odds terms, a coefficient is the change in log-odds per unit of the feature.",
     simple: "Each clue gets a dial that says how much it matters and in which direction. A big positive dial means 'this clue strongly points to yes'; a negative one points to 'no'.",
@@ -612,10 +612,10 @@
     q: "In logistic regression, what is an odds ratio?",
     choices: [
       "The factor by which the odds of the outcome multiply for a one-unit increase in a feature",
-      "The probability the model assigns to the positive class",
-      "The difference between two predicted probabilities",
-      "The ratio of correct to incorrect predictions on the test set",
-      "The sum of all the model's coefficients"
+      "The final probability that the model assigns to the positive class after passing through the sigmoid",
+      "The plain arithmetic difference between two separate predicted probabilities",
+      "The ratio of correct to incorrect predictions counted on the held-out test set",
+      "The total sum of all of the model's learned coefficients added together"
     ],
     explain: "For a logistic regression coefficient w, the odds ratio is e^w: increasing that feature by one unit multiplies the odds of the positive outcome by e^w. An odds ratio above 1 means the feature raises the odds; below 1 means it lowers them. It is the standard way to interpret a coefficient's effect.",
     simple: "It says 'bump this feature up by one and the odds change by this multiplier'. An odds ratio of 2 means one more unit doubles the odds of a yes.",
@@ -635,10 +635,10 @@
     q: "In logistic regression, what is the softmax function?",
     choices: [
       "A function that turns a vector of scores into class probabilities that are positive and sum to 1",
-      "A function that squashes a single score into a 0-to-1 value",
-      "A function that picks the single largest score and discards the rest",
-      "A function that measures distance between two feature vectors",
-      "A function that scales each feature to unit variance"
+      "A function that squashes only a single score into a 0-to-1 value, as the sigmoid does",
+      "A function that hard-picks the single largest score and completely discards all of the others, called argmax",
+      "A function that measures the straight-line distance between two feature vectors",
+      "A function that scales each individual feature to have exactly unit variance"
     ],
     explain: "Softmax generalises the sigmoid to multiple classes: given one score per class, it exponentiates each and normalises so the outputs are non-negative and sum to 1, forming a probability distribution over classes. Multinomial (multiclass) logistic regression uses it to produce class probabilities. The largest score gets the largest probability.",
     simple: "When there are several classes, softmax turns each class's score into a slice of a pie that adds up to 100%. Bigger scores get bigger slices, and all the slices together make one whole.",
@@ -658,10 +658,10 @@
     q: "In logistic regression, what is the log loss (cross-entropy) cost function?",
     choices: [
       "A loss that penalises predicted probabilities by how far and how confidently they miss the true label",
-      "A loss equal to the count of misclassified examples",
-      "A loss that squares the difference between predicted and true numeric values",
-      "A loss that measures the distance between nearest neighbours",
-      "A loss that rewards the model for large coefficients"
+      "A loss equal simply to the raw count of misclassified examples, ignoring any confidence",
+      "A loss that squares the difference between the predicted and the true numeric values, as in regression",
+      "A loss that measures the average distance between the nearest neighbours in feature space",
+      "A loss that actively rewards the model for producing large coefficient weights"
     ],
     explain: "Log loss (binary cross-entropy) is −[y·log(p) + (1−y)·log(1−p)] averaged over examples, where p is the predicted probability. It grows sharply when the model is confidently wrong and is small when confident and right, so it rewards well-calibrated probabilities. Logistic regression is trained by minimising it (equivalently, maximising likelihood).",
     simple: "It scores the model on its probabilities, not just right/wrong. Being confidently wrong ('99% sure' but wrong) is punished brutally; being confidently right is barely penalised.",

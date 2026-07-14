@@ -375,10 +375,10 @@
     q:"What is MUTUAL INFORMATION as a feature-selection score?",
     choices:[
       "A measure of how much knowing a feature reduces uncertainty about the target, capturing even non-linear links",
-      "A measure that only detects straight-line (linear) relationships, like Pearson correlation",
-      "The number of times two features take the same value",
-      "The variance of a feature divided by the variance of the target",
-      "A count of how many rows are missing values in both a feature and the target"
+      "A measure that only ever detects straight-line, strictly linear relationships, exactly like ordinary Pearson correlation does",
+      "The raw number of separate times that two different features happen to take on precisely the same value across all the rows",
+      "The plain variance of a single feature divided by the variance of the target column, giving one simple summary ratio",
+      "A running count of how many individual rows are missing their values in both a given feature and the target at the same time"
     ],
     explain:"Mutual information measures the reduction in uncertainty about the target once you know a feature — it is zero only when they are fully independent. Unlike correlation, it captures non-linear and non-monotonic relationships, so it can flag a useful feature whose link to the target is curved or U-shaped. That makes it a powerful filter score.",
     simple:"Mutual information asks: how much does knowing this column tell me about the target? It catches curvy relationships that plain correlation would miss.",
@@ -401,10 +401,10 @@
     q:"What is CORRELATION-BASED feature selection?",
     choices:[
       "Keeping features that correlate well with the target while removing ones that are highly correlated with each other",
-      "Keeping only the features that correlate strongly with each other and ignoring the target",
-      "Removing every feature that has any correlation with the target to avoid leakage",
-      "Selecting features purely by how many unique values they contain",
-      "Combining correlated features into principal components"
+      "Keeping only those features that correlate strongly with each other while completely ignoring the actual target column itself",
+      "Removing every single feature that shows any correlation at all with the target, purely as a way of avoiding data leakage",
+      "Selecting the features purely by counting up how many distinct unique values each one of them happens to contain",
+      "Combining all of the correlated features together into a smaller set of new principal component directions instead"
     ],
     explain:"Correlation-based selection has two goals at once: relevance and low redundancy. It favours features strongly correlated with the target, but among a group of features that are highly correlated with EACH OTHER, it keeps just one — the rest are redundant. This yields a compact set that covers the signal without duplication.",
     simple:"Correlation-based selection keeps columns that track the target but drops ones that just echo each other. You want relevant, non-duplicate features.",
@@ -424,10 +424,10 @@
     q:"What is Recursive Feature Elimination (RFE)?",
     choices:[
       "It trains a model, drops the weakest feature, retrains, and repeats until the desired number of features remains",
-      "It scores every feature once and keeps the top ones without ever retraining",
-      "It adds features one at a time starting from an empty set",
-      "It removes rows with recursive outliers until the data is clean",
-      "It randomly deletes features until accuracy drops"
+      "It scores every feature just once up front and then keeps only the top ones without ever retraining the model again",
+      "It adds the features back in one at a time, always starting from a completely empty set and growing it steadily upward",
+      "It removes the rows that contain recursive statistical outliers, one pass after another, until the data is finally clean",
+      "It deletes the features completely at random, one after another in turn, until the validation accuracy finally starts to drop"
     ],
     explain:"RFE is a wrapper that works backwards: fit the model, rank features by importance or coefficient size, remove the least important, then refit and repeat. By retraining after each removal it accounts for how the remaining features interact. It often finds strong compact subsets, but the repeated retraining makes it computationally heavy.",
     simple:"RFE trains the model, kicks out the weakest feature, trains again, and keeps going until only the best few remain. It's thorough but slow.",
@@ -447,10 +447,10 @@
     q:"Why is RFE often described as computationally EXPENSIVE?",
     choices:[
       "It retrains the whole model once for (roughly) every feature it removes, so cost grows with the feature count",
-      "It stores the entire dataset in memory many times over",
-      "It requires a GPU that most laptops do not have",
-      "It uses a slow statistical test that filters cannot use",
-      "It has to label the data by hand before each step"
+      "It has to store the entire dataset in working memory many separate times over, which quickly exhausts the machine's RAM",
+      "It requires a specialised high-end GPU that most ordinary laptops and desktop machines simply do not come equipped with",
+      "It relies on a notoriously slow statistical significance test that the cheaper filter methods are somehow unable to use",
+      "It has to re-label every single row of the data entirely by hand before it is allowed to proceed to each elimination step"
     ],
     explain:"RFE removes features one (or a few) at a time and refits the model after each removal. With many features that means many full training runs — remove-and-retrain repeated dozens or hundreds of times. Each retrain has the model's normal cost, so total time scales with the number of features being eliminated, which is why RFE is slow on wide datasets.",
     simple:"RFE trains the model again every time it drops a feature. With hundreds of features that's hundreds of trainings, so it gets slow fast.",
@@ -470,10 +470,10 @@
     q:"How does LASSO (L1) regression perform feature selection?",
     choices:[
       "Its L1 penalty shrinks weak coefficients to EXACTLY zero, so those features drop out automatically",
-      "It ranks features by correlation and deletes the bottom half before training",
-      "It averages the coefficients of correlated features so none is ever zero",
-      "It adds a squared penalty that shrinks coefficients but never reaches zero",
-      "It removes rows whose target is an outlier during fitting"
+      "It ranks all of the features by their correlation and then simply deletes the entire bottom half of them before training",
+      "It quietly averages together the coefficients of correlated features so that not a single one of them is ever exactly zero",
+      "It adds a squared L2 penalty that steadily shrinks the coefficients but never actually drives any of them all the way to zero",
+      "It removes the rows whose target value happens to look like an outlier while the model is still being fitted to the data"
     ],
     explain:"Lasso adds an L1 penalty (the sum of absolute coefficient values) to the loss. The geometry of this penalty drives many coefficients to precisely zero as the penalty strength grows, effectively removing those features. This makes Lasso an embedded method: it fits a model and selects features in one step. (Ridge's L2 penalty only shrinks toward zero, never to it.)",
     simple:"Lasso adds a penalty that pushes weak feature weights all the way to zero. A zero weight means that feature is dropped — selection happens as it trains.",

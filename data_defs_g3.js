@@ -323,10 +323,10 @@
     q: "What is boosting?",
     choices: [
       "An ensemble strategy that trains weak learners SEQUENTIALLY, each focusing on the examples the previous learners got wrong, and combines them into one strong learner",
-      "An ensemble strategy that trains many independent learners in parallel and averages them",
-      "A strategy that increases a model's learning rate over time to speed up training",
-      "A strategy that duplicates the strongest single model many times for stability",
-      "A strategy that boosts the resolution of the input features before training"
+      "An ensemble strategy that trains many fully independent learners in parallel on separate resamples and then averages their predictions together to smooth out variance",
+      "A training strategy that steadily increases a model's learning rate over time to speed up convergence, taking larger and larger optimization steps as the run goes on",
+      "A strategy that duplicates the single strongest model many times over and averages the identical copies together to squeeze out a little more prediction stability",
+      "A preprocessing strategy that boosts the resolution of the input features before training, upsampling coarse columns into finer-grained ones the model can then split on"
     ],
     explain: "Boosting turns a collection of weak learners (only slightly better than chance) into a strong one by training them in sequence. Each learner concentrates on the mistakes left by its predecessors — via re-weighted examples (AdaBoost) or by fitting residuals/gradients (gradient boosting). The learners are then combined, typically as a weighted sum. This contrasts with bagging, which trains learners independently and in parallel.",
     simple: "Boosting trains models one after another, and each one pays special attention to what the last ones messed up. Together they add up to something strong.",
@@ -351,10 +351,10 @@
     q: "In gradient boosting, what is the learning rate (shrinkage)?",
     choices: [
       "A factor between 0 and 1 that scales down each new tree's contribution, so the ensemble learns in small careful steps and generalizes better",
-      "The depth to which each individual boosting tree is grown",
-      "The fraction of rows sampled for each boosting round",
-      "The number of trees added before training stops",
-      "The rate at which the training data is streamed into memory"
+      "The maximum depth to which each individual boosting tree is grown before it must stop splitting, fixing how many questions one weak learner is allowed to ask",
+      "The fraction of training rows randomly sampled for each boosting round, controlling how much of the data every individual tree in the sequence gets to fit on",
+      "The total number of trees added to the ensemble before training halts, setting the length of the whole boosting sequence in advance of the run",
+      "The rate at which the training data is streamed into memory during fitting, tuned to keep the hardware busy without exhausting the available RAM"
     ],
     explain: "The learning rate η multiplies every tree before it is added to the ensemble. A small η (e.g. 0.1 or 0.01) means each tree corrects only a fraction of the current error, so the model improves gradually and is less likely to overfit — but it needs more trees to converge. Learning rate and number of trees trade off directly; tuning them together is central to gradient boosting.",
     simple: "The learning rate says how big a step each new tree is allowed to take. Small steps are safer and generalize better, but you need more of them.",
@@ -379,10 +379,10 @@
     q: "In boosting, what is an 'additive model'?",
     choices: [
       "A model whose prediction is the SUM of many simple base functions (trees), each added one at a time to reduce the remaining error",
-      "A model that adds a constant offset to the predictions of a single decision tree",
-      "A model that adds new features to the dataset during training",
-      "A model formed by adding together the class probabilities of two independent classifiers",
-      "A model that adds noise to the inputs to make training more robust"
+      "A model that adds a fixed constant offset to the predictions of a single decision tree, shifting all of its outputs up or down by the very same learned amount",
+      "A model that keeps adding brand-new engineered features to the dataset all through training, growing the input columns until the measured loss finally stops falling",
+      "A model formed by adding together the class probabilities of two independent classifiers and then renormalizing those totals back into one valid probability distribution",
+      "A model that adds small random noise to the inputs on every pass to make the final trained predictor more robust to perturbations it may face at test time"
     ],
     explain: "Boosting builds an additive model of the form F(x) = f0 + η·t1(x) + η·t2(x) + … : a running sum of base learners. Each stage adds one more term chosen to reduce the current loss, so the final prediction is literally the accumulation of many small corrective trees. This additive, stagewise structure is what makes boosting a form of gradient descent in function space.",
     simple: "An additive model is just a big sum: start with a baseline, then keep adding small trees, each nudging the total closer to the truth.",
@@ -407,10 +407,10 @@
     q: "In boosting, what does 'sequential training' mean?",
     choices: [
       "Each learner is trained AFTER the previous ones and depends on their results, because it targets the errors they left behind — so the learners cannot be built in parallel",
-      "The training rows are fed to the model in a fixed sorted order",
-      "Each learner is trained on a different sequential slice of the timeline",
-      "The features are added to the model one column at a time in sequence",
-      "Several learners are trained at once and then arranged into a sequence afterward"
+      "The training rows are fed to the model in one fixed sorted order, cycling through that same sequence every epoch so the updates always arrive in the same arrangement",
+      "Each learner is trained on a different sequential slice of the timeline, so earlier models cover the oldest data while later ones only ever see the most recent rows",
+      "The input features are added to the model one column at a time in sequence, refitting after each addition until every available feature has finally been folded in",
+      "Several learners are all trained at once in parallel and only afterward arranged into a sequence, so their ordering is purely cosmetic and carries no real dependency"
     ],
     explain: "Boosting is inherently sequential: learner m is fit to the residuals or re-weighted errors produced by learners 1…m-1, so you must finish one before starting the next. This dependency is the key structural difference from bagging, whose learners are independent and can be trained fully in parallel. It also makes boosting harder to parallelize across trees.",
     simple: "Sequential means each new model waits for the previous one, because it's built to fix that model's mistakes. You can't start tree 5 until trees 1–4 are done.",
@@ -435,10 +435,10 @@
     q: "In gradient boosting, what is the 'loss gradient' (pseudo-residual) that each new tree is fit to?",
     choices: [
       "The negative derivative of the loss with respect to the current prediction for each row — the direction in which changing the prediction most reduces the loss",
-      "The difference between the largest and smallest prediction in the batch",
-      "The slope of the decision boundary drawn by the previous tree",
-      "The gradient of each feature's values across the sorted dataset",
-      "The rate at which the learning rate decays over the boosting rounds"
+      "The difference between the largest and the smallest prediction in the current batch, used as a crude measure of how spread out the ensemble's outputs have become",
+      "The slope of the decision boundary drawn by the previous tree, measured where it separates the two classes and passed forward to help steer the very next split",
+      "The gradient of each feature's raw values taken across the sorted dataset, capturing how quickly a column changes from one ordered row to the next one",
+      "The rate at which the learning rate itself decays over successive boosting rounds, shrinking every new tree's step a little more than the round just before it"
     ],
     explain: "Gradient boosting generalizes 'fit the residuals' to any differentiable loss by fitting each new tree to the negative gradient of the loss with respect to the current predictions — the pseudo-residuals. For squared error these gradients are exactly the ordinary residuals; for other losses (log-loss, etc.) they are the appropriate generalization. Following them steps the ensemble downhill on the loss, which is why it's called gradient boosting.",
     simple: "The loss gradient tells each new tree which way to push every prediction to make the error drop fastest. The tree learns to point predictions in that direction.",
@@ -463,10 +463,10 @@
     q: "What is a decision stump?",
     choices: [
       "A decision tree with a single split (depth 1) — one feature, one threshold, two leaves — a classic weak learner used in boosting",
-      "A decision tree that has been fully pruned back to only its root node with no splits",
-      "The leftover branch of a tree after its most important split is removed",
-      "A tree that splits on every feature exactly once, in order",
-      "A tree whose leaves all predict the same majority class"
+      "A decision tree that has been fully pruned back to only its root node with no splits at all, so it returns one constant prediction for every single input row",
+      "The single leftover branch of a tree that remains after its most important split has been removed, kept on afterward as a smaller standalone sub-tree",
+      "A decision tree that splits on every available feature exactly once, in a fixed preset order, until each column has contributed one node to the path",
+      "A decision tree whose leaves are all forced to predict the same majority class, so it agrees with the base rate no matter which branch a given row follows"
     ],
     explain: "A decision stump is the smallest useful tree: it makes a single decision on one feature and produces two leaves. On its own it is a weak learner, barely better than chance, but boosting chains many stumps (or shallow trees) together, each correcting the last, to build a strong model. Shallow base learners keep each step's contribution small and controllable.",
     simple: "A decision stump is a tree with just one question. Alone it's weak, but boosting stacks lots of them into something powerful.",
@@ -491,10 +491,10 @@
     q: "In gradient boosting, what is 'early stopping'?",
     choices: [
       "Halting the addition of trees once a validation metric stops improving (for a set number of rounds), to prevent the ensemble from overfitting",
-      "Stopping the growth of an individual tree once it reaches a maximum depth",
-      "Ending training as soon as the learning rate falls below a threshold",
-      "Removing the first few trees whose contribution turned out to be too small",
-      "Stopping when every training row has been classified correctly"
+      "Stopping the growth of an individual tree once it reaches its preset maximum depth, capping how many nested splits that single weak learner is allowed to make",
+      "Ending the whole training run as soon as the learning rate has decayed below a fixed threshold, treating that tiny remaining step size as the signal to quit",
+      "Removing the first few trees whose individual contribution to the ensemble turned out to be too small, then continuing to add fresh new ones in their place",
+      "Stopping the very moment every single training row has been classified correctly, taking a perfect fit on the training set as the cue that training is finished"
     ],
     explain: "Because boosting keeps reducing training loss, adding too many trees eventually overfits. Early stopping monitors performance on a validation set and stops adding trees when that score hasn't improved for a chosen number of rounds ('patience'), keeping the number of trees that generalized best. It's a simple, effective regularizer and a standard feature of XGBoost, LightGBM, and sklearn's boosters.",
     simple: "Early stopping watches a validation score and quits adding trees once it stops getting better — so the model doesn't keep training itself into overfitting.",
@@ -522,10 +522,10 @@
     q: "In gradient boosting, what does 'regularization' refer to?",
     choices: [
       "Techniques that constrain the ensemble's complexity — shrinkage, shallow trees, subsampling, and penalties on leaf weights — to curb overfitting",
-      "Rescaling every input feature to have zero mean and unit variance before training",
-      "Ensuring the training rows are evenly spaced along each feature axis",
-      "Rounding the predicted probabilities to regular intervals for readability",
-      "Forcing every tree in the ensemble to have exactly the same structure"
+      "Rescaling every input feature to have zero mean and unit variance before training, so no single column dominates the splits purely because it happens to have a larger scale",
+      "Ensuring the training rows are evenly spaced along each feature axis, resampling the data until it is spread out uniformly before any tree in the ensemble is grown",
+      "Rounding the ensemble's predicted probabilities to regular fixed intervals for readability, snapping each output value to the nearest clean round percentage",
+      "Forcing every tree in the ensemble to share exactly the same structure, so they all split on identical features at identical thresholds purely for consistency"
     ],
     explain: "Left unchecked, boosting can fit training data arbitrarily well and overfit. Regularization bundles the controls that fight this: a small learning rate (shrinkage), limited tree depth and minimum leaf size, row and column subsampling, early stopping, and explicit penalties on the number and magnitude of leaf weights (the λ and γ terms in XGBoost). Together they trade a little training fit for better generalization.",
     simple: "Regularization is all the knobs that stop a booster from over-memorizing: small steps, shallow trees, sampling, and penalties for getting too complex.",
@@ -553,10 +553,10 @@
     q: "What is subsampling in stochastic gradient boosting?",
     choices: [
       "Fitting each boosting tree on a random fraction of the training rows (drawn without replacement), which injects randomness that speeds training and reduces overfitting",
-      "Downsampling the majority class so the training set becomes perfectly balanced",
-      "Reducing the resolution of continuous features into coarse bins before training",
-      "Averaging every few consecutive rows into a single summary row",
-      "Sampling the predictions of the finished ensemble to estimate uncertainty"
+      "Downsampling the majority class before every round so the training set becomes perfectly balanced, discarding the excess rows until each class contributes an equal share",
+      "Reducing the resolution of the continuous features into coarse fixed bins before training, so that each column takes only a handful of discrete values the trees can split on",
+      "Averaging every few consecutive training rows together into a single summary row, shrinking the dataset into fewer, smoother points before any tree is ever fit to it",
+      "Sampling the predictions of the already-finished ensemble many times over to estimate the uncertainty around each output, without changing at all how it was trained"
     ],
     explain: "Stochastic gradient boosting adds randomness by training each tree on a random subsample (e.g. 50–80%) of the rows rather than all of them. Like bagging's resampling, this decorrelates the trees and acts as a regularizer, often improving generalization, while also cutting the compute per round. Column (feature) subsampling per tree or per split is a related variant.",
     simple: "Subsampling means each new tree only sees a random slice of the data. That randomness makes the trees a bit different and helps the model generalize.",

@@ -429,10 +429,10 @@
     q: "What is grid search for hyperparameters?",
     choices: [
       "Trying every combination from a fixed grid of candidate values and keeping the best-scoring one",
-      "Randomly sampling a handful of settings and stopping when one looks good enough",
-      "Letting the model adjust its own hyperparameters during training",
-      "Searching the internet for hyperparameters other people used",
-      "Increasing one hyperparameter until the score stops improving, then freezing it"
+      "Randomly sampling just a small handful of scattered settings and then stopping the search as soon as one looks good enough",
+      "Simply letting the model quietly adjust and set all of its own hyperparameters entirely by itself during ordinary training",
+      "Searching around on the open internet for whatever hyperparameter values other people happened to use on their own projects",
+      "Steadily increasing one single hyperparameter until the validation score finally stops improving and then freezing it there"
     ],
     explain: "Grid search lays out a grid — e.g. depth in {3,5,7} crossed with learning rate in {0.01, 0.1} — and evaluates every single combination on validation data, keeping the winner. It's exhaustive and simple, but the number of combinations multiplies with each hyperparameter, so it gets expensive fast.",
     simple: "List the values you want to try for each setting, then test every possible combination and keep the best. Thorough and easy to understand — but the combinations pile up quickly when you have several knobs.",
@@ -456,10 +456,10 @@
     q: "What is random search for hyperparameters?",
     choices: [
       "Sampling random combinations of hyperparameter values for a fixed budget of trials, keeping the best",
-      "Assigning every hyperparameter a random value once and shipping that model",
-      "Randomly shuffling the training data before each epoch of training",
-      "Letting a random forest choose the hyperparameters automatically",
-      "Trying every grid combination but in a randomised order"
+      "Assigning every single hyperparameter one random value exactly once at the start and then immediately shipping that model",
+      "Randomly reshuffling the order of all the training data rows before each and every separate epoch of the training run",
+      "Simply letting a random forest algorithm quietly choose all of the hyperparameters for you fully automatically on its own",
+      "Trying out every single combination from the full grid, exactly like grid search, but visiting them all in a randomised order"
     ],
     explain: "Random search picks hyperparameter values at random (from ranges you specify) for a set number of trials — say 30 — and keeps the best. Surprisingly, for the same budget it often beats grid search, because when only a few hyperparameters really matter, random sampling explores more distinct values of those important ones instead of wasting trials on a rigid lattice.",
     simple: "Instead of a rigid grid, just try random combinations for a fixed number of attempts and keep the best. It sounds crude, but for the same budget it often finds a better setting than grid search, especially when only a couple of knobs really matter.",
@@ -483,10 +483,10 @@
     q: "What is stratified k-fold cross-validation?",
     choices: [
       "k-fold where each fold is built to keep the same class proportions as the whole dataset",
-      "k-fold where the folds are sorted by the target value from lowest to highest",
-      "k-fold applied separately to each feature and then averaged",
-      "k-fold that uses more folds for the majority class than the minority class",
-      "k-fold where each fold contains examples from only one class"
+      "A variant of k-fold where all of the folds are carefully sorted by the target value in order from the lowest up to the highest",
+      "A variant of k-fold that is applied completely separately to each individual feature column and then simply averaged together",
+      "A variant of k-fold that deliberately uses more folds for the majority class than it ever does for the smaller minority class",
+      "A variant of k-fold where each individual fold is built to contain training examples drawn from only one single target class"
     ],
     explain: "With plain random folds and an imbalanced target, some folds can end up with very few (or zero) minority-class examples, making their scores meaningless. Stratified k-fold ensures every fold mirrors the overall class balance, so each fold is a fair miniature of the whole. It's the sensible default for classification.",
     simple: "If only 5% of your data is the rare class, a random fold might get none of it. Stratified k-fold makes sure every fold has roughly the same class mix as the full dataset, so no fold is lopsided. Use it by default for classification.",
@@ -510,10 +510,10 @@
     q: "You're forecasting next month's sales from past months. Why is ordinary shuffled k-fold the wrong way to validate, and what should you use instead?",
     choices: [
       "Shuffling leaks the future into the training folds; use a time-based split that always trains on the past and tests on later data",
-      "Shuffling is fine; time series just need more folds than usual",
-      "Shuffling is wrong only because it's slower; use a random 80/20 split instead",
-      "Use leave-one-out on random rows to squeeze out more folds",
-      "Time series can't be cross-validated at all, so just use the training score"
+      "Ordinary shuffling is perfectly fine to use in this situation; a time-series problem simply needs a larger number of folds than usual to work well",
+      "Shuffling is wrong here only in the narrow sense that it happens to run a little bit slower, so you should just use a plain random 80/20 split instead",
+      "Use leave-one-out cross-validation over randomly chosen individual rows as a clever way to squeeze many more usable folds out of the same dataset",
+      "Time-series data genuinely cannot ever be cross-validated in any meaningful way at all, so you should just fall back on the raw uncorrected training score"
     ],
     explain: "In a time series, order carries information. Shuffled k-fold lets the model train on June to predict May — using future data to predict the past, which never happens in deployment and produces wildly optimistic scores. A time-based (forward-chaining) split always trains on earlier data and validates on later data, matching how you'll actually use the model.",
     simple: "You can't peek at the future to predict the past. Shuffling mixes future months into training and gives fake-good scores. Instead, always train on earlier data and test on later data, the way you'd really use the model.",
@@ -537,10 +537,10 @@
     q: "You have 6 hyperparameters to tune and a fixed compute budget. Why do practitioners often prefer random search over a full grid here?",
     choices: [
       "A grid's combinations explode with each knob, while random search covers the space far better for the same fixed budget",
-      "Random search always finds the exact optimum that grid search misses",
-      "Grid search cannot handle more than two hyperparameters at all",
-      "Random search trains each model faster than grid search does",
-      "Grid search only works on regression, not classification"
+      "Random search is somehow guaranteed to always find the one exact global optimum that a regular grid search would completely miss",
+      "Grid search simply cannot handle or cope with more than two separate hyperparameters at the same time under any circumstances at all",
+      "Random search somehow manages to train each individual candidate model noticeably faster than grid search ever manages to train one",
+      "Grid search only ever works correctly on regression problems and never once functions properly on classification problems at all"
     ],
     explain: "With 6 knobs, even 4 values each is 4^6 = 4096 grid points — often unaffordable. Random search spends the same budget sampling widely, and crucially it tries many distinct values of the hyperparameters that actually matter, instead of repeating the same few grid values. That's why for the same number of trials it usually finds a comparable or better setting in high dimensions.",
     simple: "With lots of knobs, a full grid has too many combinations to afford. Random search spreads the same budget across the space and tends to hit good values of the knobs that matter, so it's the better bet when you have many hyperparameters.",
@@ -564,10 +564,10 @@
     q: "You tried 200 model variants and picked the one with the best validation score. Why is that winning validation score likely too optimistic?",
     choices: [
       "With enough tries, some model looks best partly by fitting the validation set's random noise",
-      "Validation sets are always smaller than test sets, so they read low",
-      "The 200th model always overfits more than the first one by design",
-      "Validation scores drift upward simply because time has passed",
-      "Comparing many models corrupts the training data they share"
+      "Validation sets are always built to be strictly smaller than the test sets, so their reported scores consistently read low",
+      "The two-hundredth model you happen to try always overfits more than the very first one did, purely by design and by ordering",
+      "Validation scores naturally drift steadily upward over time simply because more clock time has quietly passed during tuning",
+      "Comparing that many separate models slowly corrupts the shared training data that all of the candidates were fitted on"
     ],
     explain: "Each validation score has some random noise. Try enough models and the 'winner' is often the one that got the luckiest draw of that noise, not the one that's genuinely best — you've overfit the validation set through sheer number of comparisons. That's why the winner's validation score overstates its true quality, and you need a fresh test set to confirm.",
     simple: "If you try 200 models and keep the best score, some of that top score is just luck — the winner rode the validation set's noise. The more you compare, the more optimistic that best number gets. Confirm it on a fresh test set.",
@@ -591,10 +591,10 @@
     q: "Your learning curve shows validation accuracy has flattened out and adding more training data barely helps. What does this tell you to do next?",
     choices: [
       "More data won't help much — invest in better features or a more capable model instead",
-      "Keep collecting data; the curve will eventually shoot up again",
-      "Reduce the training set size to make the model train faster",
-      "Switch to a simpler model since data has stopped mattering",
-      "Nothing — a flat learning curve means the model is already perfect"
+      "Just keep on collecting more and more training data, because the flattened curve will eventually shoot sharply upward again",
+      "Deliberately reduce the overall training-set size from here so that the model manages to train noticeably faster on each run",
+      "Switch right away to a strictly simpler model, given that the amount of training data has apparently stopped mattering at all",
+      "Do nothing further at all, since a perfectly flat learning curve is a clear sign that the model is already completely perfect"
     ],
     explain: "A learning curve plots performance against training-set size. When it plateaus, you've hit the ceiling of what THIS model can extract from THIS data — more rows just retrace the flat line. The lever to pull is a richer representation: better features, or a more expressive model. If instead the curve were still climbing, more data would be the cheaper win.",
     simple: "The learning curve shows whether more data would help. If it's still rising, collect more data. If it's flat, more data is wasted effort — you need better features or a stronger model to break through.",
@@ -618,10 +618,10 @@
     q: "On a 200-row test set, model A scores 84% and model B scores 85%. A teammate declares B the winner. What's the sound response?",
     choices: [
       "A 1-point gap on 200 rows is well within noise — the difference isn't statistically meaningful",
-      "B clearly wins; any positive gap settles it regardless of sample size",
-      "A wins, because smaller models are always safer to deploy",
-      "Retrain B ten times and ship it if it wins most rounds on the same 200 rows",
-      "The gap proves B generalises better to all future data"
+      "Model B clearly wins outright here, because any positive gap at all settles the whole matter regardless of the sample size",
+      "Model A actually wins this comparison, simply because smaller and lighter models are always inherently safer to deploy",
+      "Retrain model B about ten separate times and then ship it if it happens to win most of those rounds on the same 200 rows",
+      "That single one-point gap firmly proves that model B will generalise strictly better than model A across all future data"
     ],
     explain: "On 200 rows, the margin of error on an accuracy estimate is roughly plus or minus 5 points — far larger than the 1-point gap. That gap could easily flip on a different 200 rows. To claim B is really better you'd need a bigger test set, cross-validation across folds, or a proper significance check. Treat tiny gaps on small data as ties.",
     simple: "On only 200 rows, scores naturally wobble by several points, so a 1-point lead is basically a coin flip. Don't crown a winner over noise. Either get more test data or compare across many folds before believing the gap.",

@@ -172,10 +172,10 @@
     "q": "t-SNE and PCA both do 'dimensionality reduction'. In plain terms, what is that?",
     "choices": [
       "Turning data with many features into fewer, so it's easier to visualise or model",
-      "Deleting rows until the dataset is small enough to load",
-      "Rounding every feature value to one decimal place",
-      "Merging duplicate columns that hold the same values",
-      "Reducing the number of clusters the data contains"
+      "Deleting whole rows one at a time until the dataset is finally small enough to load into memory",
+      "Rounding every single feature value in the whole table to just one decimal place",
+      "Merging together any duplicate columns that happen to hold exactly the same values",
+      "Reducing the total number of separate clusters that the data actually contains"
     ],
     "explain": "Dimensionality reduction squeezes many feature-columns down to a few new ones that keep most of the structure — for visualisation (usually 2-D), speed, denoising, or as compact inputs to a model. It's about columns (features), not rows.",
     "simple": "Real data can have hundreds of columns, and you can't see or easily model in hundreds of dimensions. Dimensionality reduction boils those down to a handful of new directions that still capture most of what matters — often just two, so you can plot it. It compresses FEATURES, not rows, and isn't rounding or de-duplicating.",

@@ -20,7 +20,7 @@
 
 {
   q: "What is the 'weighted score' that logistic regression computes for each case?",
-  choices: ["Each feature times its weight, all summed with the intercept", "The probability each feature gets after the sigmoid squash", "The count of features that push toward the positive class", "The largest single feature-times-weight term in the case", "The average of every feature value multiplied together"],
+  choices: ["Each feature times its weight, all summed with the intercept", "The probability each feature gets after the sigmoid squash", "The count of features that push toward the positive class", "The largest single feature-times-weight term, with the rest ignored", "The average of every feature value multiplied together, unweighted"],
   explain: "The model multiplies every feature by its learned weight, adds those products together, and adds the intercept. This single number, the linear combination w.x + b, is then handed to the sigmoid. It summarises the whole case in one value before any probability is formed.",
   simple: "It is like a scorecard: each answer is worth some points (its weight), and you add all the points up plus a starting bonus. One person, one final tally. That tally is the only thing the model reacts to next.",
   widget: {

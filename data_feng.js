@@ -106,8 +106,8 @@
     q: "What is ordinal encoding?",
     choices: [
       "Replacing ordered categories with integers that reflect their rank (small=0, medium=1, large=2)",
-      "Creating a separate 0/1 indicator column for every distinct category and dropping the original",
-      "Rescaling the raw numbers into the fixed range 0 to 1 using the column's minimum and maximum",
+      "Creating a separate 0/1 indicator column for every distinct category value and dropping the original text",
+      "Rescaling the raw numbers into the fixed range 0 to 1 using the column's own minimum and maximum values",
       "Removing every row that has a missing or blank category label before the model is ever trained",
       "Averaging the target value observed within each category and storing that mean as the new code"
     ],
@@ -162,10 +162,10 @@
     q: "What is standardization (z-score scaling) of a feature?",
     choices: [
       "Subtracting the mean and dividing by the standard deviation, so it has mean 0 and spread 1",
-      "Squeezing the values into the fixed range 0 to 1 using the column's minimum and maximum",
-      "Replacing each value with its rank order position, so the smallest becomes 1 and so on up",
-      "Taking the natural logarithm of every value to pull in a long, heavy right-hand tail",
-      "Turning the numeric feature into several 0/1 category columns split at equal-width cutoffs"
+      "Squeezing all of the values into the fixed range 0 to 1 using the column's minimum and maximum",
+      "Replacing each value with its rank order position, so the smallest becomes 1 and so on upward",
+      "Taking the natural logarithm of every value to pull in a long, heavy right-hand tail toward zero",
+      "Turning the numeric feature into several 0/1 category columns split at equal-width cutoff points"
     ],
     explain: "Standardization transforms a feature to z = (x − mean) / std, giving it mean 0 and standard deviation 1. Values then read as 'how many standard deviations from average', which suits many linear, distance, and gradient-based models. It does not bound values to a fixed range.",
     simple: "It re-centers a column on zero and stretches it so a spread of 1 is normal. A value of +2 then simply means 'two standard deviations above average'.",
@@ -782,8 +782,8 @@
     q: "What is feature hashing (the 'hashing trick')?",
     choices: [
       "Mapping categories to a fixed number of columns via a hash function, avoiding a giant one-hot matrix",
-      "Encrypting each of the feature values for data security so the raw categories can no longer be read",
-      "Sorting all of the features by their measured importance and keeping only the very top-ranked ones",
+      "Encrypting each of the feature values for the sake of data security so the raw categories cannot be read",
+      "Sorting all of the features by their own measured importance and keeping only the very top-ranked ones",
       "Filling every missing value in the row with a hash computed from that same row's other columns first",
       "Deleting all of the duplicate rows from the dataset by comparing a checksum of each full row first"
     ],

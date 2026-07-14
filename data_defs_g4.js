@@ -348,10 +348,10 @@
     q: "In machine learning, what is a train/validation/test split?",
     choices: [
       "Dividing the data into three parts: one to train on, one to tune choices on, and one held back untouched to estimate final performance",
-      "Rotating the data through many folds and averaging the resulting scores",
-      "Splitting each feature column into equal-width numeric bins",
-      "Separating a dataset into its positive and negative classes",
-      "Breaking the loss function into a bias term and a variance term"
+      "Rotating the entire dataset through many separate equal-sized folds in turn and averaging the validation scores that each of those rotations produces",
+      "Splitting each individual feature column into a set of equal-width numeric bins before any of the modelling work begins",
+      "Separating one single dataset into its positive cases and its negative cases so that each of the two groups can be studied on its own",
+      "Breaking the model's total loss function apart into one distinct bias term and one distinct separate variance term"
     ],
     explain: "The three-way split gives each part a distinct job: the training set fits the model, the validation set guides choices like hyperparameters and model selection, and the test set is opened only once at the end to give an honest estimate of real-world performance. Keeping the test set untouched during development is what prevents optimistic, self-fooling results.",
     simple: "You cut the data into three piles: one to learn from, one to tune settings on, and one you lock away until the very end to see how you truly did.",
@@ -376,10 +376,10 @@
     q: "In machine learning, what is the generalization gap?",
     choices: [
       "The difference between a model's performance on the training data and its performance on unseen data",
-      "The gap in time between training a model and deploying it to production",
-      "The difference between precision and recall at a chosen threshold",
-      "The number of features removed during dimensionality reduction",
-      "The distance between two clusters' centroids"
+      "The gap in calendar time between finishing the training of a model and actually deploying it into production",
+      "The difference between precision and recall as measured at one single chosen decision threshold on the test set",
+      "The number of input features that were removed from the data during a dimensionality-reduction step",
+      "The straight-line distance measured between the centroids of two separate clusters out in the feature space"
     ],
     explain: "The generalization gap is the shortfall between how well a model does on data it was trained on versus data it has never seen — for instance, training accuracy minus test accuracy. A small gap suggests the model generalises well; a large gap is a hallmark of overfitting. Watching this gap is a core way to diagnose whether a model will hold up in the real world.",
     simple: "It is how much better a model does on its practice data than on fresh data. A big gap is a warning sign that it memorised rather than learned.",
@@ -404,10 +404,10 @@
     q: "In machine learning, what is a learning curve?",
     choices: [
       "A plot of model performance against the amount of training data used, showing how the score improves as data grows",
-      "A plot of the true-positive rate against the false-positive rate across thresholds",
-      "A curve of precision falling as recall rises",
-      "A table of counts of true and false positives and negatives",
-      "The S-shaped curve the sigmoid function produces"
+      "A plot of the true-positive rate against the false-positive rate measured across the full range of decision thresholds",
+      "A curve tracing how precision steadily falls as recall is pushed higher by loosening the decision threshold",
+      "A table listing the counts of true positives, false positives, true negatives, and false negatives together",
+      "The characteristic S-shaped curve that the sigmoid activation function produces as its input sweeps through zero"
     ],
     explain: "A learning curve charts how a model's performance changes as it is given more and more training examples, usually plotting both training and validation scores. It reveals whether adding data would help, and whether the model is limited by high bias (curves plateau low and close together) or high variance (a wide gap between them). It is a key diagnostic for deciding next steps.",
     simple: "It shows how a model's score changes as you feed it more training data. If the curve is still climbing, more data should help; if it has flattened, more data won't.",
@@ -432,10 +432,10 @@
     q: "In hyperparameter tuning, what is grid search?",
     choices: [
       "Exhaustively trying every combination from a predefined grid of hyperparameter values and keeping the best-scoring one",
-      "Sampling hyperparameter combinations at random from specified ranges for a fixed number of trials",
-      "Adjusting the model's weights by stepping down the gradient of the loss",
-      "Splitting the data into k folds and averaging the validation scores",
-      "Stopping training as soon as validation performance stops improving"
+      "Sampling hyperparameter combinations at random from specified ranges for a fixed number of trials and keeping the best one",
+      "Adjusting the model's internal weights by repeatedly stepping downhill along the gradient of its loss function",
+      "Splitting the data into k separate folds and then averaging the validation scores obtained across all of the folds",
+      "Stopping the training process as soon as validation performance stops improving from one epoch to the next one"
     ],
     explain: "Grid search tunes hyperparameters by laying out a discrete grid of candidate values for each and evaluating every possible combination, usually with cross-validation, then selecting the combination that scores best. It is simple and thorough but its cost grows multiplicatively with the number of hyperparameters and values, so it can become expensive quickly.",
     simple: "You list a few values to try for each setting and test every possible combination, then keep the winner. Thorough, but the number of tries multiplies fast.",
@@ -460,10 +460,10 @@
     q: "In hyperparameter tuning, what is random search?",
     choices: [
       "Sampling hyperparameter combinations at random from specified ranges for a fixed number of trials, keeping the best",
-      "Exhaustively evaluating every combination on a predefined grid of values",
-      "Combining several models' predictions by majority vote",
-      "Rescaling each feature to zero mean and unit variance before training",
-      "Halting training once the validation loss stops falling"
+      "Exhaustively evaluating every single possible combination laid out on a predefined grid of hyperparameter values",
+      "Combining the predictions of several separately trained models together by taking a simple majority vote among them",
+      "Rescaling each feature so that it has zero mean and unit variance before the model is ever trained on the data",
+      "Halting the training run once the validation loss stops falling across several successive iterations of training"
     ],
     explain: "Random search picks hyperparameter combinations at random from the specified ranges and evaluates a fixed budget of them. Because it does not waste trials on an exhaustive grid, it often finds good settings faster than grid search, especially when only a few hyperparameters really matter — random sampling covers each important dimension with many distinct values.",
     simple: "Instead of trying every combination, you just try a set number of random ones and keep the best. It often finds a good setting faster, especially when only a couple of knobs matter.",
@@ -488,10 +488,10 @@
     q: "In model training, what is early stopping?",
     choices: [
       "Halting training once performance on a validation set stops improving, to prevent overfitting",
-      "Ending training the instant the training loss reaches zero",
-      "Removing features whose importance falls below a threshold",
-      "Splitting the data into k folds before any training begins",
-      "Reducing the learning rate to zero at the start of training"
+      "Ending the training run the very instant the training loss first reaches exactly zero on the training data",
+      "Removing any of the input features whose measured importance score happens to fall below a fixed chosen threshold",
+      "Splitting the whole dataset into k separate equal-sized folds before any of the model training has begun",
+      "Reducing the learning rate all the way down to zero right at the very start of the training run itself"
     ],
     explain: "Early stopping monitors a validation metric during iterative training and stops when that metric ceases to improve (often after a patience window), keeping the model from the point just before it began to overfit. It acts as a form of regularization: training long enough to learn the signal but not so long that it memorises noise.",
     simple: "You watch the score on a held-out set while training and stop the moment it stops getting better. That keeps the model from over-studying the training data.",

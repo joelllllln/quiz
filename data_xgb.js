@@ -404,10 +404,10 @@
     q:"What does min_child_weight do in XGBoost?",
     choices:[
       "It sets the minimum total instance weight (roughly rows) needed in a leaf to keep splitting",
-      "It sets the smallest learning rate allowed during training",
-      "It limits the number of child trees per parent tree",
-      "It weights the youngest rows more heavily than older ones",
-      "It caps how many features a child node may use"
+      "It sets the very smallest learning rate value that XGBoost is allowed to use at any point in training",
+      "It strictly limits the total number of child trees that each parent tree in the ensemble may spawn off",
+      "It weights the most recently added, youngest training rows far more heavily than all of the older ones",
+      "It caps exactly how many distinct feature columns any single child node in a tree is ever permitted to use"
     ],
     explain:"min_child_weight requires a certain amount of instance weight (in simple cases, a number of rows) in each resulting leaf before a split is allowed. Larger values stop the tree from creating tiny leaves that fit just a few noisy points, so it acts as a regularizer. Raising it makes trees more conservative and reduces overfitting.",
     simple:"min_child_weight is the minimum 'amount of data' a leaf must hold. Set it higher and XGBoost won't split off tiny leaves that only fit a handful of noisy rows, so it overfits less.",
@@ -423,10 +423,10 @@
     q:"You are detecting fraud: 1% of transactions are fraud. Your XGBoost model predicts 'not fraud' for almost everything. Best first fix?",
     choices:[
       "Set scale_pos_weight near the negative-to-positive ratio to up-weight fraud cases",
-      "Increase max_depth to 30 so trees can memorize the fraud rows",
-      "Remove the validation set so training sees more fraud examples",
-      "Switch the objective to squared-error regression",
-      "Lower the learning rate to 0.001 and keep trees fixed at 10"
+      "Increase max_depth all the way to 30 levels so that the trees can simply memorize the fraud rows",
+      "Remove the held-out validation set entirely so that training gets to see even more fraud examples",
+      "Switch the objective function over to plain squared-error regression instead of binary classification",
+      "Lower the learning rate down to just 0.001 while keeping the number of trees fixed at only 10 total"
     ],
     explain:"With 1% positives, the model can score high accuracy by always predicting the majority class, ignoring fraud. scale_pos_weight up-weights the rare positive class so its errors count more, pushing XGBoost to actually catch fraud. Setting it near the ratio of negatives to positives (about 99 here) is the standard starting point.",
     simple:"When fraud is only 1%, guessing 'not fraud' looks accurate but is useless. Tell XGBoost the rare class matters more with scale_pos_weight -- roughly the count of normal cases per fraud case -- so it stops ignoring them.",
@@ -442,10 +442,10 @@
     q:"Why does XGBoost's histogram tree method (tree_method='hist') speed up training?",
     choices:[
       "It buckets feature values into a few bins so it tests far fewer split points",
-      "It skips building trees entirely and fits one linear model",
-      "It trains on only the first 100 rows of the dataset",
-      "It removes regularization to save computation time",
-      "It caches the final predictions and reuses them each round"
+      "It skips building any decision trees entirely and instead just fits one single linear model",
+      "It trains using only the very first 100 rows of the dataset and ignores everything that comes after",
+      "It removes all of the regularization terms from the objective in order to save computation time",
+      "It caches the final round predictions and simply reuses them again during each of the later rounds"
     ],
     explain:"The exact greedy method evaluates every possible split point on every feature, which is slow on large data. The histogram method first bins each feature's values into a fixed number of buckets (say 256), then only considers splits at bucket edges. This dramatically cuts the number of candidate splits with little loss in accuracy, and it is the default for large datasets.",
     simple:"Instead of checking every single value as a possible split, the histogram method groups values into a handful of bins and only splits between bins. Far fewer things to check means much faster training.",
@@ -461,10 +461,10 @@
     q:"You set n_estimators = 5000 but pass a validation set with early_stopping_rounds = 50. What happens?",
     choices:[
       "Training stops early — often well before 5000 — once validation stalls for 50 rounds",
-      "All 5000 trees are always built regardless of the validation score",
-      "The 5000 is ignored and exactly 50 trees are built",
-      "It raises an error because the two settings conflict",
-      "Only the first 50 trees are kept and the rest are discarded unused"
+      "All of the full 5000 trees are always built every single time, regardless of the validation score",
+      "The 5000 setting is completely ignored and instead exactly 50 boosting trees end up getting built",
+      "It immediately raises a runtime error because these two conflicting settings simply cannot coexist",
+      "Only the very first 50 trees are ever kept, while all of the remaining trees are discarded unused"
     ],
     explain:"With early stopping, n_estimators is just an upper bound. XGBoost keeps adding trees while the validation metric improves and halts once it has not improved for 50 consecutive rounds, remembering the best iteration. So you can safely set a large n_estimators and let early stopping choose the real tree count.",
     simple:"Think of 5000 as a ceiling, not a target. Early stopping quits as soon as the validation score has gone 50 rounds without improving, so you usually end up with far fewer trees -- and the best one.",
@@ -482,10 +482,10 @@
     q:"What is 'gain' as a feature-importance measure in XGBoost?",
     choices:[
       "The total loss reduction a feature contributes across all the splits that use it",
-      "The number of times a feature appears in any tree",
-      "The average number of rows passing through splits on that feature",
-      "The correlation between the feature and the target label",
-      "The feature's coefficient in an equivalent linear model"
+      "The raw number of separate times that a given feature happens to appear across any of the trees",
+      "The average number of training rows that end up passing through the splits made on that feature",
+      "The plain statistical correlation measured between the feature's values and the target label column",
+      "The feature's fitted coefficient in an equivalent ordinary linear regression model of the same data"
     ],
     explain:"Gain measures how much each feature improved the objective, summed over every split where that feature was used. A high-gain feature is one whose splits sharply reduced the loss, making it the most meaningful default importance type in XGBoost. It differs from 'weight' (how often a feature is used) and 'cover' (how many rows its splits affect).",
     simple:"Gain asks: how much did splitting on this feature actually reduce error, added up everywhere it was used? Features that make the biggest dents in the loss get the highest gain scores.",
@@ -501,10 +501,10 @@
     q:"XGBoost can report importance as gain, cover, or weight. How do these differ?",
     choices:[
       "Gain = loss reduction, cover = rows affected, weight = how often the feature is used",
-      "They are three names for the exact same count of splits",
-      "Gain = row count, cover = correlation, weight = tree depth",
-      "Gain and cover are for regression; weight is only for classification",
-      "All three are always identical for any trained model"
+      "They are really just three different names for the exact same underlying count of the tree splits",
+      "Gain equals the plain row count, cover equals the correlation, and weight equals the overall tree depth",
+      "Gain and cover apply only to regression tasks, while weight applies only to classification tasks instead",
+      "All three of these different measures always come out perfectly identical for any fully trained model"
     ],
     explain:"Weight (frequency) counts how many times a feature is used to split, cover measures the number of observations touched by those splits, and gain sums the loss improvement they produced. They can rank features quite differently: a feature used often (high weight) may still contribute little loss reduction (low gain). Gain is usually the most trustworthy for 'which features matter most.'",
     simple:"Weight just counts how often a feature is used, cover counts how many rows its splits touch, and gain measures how much error those splits removed. They can disagree, and gain is usually the one to trust for real importance.",
@@ -520,10 +520,10 @@
     q:"XGBoost offers both L2 (reg_lambda) and L1 (reg_alpha) regularization on leaf weights. How do they differ?",
     choices:[
       "L2 shrinks all leaf weights smoothly; L1 can push some leaf weights exactly to zero",
-      "L2 removes trees; L1 removes rows from the data",
-      "L2 sets the learning rate; L1 sets the tree count",
-      "L1 only works for regression; L2 only works for classification",
-      "They are identical and only one can be used at a time"
+      "L2 deletes whole trees from the ensemble, while L1 instead removes individual rows from the dataset",
+      "L2 quietly sets the model's overall learning rate, while L1 sets the total number of trees to build",
+      "L1 regularization only ever works for regression, while L2 only works for classification tasks instead",
+      "They are completely identical in their effect and, moreover, only one of them can be used at any time"
     ],
     explain:"L2 regularization (lambda) penalizes the squared leaf weights, shrinking them all toward zero smoothly and stabilizing the model. L1 regularization (alpha) penalizes absolute leaf weights and can drive some to exactly zero, adding sparsity. Both discourage large leaf values that fit noise; they can be combined, and tuning them helps control overfitting.",
     simple:"Both penalize big leaf values so the model stays humble. L2 gently shrinks every leaf weight; L1 can zero some out entirely. You can use both, and they help fight overfitting.",
@@ -539,10 +539,10 @@
     q:"XGBoost uses second-order information (the Hessian) when fitting each tree. What is the benefit?",
     choices:[
       "Using the loss's curvature, not just its slope, gives more accurate, stable split decisions",
-      "It lets the model skip computing gradients entirely",
-      "It forces every tree to be exactly one level deep",
-      "It removes the need to choose an objective function",
-      "It converts the problem into simple linear regression"
+      "It conveniently lets the model skip computing any of the first-order gradients entirely during training",
+      "It forces every single tree in the entire ensemble to be built exactly one single level deep each time",
+      "It completely removes the need for the user to ever choose any objective or loss function at all for it",
+      "It quietly converts the entire boosting problem into one single straightforward linear regression fit"
     ],
     explain:"Plain gradient boosting uses only first-order gradients (the slope of the loss). XGBoost also uses the second derivative (the Hessian, the curvature), giving a Newton-style step that better estimates how much a leaf's weight should change. This yields more precise split gains and leaf values, contributing to XGBoost's strong accuracy and fast convergence.",
     simple:"Instead of just knowing which way the loss slopes, XGBoost also knows how sharply it curves. That extra information lets it pick better splits and leaf values, so it learns more accurately in fewer steps.",

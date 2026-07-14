@@ -79,7 +79,7 @@
 
 {
   q: "You switch the penalty from L2 (sum of squared weights) to L1 (sum of absolute weights). What famous behaviour appears?",
-  choices: ["Weights hit EXACTLY zero — the model performs feature selection", "Weights shrink smoothly toward zero but never actually reach it", "The loss surface develops several local minima", "Every surviving weight is pulled to the same value", "Some predicted probabilities begin to exceed 1"],
+  choices: ["Weights hit EXACTLY zero — the model performs feature selection", "Weights shrink smoothly toward zero but never actually reach it", "The loss surface sprouts several local minima that trap the solver", "Every surviving weight is dragged toward one shared central value", "Some predicted probabilities begin to exceed 1 and get clipped"],
   explain: "L2 shrinks weights smoothly toward zero but never to it; L1's corner at zero makes exact zeros optimal for weakly-useful features. The surviving nonzero weights ARE a feature selection, done by the optimiser.",
   simple: "L2 is a tax proportional to the square of each opinion — big opinions shrink, small ones linger tiny. L1 taxes the absolute size, which makes 'exactly zero' a genuinely attractive option: weak features get switched off entirely. You get a sparser, more readable model for free.",
   widget: {

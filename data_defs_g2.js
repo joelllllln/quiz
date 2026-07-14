@@ -686,10 +686,10 @@
     q: "In an SVM, what is a 'kernel'?",
     choices: [
       "A function that computes the similarity between two examples as if in a higher-dimensional space, letting the SVM form non-linear boundaries",
-      "The single training point that lies exactly on the decision boundary",
-      "The penalty applied to each misclassified example during training",
-      "The width of the margin the SVM tries to maximise",
-      "The learning rate that controls how fast the optimiser converges"
+      "The single training point that happens to lie exactly on the decision boundary, the borderline example sitting right at the dividing surface where the class score is precisely zero",
+      "The penalty applied to each misclassified example during training, a slack cost scaled by the C parameter that the optimiser adds up and works to keep as small as it possibly can",
+      "The width of the empty margin band that the SVM tries hard to maximise, the buffer stretching from the boundary out to the nearest points on either side of the divide",
+      "The learning rate that controls how fast the optimiser converges, the step size deciding how big a stride the training procedure takes downhill on each successive update"
     ],
     explain: "A kernel is a function K(x, x') that returns the inner product of two examples in some (possibly very high-dimensional) feature space without ever computing the coordinates there. Swapping in different kernels (linear, polynomial, RBF) lets the SVM draw curved boundaries in the original space. It is the mechanism behind the SVM's flexibility.",
     simple: "It is a similarity gadget that measures how alike two points are as if they lived in a richer space. Different kernels let the SVM bend its dividing line into curves.",
@@ -714,10 +714,10 @@
     q: "In an SVM, what is the 'RBF kernel'?",
     choices: [
       "A kernel whose similarity between two points falls off smoothly with their distance, allowing flexible, localised curved boundaries",
-      "A kernel that computes a plain dot product and only ever yields a straight boundary",
-      "A kernel that raises the dot product of two points to an integer power",
-      "A penalty term that grows with the number of support vectors",
-      "A rule for choosing the number of nearest neighbours to consult"
+      "A kernel that computes a plain dot product between the two raw feature vectors and therefore only ever yields a flat straight-line boundary, unable to bend around the classes at all",
+      "A kernel that raises the dot product of two points to a fixed integer power, the polynomial kernel that curves the boundary in stiff degree-limited bends rather than smooth localised ones",
+      "A penalty term added to the objective that grows steadily with the number of support vectors the model keeps, pushing the training to lean on as few borderline points as it can",
+      "A rule for choosing how many nearest neighbours a lazy classifier should consult, the setting that fixes how large a local vote is gathered before a query point is labelled"
     ],
     explain: "The radial basis function (Gaussian) kernel, K(x,x') = exp(−γ‖x−x'‖²), gives a similarity that is highest for nearby points and decays with distance. It is a popular default because it can carve highly flexible, curved boundaries and depends only on distances. Its reach is controlled by the gamma parameter.",
     simple: "It is a kernel that says two points are similar only if they are close together, with similarity fading as they get farther apart. It lets the SVM draw smooth, curvy borders.",
@@ -742,10 +742,10 @@
     q: "In an SVM, what does the 'C' (regularization) parameter control?",
     choices: [
       "The trade-off between a wider margin and fewer training misclassifications, with larger C penalising margin violations more heavily",
-      "The number of dimensions the kernel maps the data into",
-      "The rate at which the RBF similarity decays with distance",
-      "The number of support vectors the model is allowed to keep",
-      "The threshold on the decision function used to assign a class"
+      "The number of dimensions the kernel secretly maps the data up into, the size of the richer feature space in which a curved split can finally become a plain flat separation",
+      "The rate at which the RBF similarity between two points decays with the distance separating them, the reach knob set instead by gamma that decides how local each point stays",
+      "The number of support vectors the trained model is allowed to keep, a hard cap on how many borderline examples may be retained to pin the final boundary in place",
+      "The threshold on the decision function used to assign a class, the cut-off applied to the signed score that decides which side of the divide an example is finally placed"
     ],
     explain: "C sets how much the SVM penalises points that fall inside or across the margin: a large C forces the boundary to classify training points correctly (narrow margin, risk of overfitting), while a small C tolerates violations for a wider, smoother margin. It is the regularisation knob balancing fit against margin width.",
     simple: "It is a strictness dial. High C means 'don't you dare misclassify training points', giving a tight margin; low C relaxes and allows a wider, more forgiving gap.",
@@ -770,10 +770,10 @@
     q: "In an SVM with an RBF kernel, what does the 'gamma' parameter control?",
     choices: [
       "How far the influence of a single training point reaches, with larger gamma making each point's reach shorter and the boundary wigglier",
-      "The penalty charged for each misclassified training example",
-      "The width of the margin the model tries to maximise",
-      "The number of classes the SVM can distinguish at once",
-      "The fraction of data reserved for validating the model"
+      "The penalty charged for each misclassified training example, a slack cost set instead by the C parameter that the optimiser sums up and works to keep as small as it possibly can",
+      "The width of the empty margin band the model tries hard to maximise, the buffer stretching from the boundary out to the nearest points that gamma itself does not directly set",
+      "The number of distinct classes the SVM is able to distinguish at once, a count of the categories the classifier can separate rather than any reach of a single point's influence",
+      "The fraction of the data deliberately reserved for validating the model, the held-out slice used to check its accuracy rather than any measure of how far a point's reach extends"
     ],
     explain: "Gamma sets the reach of the RBF kernel: a large gamma makes similarity decay quickly with distance, so each point influences only its close neighbourhood and the boundary becomes highly wiggly (risking overfitting); a small gamma gives each point a broad reach and a smoother boundary. It works together with C to control model complexity.",
     simple: "It sets how far each training point's influence spreads. Big gamma means each point only affects its immediate area, making a jagged boundary; small gamma spreads influence wide and smooth.",

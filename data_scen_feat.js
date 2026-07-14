@@ -263,10 +263,10 @@
     q: "You standardize all numeric features using the mean and standard deviation computed over the entire dataset, then split into train and test. Validation looks great but production is worse. What went wrong?",
     choices: [
       "Data leakage — the scaler learned statistics from the test rows; fit the scaler on the training fold only and apply it to the rest",
-      "You should have standardized after, not before, computing the model coefficients",
-      "Standardization is never appropriate and should be removed",
-      "The test set was simply too small to trust",
-      "You used standardization instead of min-max scaling, which is the real bug"
+      "You should have standardized the features after computing the model coefficients rather than before, and that ordering mistake is the whole problem",
+      "Standardization is never actually appropriate for this kind of linear model, so it should be removed from the pipeline altogether to fix the drop",
+      "The held-out test set you evaluated on was simply far too small for its reported score to be trusted in the first place, which fully explains it",
+      "You used z-score standardization instead of min-max scaling on the features, and that specific choice of scaler is the real underlying bug here"
     ],
     explain: "Fitting the scaler on the full dataset lets the training pipeline peek at the test rows' mean and standard deviation, so the model is evaluated on data whose statistics it already absorbed — that is preprocessing leakage, and it inflates validation optimistically. In production the model faces genuinely unseen data whose statistics it never saw, so performance drops. The fix is to fit all preprocessing (scaler, imputer, encoder) on the training split alone and merely transform the validation and test sets, ideally inside a cross-validation pipeline.",
     simple: "If you peek at the test answers while setting up your study notes, your practice score lies. Learn the scaling from the training data only.",
@@ -283,10 +283,10 @@
     q: "You run feature selection (keeping the top 20 of 500 features by correlation with the target) on the full dataset, then cross-validate a model on those 20. CV accuracy is suspiciously high. What is the flaw?",
     choices: [
       "Selection leakage — features were chosen using the whole dataset including the CV test folds, so selection must happen inside each fold",
-      "Twenty features is too few, so the model got lucky",
-      "Correlation is the wrong statistic; mutual information would have avoided the problem",
-      "The model needs more folds to lower the accuracy to a believable level",
-      "You should have selected the bottom 20 features instead of the top 20"
+      "Twenty features out of the original five hundred is simply far too few, so the model just happened to get lucky on this one particular run",
+      "Correlation was the wrong ranking statistic to use here, and switching to mutual information for the selection step would have avoided the whole problem",
+      "The cross-validation just needs a larger number of folds in order to bring the suspiciously high accuracy back down to a more believable level",
+      "You should have selected the bottom-ranked 20 features by correlation instead of the top-ranked 20, and that is what inflated the reported score"
     ],
     explain: "Choosing the 20 features on the entire dataset lets the selector see the labels of the very rows it will later be tested on, so those features are pre-tuned to the test folds — the cross-validation is no longer measuring generalization. This selection leakage inflates CV accuracy, sometimes dramatically, even when the features are pure noise. The correct procedure nests selection inside the CV loop: within each fold, select features using only that fold's training rows, then evaluate on its held-out rows.",
     simple: "If you pick your best features by peeking at the whole exam, the practice score is rigged. Choose features fresh inside each fold, using only that fold's training data.",
@@ -303,10 +303,10 @@
     q: "Two features, 'height_cm' and 'height_inches', are near-perfectly correlated and both fed into a linear regression. The coefficients come out huge, opposite in sign, and unstable across runs. What is happening and the fix?",
     choices: [
       "Multicollinearity — the redundant pair makes coefficients unstable; drop one or combine them (or use regularization)",
-      "The model is underfitting and needs more features like these",
-      "The target variable must be non-linear, so switch to a tree",
-      "The learning rate is too high, causing the coefficients to diverge",
-      "Nothing is wrong; large opposite coefficients always cancel out safely"
+      "The model is clearly underfitting the data and simply needs more informative features exactly like these two redundant height columns added in",
+      "The target variable you are predicting must be strongly non-linear, so the correct fix here is to abandon the linear model and switch to a tree",
+      "The optimiser's learning rate has been set far too high, and that is what is causing the two coefficients to diverge and swing wildly between runs",
+      "Nothing is actually wrong with the fit at all, because large coefficients of opposite sign always safely cancel each other out in the predictions"
     ],
     explain: "Height in centimeters and inches carry the same information, so the linear model cannot decide how to split credit between them; it can add a large positive weight to one and a nearly equal negative weight to the other, giving wildly unstable coefficients that swing between runs and samples. This multicollinearity does not necessarily hurt prediction but destroys interpretability and inflates coefficient variance. The remedy is to drop one of the redundant features, combine them, or apply L2 regularization to shrink and stabilize the shared weight.",
     simple: "You gave the model the same measurement twice in different units. It cannot decide which to credit, so the weights seesaw. Keep just one copy.",
@@ -323,10 +323,10 @@
     q: "You tuned hyperparameters with grid search using cross-validation, then reported that same best CV score as your estimate of future performance. A colleague says it is optimistic. Why, and what fixes it?",
     choices: [
       "The CV score was used to choose hyperparameters, so it is optimistically biased; nested cross-validation (an outer loop for evaluation) gives an honest estimate",
-      "Grid search is always biased, so you must use random search to report a fair score",
-      "The score is fine; cross-validation can never be optimistic",
-      "You simply need more hyperparameter values in the grid",
-      "The bias comes from too few folds; using 20 folds removes it entirely"
+      "Grid search itself is always inherently biased as a procedure, so you must switch over to random search instead in order to report a fair score",
+      "The reported score is perfectly fine exactly as it stands, because a properly run cross-validation can never be optimistically biased in any way",
+      "You simply need to add many more candidate hyperparameter values into the search grid, and that alone will make the reported best score honest",
+      "The optimistic bias here comes purely from using too few folds, so simply switching the cross-validation up to 20 folds would remove it entirely"
     ],
     explain: "When you pick the hyperparameters that maximize the CV score, you are optimizing against that very score, so it becomes a biased, optimistic estimate of generalization — you have implicitly fit to the validation folds. Nested cross-validation separates the two jobs: an inner loop selects hyperparameters, and an untouched outer loop estimates performance on data never used for tuning. That outer estimate is unbiased; reporting the inner best score is not, no matter how many folds you add.",
     simple: "If you keep the setting that scored best on the practice tests, that best score is cherry-picked. Grade the finished model on a fresh test it never helped choose.",
@@ -343,10 +343,10 @@
     q: "For a churn model you engineer a feature 'account_closed_date'. It gives 0.99 CV accuracy. Before deploying, what should raise a red flag?",
     choices: [
       "Target leakage — the closed date only exists because the customer already churned, so the feature encodes the answer and won't be available at prediction time",
-      "0.99 accuracy simply proves the feature is excellent and should be prioritized",
-      "The feature needs one-hot encoding before it can be trusted",
-      "The accuracy is too low and more such features are needed",
-      "The date should be scaled to 0-1 to make the model even better"
+      "The 0.99 cross-validation accuracy simply proves that this engineered feature is excellent and it should be prioritized above all the others going forward",
+      "The account-closed-date feature just needs to be one-hot encoded properly before the model can be trusted to make good use of the strong signal it carries",
+      "The 0.99 accuracy is actually far too low to deploy on, and the real fix is to engineer several more powerful features just like this closed-date one",
+      "The closed-date field should be scaled into the 0-to-1 range before training so that the model can make even better use of it than it already does now"
     ],
     explain: "An account's closed date is a consequence of churning, not a cause you know beforehand — at the moment you must predict whether a still-active customer will churn, that field is empty or in the future. Training on it leaks the label, producing an unrealistically high 0.99 that collapses in production because the feature is unavailable or always null for the customers you actually score. The tell is a single feature that is 'too good': always ask whether it would truly be known at prediction time.",
     simple: "The move-out date only exists after someone has already left. Using it to predict who will leave is reading tomorrow's newspaper today.",
@@ -363,10 +363,10 @@
     q: "Your dataset drifts over time (customer behavior in 2026 differs from 2023). You randomly shuffle all rows before making the train/test split and get strong CV scores. Why might this mislead you?",
     choices: [
       "Random shuffling lets future rows train the model that is tested on past rows; a time-based split respects the real forward-prediction task",
-      "Shuffling is always correct; the drift is irrelevant to validation",
-      "The CV scores are low only because you need more folds",
-      "You should stratify by the target, which fully solves temporal drift",
-      "Drift means you should remove all 2023 data and keep only 2026"
+      "Random shuffling before the split is always the correct thing to do, and the drift in customer behaviour over time is entirely irrelevant to validation",
+      "The cross-validation scores you are seeing are only this strong because you happen to need a larger number of folds to bring them back down to reality",
+      "You should stratify the train-test split by the target label instead, which completely and fully solves the whole problem of temporal drift over years",
+      "The presence of drift means you should simply remove all of the older 2023 data from the set and keep only the most recent 2026 rows for both parts"
     ],
     explain: "With temporal drift, the future does not look like the past, but random shuffling scatters 2026 rows into the training set while 2023 rows land in the test set, so the model effectively learns from the future to predict the past — an information advantage it will never have in deployment. That inflates CV scores and hides the model's real difficulty in extrapolating forward. A time-based (forward-chaining) split trains on earlier periods and tests on strictly later ones, mirroring how the model is actually used. Stratifying by target does not address the time ordering.",
     simple: "If you let the model peek at next year while quizzing it on last year, it looks brilliant. Test it the way it will really work: train on the past, predict the future.",
