@@ -122,10 +122,10 @@
     q: "What is 'k-means++'?",
     choices: [
       "A smarter way to choose the initial centroids, spreading the starting seeds far apart so k-means is less likely to get stuck in a poor solution",
-      "A version of k-means that automatically decides the best number of clusters k for you",
-      "A variant that lets each point belong partly to several clusters instead of exactly one",
-      "An algorithm that speeds up k-means by clustering only a random sample of the data",
-      "A metric that scores the final clustering once the algorithm has converged"
+      "A version of k-means that inspects the data on its very own and automatically decides on the single best number of clusters k to use for you",
+      "A soft variant of the algorithm that lets each data point belong partly to several different clusters at once instead of just to exactly one",
+      "An algorithm that speeds ordinary k-means up considerably by clustering only a small random sample of the data drawn out from the full whole dataset",
+      "A scoring metric that rates just how good the final clustering actually turned out to be once the whole algorithm has fully converged and stopped"
     ],
     explain: "Plain k-means starts from random centroids, and a bad random start can trap it in a poor local minimum. K-means++ instead picks the first centroid at random, then chooses each later seed with probability proportional to its squared distance from the nearest existing seed, spreading the starting points out. This clever seeding usually gives lower final inertia and faster convergence, and it is the default in most libraries.",
     simple: "K-means can start in a bad spot if its first centres are chosen carelessly. K-means++ picks starting centres that are spread far apart on purpose. Better starting points usually lead to a better, faster result.",
@@ -150,10 +150,10 @@
     q: "In k-means, what is the 'assignment step'?",
     choices: [
       "The step that labels each data point with the cluster whose centroid is currently nearest to it",
-      "The step that moves each centroid to the mean of the points now assigned to it",
-      "The step that decides how many clusters k the algorithm should look for",
-      "The step that scores the final clustering once the centroids stop moving",
-      "The step that randomly places the initial centroids before the loop begins"
+      "The step that shifts each centroid over to the mean position of the points now assigned to it",
+      "The step that decides how many clusters k the whole algorithm should actually look for overall",
+      "The step that scores the finished clustering once all of the centroids have finally stopped moving",
+      "The step that randomly scatters the initial centroids across the space before the main loop begins"
     ],
     explain: "K-means alternates two steps. In the assignment step, every point is attached to the closest centroid, forming k groups given the centroids' current positions. This is followed by the update step, which recomputes the centroids. Repeating the pair until assignments stop changing is the whole algorithm.",
     simple: "The assignment step looks at each point and puts it with the nearest centre. It is the 'sort the points' half of k-means. The other half then moves the centres.",
