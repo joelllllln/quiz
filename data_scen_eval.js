@@ -61,7 +61,7 @@
       "Accuracy, since the model already reports a very impressive 99% on this dataset as it stands",
       "Recall alone, which on its own fully and completely summarises the model's rare-class performance",
       "Precision alone, which is entirely sufficient as a single summary number on heavily imbalanced data",
-      "The ROC-AUC, which is completely unaffected by the class imbalance and by the chosen decision threshold"
+      "The ROC-AUC, which is completely unaffected by the class imbalance and by the chosen decision threshold no matter how skewed the classes are"
     ],
     explain: "MCC is a correlation between predictions and truth built from all four confusion-matrix cells; a majority-only classifier scores about 0, so it cannot be fooled by imbalance the way accuracy is. Recall or precision alone each capture only one column of the matrix. ROC-AUC is threshold-free but on severe imbalance it can look optimistic because the huge true-negative count inflates the false-positive-rate axis — PR-AUC or MCC give a more honest single number.",
     simple: "MCC is like a report card that checks all four boxes of right-and-wrong at once, so a lazy 'always say no' model still scores near zero.",
@@ -162,7 +162,7 @@
     q: "Two classifiers: model A has ROC-AUC 0.92, model B has ROC-AUC 0.90. But your positive class is only 3% of data and you care about performance among the positive predictions. Which comparison should decide the winner?",
     choices: [
       "Compare their precision-recall AUC (PR-AUC), which focuses on the rare positive class and is more informative under heavy imbalance",
-      "Pick model A purely on the strength of its higher ROC-AUC, since ROC-AUC is universally regarded as the gold-standard metric",
+      "Pick model A purely on the strength of its higher ROC-AUC, since ROC-AUC is universally regarded as the gold-standard metric for comparing any two classifiers at all",
       "Compare the two models on their overall classification accuracy measured at the default 0.5 decision threshold instead",
       "Choose whichever of the two models happens to have the higher specificity on the held-out validation data",
       "Average each model's ROC-AUC and PR-AUC together into a single combined score and then simply pick the larger one"
@@ -204,7 +204,7 @@
     q: "Your training set is 90% class A, 10% class B, and the model ignores class B. You are weighing class_weight='balanced' against random oversampling of B. Both aim to help minority recall. What is a fair statement of the trade-off?",
     choices: [
       "class_weight reweights the loss without duplicating rows, while oversampling grows the data and can overfit duplicated minority points — both raise minority recall but can lower precision",
-      "class_weight and random oversampling are completely identical in every single effect they have, so the choice between the two is entirely arbitrary",
+      "class_weight and random oversampling are completely identical in every single effect they have, so the choice between the two is entirely arbitrary and can be made purely on personal preference",
       "Random oversampling always beats class_weight in every single case, simply because adding more rows to the training data is always strictly better",
       "Using class_weight='balanced' mathematically guarantees a strictly higher overall accuracy than doing nothing at all about the class imbalance",
       "Neither of the two techniques has any real effect on the minority class at all; only changing the decision threshold afterwards can actually help"
@@ -225,7 +225,7 @@
     q: "A k-nearest-neighbours model is very accurate but must answer 5,000 requests per second with tight latency, and prediction is slow because it scans all training points. You are weighing options. What is the soundest trade-off?",
     choices: [
       "Trade a little accuracy for speed: use an approximate-neighbour index (e.g. KD-tree/Ball-tree or ANN), reduce dimensionality, or distil to a faster model",
-      "Keep the exact brute-force kNN exactly as it is and simply pay for the accuracy, since in this system the prediction latency does not really matter",
+      "Keep the exact brute-force kNN exactly as it is and simply pay for the accuracy, since in this system the prediction latency does not really matter even under very heavy request load",
       "Increase the neighbour count k to a very large value, because scanning for a larger set of neighbours actually makes each prediction run faster",
       "Retrain the kNN model far more frequently than you currently do, since more frequent retraining is what actually reduces the per-query latency",
       "Switch the evaluation metric from accuracy over to recall instead, which will make the kNN model run noticeably faster at prediction time"
@@ -271,7 +271,7 @@
       "The held-out test set you used was simply far too small for its reported 95% accuracy to be considered reliable in any way",
       "The model is fundamentally underfitting the data and just needs considerably more capacity added to it before being deployed",
       "This is just random noise in the particular split, and re-running the whole thing with a different random seed would fix the drop",
-      "The input features were correlated with one another, and feature correlation like that always causes a drop in production accuracy"
+      "The input features were correlated with one another, and feature correlation like that always causes a drop once the model is actually deployed live in production"
     ],
     explain: "Fitting the scaler's mean/variance and the imputer's fill values on the entire dataset before splitting means those statistics were computed using the test rows too — the model implicitly saw information about its own test set, so the 95% is optimistic. In production, no such peek exists, hence the drop. The fix is to fit all preprocessing inside a Pipeline on training folds only, so the test/validation rows are transformed but never used for fitting.",
     simple: "You let the model study the answer key while computing averages, then acted surprised it aced the practice test. Fit the prep on training data only.",
@@ -287,7 +287,7 @@
     q: "You used GridSearchCV to pick hyperparameters, then reported the best cross-validation score from that search as your estimate of future performance. Why is this optimistic, and what fixes it?",
     choices: [
       "The CV score was maximised over many configs, so it is biased upward; use nested cross-validation (or a held-out test set) to estimate real performance",
-      "Nothing is wrong here at all, because the best cross-validation score from a search is a completely unbiased estimate of future performance",
+      "Nothing is wrong here at all, because the best cross-validation score from a search is a completely unbiased estimate of future performance on genuinely new and unseen data",
       "The hyperparameter grid you searched over was simply too small, and using a substantially bigger grid would make the reported score unbiased",
       "You should just report the training-set accuracy instead of the CV score, since training accuracy is always a perfectly unbiased estimate",
       "The whole problem is caused by the random seed, and averaging the results across many different random seeds removes all of the optimism"
@@ -308,7 +308,7 @@
     q: "Your dataset has 20 nearly-duplicate rows per patient (repeated visits). You do a random 80/20 split, and the same patients appear in both train and test. Test accuracy is 96%. Why might this mislead, and what is the correct split?",
     choices: [
       "Group leakage — rows from one patient span train and test, so the model recognises patients rather than generalising; use GroupKFold split by patient",
-      "The split ratio you used is simply wrong, and moving to a 90/10 train-test split instead of 80/20 would completely remove the whole problem",
+      "The split ratio you used is simply wrong, and moving to a 90/10 train-test split instead of 80/20 would completely remove the whole problem of the inflated accuracy here",
       "The 96% test accuracy is simply correct as reported and needs no further scrutiny whatsoever before the model is put into production",
       "The real issue is that the model has too few features, and adding many more of them would honestly bring the inflated score back down",
       "Random splitting of the rows is always a perfectly safe thing to do here, just so long as the shuffling itself is genuinely and truly random"
@@ -327,10 +327,10 @@
     q: "To handle imbalance you applied SMOTE oversampling to the whole dataset, THEN split into train and test. Cross-validation looks superb but production is disappointing. What went wrong?",
     choices: [
       "Resampling before the split leaked synthetic points derived from test rows into training; oversample inside the Pipeline on the training fold only (e.g. imblearn Pipeline)",
-      "SMOTE is simply a fundamentally bad resampling technique and it should really never be used on any imbalanced dataset under any circumstances",
+      "SMOTE is simply a fundamentally bad resampling technique and it should really never be used on any imbalanced dataset no matter how severe the imbalance happens to be",
       "The test set itself became far too balanced after the resampling, and an artificially balanced test set like that always lowers the real accuracy",
       "The model badly overfit purely because SMOTE ended up creating far too few brand-new synthetic minority points during the resampling step",
-      "The whole problem is the choice of evaluation metric, and simply switching over to plain accuracy instead would immediately reveal the truth"
+      "The whole problem is the choice of evaluation metric, and simply switching over to plain accuracy instead would immediately reveal the real truth of the matter here"
     ],
     explain: "SMOTE synthesises minority points by interpolating between neighbours. If you run it on the full dataset before splitting, synthetic rows can be built from — or land near — test observations, and near-identical points then appear in both train and test, leaking information and inflating CV. Production sees no such synthetic echoes. The fix is to resample only within each training fold, e.g. by placing SMOTE inside an imblearn Pipeline so it never touches validation/test rows.",
     simple: "SMOTE invents new rows by blending real ones. Do it before splitting and the invented rows can be cousins of your test data — the model has effectively seen the test set.",
@@ -349,7 +349,7 @@
       "The calibration curve is a fundamentally meaningless plot for predicted probabilities and it should never really be plotted for a model at all",
       "Achieving perfect calibration on the training data itself conclusively proves that the model is fully ready to be deployed into production",
       "The histogram bins you used were simply too wide, and switching to much narrower bins would reveal the true miscalibration on training data",
-      "You should have plotted a plain accuracy score instead of a calibration curve, since accuracy would have told you everything you needed"
+      "You should have plotted a plain accuracy score instead of a calibration curve, since a plain accuracy score would have told you everything that you actually needed to know here"
     ],
     explain: "Scoring rows with a model that was trained on those same rows yields optimistic, in-sample probabilities — the model has partly memorised them, so the reliability curve flatters itself. cross_val_predict returns, for each row, a prediction from a fold in which that row was held out, giving genuine out-of-fold estimates. Plotting the calibration curve on those out-of-fold probabilities reveals the true reliability the model would show on unseen data.",
     simple: "Grading the model on the exact examples it studied makes its confidence look perfect. Score each row using a model that never saw it — that is what cross_val_predict does.",
@@ -369,7 +369,7 @@
       "Fitting the encoder on all data leaked category vocabulary and it will error or misbehave on unseen categories; fit inside the Pipeline on training data and set handle_unknown='ignore'",
       "Genuinely new categories are impossible to encounter at all if the data was simply shuffled well enough beforehand, so there is really no risk here",
       "The ColumnTransformer automatically detects and handles any brand-new category that appears at serving time entirely on its own with no configuration",
-      "One-hot encoding should just be replaced wholesale with label encoding, which conveniently never fails or errors out on unseen categories at serving time",
+      "One-hot encoding should just be replaced wholesale with label encoding, which conveniently never fails or errors out at serving time no matter how many brand-new categories happen to appear",
       "The risk here is purely cosmetic in nature, since an unseen category appearing at serving time does not actually affect the model's predictions at all"
     ],
     explain: "Two problems compound here. Fitting the OneHotEncoder on the full dataset (including validation/test rows) leaks the category vocabulary, inflating scores. And a default encoder fitted only on training categories will raise an error when a genuinely new category arrives at serving time. The correct setup fits the ColumnTransformer inside a Pipeline on training data only, and sets handle_unknown='ignore' so unseen categories map to an all-zeros vector instead of crashing.",

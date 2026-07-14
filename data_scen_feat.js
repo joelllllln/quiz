@@ -323,7 +323,7 @@
     q: "You tuned hyperparameters with grid search using cross-validation, then reported that same best CV score as your estimate of future performance. A colleague says it is optimistic. Why, and what fixes it?",
     choices: [
       "The CV score was used to choose hyperparameters, so it is optimistically biased; nested cross-validation (an outer loop for evaluation) gives an honest estimate",
-      "Grid search itself is always inherently biased as a procedure, so you must switch over to random search instead in order to report a fair score",
+      "Grid search itself is always inherently biased as a procedure, so you must switch over to random search instead in order to report a fair score on any dataset you happen to be working with",
       "The reported score is perfectly fine exactly as it stands, because a properly run cross-validation can never be optimistically biased in any way",
       "You simply need to add many more candidate hyperparameter values into the search grid, and that alone will make the reported best score honest",
       "The optimistic bias here comes purely from using too few folds, so simply switching the cross-validation up to 20 folds would remove it entirely"
@@ -343,7 +343,7 @@
     q: "For a churn model you engineer a feature 'account_closed_date'. It gives 0.99 CV accuracy. Before deploying, what should raise a red flag?",
     choices: [
       "Target leakage — the closed date only exists because the customer already churned, so the feature encodes the answer and won't be available at prediction time",
-      "The 0.99 cross-validation accuracy simply proves that this engineered feature is excellent and it should be prioritized above all the others going forward",
+      "The 0.99 cross-validation accuracy simply proves that this engineered feature is excellent and it should be prioritized above all the others in every single future model that you build",
       "The account-closed-date feature just needs to be one-hot encoded properly before the model can be trusted to make good use of the strong signal it carries",
       "The 0.99 accuracy is actually far too low to deploy on, and the real fix is to engineer several more powerful features just like this closed-date one",
       "The closed-date field should be scaled into the 0-to-1 range before training so that the model can make even better use of it than it already does now"

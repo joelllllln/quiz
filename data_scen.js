@@ -38,7 +38,7 @@
     q: "Your fraud dataset is 2% fraud, 98% legitimate. Your model reports 98% accuracy. What should you conclude?",
     choices: [
       "Accuracy is misleading here — a model that always predicts 'legitimate' also scores 98%, so you need precision, recall or MCC",
-      "The model is excellent; a 98% accuracy score means it reliably catches almost all of the fraud cases",
+      "The model is genuinely excellent overall; a 98% accuracy score clearly means that it reliably catches very nearly all of the fraud cases in the data",
       "You should collect many more legitimate transactions, since that will push overall accuracy even higher",
       "Accuracy is exactly the right metric here; you simply need to tune the model until it clears 99%",
       "The 2% fraud rate means the model is only 2% wrong overall, which is a perfectly acceptable error rate"
@@ -58,7 +58,7 @@
     q: "You have only 300 labelled rows and 8 features, and you need a solid baseline classifier quickly. What's a sensible first choice?",
     choices: [
       "A simple, well-regularised model like logistic regression — low variance suits small data",
-      "A deep neural network with several fully-connected hidden layers stacked together",
+      "A deep neural network built out of several fully-connected hidden layers stacked one on top of another",
       "A gradient-boosted ensemble with 2,000 trees to squeeze every last pattern from the rows",
       "A very deep, unpruned decision tree grown until each leaf is perfectly pure",
       "k-NN with k = 1, because the single nearest example is always the most reliable guide"
@@ -78,7 +78,7 @@
     q: "Your features are on wildly different scales — income in the tens of thousands, age in years — and you plan to use k-nearest neighbours. What must you do first?",
     choices: [
       "Scale the features (e.g. standardise) so distance isn't dominated by the large-numbered column",
-      "Nothing at all — k-NN automatically handles raw feature scales without any preprocessing",
+      "Nothing at all is required — k-NN automatically handles raw feature scales on its own without any preprocessing",
       "Convert every numeric feature into a category first and apply one-hot encoding to each",
       "Remove the age feature entirely, since income is the bigger number and must matter more",
       "Switch your evaluation metric to plain accuracy so the scale problem no longer applies"
@@ -155,7 +155,7 @@
     q: "A colleague reports 100% accuracy on the test set after including a 'customer_closed_account' column to predict churn. What most likely happened?",
     choices: [
       "Data leakage — that column encodes the outcome itself, so it won't be available before churn happens",
-      "The model is genuinely perfect and is completely ready to be deployed straight to production",
+      "The model here is genuinely perfect in every way and is completely ready to be deployed straight into live production",
       "The test set was simply far too easy and should be rebuilt at a substantially larger size",
       "Accuracy is the wrong metric to use here; switching to F1 would reveal the real story",
       "The model overfit the training data and just needs a good deal more regularisation"
@@ -292,7 +292,7 @@
     q: "Predictions must return in under 10 milliseconds at scale, and training-time cost doesn't matter. Which model characteristic matters most?",
     choices: [
       "Fast inference — favour a model that predicts quickly, like a compact linear model or a pruned tree",
-      "A model chosen purely for the fastest training time, regardless of how slow its predictions are",
+      "A model chosen purely for having the very fastest training time, regardless of how slow each of its individual predictions turns out to be",
       "k-NN, because it has no training phase at all and therefore nothing there to slow you down",
       "The largest ensemble you can possibly build, since raw prediction accuracy is all that counts",
       "Whatever model happens to have the very smallest saved file size sitting on the disk"
@@ -331,7 +331,7 @@
     choices: [
       "By cross-validation, picking the k with the best validation performance — not the best training score",
       "Always pick k = 1, because that setting gives you the highest possible training accuracy every time",
-      "Choose the largest k that is possible, since letting more neighbours vote always improves the result",
+      "Choose the largest value of k that is at all possible, since letting more neighbours vote always improves the final result",
       "Set k equal to the total number of features in your dataset so dimensions and votes line up",
       "Set k equal to the number of classes, so that every class gets exactly one neighbouring vote"
     ],
@@ -389,7 +389,7 @@
     q: "You standardised your features using the mean and standard deviation of the ENTIRE dataset, then split into train and test. What's the problem?",
     choices: [
       "Preprocessing leaked test information — fit the scaler on the training set only, then apply it to the test set",
-      "Nothing at all — using every row of the data to compute the scaling is the correct, most accurate approach",
+      "Nothing at all is wrong here — using every single row of the data to compute the scaling is the correct and most accurate approach",
       "You should have standardised each individual row instead of standardising each feature column",
       "Standardisation should always be carried out after the model has already been fully trained",
       "The only real problem is that standardisation is completely unnecessary for any kind of model"
@@ -410,7 +410,7 @@
       "Adjust class weights, resample (e.g. SMOTE / undersample), and tune the decision threshold — judged by PR-AUC or F1",
       "Just raise the overall accuracy target you are aiming for and then retrain the whole model from scratch again",
       "Delete the entire minority class from the dataset so that the two remaining classes come out perfectly balanced",
-      "Switch to a much larger randomly-drawn test split and deliberately change absolutely nothing else in the pipeline",
+      "Switch over to a much larger randomly-drawn test split and deliberately change absolutely nothing else at all in the whole pipeline",
       "Report only the single overall accuracy figure and simply ignore the minority class entirely when evaluating"
     ],
     explain: "Imbalance makes the model favour the majority. Real fixes rebalance the learning signal: class weights penalise minority errors more, resampling (oversample the minority with SMOTE, or undersample the majority) evens the training set, and lowering the decision threshold trades precision for recall. Evaluate with PR-AUC or F1, not accuracy. Deleting the minority destroys the very thing you're trying to predict.",
@@ -505,7 +505,7 @@
     q: "You tuned hyperparameters on your test set until accuracy peaked, and reported that peak. Why is the reported number untrustworthy?",
     choices: [
       "You overfit the test set by repeatedly optimising against it — you need a separate validation set (or nested CV) and a truly untouched test set",
-      "Test sets are genuinely meant to be tuned on again and again, so the single peak number you reported is perfectly fine to keep and publish",
+      "Test sets are genuinely meant to be tuned on again and again, so the single peak number that you reported is perfectly fine to keep and to publish as your final result",
       "The only real problem here is that your test set was simply far too small to give a trustworthy number",
       "Accuracy simply can never be trusted as a metric under absolutely any circumstances whatsoever, so the reported score is meaningless",
       "You should instead have tuned all of your hyperparameters on the training set's own accuracy figure"
@@ -525,7 +525,7 @@
     q: "Two features in your model are almost perfectly correlated. A permutation-importance report says BOTH are unimportant. Why might that be misleading?",
     choices: [
       "With a correlated twin present, shuffling one barely hurts because the other still carries the signal — importance is split/masked, not absent",
-      "Permutation importance is always exactly correct in every possible case, so both of these two features genuinely are entirely useless",
+      "Permutation importance is always exactly correct in every single possible case, so both of these two features here genuinely are entirely useless to the model",
       "Two correlated features can never have any effect at all on a model's predictions, so the report must simply be right",
       "The whole model must be fundamentally broken and therefore ought to be thrown away and retrained again from scratch",
       "It proves beyond any doubt that you should always keep both of the correlated features together in the final model"
@@ -563,7 +563,7 @@
     q: "Your churn model was trained on last year's data and accuracy has quietly decayed in production over six months. What is the most likely cause?",
     choices: [
       "Data / concept drift — the input distribution or its relationship to churn has shifted, so the model needs monitoring and retraining",
-      "The model has somehow spontaneously forgotten all of its own carefully learned parameters over the past six months in production",
+      "The model has somehow spontaneously forgotten all of its own carefully learned parameters over the past six months of running in production",
       "Test accuracy figures are simply always completely wrong the moment a model has actually been deployed out into live production",
       "The original training set was far too perfectly balanced, which is exactly what caused the slow decay over time",
       "Nothing at all is wrong here; machine-learning models naturally just keep on getting better and better over time"
@@ -682,7 +682,7 @@
       "Without a baseline (e.g. majority-class or a simple model) you can't tell whether 91% is impressive or trivial for this problem",
       "Establishing baselines is a complete waste of everyone's time once you already have a powerful deep model in hand",
       "A score of 91% is always genuinely excellent no matter what the underlying problem or dataset happens to be",
-      "The naive baseline would only ever actually matter in the special case where the data happened to be perfectly balanced",
+      "The naive baseline would only ever actually matter in the one special case where the data happened to be almost perfectly balanced between the classes",
       "Deep models never require any comparison at all, simply because they are already the state of the art by definition"
     ],
     explain: "A score means nothing without a reference point. If 89% of cases are the majority class, 91% barely beats always-guessing; if a plain logistic regression already hits 90%, the deep model's extra cost buys almost nothing. Always establish a naive baseline (majority-class, simple linear model) first — it tells you how hard the problem is and whether your complex model actually earns its keep.",

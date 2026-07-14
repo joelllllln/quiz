@@ -178,10 +178,10 @@
     q: "In k-means, what is the 'update step'?",
     choices: [
       "The step that moves each centroid to the mean position of all the points currently assigned to its cluster",
-      "The step that attaches each point to the centroid nearest to it",
-      "The step that merges two clusters whose centroids are closest together",
-      "The step that removes clusters that ended up with no points",
-      "The step that chooses the value of k before clustering starts"
+      "The step that attaches every single data point to whichever one of the centroids happens to sit nearest to it",
+      "The step that merges together the two clusters whose two centroids happen to sit closest to one another",
+      "The step that removes away any clusters that have ended up containing no assigned points at all this round",
+      "The step that picks out the value of k the whole algorithm will use before the clustering loop even begins"
     ],
     explain: "After points are assigned, the update step recomputes each centroid as the average of the points in its cluster, so the centre moves to the middle of its current members. Because the mean minimises squared distance, this move lowers inertia. Alternating assignment and update until nothing changes is Lloyd's algorithm.",
     simple: "Once the points are sorted, the update step slides each centre to the average location of its points. The centre moves to the middle of its group. Then the points get re-sorted and it repeats.",
@@ -206,10 +206,10 @@
     q: "In k-means, what is a 'Voronoi cell'?",
     choices: [
       "The region of space consisting of all points closer to one particular centroid than to any other — the territory that centroid owns",
-      "The smallest circle that encloses all the points assigned to one cluster",
-      "The straight-line segment connecting two neighbouring centroids",
-      "The set of points that lie exactly halfway between two centroids",
-      "The average of all the points assigned to a single cluster"
+      "The smallest possible circle that still manages to enclose every single one of the points that are assigned to one cluster in the plane",
+      "The straight-line segment that connects two neighbouring centroids together right across the boundary lying between them in the plane",
+      "The set of all the points that happen to lie exactly halfway along the line drawn between two adjacent centroids in space itself",
+      "The average position, or mean point, taken over every single one of the data points that are assigned to one particular cluster"
     ],
     explain: "Given the centroids, space divides into regions where each region is the set of locations nearest to one centroid — these are the Voronoi cells, and their boundaries are the k-means decision boundaries. Any new point is assigned to a cluster simply by which cell it falls in. The cells are convex and tile the whole space.",
     simple: "Draw lines so that every spot in the map belongs to its nearest centre. Each centre gets its own patch of territory. That patch is the Voronoi cell.",
@@ -234,10 +234,10 @@
     q: "What is 'Lloyd's algorithm' in the context of k-means?",
     choices: [
       "The standard iterative procedure that runs k-means by alternating the assignment and update steps until the assignments no longer change",
-      "A method for automatically selecting the best number of clusters k from the data",
-      "A rule for initialising the centroids by spreading them far apart before clustering",
-      "A distance measure used to compare two clusterings of the same data",
-      "A way to speed up clustering by processing points in small random mini-batches"
+      "A method for automatically selecting the single best number of clusters k directly from the underlying shape of the data on its own",
+      "A rule for initialising the centroids by deliberately spreading them far apart from one another before any of the clustering begins at all",
+      "A distance measure that is used to compare two entirely different clusterings of the very same dataset against each other and score them",
+      "A way to speed the clustering up by processing the points in small randomly drawn mini-batches instead of all of them at once each round"
     ],
     explain: "Lloyd's algorithm is the classic implementation of k-means: fix k, initialise centroids, then repeat 'assign each point to its nearest centroid' and 'move each centroid to the mean of its points' until nothing changes. Each iteration cannot increase inertia, so it converges — though only to a local minimum, which is why initialisation matters. When people say 'the k-means algorithm', this loop is usually what they mean.",
     simple: "Lloyd's algorithm is just the repeat-loop at the heart of k-means: sort the points, move the centres, sort again, move again, until it settles. It is the recipe the computer actually follows. It always stops, but not always at the perfect answer.",
@@ -262,10 +262,10 @@
     q: "Why does k-means usually require 'feature scaling' first?",
     choices: [
       "Because k-means uses distances, a feature on a large numeric range would dominate the distance and the clusters, so features are rescaled to comparable ranges beforehand",
-      "Because k-means cannot run at all unless every feature is a whole number between 0 and 1",
-      "Because scaling automatically chooses the correct number of clusters k for you",
-      "Because unscaled features make the algorithm run forever without ever converging",
-      "Because scaling converts categorical labels into the numeric targets k-means needs to learn"
+      "Because k-means simply cannot run at all unless every single one of the features has first been carefully turned into a whole number lying strictly between 0 and 1 each time",
+      "Because the scaling step is really what automatically chooses the single correct number of clusters k for the whole algorithm to go and look for on your behalf",
+      "Because leaving the features left completely unscaled would otherwise make the whole algorithm just carry on running forever without ever quite managing to converge at all",
+      "Because the scaling is really what converts the categorical class labels into the numeric target values that the k-means algorithm needs to have in order to learn"
     ],
     explain: "K-means measures closeness with Euclidean distance, which sums the squared differences across features. If one feature ranges over thousands and another over a handful, the large-range feature swamps the distance and effectively decides the clusters on its own. Standardising or normalising features so they share a comparable scale lets every feature contribute fairly.",
     simple: "K-means groups points by distance, and distance is unfair when one column is measured in huge numbers and another in tiny ones. The big column would decide everything. Rescaling the columns to a similar range fixes that.",
@@ -292,10 +292,10 @@
     q: "What is hierarchical clustering?",
     choices: [
       "A clustering approach that builds a nested tree of clusters, merging or splitting groups by similarity, so you can read off clusters at any level of the hierarchy",
-      "A clustering approach that fixes the number of clusters k in advance and moves centroids to minimise within-cluster distance",
-      "A clustering approach that grows clusters outward from dense regions and marks sparse points as noise",
-      "A supervised approach that learns the boundary between labelled classes from training examples",
-      "A method that reduces the data to a few principal directions before any grouping is done"
+      "A clustering approach that fixes the number of clusters k in advance and then repeatedly nudges its moving centroids around to minimise the total within-cluster distance",
+      "A clustering approach that grows clusters outward from dense crowded regions of the data and then marks the leftover sparse points as unclustered background noise instead",
+      "A supervised approach that learns the decision boundary lying between labelled classes directly from a set of hand-annotated training examples handed over up front",
+      "A method that first reduces the data down to just a few principal directions of maximum variance before any of the actual grouping work is even carried out at all"
     ],
     explain: "Hierarchical clustering organises data into a tree of clusters rather than a single flat partition. The agglomerative form starts with each point alone and repeatedly merges the two most similar groups; the divisive form starts with one cluster and splits it. Because the whole tree is produced, you can choose how many clusters you want afterward by cutting the tree at a chosen level.",
     simple: "Instead of picking a number of groups up front, this method builds a whole family tree of groups — small ones nested inside bigger ones. You can then slice the tree wherever you like to get however many clusters you want.",
@@ -320,10 +320,10 @@
     q: "In hierarchical clustering, what is 'linkage'?",
     choices: [
       "The rule that defines the distance between two clusters, deciding which pair of clusters is 'closest' and therefore merged next",
-      "The line drawn in a dendrogram connecting two points that belong to the same cluster",
-      "The number of clusters left after the algorithm has finished merging",
-      "The order in which the original data points were fed into the algorithm",
-      "The threshold height at which the final tree is cut into clusters"
+      "The line that is drawn across a dendrogram to connect two individual points which both belong to the very same cluster together",
+      "The number of separate clusters that are left remaining over after the whole algorithm has completely finished all of its merging",
+      "The particular order in which the original raw data points happened to be fed into the clustering algorithm at the very start",
+      "The threshold height at which the finished tree is finally cut straight across to produce the final set of flat clusters"
     ],
     explain: "Agglomerative clustering repeatedly merges the two closest clusters, but 'closest' between groups of points needs a definition — that is the linkage. Single linkage uses the nearest pair of points, complete linkage the farthest pair, average linkage the mean pairwise distance, and Ward the increase in variance. The linkage choice strongly shapes the clusters you get.",
     simple: "To merge the two closest clusters you first need to say what 'distance between two clusters' even means. Linkage is that rule. Different linkage rules give different-looking clusters.",
@@ -348,10 +348,10 @@
     q: "What is 'single linkage' in hierarchical clustering?",
     choices: [
       "A linkage rule that defines the distance between two clusters as the distance between their two closest points",
-      "A linkage rule that uses the distance between the two farthest points of the clusters",
-      "A linkage rule that averages the distances over all pairs of points between the clusters",
-      "A linkage rule that merges clusters to minimise the increase in total within-cluster variance",
-      "A linkage rule that compares the centroids of the two clusters"
+      "A linkage rule that instead uses the distance between the two single farthest-apart points of the two clusters",
+      "A linkage rule that averages the distances taken over every possible pair of points spanning the two clusters",
+      "A linkage rule that merges clusters so as to minimise the resulting increase in the total within-cluster variance",
+      "A linkage rule that simply compares the two centroids, the mean points, of the two clusters that are being merged"
     ],
     explain: "Single linkage measures cluster distance by the closest pair of points, one from each cluster. This lets clusters merge as soon as any two members are near, so it can trace long, chain-like or non-spherical shapes — but it is also prone to 'chaining', where distinct clusters get bridged by a thin trail of points. It is the most optimistic of the standard linkages.",
     simple: "Single linkage says two groups are close if their nearest edges touch, even if the rest is far away. It happily links long stringy shapes, but it can also chain separate blobs together through a few in-between points.",
@@ -376,10 +376,10 @@
     q: "What is 'complete linkage' in hierarchical clustering?",
     choices: [
       "A linkage rule that defines the distance between two clusters as the distance between their two farthest points",
-      "A linkage rule that uses the distance between the two closest points of the clusters",
-      "A linkage rule that averages the distances over all pairs of points between the clusters",
-      "A linkage rule that merges to minimise the growth of within-cluster variance",
-      "A linkage rule based only on the distance between the clusters' centroids"
+      "A linkage rule that instead uses the distance between the two single closest-together points of the two clusters",
+      "A linkage rule that averages the distances taken across all of the pairs of points spanning the two clusters",
+      "A linkage rule that merges clusters so as to minimise the resulting growth in the total within-cluster variance",
+      "A linkage rule based only on the straight-line distance measured between the two clusters' own mean centroids"
     ],
     explain: "Complete linkage measures cluster distance by the farthest pair of points, one from each cluster, so two clusters merge only when even their most distant members are reasonably close. This makes it favour compact, roughly equal-sized, ball-shaped clusters and resist the chaining that single linkage suffers. It can, however, break up large or elongated true clusters.",
     simple: "Complete linkage is the cautious opposite of single linkage: two groups count as close only if even their most far-apart members are near. That keeps clusters tight and round, but it can split up big stretched-out groups.",

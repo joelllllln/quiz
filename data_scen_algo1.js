@@ -162,7 +162,7 @@
       "k-NN is a lazy learner: near-zero training cost but expensive prediction (search all points), so it can be too slow to serve at scale without approximation",
       "k-NN is very slow to train but then completely instant to predict, so serving latency is never once a real concern here",
       "k-NN uses essentially no memory whatsoever at prediction time, so scaling it up to many millions of stored points is basically free of cost",
-      "The prediction latency of k-NN depends only on the chosen value of k itself, and never at all on the number of training points that are stored",
+      "The prediction latency of k-NN depends only on the chosen value of k itself, and never at all on the total number of training points that happen to be stored in memory",
       "k-NN simply cannot be used for a recommendation task at all, so its accuracy on this data is completely irrelevant"
     ],
     explain: "k-NN does no real work at training time — it just stores the data — but that pushes all the cost to prediction, where it must find the nearest neighbours among every stored point. With millions of points and tight latency, a naive scan is too slow and it must hold the whole dataset in memory. You weigh its accuracy against that serving cost, and often reach for approximate nearest-neighbour indexes (KD-trees, ball trees, HNSW) or a faster model to meet the latency budget.",
@@ -200,7 +200,7 @@
     q: "Your logistic regression scores 99% on training but 71% on validation. You control the inverse-regularisation strength C (large C = weak penalty). Which way should you move C, and why?",
     choices: [
       "Decrease C to strengthen regularisation — the train/validation gap signals overfitting, and more shrinkage should raise validation performance",
-      "Increase the value of C all the way toward infinity, so as to let the model fit the training data even more tightly and even more closely",
+      "Increase the value of C all the way toward infinity, so as to let the model fit the training data even more tightly and much more closely still than before",
       "The C parameter only affects training speed, so just leave it alone and instead simply add many more features",
       "Remove all of the regularisation entirely, since the training accuracy that you are already getting is excellent",
       "Increase C, because choosing a bigger number for it will always make the model generalise better to new data"
@@ -283,7 +283,7 @@
     choices: [
       "Data leakage — the scaler learned means and standard deviations using the test rows, so test performance is optimistically biased; fit the scaler on train only",
       "k-NN fundamentally cannot make use of scaled features at all, so the feature scaling itself is what corrupted the whole model",
-      "The test set that you happened to use was simply far too small, and a substantially larger test set would have matched the production accuracy almost exactly",
+      "The test set that you happened to use was simply far too small, and a substantially larger test set would have matched the real production accuracy almost perfectly and exactly",
       "Scaling the features before splitting is actually the completely correct procedure, so the gap you saw must just be random noise",
       "You should have applied the scaling after prediction rather than before it, so as to avoid distorting the computed distances"
     ],

@@ -18,10 +18,10 @@
     q: "You train a single decision tree with no depth limit on 3,000 rows. It scores 100% on training data but only 71% on the held-out test set. What is the most likely diagnosis?",
     choices: [
       "The tree overfit — it grew deep enough to memorize the training rows, so you should limit depth, set a minimum leaf size, or prune it",
-      "The tree underfit — it is too simple and needs to grow even deeper",
-      "The features need to be standardized before a tree can generalize",
-      "The test set is simply mislabeled and the tree is actually fine",
-      "Decision trees cannot exceed 71% accuracy on any real dataset"
+      "The tree actually underfit the data — it is far too simple as it currently stands, and it really needs to be allowed to grow considerably deeper still",
+      "The features all need to be standardized first, because a decision tree can never generalize on unscaled inputs",
+      "The held-out test set is simply mislabeled in places, and the tree itself is actually working perfectly fine",
+      "Decision trees are fundamentally incapable of ever exceeding 71% accuracy on any real-world dataset at all"
     ],
     explain: "A perfect training score with a much lower test score is the textbook signature of overfitting. An unpruned tree keeps splitting until each leaf is nearly pure, effectively memorizing noise in the training rows. The cure is to constrain growth (max depth, minimum samples per leaf, or cost-complexity pruning) so the tree captures general patterns rather than memorized specifics.",
     simple: "A tree left to grow forever builds a private rule for every single training example, like memorizing the answers instead of learning the subject. It aces practice and flunks the real test.",
@@ -39,10 +39,10 @@
     q: "Your features are age (0-90), income (0-500,000), and number of accounts (0-12), all on wildly different scales. You will train a single decision tree. Do you need to standardize or normalize the features first?",
     choices: [
       "No — a decision tree splits one feature at a time on threshold rules, so it is invariant to feature scale and monotone transforms",
-      "Yes — without scaling, income will dominate every split because its numbers are largest",
-      "Yes — trees compute distances, so unscaled features distort the geometry",
-      "Yes — you must always min-max normalize every feature to 0-1 before any model",
-      "No, but you must one-hot encode income into buckets or the tree will fail"
+      "Yes — without any feature scaling at all, income will end up dominating every single split, simply because its raw numeric values are by far the largest ones",
+      "Yes — decision trees internally compute distances between points, so leaving features unscaled badly distorts the geometry",
+      "Yes — you must always min-max normalize every one of the features to the 0-1 range before fitting any kind of model",
+      "No, but you first have to one-hot encode income into discrete buckets, or else the decision tree will simply fail to train"
     ],
     explain: "A decision tree evaluates each feature independently, choosing a split like 'income <= 42,000' by ranking values, so only the order of values within a feature matters, not their magnitude. Rescaling or applying any monotone transform leaves the same split points and the same tree. That is why trees (and tree ensembles) are famously immune to the feature-scaling step that distance- and gradient-based models require.",
     simple: "A tree just asks yes/no threshold questions on one column at a time. It does not care whether income is in dollars or thousands of dollars — the cut lands in the same place either way.",
@@ -59,10 +59,10 @@
     q: "You have 800 rows with 2 numeric features and a curved, non-linear boundary between the two classes. A plain linear SVM scores 68%. What is the most direct fix within the SVM family?",
     choices: [
       "Switch to an RBF (Gaussian) kernel, which maps the data into a higher-dimensional space where a curved boundary becomes separable",
-      "Increase C to a very large value on the linear kernel until it fits the curve",
-      "Remove one of the two features so the boundary becomes a straight line",
-      "Standardize the labels instead of the features",
-      "Add thousands more rows — a linear SVM will eventually bend its boundary"
+      "Increase C all the way to a very large value on the plain linear kernel, until it somehow finally manages to fit the curved boundary between the classes",
+      "Remove one of the two numeric features entirely, so that the decision boundary simply becomes a straight line",
+      "Standardize the target labels themselves instead of standardizing the input features before training",
+      "Add many thousands more training rows, since a linear SVM will eventually start to bend its own boundary"
     ],
     explain: "A linear SVM can only draw a straight decision boundary, so it caps out when the true boundary is curved. The kernel trick lets an SVM compute similarities in a higher-dimensional space without materializing it; the RBF kernel in particular can carve out smooth, curved boundaries. Raising C only hardens the margin of the same straight line, and dropping a feature discards signal — neither adds the needed curvature.",
     simple: "A linear SVM can only cut with a straight ruler. An RBF kernel is like being allowed to cut with a curved blade, so it can follow a bendy border between the classes.",
@@ -79,10 +79,10 @@
     q: "You are about to train an SVM with an RBF kernel on features measured in very different units (grams, kilometers, counts). What preprocessing step is essential here?",
     choices: [
       "Standardize or normalize the features, because the RBF kernel uses distances and a large-scale feature would otherwise dominate the similarity",
-      "Nothing — SVMs are scale-invariant just like decision trees",
-      "Prune the support vectors down to a fixed count before training",
-      "Convert every feature to a categorical bucket so distance is undefined",
-      "Set gamma to zero so scale no longer matters"
+      "Nothing at all is needed here — SVMs are completely scale-invariant, in exactly the same way that decision trees are",
+      "Prune the model's support vectors down to a small fixed count first, before you actually begin training the SVM",
+      "Convert every single one of the features into a discrete categorical bucket, so that the very notion of distance between two points becomes completely undefined",
+      "Set the gamma hyperparameter all the way to zero, so that the feature scale simply no longer matters at all"
     ],
     explain: "The RBF kernel computes similarity from the squared distance between points, so a feature spanning thousands of units swamps one spanning single digits, and the model effectively ignores the small-scale feature. Standardizing every feature to comparable ranges lets each contribute fairly to the distance. Feature scaling is essential for SVMs (and any distance- or margin-based method), which is exactly the opposite of decision trees.",
     simple: "The RBF kernel measures how far apart points are. If one feature is in kilometers and another in grams, the kilometers drown everything out — so you must put them on the same scale first.",
@@ -99,10 +99,10 @@
     q: "A hospital wants a screening rule that a nurse can apply by hand from a laminated card, with a handful of if/then questions. Which model best fits the deployment constraint?",
     choices: [
       "A shallow decision tree, whose root-to-leaf path is a short readable sequence of if/then rules",
-      "An RBF-kernel SVM, because it is usually the most accurate classifier",
-      "A random forest of 300 trees, majority-voting on each patient",
-      "A deep neural network exported to the card as a formula",
-      "k-nearest neighbours, which stores the whole training set for lookup"
+      "An RBF-kernel SVM, simply because it is usually the single most accurate classifier you can reach for",
+      "A random forest of 300 separate trees, each one majority-voting on the outcome for each patient",
+      "A deep neural network that has been exported onto the laminated card in the form of a formula",
+      "k-nearest neighbours, which stores the entire training set in memory and looks up neighbours for each case"
     ],
     explain: "A shallow decision tree literally is a flowchart: each internal node is one threshold question and each leaf is a decision, so a nurse can walk the path by hand. That transparency is the whole point when the model must run without a computer and be auditable. Ensembles, kernel SVMs, and deep nets may be more accurate but they combine many models or continuous math that cannot be executed from a laminated card.",
     simple: "A short decision tree is just a yes/no flowchart. That is perfect when a person has to follow the steps by hand and see exactly why each patient was flagged.",
@@ -119,10 +119,10 @@
     q: "After training a linear SVM, you find that only 40 of your 2,000 training points are support vectors. What does that tell you about the model?",
     choices: [
       "The decision boundary is defined only by those 40 border points — the other 1,960 points sit safely away from the margin and do not affect the boundary",
-      "The model failed to train because it used only 40 points",
-      "You must retrain until all 2,000 points become support vectors",
-      "The 40 support vectors are the misclassified points and should be deleted",
-      "Support vectors are irrelevant to where the boundary sits"
+      "The model must have failed to train properly, because it ended up using only 40 of the available points",
+      "You will need to keep on retraining the model over and over again until every last one of all 2,000 of the training points has finally become a support vector",
+      "Those 40 support vectors are exactly the misclassified points in the data, and they should therefore simply be deleted",
+      "The support vectors are actually completely irrelevant to where the final decision boundary ends up sitting"
     ],
     explain: "An SVM's decision boundary is determined entirely by the support vectors — the points lying on or inside the margin. Points far from the boundary have zero influence, so having only 40 support vectors means the boundary rests on a small, well-separated set of border cases and the rest of the data is comfortably classified. This sparsity is a feature: prediction depends only on those few points, and a small support-vector count on clean data is normal and healthy.",
     simple: "An SVM only cares about the points nearest the dividing line — the tricky border cases. Everything sitting comfortably far away is ignored when placing the boundary.",
@@ -141,10 +141,10 @@
     q: "You can ship a single pruned decision tree (test accuracy 84%, fully readable) or a random forest of 400 trees (test accuracy 90%, opaque). Stakeholders want accuracy AND a per-decision explanation. How do you frame the trade-off?",
     choices: [
       "It is an interpretability-vs-accuracy trade-off: the single tree gives readable rules at a 6-point accuracy cost, the forest gives 6 more points but no single readable reason — pick based on how much explanation the use case legally and practically requires",
-      "Always pick the forest — 90% beats 84%, and accuracy is the only thing that matters",
-      "Always pick the single tree — simpler models are always correct",
-      "Combine them by averaging the tree and the forest predictions to get both",
-      "Scale the features so the single tree reaches 90% too"
+      "Always just pick the random forest in this situation — a 90% score very comfortably beats 84%, and when it really comes down to it, raw predictive accuracy is genuinely the only thing that ever actually matters when you are choosing a model to ship",
+      "Always just pick the single decision tree in every case, because simpler and more readable models are quite simply always the correct and safest choice to make",
+      "You can simply combine the two approaches by averaging together the single tree's prediction and the whole forest's prediction on every case, and doing that neatly gives you both the forest's full accuracy and the single tree's complete per-decision readability at the very same time, with no real trade-off left to worry about at all",
+      "Just scale and standardize all of the input features beforehand, and then the single decision tree will comfortably reach the very same 90% accuracy that the forest gets too"
     ],
     explain: "A single tree exposes an exact root-to-leaf reason for every prediction, while a random forest averages hundreds of trees and trades that readability for accuracy and stability. Neither wins universally: the right call depends on whether the extra 6 points outweigh the loss of a clean per-decision explanation. In regulated or safety settings the readable tree can be worth more than the accuracy; in a low-stakes recommender the forest usually wins.",
     simple: "One clear tree tells you exactly why. A forest of 400 trees is more accurate but can only say 'the crowd voted this way'. You are trading reasons for a few points of accuracy.",
@@ -162,10 +162,10 @@
     q: "Tuning an RBF-SVM, small C gives a wide soft margin that misclassifies a few training points; large C gives a narrow hard margin that fits training points tightly. How should you choose C?",
     choices: [
       "C controls the bias-variance trade-off: small C tolerates margin violations for a smoother, more general boundary (more bias), large C fits training points hard (more variance) — tune it by cross-validation to the setting with best held-out accuracy",
-      "Always use the largest C possible, since fitting training points perfectly is the goal",
-      "Always use the smallest C possible, since simpler is always safer",
-      "C only changes training speed and has no effect on the boundary",
-      "Set C equal to the number of features for guaranteed best results"
+      "Always just use the very largest possible value of C that you can manage, since getting the model to fit every single one of the training points perfectly and exactly is really the whole entire goal of training any support vector machine in the first place, no matter the dataset",
+      "Always simply use the smallest possible value of C that you can, because a simpler and smoother model is quite simply always the safer and more reliable choice to make in absolutely every situation you will ever encounter",
+      "The C hyperparameter only ever changes how fast the model trains, and it genuinely has no effect whatsoever on where the final decision boundary actually ends up being placed by the SVM",
+      "Just set the value of C equal to the total number of input features that you have, and doing exactly that is essentially guaranteed to give you the very best possible results every single time without any tuning at all"
     ],
     explain: "In an SVM, C is the penalty for margin violations: a small C lets some points sit inside or across the margin in exchange for a wider, smoother boundary that generalizes better (higher bias, lower variance), while a large C forces the boundary to classify training points correctly at the cost of a narrow margin that can overfit (lower bias, higher variance). There is no universally best value — you sweep C and pick the one with the best cross-validated accuracy. This is the SVM's version of the bias-variance balance.",
     simple: "Small C says 'draw a smooth line and ignore a few troublemakers.' Large C says 'bend over backwards to get every training point right.' Too smooth underfits, too rigid overfits — cross-validation finds the sweet spot.",
@@ -183,10 +183,10 @@
     q: "With an RBF-SVM you must also set gamma. Small gamma gives each point a wide influence (smooth boundary); large gamma gives each point a tiny, local influence (wiggly boundary). What is the trade-off and how do you set it?",
     choices: [
       "Gamma sets the reach of each training point: small gamma = smooth, possibly underfit boundary; large gamma = highly local boundary that can overfit by wrapping tightly around individual points — tune gamma (jointly with C) by cross-validation",
-      "Larger gamma is always better because it fits the training data more precisely",
-      "Smaller gamma is always better because smoother is always safer",
-      "Gamma only matters for the linear kernel, not the RBF kernel",
-      "Gamma should be fixed equal to C at all times"
+      "A larger value of gamma is always strictly better in every single case, simply because a bigger gamma makes the model fit the fine details of the training data far more precisely and much more exactly than any smaller value could ever hope to do on its own",
+      "A smaller value of gamma is always strictly better in every possible situation, because a smoother and less wiggly decision boundary is quite simply always the safer and more dependable option to reach for no matter the data",
+      "The gamma hyperparameter only ever actually matters when you are using the plain linear kernel, and it has no effect at all whenever you happen to be using the RBF kernel instead",
+      "The gamma value should always simply be fixed to be exactly equal to the value of C at absolutely all times, in every model you ever train, without any exception whatsoever"
     ],
     explain: "In the RBF kernel, gamma controls how far a single training example's influence reaches: a small gamma spreads influence widely for a smooth boundary that may underfit, while a large gamma shrinks influence to a tiny neighborhood so the boundary can bend around individual points and overfit. Because gamma and C interact, they are tuned together (a grid search over both) and chosen by held-out performance. Neither extreme is universally right — it is a bias-variance dial like C.",
     simple: "Gamma is how far each point's 'vote' reaches. Small gamma blurs everything into a smooth line; large gamma lets each point carve its own bump. Too blurry underfits, too bumpy overfits.",
@@ -204,10 +204,10 @@
     q: "You need a classifier that retrains nightly on a growing dataset and returns predictions in under a millisecond on tens of features. You are weighing a pruned decision tree against an RBF-kernel SVM. What is the practical trade-off?",
     choices: [
       "The tree trains and predicts very fast and scales well with rows, while the RBF-SVM can be more accurate on complex boundaries but its training scales poorly with dataset size and prediction cost grows with the number of support vectors — favor the tree if speed and frequent retraining dominate",
-      "The SVM is always faster because it only keeps support vectors",
-      "The tree is always more accurate, so speed is the only reason to consider the SVM",
-      "Both have identical training cost, so pick either at random",
-      "Neither can predict in under a millisecond, so you need a neural network"
+      "The support vector machine is actually always the faster of the two models in practice, simply because it only ever keeps and stores the small handful of support vectors rather than the entire dataset, so serving it is cheap",
+      "The decision tree is quite simply always strictly more accurate than any support vector machine could ever possibly be on this kind of data, so the one and only real reason you would ever even consider using the RBF-SVM here at all is if you happened to care about raw prediction speed far above every other consideration you might have",
+      "Both of these two models have essentially identical training costs as the dataset grows, so in the end you can quite safely just pick either one of them completely at random and expect the same behaviour either way",
+      "Neither of the two models is actually capable of returning a prediction in under a single millisecond at this scale, so what you really need to do instead is reach for a deep neural network to meet the tight latency budget you have"
     ],
     explain: "Decision trees train roughly in n-log-n time and predict in the depth of the tree, so they stay fast as data grows and are cheap to retrain nightly. Kernel SVMs must work with pairwise similarities and their training time grows steeply (roughly quadratic-to-cubic in the number of rows), while prediction cost scales with the number of support vectors. If the workload demands frequent retraining and sub-millisecond inference at growing scale, the tree's speed usually outweighs the SVM's possible accuracy edge on curved boundaries.",
     simple: "A tree is quick to build and quick to answer, even as data piles up. A kernel SVM can be sharper on tricky boundaries but gets slow to train as rows grow — for nightly retrains and instant answers, the tree wins.",
@@ -225,10 +225,10 @@
     q: "Your single decision tree is unstable: a small change to the training data reshuffles the whole tree and test accuracy swings between 80% and 88%. You value both stability and reasonable interpretability. What is the balanced move?",
     choices: [
       "Use a random forest or moderately limit tree depth: averaging many trees (or shallower trees) cuts variance and stabilizes accuracy, trading some of the single tree's exact readability for robustness — pick the balance the use case needs",
-      "Keep the single unpruned tree and simply retrain until you get an 88% run",
-      "Switch to a linear SVM, which is guaranteed more accurate than any tree",
-      "Standardize the features so the single tree stops changing",
-      "Grow the tree even deeper so it becomes more stable"
+      "Just keep the single unpruned decision tree exactly as it currently is, and then simply retrain it over and over and over again until you eventually happen to land on one of the lucky 88% accuracy runs, and then go ahead and ship that particular fortunate one to production",
+      "Switch over to using a plain linear SVM instead, since a linear support vector machine is essentially guaranteed to be strictly more accurate than any decision tree could ever manage to be on this dataset",
+      "Just standardize and rescale all of the input features first, and once you have done that the single decision tree will completely stop changing its structure every time the data is nudged",
+      "Simply grow the single decision tree even deeper than it already is, because allowing a tree to become much deeper is what actually makes its predictions far more stable and far less jumpy overall"
     ],
     explain: "Single decision trees are high-variance: because each split is chosen greedily, a small data change can flip an early split and cascade into a completely different tree, causing accuracy to swing. Averaging many decorrelated trees (a random forest) or restricting depth reduces that variance and stabilizes performance, at the cost of the single tree's crisp per-decision readability. The balanced choice is to trade a little interpretability for the stability the deployment needs, rather than gambling on a lucky single-tree run.",
     simple: "One tree is jumpy — nudge the data and it redraws itself. Averaging a forest of trees smooths out the jumpiness, but you give up the single clean flowchart in exchange.",
@@ -245,10 +245,10 @@
     q: "A dataset has 30% of the minority-class labels missing at random, and the majority class is 4x larger. You must choose between a linear SVM and an RBF-SVM while also deciding how much margin softness (C) to allow. What is the sound reasoning?",
     choices: [
       "Test both kernels by cross-validation and use class weights, and lean toward a softer margin (smaller C) so noise and class imbalance do not force the boundary to overfit the crowded majority — let held-out performance on a proper metric decide kernel and C together",
-      "Always pick RBF with the largest C, since flexibility plus a hard margin is strictly best",
-      "Always pick the linear SVM, since it is immune to class imbalance",
-      "Drop the minority class entirely so the classes are balanced",
-      "Set C to infinity so the model never violates the margin on the majority class"
+      "Always just pick the RBF kernel together with the very largest possible value of C that you can manage to use, since the combination of full RBF kernel flexibility plus a perfectly hard, unforgiving margin is quite simply and strictly the single best possible option in absolutely every single case that you will ever happen to meet in practice",
+      "Always just pick the plain linear SVM in this situation, since a linear support vector machine is completely and totally immune to any and all effects of class imbalance in the training data no matter what",
+      "Simply drop the entire minority class out of the dataset altogether, so that the two remaining classes then end up being perfectly and exactly balanced against one another before you train",
+      "Just set the value of C all the way to infinity, so that the trained model then never once violates its own margin on any of the crowded majority-class training points at all"
     ],
     explain: "With imbalance and noisy/missing labels, a hard margin (very large C) will contort the boundary to satisfy the crowded, noisy majority and overfit. A softer margin (smaller C) tolerates violations for a more general boundary, and class weighting counteracts the 4-to-1 imbalance so the minority is not ignored. Whether linear or RBF wins depends on the true boundary shape, so you cross-validate both on an imbalance-aware metric rather than assuming one is universally superior.",
     simple: "When one class dwarfs the other and labels are noisy, forcing the SVM to get every point right just makes it chase the majority's noise. Loosen the margin, weight the rare class, and let a fair test pick the kernel.",
@@ -268,10 +268,10 @@
     q: "A decision tree predicting hospital readmission scores an astonishing 99% test accuracy. You notice one feature is 'discharge_disposition = readmitted-later', populated after the outcome is known. What is really happening?",
     choices: [
       "Target leakage — a feature that encodes the outcome sneaked in, so the tree just reads the answer; remove it and re-evaluate, expecting far lower honest accuracy",
-      "The tree is genuinely excellent and should be deployed immediately",
-      "The tree underfit and needs to grow deeper to exceed 99%",
-      "The features need standardizing to bring accuracy back to a believable level",
-      "99% is normal for decision trees and requires no scrutiny"
+      "The decision tree is genuinely excellent as it stands, and it should therefore be deployed to production immediately without any further changes",
+      "The decision tree has actually underfit the training data quite badly, and it simply needs to be allowed to grow considerably deeper still in order to push past its current 99% figure",
+      "The input features all just need to be standardized properly, which will bring the reported accuracy back down to a more believable level",
+      "A test accuracy of 99% is completely normal and expected for decision trees, and it therefore requires no further scrutiny at all"
     ],
     explain: "A near-perfect score driven by a feature that is only known after the target is decided is classic target leakage: the tree finds the split on that feature and effectively copies the label. It will look brilliant offline and fail in production, where that feature is not yet available at prediction time. The fix is to remove any feature that would not exist at the moment of prediction and re-measure — the honest accuracy will be much lower but real.",
     simple: "The tree isn't smart, it's peeking. One column secretly contains the answer that only appears after the fact, so of course it scores 99% — until you deploy it and the peek is gone.",
@@ -287,10 +287,10 @@
     q: "Two decision trees on the same churn data: Tree A uses 5-fold cross-validation, Tree B was tuned by trying 200 depth/leaf settings and reporting the single best test-set score. Tree B looks better. Why is that comparison a trap?",
     choices: [
       "Tree B overfit the test set through repeated peeking — trying 200 configs and keeping the best test score turns the test set into a training signal, so its reported accuracy is optimistically biased; trust the cross-validated estimate",
-      "Tree B is legitimately better because it tried more configurations",
-      "Cross-validation always underestimates accuracy, so Tree A is wrong",
-      "Tree B must be more accurate because more tuning always generalizes better",
-      "The two are directly comparable and Tree B simply wins"
+      "Tree B is quite legitimately the genuinely better of the two models here, simply and entirely because it actually went to the trouble of trying out very many more different hyperparameter configurations than Tree A ever bothered to do during the whole of its own tuning process",
+      "Cross-validation as a technique always systematically underestimates the true accuracy of any model, so Tree A's cross-validated number must therefore simply be wrong and far too low to trust here",
+      "Tree B simply must be the more accurate model of the two, because doing a great deal more hyperparameter tuning like that always reliably leads to better generalization on genuinely new, unseen data",
+      "The two models are perfectly directly comparable to each other exactly as reported, and when you line them up side by side like that Tree B quite simply and clearly wins the comparison outright"
     ],
     explain: "Selecting the best of 200 configurations by their test-set score lets the test set leak into model selection: with enough tries, one config scores high by chance, and reporting that maximum is optimistically biased. Cross-validation (or a held-out set touched only once) gives an honest estimate because the evaluation data was not used to pick the winner. Tree B's headline number is inflated; the fair comparison uses Tree A's cross-validated score or a fresh untouched test set for both.",
     simple: "If you take 200 exams and report only your best score, that number flatters you. Tree B did exactly that on the test set, so its 'win' is partly luck, not skill.",
@@ -308,10 +308,10 @@
     q: "You standardize your features and then train an RBF-SVM with 5-fold cross-validation, fitting the scaler on the FULL dataset before splitting. CV accuracy is 91% but production accuracy is 84%. What went wrong?",
     choices: [
       "Data leakage in preprocessing — the scaler's mean and standard deviation were computed using the validation folds, leaking their statistics into training; fit the scaler inside each fold (on training data only) so CV reflects real performance",
-      "The RBF kernel is simply unreliable and should be replaced with a linear one",
-      "The gap is normal and can be ignored since 84% is close enough",
-      "You should standardize the labels as well as the features",
-      "Cross-validation always overestimates by exactly this amount"
+      "The RBF kernel itself is simply fundamentally unreliable in general, and it really ought to just be swapped out and replaced with a plain linear kernel instead so the numbers finally agree",
+      "The gap between the two numbers is completely normal and can safely just be ignored entirely, since an accuracy of 84% is really quite close enough to the 91% figure for all practical purposes anyway",
+      "You should really be standardizing the target labels themselves as well, in addition to standardizing all of the input features, and doing both together is what will finally close the gap you are seeing",
+      "Cross-validation as a method always reliably overestimates the true production accuracy by very nearly exactly this same fixed amount each and every single time you ever run it, so the difference that you happened to see here is completely expected and really nothing at all to worry about"
     ],
     explain: "Fitting the scaler on the entire dataset before cross-validation lets each validation fold's mean and standard deviation influence the scaling used during training, so the model has already 'seen' summary statistics of the data it is evaluated on. That inflates CV accuracy relative to production, where new data was never part of the scaler. The fix is to fit the scaler on each fold's training portion only (e.g., inside a pipeline), so the CV estimate honestly reflects unseen data.",
     simple: "You let the scaler peek at the test folds when computing its averages. That tiny peek makes cross-validation look better than reality — do the scaling inside each fold instead.",
@@ -327,10 +327,10 @@
     q: "Your fraud SVM is 99.3% accurate on data that is 0.7% fraud, and management is thrilled. A closer look shows it flags almost no fraud. What is the real problem?",
     choices: [
       "Accuracy is the wrong metric under extreme imbalance — a model that predicts 'not fraud' for everyone already scores 99.3%; judge it by precision, recall, F1, or PR-AUC on the fraud class",
-      "The SVM is excellent and simply needs a bigger C to catch the last 0.7%",
-      "The features must be unscaled, which is why fraud is missed",
-      "99.3% proves the model generalizes and needs no further metric",
-      "The RBF kernel should be swapped for linear to raise accuracy further"
+      "The SVM is genuinely excellent as it is, and it simply needs to be given a somewhat bigger value of C so that it can finally start catching that last remaining 0.7% of fraud cases too",
+      "The input features involved here must simply all be left unscaled by mistake, and that missing feature scaling is really the whole reason that so much of the actual fraud is being missed entirely",
+      "A score of 99.3% clearly proves on its own that the model generalizes extremely well, and it therefore needs no further evaluation with any other metric of any kind whatsoever",
+      "The RBF kernel currently in use should simply be swapped out and replaced with a plain linear kernel instead, since doing exactly that will reliably raise the overall accuracy even further still"
     ],
     explain: "When only 0.7% of cases are fraud, a trivial classifier that always says 'not fraud' scores 99.3% accuracy while catching zero fraud, so a high accuracy number is meaningless here. The right metrics focus on the rare positive class: precision and recall, their F1 balance, or the area under the precision-recall curve. The SVM likely placed its boundary to satisfy the overwhelming majority; you would add class weights or adjust the threshold and then measure with imbalance-aware metrics.",
     simple: "Saying 'no fraud' about everyone is right 99.3% of the time and catches no crooks. Accuracy is fooled by the rare class — look at how much fraud you actually catch (recall) and how clean your alerts are (precision).",
@@ -347,10 +347,10 @@
     q: "A decision tree ranks 'customer_id_hash' as its top feature by importance and splits on it heavily, giving high training accuracy. Why should this alarm you?",
     choices: [
       "A near-unique identifier lets the tree memorize individual rows rather than learn a pattern, inflating training accuracy and gutting generalization; drop ID-like high-cardinality features and re-evaluate",
-      "It is great news — the tree found the single most predictive feature",
-      "Customer IDs are always the strongest legitimate signal in churn data",
-      "The tree needs deeper splits on the ID to reach even higher accuracy",
-      "You should standardize the ID hash so its importance is measured fairly"
+      "This is actually really great news — it simply means the decision tree has successfully found the single most predictive and most valuable feature there is in the entire dataset",
+      "Customer ID values like this one are quite simply always the very strongest and most legitimate predictive signal that you will ever find anywhere in customer churn data",
+      "The decision tree simply just needs to be allowed to make even deeper and more numerous splits on the customer ID feature, because allowing exactly that is precisely what will let it go on to reach an even higher training accuracy than it already has",
+      "You should really just standardize the customer ID hash values first, so that the feature's importance then ends up being measured completely fairly against all of the other features"
     ],
     explain: "A high-cardinality, near-unique feature like an ID hash lets a tree carve the data into tiny leaves that each match a handful of rows, effectively memorizing the training set and posting misleadingly high training importance and accuracy. Such a feature carries no generalizable signal — the same IDs will not recur in new data — so test performance collapses. The correct move is to exclude identifiers and other leaky high-cardinality keys before training and re-measure.",
     simple: "Splitting on a customer ID is like acing a test by memorizing which student sat in which seat. It works on the practice roster and tells you nothing about new customers.",
@@ -367,10 +367,10 @@
     q: "An RBF-SVM trained last year on transaction data has quietly dropped from 90% to 76% live accuracy, though it still scores 90% when re-tested on the original held-out set. Nothing in the code changed. What is the most likely cause?",
     choices: [
       "Data drift — the live input distribution has shifted away from the training data, so the fixed boundary no longer fits; monitor the input/label distributions and retrain on recent data",
-      "The SVM's support vectors wore out and must be regenerated from scratch",
-      "The original test set was too small and the 90% was always fake",
-      "The RBF kernel degrades on its own over time regardless of the data",
-      "Feature scaling silently reversed itself, so just re-standardize"
+      "The SVM's own support vectors have simply worn out and degraded over the past year, and they must now all be fully regenerated again completely from scratch to restore the model",
+      "The original held-out test set was quite simply always far too small right from the very beginning, which really means that the impressive 90% figure it kept giving was actually completely fake and untrustworthy the entire time all along",
+      "The RBF kernel itself just naturally degrades and gets worse all on its own steadily over time, completely regardless of whether the underlying data has changed at all or not",
+      "The feature scaling that was applied must have silently reversed itself somehow at some point, so the correct fix is simply to go back and re-standardize all of the features once again"
     ],
     explain: "The model still scores 90% on the original held-out set, so the model itself is unchanged; what changed is the world. When the live data distribution shifts (new customer behavior, new fraud patterns, seasonality), a fixed decision boundary that was optimal last year no longer matches today's inputs, and accuracy erodes even though nothing in the code moved. The remedy is to monitor input and label distributions for drift and retrain on recent data rather than trusting a frozen model.",
     simple: "The model didn't break — the world moved. Customers behave differently now, so a boundary drawn last year sits in the wrong place. You need to watch for drift and retrain on fresh data.",

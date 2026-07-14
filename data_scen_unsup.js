@@ -140,7 +140,7 @@
     q: "For K-Means on your data, the elbow plot is ambiguous (no sharp bend), but silhouette scores are 0.61 at k = 4 and 0.38 at k = 6. Business wants finer segments (k = 6). How do you weigh this?",
     choices: [
       "Favor k = 4: its far higher silhouette means genuinely better-separated clusters; adopt k = 6 only if the extra segments are validated as useful",
-      "Always pick k = 6 for the segmentation, purely because the business stakeholders explicitly asked for more, finer segments",
+      "Always pick k = 6 for the segmentation, purely because the business stakeholders explicitly asked for more, finer segments and the customer is always right in the end",
       "Pick k = 4 and then flatly refuse to ever discuss or consider any more granular customer segmentation with the business at all",
       "Ignore the silhouette scores entirely, since only the elbow plot is ever a valid tool for choosing the number of clusters k",
       "Pick whichever value of k produces the highest total inertia, working on the principle that a higher inertia is always better"
@@ -163,7 +163,7 @@
       "Always use single linkage for this data, purely because single linkage happens to be the fastest and the simplest of all the rules",
       "Use single linkage so that the clusters are free to chain together, since the chaining effect is always a desirable property to have",
       "The choice of linkage rule never actually affects the resulting clusters at all, so you may as well just pick any one of them at random",
-      "Use complete linkage and only complete linkage, since complete linkage is provably the theoretical best choice in every possible case"
+      "Use complete linkage and only complete linkage, since complete linkage is provably the theoretical best choice in every possible case regardless of the data's shape"
     ],
     explain: "Linkage defines how the distance between two clusters is measured, and it strongly shapes the outcome. Single linkage joins clusters by their two closest points, so a thin bridge of points can chain unrelated blobs together — great for elongated shapes, bad for clean separation. Ward merges the pair that least increases within-cluster variance, producing compact, similarly-sized clusters that fit convex blobs well. Since your data is round and balanced, Ward is the better trade-off; you would reconsider if the shapes were stringy.",
     simple: "Single linkage is a chain of stepping stones — good for long shapes, but one stone in the wrong place links two islands. Ward keeps clusters round and tidy, which suits round, tidy data.",
@@ -183,7 +183,7 @@
       "Keep all 200 of the original components, since dropping even a single one of them at all would inevitably lose some real information",
       "Keep exactly 2 components and no more, because PCA is really only ever meant for producing two-dimensional scatter plots anyway",
       "Keep just 1 single component, since the very first principal component already explains the largest share of the variance by far",
-      "Keep the full 30 components, on the principle that keeping more components is always the safer option regardless of the cost"
+      "Keep the full 30 components, on the principle that keeping more components is always the safer option regardless of the cost in compute time or in memory"
     ],
     explain: "This is a compression-versus-fidelity trade-off. Ten components retain 95% of the total variance while cutting dimensionality 20-fold, which usually speeds training and reduces noise with negligible loss. Jumping to 30 buys only another 4% of variance for triple the size — worthwhile only if that residual signal is genuinely predictive. Keeping all 200 defeats the purpose, and 1-2 components throws away too much. A cumulative-variance curve makes the sweet spot visible.",
     simple: "Ten components already hold 95% of the picture at a fraction of the size. Paying for 20 more components to recover the last few percent is only worth it if that detail actually helps.",
@@ -221,7 +221,7 @@
     q: "You must cluster 5 million points. DBSCAN handles noise and odd shapes but needs a good eps and can be memory-heavy; K-Means is fast and scales linearly but assumes round clusters and no noise. Clusters look roughly spherical and speed matters most. What is the sensible call?",
     choices: [
       "Use K-Means (or MiniBatch K-Means): with spherical clusters and a tight compute budget its speed and scalability win, accepting it will not flag noise",
-      "Use DBSCAN regardless of the situation, purely because DBSCAN is always strictly more accurate than K-Means on any dataset at all",
+      "Use DBSCAN regardless of the situation, purely because DBSCAN is always strictly more accurate than K-Means on any dataset at all, whatever the shape or the size",
       "Use hierarchical agglomerative clustering, since of all the available methods it is the one that scales the best to many millions of points",
       "Use K-Means but set the cluster count k equal to the total number of data points, so as to capture the maximum possible detail",
       "Avoid clustering these points entirely, since a dataset as large as 5 million points simply cannot be meaningfully clustered at all"
@@ -241,7 +241,7 @@
     q: "Running t-SNE, a low perplexity (~5) emphasises very local structure and can fabricate tiny scattered clumps, while a high perplexity (~50) preserves more global layout but can blur fine groups together. You have ~2000 points and want a faithful cluster picture. How do you set it?",
     choices: [
       "Try a moderate perplexity (~30) and compare a few values — it balances local detail against global structure, and stable groups across settings are the trustworthy ones",
-      "Always use the very lowest perplexity value available, since capturing more fine local detail in the map is strictly better in every case",
+      "Always use the very lowest perplexity value available, since capturing more fine local detail in the map is strictly better in every case than preserving the global layout",
       "Always use the very highest perplexity value available, since preserving the broad global layout of the data is really all that ever matters",
       "The perplexity setting has no real effect on the resulting t-SNE plot at all, so you can safely just leave it at any value you happen to like",
       "Set the perplexity equal to the total number of points in the whole dataset in order to get the maximum possible resolution in the map"
@@ -266,7 +266,7 @@
       "The teammate is completely right about this: t-SNE faithfully preserves the true distances and the densities of the data exactly",
       "A larger-looking cluster in a t-SNE plot always means that group genuinely has a higher variance back in the original feature space",
       "The gaps between the clusters in t-SNE are equal to the real distances, so B and C really are the two most similar groups of the three",
-      "The t-SNE axes have meaningful units that you can read straight off the plot in order to directly compare the spreads of the clusters"
+      "The t-SNE axes have meaningful units that you can read straight off the plot in order to directly compare the spreads of the clusters and their relative densities too"
     ],
     explain: "t-SNE optimises to preserve local neighbourhoods, not global geometry. It actively expands dense regions and contracts sparse ones, so a cluster's rendered size reflects the algorithm's crowding correction, not the group's true spread. Likewise the distances between separated clusters are largely meaningless — a big gap does not mean 'far apart' in the original space. The honest reading is only that distinct, separated blobs suggest distinct groups; do not interpret their sizes or spacing.",
     simple: "A t-SNE plot is like a subway map: it shows which stops connect, but not real distances or how big each area is. Trust that groups are separate — do not trust how far apart or how large they look.",
@@ -286,7 +286,7 @@
       "There is no problem at all here, because PCA is an unsupervised method and so it can perfectly safely be allowed to see all of the data",
       "The only real problem is that PCA runs noticeably slower when it is fit on the full set of rows rather than on just the training rows",
       "It is completely fine to do this, just so long as you are careful never to look at any of the test-set labels during the PCA step",
-      "The real issue is simply that PCA should always be fit after the standardisation step rather than before it, which is the ordering mistake"
+      "The real issue is simply that PCA should always be fit after the standardisation step rather than before it, which is the ordering mistake that inflated the reported score here"
     ],
     explain: "Even though PCA and standardisation ignore labels, they still learn parameters — component directions, feature means and variances — from the data they are fit on. Fitting them on the full dataset lets information from the test rows shape the transform applied to the training rows, so the test set is no longer truly unseen. The correct procedure is to split first, fit the scaler and PCA on the training set only, then apply those fixed transforms to the test set (a Pipeline enforces this). Otherwise your reported score is optimistically inflated.",
     simple: "If your dimension-reduction step peeked at the test data while learning, the test is no longer a surprise. Split first, then let PCA learn only from the training half.",
@@ -326,7 +326,7 @@
       "Adding more features always helps clustering and nearest-neighbour results, so the real cause of the drop here must be a coding bug somewhere",
       "Working in very high dimensions makes it mathematically impossible to actually compute the Euclidean distance between any two points at all",
       "The hundreds of extra features you added effectively increased the sample size of the data, and a larger sample size hurts the clustering here",
-      "Both clustering and k-nearest-neighbours are completely unaffected by the number of features in the data, so this result is quite surprising"
+      "Both clustering and k-nearest-neighbours are completely unaffected by the number of features in the data, so this result most likely points to a bug in the code somewhere"
     ],
     explain: "As dimensionality grows, data becomes sparse and the contrast between the nearest and farthest neighbour distances shrinks toward zero — distances 'concentrate'. Since K-Means, DBSCAN and kNN all rely on distances being meaningful, their notion of a neighbourhood degrades, and irrelevant added features inject noise that dilutes any real signal. This is the curse of dimensionality. The fix is fewer, more relevant features: feature selection or dimensionality reduction such as PCA before clustering.",
     simple: "Pile on enough dimensions and everything ends up roughly the same distance from everything else, so 'nearest neighbour' stops meaning anything. More columns can bury the signal instead of adding it.",
@@ -346,7 +346,7 @@
       "DBSCAN can only ever work on a single one cluster at a time, so it fundamentally fails the moment you give it two clusters at once",
       "The loose, sparse cluster is really just noise in the data, and noise like that should always simply be discarded rather than clustered",
       "The eps parameter only affects how fast DBSCAN runs and has no bearing at all on which of the points actually get clustered together",
-      "You must set the eps parameter all the way down to zero, which will make DBSCAN find every cluster in the data completely automatically"
+      "You must set the eps parameter all the way down to zero, which will make DBSCAN find every cluster in the data completely automatically with no manual tuning at all"
     ],
     explain: "DBSCAN uses one global eps (neighbourhood radius) and minPts threshold for the whole dataset. An eps small enough to keep the dense cluster from merging with its surroundings is too small for the sparse cluster, whose points are simply farther apart, so most of them fall below the density threshold and get labeled noise. This varying-density weakness is inherent to classic DBSCAN. Remedies include tuning eps via a k-distance plot, or using HDBSCAN, which adapts to varying density.",
     simple: "DBSCAN uses one 'how close counts as together' setting for the whole map. Tune it for the crowded neighbourhood and the spread-out one looks empty; the single radius cannot serve both.",
@@ -363,10 +363,10 @@
     q: "Two species in your data form two long, parallel, slightly-curved bands that nearly touch at one point. You use single-linkage hierarchical clustering and it merges both bands into one cluster. Why?",
     choices: [
       "Single linkage's chaining effect — it merges clusters via their closest pair, so the near-touching point bridges the two bands into one",
-      "Single linkage is buggy and should never be used for any data",
-      "The two bands are genuinely one cluster, so the result is correct",
-      "Hierarchical clustering cannot handle elongated shapes under any linkage",
-      "The merge happened because you used too many features"
+      "Single linkage is fundamentally buggy as an algorithm and it should really never be used on any dataset at all under any circumstances",
+      "The two long parallel bands are genuinely just one single cluster all along, so the merge that single linkage produced is actually correct",
+      "Hierarchical clustering is simply incapable of handling elongated or curved shapes like these two bands under any linkage rule you pick",
+      "The incorrect merge happened purely because you fed the clustering far too many input features for it to handle properly all at once"
     ],
     explain: "Single linkage defines the distance between two clusters as the distance between their two nearest points, so clusters merge as soon as any pair of points is close. Where the two bands nearly touch, that minimal gap is tiny, so single linkage links them through that bridge — the classic chaining effect that strings together groups connected by a thin path. Here it wrongly fuses two species. Complete or Ward linkage, which consider farthest points or variance, would resist this bridging.",
     simple: "Single linkage joins groups the moment any two points get close, like a chain that only needs one link. Where the two bands almost touch, that single link welds them into one.",
