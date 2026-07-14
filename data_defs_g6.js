@@ -38,10 +38,10 @@
     q: "What is a principal component?",
     choices: [
       "One of the new axes PCA produces — a direction through the data, built as a weighted mix of the original features, along which the data varies as much as possible",
-      "A single original column of the dataset that PCA decides to keep unchanged",
-      "The average of all the data points, used as the origin of the new coordinate system",
-      "A cluster centre that PCA assigns each point to during the projection",
-      "The label PCA predicts for each row after it reduces the dimensions"
+      "A single untouched column from the original dataset that PCA hands straight through to the output without combining it with any other feature at any stage of the process",
+      "The plain average of all the data points across every feature, used only as the fixed origin from which the new rotated coordinate system is ultimately measured out",
+      "A cluster centre that PCA computes and then assigns each data point to, so every row is labelled by whichever centre it happens to land nearest to",
+      "The single categorical label that PCA predicts for each row once it has finished reducing the dataset down to a smaller handful of dimensions overall"
     ],
     explain: "A principal component is a direction in feature space, expressed as a linear combination of the original features, chosen so the data's variance along it is maximal (subject to being orthogonal to earlier components). The components are ordered: the first captures the most variance, the second the next most, and so on. Each data point's position along a component is its 'score' on that component.",
     simple: "A principal component is one of the fresh directions PCA discovers, made by blending your original columns. The first one points where the data is most spread out, and later ones capture whatever spread is left over.",
@@ -66,10 +66,10 @@
     q: "What is the first principal component (PC1)?",
     choices: [
       "The single direction through the data along which its variance is the largest of any possible direction",
-      "The direction along which the data varies the least, used to discard noise",
-      "The original feature that happens to have the biggest raw numbers",
-      "The line connecting the two data points that are farthest apart",
-      "The axis that is perpendicular to every other component but carries no variance"
+      "The single direction along which the data varies the very least, kept so its tiny spread can be dropped as noise",
+      "The one original feature that happens to contain the biggest raw numeric values before any scaling is applied",
+      "The straight line drawn to connect the two individual data points that sit farthest apart in the whole cloud",
+      "The extra axis that is perpendicular to every other component yet happens to carry no variance at all"
     ],
     explain: "The first principal component is the direction in feature space that maximises the variance of the projected data — no other single direction spreads the points out more. It is the leading eigenvector of the covariance matrix, and its eigenvalue equals the variance captured along it. Every other component must be orthogonal to it and captures less.",
     simple: "PC1 is the one direction in which your data is most stretched out. If you had to summarise every point with a single number, projecting onto PC1 keeps as much of the spread as any single line can.",
@@ -94,10 +94,10 @@
     q: "In PCA, what is an eigenvector of the covariance matrix?",
     choices: [
       "A special direction that the covariance matrix only stretches, not rotates — PCA uses these directions as its principal components",
-      "The list of average values, one per feature, that centres the data",
-      "A single data point that lies exactly on a principal component",
-      "The amount of variance left unexplained after projection",
-      "A random starting direction that PCA refines by gradient descent"
+      "The list of per-feature average values that PCA subtracts from every row so the whole cloud is centred on the origin before decomposition",
+      "A single individual data point that happens to lie exactly on top of a principal component line after the data has been fully projected",
+      "The leftover amount of variance that stays unexplained once the data has been projected down onto the kept principal components",
+      "A random starting direction that PCA gradually refines step by step using gradient descent until it settles on a component"
     ],
     explain: "An eigenvector of a matrix is a direction that the matrix maps onto a scalar multiple of itself: applying the matrix stretches or shrinks it but does not change where it points. For a covariance matrix these eigenvectors are the principal components, and each one's eigenvalue tells how much variance the data has along it. That is why PCA reduces to an eigen-decomposition of the covariance matrix.",
     simple: "An eigenvector is a direction that a matrix leaves pointing the same way, only longer or shorter. For PCA's covariance matrix, those unmoved directions are exactly the principal components.",
@@ -122,10 +122,10 @@
     q: "In PCA, what does the eigenvalue of a principal component tell you?",
     choices: [
       "How much of the data's variance lies along that component — a bigger eigenvalue means the component captures more spread",
-      "The angle between that component and the original feature axes",
-      "How many data points were projected onto that component",
-      "The weight each original feature contributes to that component",
-      "Whether the component is orthogonal to the others"
+      "The precise angle measured in degrees between that component and each of the original feature axes it was built from",
+      "The total count of how many individual data points happened to be projected directly onto that one component during the reduction",
+      "The individual weight that each original input feature contributes toward the final direction of that particular component",
+      "Whether that component happens to sit perfectly orthogonal, at a right angle, to all of the other components"
     ],
     explain: "Each principal component (eigenvector) comes with an eigenvalue that equals the variance of the data along that direction. Ranking components by eigenvalue therefore ranks them by how much of the total variability they explain, which is why the leading components are kept and the tiny-eigenvalue ones discarded. Dividing an eigenvalue by the sum of all eigenvalues gives that component's explained-variance ratio.",
     simple: "The eigenvalue is the size of the spread along a component. Big eigenvalue means the data stretches a lot in that direction, so the component is worth keeping; tiny eigenvalue means barely any spread.",
@@ -150,10 +150,10 @@
     q: "In PCA, what is the explained-variance ratio of a component?",
     choices: [
       "The fraction of the data's total variance that a single component accounts for, found by dividing its eigenvalue by the sum of all eigenvalues",
-      "The proportion of data points that lie exactly on the component",
-      "The angle, as a fraction of 90°, between two components",
-      "The share of features that received a non-zero loading on the component",
-      "The percentage of the dataset that was used to fit the component"
+      "The proportion of the data points that happen to lie exactly on the component line rather than sitting off to one side of it after the projection step",
+      "The angle between two neighbouring components, written as a fraction of a full ninety-degree right angle rather than in raw degrees",
+      "The share of the original input features that received a non-zero loading weight on that component instead of being left out of the mix entirely",
+      "The percentage of the whole dataset that was actually sampled and used to fit the component during the decomposition step of PCA"
     ],
     explain: "The explained-variance ratio expresses each component's eigenvalue as a share of the total variance (the sum of all eigenvalues), so the ratios across all components add up to 1. It answers 'what fraction of the whole picture does this axis carry?' and, summed over the kept components, tells you how much information a reduced representation retains. It is the standard yardstick for deciding how many components to keep.",
     simple: "It is the slice of the total spread that one component covers, written as a fraction. Add up the fractions for the components you keep and you know how much of the data you are holding on to.",

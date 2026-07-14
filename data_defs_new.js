@@ -257,7 +257,7 @@
   def("valid",
     "What is group k-fold cross-validation?",
     "A split that keeps all rows from the same entity (user, firm, patient) inside one fold, so information never leaks across the split",
-    ["A split that simply shuffles all of the rows at random and then deals them out into k equally sized folds for validation",
+    ["A split that simply shuffles all of the rows at random and then deals them out evenly into k equally sized folds to be used for validation in turn",
      "A split that always trains on the earlier time-ordered rows and then tests only on the later ones, to avoid look-ahead",
      "A split that uses every single row in turn as its own one-row test fold, training on all of the other rows each time",
      "A split that carefully stratifies each of the folds so that every one matches the overall class proportions of the data"],

@@ -686,7 +686,7 @@
     q: "In scikit-learn, what is StandardScaler?",
     choices: [
       "A transformer that rescales each feature to have zero mean and unit variance, using statistics learned during fit",
-      "An estimator that predicts a single continuous numeric target value directly from the given input features",
+      "An estimator that predicts a single continuous numeric target value directly from the given raw input features",
       "A method that divides the available data into one separate training portion and one separate test portion",
       "A tool that combines several separate trained classifiers together into a single majority-vote ensemble model",
       "A systematic search across a predefined grid of candidate hyperparameter values for the best-scoring setting"
@@ -826,10 +826,10 @@
     q: "In scikit-learn, what is the random_state parameter?",
     choices: [
       "A seed for the random number generator that makes operations with randomness reproducible across runs",
-      "A hyperparameter that sets how complex the model is allowed to become",
-      "The fraction of data reserved for the test set",
-      "The number of folds used during cross-validation",
-      "The learned probability the model assigns to the positive class"
+      "A hyperparameter that sets how complex the fitted model is allowed to become during the course of its training",
+      "The fraction of the available data that is set aside and reserved for use as the held-out test set",
+      "The number of separate folds that the dataset is divided into during a cross-validation procedure",
+      "The learned probability that the fitted model ends up assigning to the positive class for a given sample"
     ],
     explain: "random_state fixes the seed of the pseudo-random number generator used by operations that involve randomness — shuffling in train_test_split, bootstrap sampling in a random forest, initialisation in k-means, and so on. Setting it to a constant makes those steps deterministic, so re-running the code reproduces exactly the same splits, models, and results, which is essential for debugging and fair comparison.",
     simple: "It is a fixed seed for anything random, so you get the same shuffle or split every time you run the code. Set it and your results become repeatable.",

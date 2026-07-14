@@ -807,7 +807,7 @@
     q: "What is a voting classifier (voting ensemble)?",
     choices: [
       "An ensemble that trains several different classifiers on the same data and combines their predictions by a fixed rule — hard voting on labels or soft voting on averaged probabilities",
-      "A single classifier that is retrained several times over from different random seeds and simply keeps whichever run happened to score the best on the held-out validation split",
+      "A single classifier that is retrained several times over from many different random seeds and simply keeps whichever one of those runs happened to score the very best on the held-out validation split",
       "A meta-model trained on the base models' out-of-fold predictions to learn the best combination, discovering the weights from data instead of fixing them ahead of time by hand",
       "A classifier that lets the human user step in and vote on whichever prediction looks the most plausible to them, manually overriding the model on every individual row",
       "A boosting classifier whose successive trees vote on which training row to reweight next, steering more and more attention onto the hardest rows the ensemble keeps missing"
