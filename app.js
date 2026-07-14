@@ -87,6 +87,7 @@
   /* ---------------- lifetime total + daily challenge ---------------- */
   function getTotal() { return +(localStorage.getItem('ds_total_correct') || 0); }
   function bumpTotal() { try { localStorage.setItem('ds_total_correct', getTotal() + 1); } catch (e) {} }
+  function setTotal(v) { try { localStorage.setItem('ds_total_correct', Math.max(0, v)); } catch (e) {} }
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function todayLabel() { try { return new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { return today(); } }
   var DAILY_OPTS = [5, 10, 25, 50];
@@ -266,6 +267,47 @@
     if (!n) logActivity();
     if (score >= 4) bumpTotal();
     return n;
+  }
+  // The marked-writing result panel, shared by both writing modes. Includes a rebuttal control:
+  // if you disagree with the AI's mark you can set your own score, and the mastery/total effect is
+  // recomputed cleanly (the AI's effect is rolled back first, so adjusting is idempotent).
+  function markResultEl(name, reference, res, onNext, onRedo) {
+    var affected = (conceptIndex()[normkey(name)] || []).map(cardId);
+    var snap = {}, cardsObj = loadCards();
+    affected.forEach(function (id) { snap[id] = cardsObj[id] ? JSON.stringify(cardsObj[id]) : null; });
+    var snapTotal = getTotal();
+    function applyScore(sc) {
+      var c = loadCards();
+      affected.forEach(function (id) { if (snap[id] == null) delete c[id]; else c[id] = JSON.parse(snap[id]); });
+      setTotal(snapTotal); saveCards();
+      recordWritten(name, sc);
+    }
+    var edited = false;
+    var el = h('<div class="wr-inner">' +
+      '<div class="wr-scorerow"><div class="wr-score sc-' + res.score + '"><span class="wr-num">' + res.score + '</span><span class="wr-den">/ 5</span></div>' +
+      '<div class="wr-meter"><div class="wr-fill sc-' + res.score + '" style="width:' + (res.score * 20) + '%"></div></div></div>' +
+      '<div class="wr-fb"></div>' +
+      '<div class="wr-model"><span class="wr-mtag">The answer</span><span class="wr-modeltext"></span></div>' +
+      '<div class="wr-adjust"><span class="wr-adjlab">Think that mark is unfair? Set your own score:</span>' +
+        '<span class="wr-adjbtns">' + [1, 2, 3, 4, 5].map(function (s) { return '<button class="wr-adj' + (s === res.score ? ' on' : '') + '" type="button" data-s="' + s + '">' + s + '</button>'; }).join('') + '</span>' +
+        '<span class="wr-edited" hidden>✓ your score</span></div>' +
+      '<div class="next-row"><button class="btn wr-next">Continue →</button><button class="btn ghost wr-redo">Rewrite</button></div></div>');
+    el.querySelector('.wr-fb').textContent = res.feedback || '';
+    el.querySelector('.wr-modeltext').textContent = reference;
+    function setUI(sc) {
+      el.querySelector('.wr-num').textContent = sc;
+      el.querySelector('.wr-score').className = 'wr-score sc-' + sc;
+      var fill = el.querySelector('.wr-fill'); fill.className = 'wr-fill sc-' + sc; fill.style.width = (sc * 20) + '%';
+      el.querySelectorAll('.wr-adj').forEach(function (bt) { bt.classList.toggle('on', +bt.getAttribute('data-s') === sc); });
+      el.querySelector('.wr-edited').hidden = !edited;
+    }
+    el.querySelectorAll('.wr-adj').forEach(function (bt) {
+      bt.onclick = function () { var sc = +bt.getAttribute('data-s'); edited = true; applyScore(sc); setUI(sc); };
+    });
+    el.querySelector('.wr-next').onclick = onNext;
+    el.querySelector('.wr-redo').onclick = onRedo;
+    applyScore(res.score);   // record the AI's mark to start
+    return el;
   }
   // Status: mastery comes only from written answers. 2 good written answers = mastered, 1 = "know it".
   // A miss (any mode) = struggling. Everything else — MC/flashcard/type/match corrects, a 3/5 written,
@@ -745,18 +787,11 @@
             result.querySelector('.wr-retry').onclick = runMark;
             return;
           }
-          var pct = res.score * 20; seen++; if (res.score >= 4) known++;
-          result.innerHTML =
-            '<div class="wr-scorerow"><div class="wr-score sc-' + res.score + '"><span class="wr-num">' + res.score + '</span><span class="wr-den">/ 5</span></div>' +
-            '<div class="wr-meter"><div class="wr-fill sc-' + res.score + '" style="width:' + pct + '%"></div></div></div>' +
-            '<div class="wr-fb"></div>' +
-            '<div class="wr-model"><span class="wr-mtag">The answer</span><span class="wr-modeltext"></span></div>' +
-            '<div class="next-row"><button class="btn wr-next">Continue →</button><button class="btn ghost wr-redo">Rewrite</button></div>';
-          result.querySelector('.wr-fb').textContent = res.feedback;
-          result.querySelector('.wr-modeltext').textContent = reference;
-          result.querySelector('.wr-next').onclick = advance;
-          result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
-          recordWritten(c.record || c.front, res.score);
+          seen++; if (res.score >= 4) known++;
+          result.innerHTML = '';
+          result.appendChild(markResultEl(c.record || c.front, reference, res,
+            advance,
+            function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); }));
         });
       }
       mark.onclick = runMark;
@@ -1008,20 +1043,12 @@
             result.querySelector('.wr-retry').onclick = runMark;
             return;
           }
-          var pct = res.score * 20;
-          result.innerHTML =
-            '<div class="wr-scorerow"><div class="wr-score sc-' + res.score + '"><span class="wr-num">' + res.score + '</span><span class="wr-den">/ 5</span></div>' +
-            '<div class="wr-meter"><div class="wr-fill sc-' + res.score + '" style="width:' + pct + '%"></div></div></div>' +
-            '<div class="wr-fb"></div>' +
-            '<div class="wr-model"><span class="wr-mtag">The answer</span><span class="wr-modeltext"></span></div>' +
-            '<div class="next-row"><button class="btn wr-next">Next prompt →</button><button class="btn ghost wr-redo">Rewrite</button></div>';
-          result.querySelector('.wr-fb').textContent = res.feedback;
-          result.querySelector('.wr-modeltext').textContent = reference;
-          result.querySelector('.wr-next').onclick = nextPrompt;
-          result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
-          // Feed the shared learning map. A strong written explanation (>=4/5) both
-          // strengthens the concept AND unlocks 'mastered' — the ONLY way to master it.
-          recordWritten(c.front, res.score);
+          result.innerHTML = '';
+          var el = markResultEl(c.front, reference, res,
+            nextPrompt,
+            function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); });
+          el.querySelector('.wr-next').textContent = 'Next prompt →';
+          result.appendChild(el);
         });
       }
       mark.onclick = runMark;
@@ -1657,25 +1684,31 @@
 
     function renderMastery() {
       var rows = masteryByTopic();
-      var mastered = 0, total = 0;
-      rows.forEach(function (r) { mastered += r.learnt; total += r.total; });
+      var tot = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0, total: 0 };
+      rows.forEach(function (r) { tot.learnt += r.learnt; tot.ready += r.ready; tot.learning += r.learning; tot.struggling += r.struggling; tot.new += r.new; tot.total += r.total; });
+      // Progress that credits every stage, so an hour of study never reads 0%.
+      function progressPct(r) { return r.total ? Math.round(100 * (r.learnt * 1 + r.ready * 0.7 + r.learning * 0.35 + r.struggling * 0.15) / r.total) : 0; }
+      function count(cls, label, n) { return n ? '<span class="mmc ' + cls + '"><i class="mm-dot ' + cls.replace('mmc', 'mm') + '"></i>' + n + ' ' + label + '</span>' : ''; }
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · only the written test advances you: score 4+/5 once to <b>know it</b>, twice to <b>master</b> it. Multiple choice and every other mode count as <b>learning</b>; a 3/5 stays learning; a miss is <b>struggling</b></p>' +
-        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-ready"></i>know it</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
+        '<div class="mm-tally">' +
+          count('mmc-learnt', 'mastered', tot.learnt) + count('mmc-ready', 'know it', tot.ready) +
+          count('mmc-learning', 'learning', tot.learning) + count('mmc-strug', 'struggling', tot.struggling) +
+          count('mmc-new', 'not started', tot.new) +
+        '</div>' +
+        '<p class="mm-sub">Only the written test advances you: score 4+/5 once to <b>know it</b>, twice to <b>master</b> it. Multiple choice and every other mode count as <b>learning</b>; a 3/5 stays learning; a miss is <b>struggling</b>.</p>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
       function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
       rows.forEach(function (r, idx) {
-        var pct = r.total ? Math.round(100 * r.learnt / r.total) : 0;
-        var pL = r.total ? (100 * r.learnt / r.total) : 0;
-        var pR = r.total ? (100 * (r.learnt + r.ready) / r.total) : 0;
+        var pct = progressPct(r);
+        var counts = count('mmc-learnt', 'mastered', r.learnt) + count('mmc-ready', 'know it', r.ready) +
+          count('mmc-learning', 'learning', r.learning) + count('mmc-strug', 'struggling', r.struggling) + count('mmc-new', 'new', r.new);
         var row = h('<button class="mm-row">' +
-          '<span class="mm-name">' + esc(r.topic) + '</span>' +
+          '<div class="mm-rowhead"><span class="mm-name">' + esc(r.topic) + '</span><span class="mm-pct" title="overall progress">' + pct + '%</span></div>' +
           '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-ready', r.ready) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
-          '<span class="mm-ring" style="background:conic-gradient(#1F7A1F 0 ' + pL + '%,#C7A400 ' + pL + '% ' + pR + '%,var(--rule) ' + pR + '% 100%)" title="' + pct + '% mastered"><i></i></span>' +
-          '<span class="mm-pct">' + pct + '%</span></button>');
+          '<div class="mm-counts">' + counts + '</div></button>');
         row.onclick = function () { start(TOPICS[idx], TOPICS[idx].levels[0]); };
         list.appendChild(row);
       });
