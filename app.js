@@ -3,9 +3,18 @@
   'use strict';
   var app = document.getElementById('app');
   window.QUESTIONS = window.QUESTIONS || {};
+  // Machine Learning Foundations is trimmed to just its definitions — the useful ML vocabulary —
+  // and presented as "Core Definitions"; the rest of the fundamentals questions are dropped.
+  (function () {
+    var D = window.DEFS || {};
+    var defs = (window.QUESTIONS.found1 || []).concat(window.QUESTIONS.found2 || [], window.QUESTIONS.found3 || [])
+      .filter(function (q) { return D[q.q]; });
+    window.QUESTIONS.founddef = defs;
+    if (window.NOTES && window.NOTES.found) window.NOTES.found.name = 'Core Definitions';
+  })();
   var TOPICS = [
-    { key: 'found', no: '00', name: 'Machine Learning Foundations', desc: 'Features, labels, training, generalisation — the base every topic stands on.',
-      levels: [{ qk: 'found1', part: 'Part I', name: 'The Ground Floor' }, { qk: 'found2', part: 'Part II', name: 'Practice' }, { qk: 'found3', part: 'Part III', name: 'Advanced Study' }] },
+    { key: 'found', no: '00', name: 'Core Definitions', desc: 'The essential ML vocabulary — the terms every other topic builds on.',
+      levels: [{ qk: 'founddef', part: 'Part I', name: 'Definitions' }] },
     { key: 'knn', no: '01', name: 'k-Nearest Neighbours', desc: 'Classify by asking the most similar known examples to vote.',
       levels: [{ qk: 'easy', part: 'Part I', name: 'Foundations' }, { qk: 'medium', part: 'Part II', name: 'Practice' }, { qk: 'hard', part: 'Part III', name: 'Advanced Study' }] },
     { key: 'logreg', no: '02', name: 'Logistic Regression', desc: 'Turn a weighted score into an honest probability.',
@@ -50,7 +59,7 @@
       levels: [{ qk: 'scen1', part: 'Part I', name: 'Clear Calls' }, { qk: 'scen2', part: 'Part II', name: 'Weighing Trade-offs' }, { qk: 'scen3', part: 'Part III', name: 'Subtle Traps' }] }
   ];
   var GROUPS = [
-    { label: 'Start here — the groundwork', keys: ['found'] },
+    { label: 'Start here — core definitions', keys: ['found'] },
     { label: 'The algorithms', keys: ['knn', 'logreg', 'bayes', 'trees', 'svm'] },
     { label: 'Ensemble methods', keys: ['rf', 'gboost', 'stacking', 'xgb'] },
     { label: 'Features & model choice', keys: ['feng', 'fsel', 'msel'] },
@@ -637,11 +646,11 @@
       return b;
     }
     function draw() {
+      var step = seq[i];
+      if (step.type === 'mc') { drawMC(step); return; }   // begin() renders the full question UI (lab, skip, ladder, retry)
       app.innerHTML = '';
       app.appendChild(bar());
-      var step = seq[i];
       if (step.type === 'read') drawRead(step.note);
-      else if (step.type === 'mc') drawMC(step);
       else if (step.type === 'written') drawWritten(step);
       else drawCard(step.card);
       window.scrollTo(0, 0);
@@ -665,37 +674,13 @@
       card.querySelector('.lr-next').onclick = advance;
       app.appendChild(card);
     }
-    // Multiple-choice test step: same correctness rules as the main quiz, kept lightweight.
+    // Multiple-choice test step: the FULL question experience — lab bench, skip, plain-English
+    // answer, break-it-down ladder and second attempt — then it returns to the read+recall loop.
     function drawMC(step) {
-      var q = step.q;
-      var card = h('<article class="qcard learn-mcq">' +
-        '<div class="q-eyebrow">Quick check · ' + esc(step.topic) + '</div>' +
-        '<h2 class="qtext"></h2><div class="choices"></div></article>');
-      card.querySelector('.qtext').textContent = q.q;
-      var box = card.querySelector('.choices');
-      var order = shuffle(q.choices.map(function (_, ix) { return ix; }));
-      var btns = [], answered = false;
-      order.forEach(function (orig, pos) {
-        var b = document.createElement('button'); b.className = 'choice';
-        var letter = document.createElement('span'); letter.className = 'ch-letter'; letter.textContent = LETTERS[pos];
-        var tx = document.createElement('span'); tx.className = 'ch-text'; tx.textContent = q.choices[orig];
-        b.appendChild(letter); b.appendChild(tx);
-        b.onclick = function () { pick(orig, b); };
-        btns.push({ b: b, orig: orig }); box.appendChild(b);
-      });
-      function pick(orig, btn) {
-        if (answered) return; answered = true;
-        var right = orig === 0;
-        btns.forEach(function (x) { x.b.disabled = true; if (x.orig === 0) x.b.classList.add('is-correct'); else if (x.b === btn) x.b.classList.add('picked-wrong'); else x.b.classList.add('dim'); });
-        recordCard(q, right); logActivity(); seen++; if (right) { known++; bumpTotal(); }
-        card.appendChild(h('<div class="banner ' + (right ? 'good' : 'bad') + '"><span class="b-label">' + (right ? 'Correct ✓' : 'Not quite') + '</span>' +
-          (right ? '' : '<div class="plain"><span class="p-label">The answer</span><div class="p-answer">' + esc(q.choices[0]) + '</div></div>') +
-          '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
-        var ww = whyOthersEl(q, orig, false); if (ww) card.appendChild(ww);
-        var row = h('<div class="next-row"><button class="btn">Continue →</button></div>');
-        row.children[0].onclick = advance; card.appendChild(row);
-      }
-      app.appendChild(card);
+      begin({ name: 'Read + recall', no: '✎', key: '__learn__' },
+        { qk: '__learn__', part: 'Read + recall', name: step.topic },
+        { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall',
+          learnNext: function (correct) { seen++; if (correct) known++; advance(); } });
     }
     // Open written test step: explain the concept; Claude Haiku marks it /5 (needs the user's key).
     function drawWritten(step) {
@@ -1036,10 +1021,12 @@
   // how OVERDUE it is relative to that interval, its lifetime lapse rate, and — most urgently —
   // whether it failed in the last few days. Weak recent failures surface first, solid old cards last.
   var BOX_INTERVAL = [0.5, 1, 3, 7, 14, 30]; // days per box 0..5
+  function getPracticeTopic() { return localStorage.getItem('ds_practice_topic') || ''; }
+  function setPracticeTopic(k) { try { localStorage.setItem('ds_practice_topic', k || ''); } catch (e) {} }
   function practiceSelect(mix) {
-    var c = loadCards(), day = dayNum();
+    var c = loadCards(), day = dayNum(), tk = getPracticeTopic();
     var known = [], neu = [];
-    buildIndex().forEach(function (e) { var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
+    buildIndex().forEach(function (e) { if (tk && e.key !== tk) return; var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
     known.forEach(function (k) {
       var r = k.r;
       var overdue = (day - r.last) / BOX_INTERVAL[Math.max(0, Math.min(5, r.box))];  // 1 = exactly due
@@ -1539,7 +1526,9 @@
     }
 
     function renderPractice() {
-      var sum = masterySummary();
+      var ptk = getPracticeTopic();
+      var sum = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 };
+      buildIndex().forEach(function (e) { if (ptk && e.key !== ptk) return; sum[cardStatus(e.q)]++; });
       var mixPct = Math.round(getMix() * 100);
       function splitFor(pct) {
         var m = pct / 100, N = PRACTICE_N;
@@ -1564,6 +1553,9 @@
           '<span class="mb mb-strug"><b>' + sum.struggling + '</b> struggling</span>' +
           '<span class="mb mb-new"><b>' + sum.new + '</b> new</span>' +
         '</div>' +
+        '<div class="filt-row rev-topicrow"><span class="filt-lab">Topic</span><select class="rev-topic">' +
+          '<option value="">All topics</option>' + TOPICS.map(function (t) { return '<option value="' + t.key + '"' + (t.key === getPracticeTopic() ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') +
+        '</select></div>' +
         '<div class="dial-wrap">' +
           '<div class="dial-ends"><span>Review what I know</span><span>New material</span></div>' +
           '<input class="dial" type="range" min="0" max="100" step="5" value="' + mixPct + '" aria-label="Review to new mix">' +
@@ -1575,6 +1567,7 @@
       var read = review.querySelector('.dial-read');
       dial.oninput = function () { read.textContent = readoutText(+dial.value); };
       dial.onchange = function () { setMix((+dial.value) / 100); };
+      review.querySelector('.rev-topic').onchange = function () { setPracticeTopic(this.value); home(); };
       review.querySelector('.review-go').onclick = startPractice;
       app.appendChild(review);
     }
@@ -1809,7 +1802,7 @@
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
       daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites, more: !!opts.more,
-      modeLabel: opts.modeLabel || '', sig: opts.sig || null,
+      modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
@@ -1876,7 +1869,7 @@
     S.results.push(null); // neutral: not recorded as right or wrong
     S.i++;
     if (S.daily) saveDaily(S.i >= S.qs.length);
-    if (S.i >= S.qs.length) return done();
+    if (S.i >= S.qs.length) { if (S.learnNext) return S.learnNext(); return done(); }
     question(false);
   }
 
@@ -2014,7 +2007,7 @@
   function next() {
     S.i++;
     if (S.daily) saveDaily(S.i >= S.qs.length);
-    if (S.i >= S.qs.length) return done();
+    if (S.i >= S.qs.length) { if (S.learnNext) return S.learnNext(S.correct); return done(); }
     question(false);
   }
 
