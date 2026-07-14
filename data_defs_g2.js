@@ -10,10 +10,10 @@
     q: "What is Bayes' theorem?",
     choices: [
       "A rule that updates the probability of a hypothesis given new evidence by multiplying its prior by the likelihood of that evidence and dividing by the evidence's overall probability",
-      "A rule that assumes every feature contributes equally and simply averages their individual probabilities to reach a decision",
-      "A method that counts how often two events occur together and reports that raw count as the final probability",
-      "A technique for drawing the straight line that best separates two classes by maximising the gap between them",
-      "A procedure that repeatedly splits data on the most informative feature until each group is pure"
+      "A rule that assumes every feature contributes exactly equally and simply averages their individual probabilities together, reporting that plain mean as the decision without ever consulting a prior belief or a normalising term",
+      "A method that counts how often two events happen to occur together in the data and reports that raw co-occurrence count directly as the final probability, without ever multiplying by a prior or dividing by the evidence term",
+      "A technique for drawing the single straight line that best separates two classes by maximising the geometric gap to the nearest points on each side, a boundary rule that ignores any notion of prior or likelihood",
+      "A procedure that repeatedly splits the data on the single most informative feature until every resulting group is perfectly pure, then reads the label off the leaf without any probability update at all"
     ],
     explain: "Bayes' theorem states P(H|E) = P(E|H)·P(H) / P(E): it converts a prior belief about a hypothesis into a posterior belief after seeing evidence. The likelihood P(E|H) says how expected the evidence is if the hypothesis holds, and dividing by P(E) normalises the result. It is the mathematical engine underneath every Naive Bayes classifier.",
     simple: "It is a formula for changing your mind with evidence: start with how likely something was, then adjust it up or down based on the new clue you just saw. The stronger and rarer the clue, the bigger the update.",
@@ -38,10 +38,10 @@
     q: "In Naive Bayes, what is the 'prior probability' of a class?",
     choices: [
       "The probability of the class before any features are observed, estimated from how common that class is in the training data",
-      "The probability of the class after all the features of a specific case have been taken into account",
-      "The chance of seeing a particular feature value given that the class is already known to be true",
-      "The overall probability of the observed evidence summed across every possible class",
-      "The ratio by which a single feature multiplies the odds in favour of the class"
+      "The probability of the class computed after every one of a specific case's features has been observed and folded in, read off the fully updated posterior at the very end of the calculation",
+      "The chance of seeing one particular feature value given that the class is already known to hold, a per-feature likelihood estimated from the counts inside that single class alone",
+      "The overall probability of the observed evidence summed across every possible class, the normalising denominator that makes the class probabilities finally add up to one",
+      "The ratio by which one single feature multiplies the running odds in favour of the class, a likelihood factor applied on top of whatever starting belief already existed"
     ],
     explain: "The prior P(class) reflects your belief in a class before you look at any of the current example's features; it is usually just the fraction of training examples in that class. Naive Bayes multiplies this prior by the likelihoods of the observed features to form the posterior. A class that is rare in training starts with a small prior and needs stronger evidence to win.",
     simple: "It is the head start each answer gets before you look at any clues, based only on how common that answer normally is. If 90% of email is spam, spam begins the race in the lead.",
@@ -66,10 +66,10 @@
     q: "In Naive Bayes, what is the 'naive independence assumption'?",
     choices: [
       "The assumption that, given the class, every feature is conditionally independent of the others, so their likelihoods can simply be multiplied",
-      "The assumption that all classes occur equally often, so the prior can be ignored entirely",
-      "The assumption that each feature is drawn from a bell-shaped Gaussian distribution",
-      "The assumption that the training data contains no errors or mislabelled examples",
-      "The assumption that features are highly correlated and must be combined before use"
+      "The assumption that all classes occur exactly equally often in the world, so the prior term can be dropped entirely and the posterior read straight off the likelihoods alone",
+      "The assumption that each and every feature is drawn from the same bell-shaped Gaussian distribution, so one shared mean and variance can describe them all across the classes",
+      "The assumption that the training data contains no errors or mislabelled examples at all, so every observed count can be trusted as a perfectly clean estimate of the truth",
+      "The assumption that the features are all highly correlated with one another and therefore must be combined into a single joint term before any likelihood is computed"
     ],
     explain: "Naive Bayes treats each feature as conditionally independent of the rest once the class is fixed, which lets it estimate P(features|class) as the product of the individual P(feature|class) terms. Real features are rarely truly independent, so the assumption is 'naive', yet the classifier often works well anyway. This simplification is exactly what makes the model fast and easy to train.",
     simple: "It pretends each clue speaks for itself and none of them lean on each other, so you can just multiply their odds together. It is often untrue, but it keeps the maths simple and usually still works.",
@@ -94,10 +94,10 @@
     q: "In Naive Bayes, what is a 'class-conditional probability'?",
     choices: [
       "The probability of observing a particular feature value given that the example belongs to a specific class, written P(feature | class)",
-      "The probability that an example belongs to a class after all its features are observed",
-      "The overall probability of a class before any feature is taken into account",
-      "The probability of the evidence averaged over every class in the dataset",
-      "The fixed probability that the classifier makes a mistake on any given example"
+      "The probability that an example belongs to a given class once all of its features have been observed and multiplied in, the fully updated posterior the classifier reports at the end",
+      "The overall probability of a class before any feature at all is taken into account, the base-rate head start read straight off how common that class is across the training set",
+      "The probability of the observed evidence averaged over every class in the dataset, the marginal denominator that rescales the numerators so the posteriors sum to one",
+      "The fixed probability that the classifier makes a mistake on any given example, an overall error rate estimated once from how often it slips on the held-out data"
     ],
     explain: "A class-conditional probability P(feature|class) measures how likely a given feature value is within a particular class, and it is the model's 'likelihood' term. Naive Bayes estimates one such probability per feature per class from the training counts, then multiplies them under the independence assumption. These conditionals are what distinguish, say, the word 'free' appearing in spam versus in ham.",
     simple: "It answers: if this were spam, how often would I see this exact clue? You learn one such number for every clue inside every class, straight from the training data.",
@@ -122,10 +122,10 @@
     q: "In Naive Bayes, what is Laplace (additive) smoothing?",
     choices: [
       "Adding a small constant to every feature count so that no probability is ever exactly zero, preventing an unseen value from wiping out a class",
-      "Rescaling all feature values to lie between zero and one before training the classifier",
-      "Averaging the predictions of many Naive Bayes models to reduce their variance",
-      "Removing the rarest features so the model only keeps the most informative clues",
-      "Replacing missing feature values with the mean of the observed values in that column"
+      "Rescaling every feature value so that it lies between exactly zero and one before training the classifier, a normalisation step meant to put all the counts on one common scale",
+      "Averaging the predictions of many separately trained Naive Bayes models together so that their combined variance drops and the final class estimate becomes steadier on new data",
+      "Removing the very rarest features from the vocabulary so that the model only ever keeps the handful of most informative clues and never wastes probability mass on noise",
+      "Replacing any missing feature value with the mean of the observed values in that same column, an imputation trick that fills gaps before the counts are turned into probabilities"
     ],
     explain: "Laplace or additive smoothing adds a pseudo-count (often 1) to every observed count before turning counts into probabilities, so a feature value that never appeared with a class still gets a small non-zero likelihood. Without it, a single unseen word would multiply the whole class probability to zero. The smoothing parameter alpha controls how strong this nudge toward uniformity is.",
     simple: "It pretends you saw every clue at least once, so a brand-new word can't slam a class down to zero probability. A tiny fake count keeps the maths from breaking.",
@@ -150,10 +150,10 @@
     q: "What is MultinomialNB (Multinomial Naive Bayes)?",
     choices: [
       "A Naive Bayes variant for discrete count features, such as word counts, that models how often each feature occurs in a class",
-      "A Naive Bayes variant that assumes each feature follows a continuous bell-shaped Gaussian distribution",
-      "A Naive Bayes variant for binary present/absent features that penalises features that are absent",
-      "A boosting method that combines many shallow decision trees on residuals",
-      "A distance-based classifier that votes among the nearest training examples"
+      "A Naive Bayes variant that assumes each feature follows a continuous bell-shaped Gaussian distribution, learning a separate mean and variance per feature per class to score real-valued measurements",
+      "A Naive Bayes variant built only for binary present-or-absent features that actively penalises the features that are absent, adding a term for every word that fails to appear in the document",
+      "A boosting method that combines many deliberately shallow decision trees, each fitted in turn on the residual errors left over by the ensemble that was built before it",
+      "A distance-based classifier that stores the whole training set and simply votes among the labels of the nearest examples to whatever new point it is asked to classify"
     ],
     explain: "MultinomialNB is the Naive Bayes flavour built for count data, most famously word counts in text classification: it estimates the probability of each feature (term) within each class from how many times it occurs. It works with a multinomial event model and pairs naturally with bag-of-words or TF-IDF features. It differs from GaussianNB (continuous features) and BernoulliNB (binary features).",
     simple: "It is the Naive Bayes you use when your features are counts, like how many times each word appears in a document. It learns how frequently each word shows up in each category.",
@@ -178,10 +178,10 @@
     q: "What is GaussianNB (Gaussian Naive Bayes)?",
     choices: [
       "A Naive Bayes variant for continuous features that models each feature within a class as a normal (Gaussian) distribution with its own mean and variance",
-      "A Naive Bayes variant that expects integer word counts and models them with a multinomial distribution",
-      "A Naive Bayes variant that only accepts binary yes/no features",
-      "A clustering method that fits a mixture of Gaussian blobs to unlabelled data",
-      "A regression method that fits a straight line by minimising squared error"
+      "A Naive Bayes variant that expects only integer word counts and models them with a multinomial distribution, estimating the frequency of each term inside each class from the raw training tallies",
+      "A Naive Bayes variant that only ever accepts binary yes-or-no features, adding an explicit penalty term for each attribute that is absent as well as each one that is present in the example",
+      "A clustering method that fits a mixture of several Gaussian blobs to entirely unlabelled data, assigning each point a soft membership across the components without ever using a class label",
+      "A regression method that fits a single straight line through the points by minimising the summed squared error, producing a continuous numeric prediction rather than a discrete class"
     ],
     explain: "GaussianNB assumes each continuous feature, conditioned on the class, is normally distributed, so it learns a mean and variance per feature per class and evaluates the Gaussian density to get likelihoods. This makes it suitable for real-valued measurements rather than counts. It keeps the same independence assumption and prior-times-likelihood machinery as any Naive Bayes.",
     simple: "It is the Naive Bayes for measured numbers like height or temperature. For each class it learns the average and spread of each number and uses a bell curve to score new values.",
@@ -206,10 +206,10 @@
     q: "In Naive Bayes, what is the 'evidence' (marginal likelihood) term?",
     choices: [
       "The overall probability of the observed features, summed over all classes, that appears in the denominator and normalises the posteriors",
-      "The probability of a single class before any features are seen",
-      "The likelihood of one feature value given a fixed class",
-      "The final class label the model outputs for an example",
-      "The count of training examples that belong to the majority class"
+      "The probability of a single class before any features are seen at all, the base-rate head start read straight off how common that class happens to be in the training data",
+      "The likelihood of observing one particular feature value given that the class is already fixed and known, a per-feature term estimated from the counts inside that class alone",
+      "The final class label that the model ultimately outputs for an example, the single winning hypothesis chosen once the posterior has been compared across every candidate class",
+      "The count of training examples that belong to the largest majority class, a raw tally used to decide which label the model should fall back on when no clue is available"
     ],
     explain: "The evidence P(features) = Σ_class P(features|class)·P(class) is the denominator of Bayes' theorem; it is the total probability of the observed data across every hypothesis. It rescales the numerators so the posteriors across classes sum to one. Because it is the same constant for every class, Naive Bayes can pick the winning class by comparing numerators alone and ignore it.",
     simple: "It is the grand total probability of the clues you saw, adding up every possible answer. It divides the result so all the class probabilities add up to 100%.",
@@ -234,10 +234,10 @@
     q: "In Bayesian classification, what is the MAP (maximum a posteriori) estimate?",
     choices: [
       "The class with the highest posterior probability, which is the label Naive Bayes ultimately predicts",
-      "The class with the highest prior probability, chosen before any features are seen",
-      "The feature value that occurs most frequently across the training set",
-      "The average of the posterior probabilities over all candidate classes",
-      "The class that maximises the likelihood alone while ignoring the prior"
+      "The class carrying the highest prior probability, chosen before any features are seen, using only the base rates",
+      "The single feature value that occurs most frequently across the whole training set, picked out by raw count alone",
+      "The plain average of the posterior probabilities taken over all of the candidate classes rather than the maximum",
+      "The class that maximises the likelihood term alone while deliberately ignoring the prior head start entirely"
     ],
     explain: "The MAP estimate picks the hypothesis (class) that maximises the posterior P(class|features), i.e. the argmax over classes of prior times likelihood. It is exactly the decision rule Naive Bayes uses to output a single label. When priors are equal it reduces to the maximum-likelihood choice, but in general it incorporates the prior.",
     simple: "It is the winner: after weighing the clues and the head start, you pick the answer with the highest final probability. That most-probable class is what the model announces.",
@@ -262,10 +262,10 @@
     q: "In text classification, what is the 'bag-of-words' representation?",
     choices: [
       "A representation of a document as the counts of the words it contains, ignoring word order and grammar",
-      "A representation that preserves the exact sequence and grammar of every sentence in a document",
-      "A representation that stores only the single most frequent word in each document",
-      "A representation that maps each document to a fixed dense vector learned by a neural network",
-      "A representation that records the pairwise distances between all documents in a corpus"
+      "A representation that carefully preserves the exact sequence and grammar of every sentence in a document, keeping word order intact so that phrasing and syntax are fully retained",
+      "A representation that stores only the single most frequent word found in each document and throws away every other term, keeping just that one headline token as the whole feature",
+      "A representation that maps each document to a fixed dense vector learned by a neural network, packing its meaning into a few hundred continuous coordinates rather than plain counts",
+      "A representation that records the pairwise distances between every pair of documents in a corpus, describing each text only by how far it sits from all of the others"
     ],
     explain: "Bag-of-words turns a document into a vector of word counts (or presence flags), discarding order, syntax and position so only which words appear and how often matters. It is the classic feature representation feeding MultinomialNB and other text classifiers. Its simplicity is its strength and its limitation: fast to compute, but blind to phrasing and context.",
     simple: "You dump all the words of a document into a bag and just count them, forgetting the order they came in. 'Dog bites man' and 'man bites dog' look identical this way.",
@@ -292,10 +292,10 @@
     q: "What is a decision tree?",
     choices: [
       "A model that predicts by following a series of yes/no tests on features from a root down to a leaf that gives the answer",
-      "A model that draws the single straight line best separating two classes with the widest possible gap",
-      "A model that averages the labels of the nearest training points to classify a new one",
-      "A model that multiplies independent feature probabilities together to score each class",
-      "A model that repeatedly nudges weights to minimise a smooth loss function"
+      "A model that draws the single straight line best separating two classes with the widest possible gap to the nearest points, fixing that boundary from only the handful of borderline examples",
+      "A model that stores every training point and classifies a new one by averaging the labels of its nearest neighbours, letting the closest few examples cast the deciding vote",
+      "A model that multiplies together the independent probabilities of each feature to score every class, treating the clues as separate and picking whichever class ends up most probable",
+      "A model that repeatedly nudges a set of weights by gradient descent to minimise a smooth loss function, sliding them a little downhill on each pass until the error settles"
     ],
     explain: "A decision tree is a flowchart-like model: each internal node asks a test about one feature, each branch is an outcome of that test, and each leaf carries a prediction. To classify an example you route it from the root through the tests until it lands in a leaf. Trees are easy to read and can capture non-linear, interaction-heavy patterns.",
     simple: "It is like a game of twenty questions that ends in an answer. Each step asks a simple yes/no about your data and sends you down a branch until you reach a final label.",
@@ -320,10 +320,10 @@
     q: "In a decision tree, what is a 'leaf' node?",
     choices: [
       "A terminal node with no further splits that assigns the final prediction to every example reaching it",
-      "The top node where the very first split of the whole dataset is made",
-      "An internal node that applies a feature test and sends examples down two branches",
-      "The threshold value chosen to divide a numeric feature at a split",
-      "The measure of how mixed the class labels are within a node"
+      "The single top node where the very first split of the whole dataset is made, the root from which every branch of the tree ultimately descends before any answer is reached",
+      "An internal decision node that applies a feature test and sends the arriving examples down two separate branches, routing them onward rather than ever handing out a final label",
+      "The particular threshold value chosen to divide a numeric feature at a split, the cut point such as age below thirty that decides which branch each example is sent down",
+      "The numeric measure of how mixed the class labels happen to be within a node, high for an even blend and zero once every example there shares a single class"
     ],
     explain: "A leaf (terminal node) is where a decision tree stops branching; every example that reaches it receives the leaf's prediction, typically the majority class or average value of the training points there. Leaves are the tree's output layer, while internal nodes only route examples. The purity of leaves is what training tries to improve.",
     simple: "It is the end of a branch where the tree stops asking questions and just gives its answer. Whoever lands there gets that leaf's label.",
@@ -348,10 +348,10 @@
     q: "In a decision tree, what is a 'split'?",
     choices: [
       "The test on a single feature at a node that divides the arriving examples into subgroups sent down different branches",
-      "The final label attached to a terminal node at the bottom of the tree",
-      "The removal of branches that add little predictive value after the tree is grown",
-      "The number of levels between the root and the deepest leaf of the tree",
-      "The fraction of examples that the tree classifies incorrectly overall"
+      "The final label attached to a terminal node at the very bottom of the tree, the prediction handed to every example that finishes its journey and lands in that leaf",
+      "The removal of branches that add little predictive value once the tree has been fully grown, a pruning step that trims back overgrown subtrees to fight overfitting",
+      "The number of levels sitting between the root and the deepest leaf of the tree, a depth count that measures how tall and elaborate the whole structure has become",
+      "The fraction of examples that the finished tree ends up classifying incorrectly overall, an error rate read off the mistakes it makes across the held-out data"
     ],
     explain: "A split is the decision rule at an internal node, such as 'age < 30?', that partitions the examples reaching that node into child groups. Tree-growing algorithms pick each split to make the resulting children as pure as possible according to a criterion like Gini or entropy. Chaining many splits is how a tree carves the feature space into regions.",
     simple: "It is one question the tree asks that divides your data into groups, like sorting people by whether they are over 30. Good splits put similar labels together.",

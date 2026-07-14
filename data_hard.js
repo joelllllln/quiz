@@ -60,10 +60,10 @@
     "q": "The two classes truly overlap: the same-looking point can carry either label. For ANY classifier on this data, what is perfect accuracy?",
     "choices": [
       "Impossible — some error is irreducible",
-      "Reachable with enough data",
-      "Reachable after standardising",
-      "Reachable with weighted votes",
-      "Impossible only for KNN"
+      "Reachable given a large enough sample",
+      "Reachable after standardising the features",
+      "Reachable with distance-weighted voting",
+      "Impossible for KNN but fine for other models"
     ],
     "explain": "Where the classes truly overlap, the best possible decision still loses on some points (Bayes error). A model scoring 100% on such training data is memorising coin flips.",
     "simple": "If identical-looking points can genuinely carry either label, some error is simply unavoidable — for ANY model. That floor is the Bayes error. Scoring 100% on such data means you memorised coin flips.",
@@ -148,10 +148,10 @@
     "q": "A KNN regression curve is a staircase: flat, jump, flat, jump. When exactly do the jumps happen?",
     "choices": [
       "The k-member club changes",
-      "A value crosses zero",
-      "The mean gets rounded",
-      "Two ties re-order",
-      "The metric switches"
+      "A fitted value crosses zero",
+      "The running mean gets rounded",
+      "Two equal distances tie",
+      "The distance metric switches"
     ],
     "explain": "As the query slides along x, the prediction is the mean of a FIXED set of neighbours until one drops out and another drops in — then the average jumps. Flat, jump, flat, jump: a staircase.",
     "simple": "The prediction is the average of a fixed club of k members. Slide along and nothing changes until one member swaps out — then the average jumps. Flat, jump, flat, jump: a staircase.",
@@ -268,10 +268,10 @@
     "q": "Modern vector search runs on approximate methods like HNSW and LSH. What trade do they offer?",
     "choices": [
       "Rarely miss the nearest; hugely faster",
-      "Exact results at fixed latency",
-      "Full speed, but only for k = 1",
-      "Full speed, but labels required",
-      "Speed by storing the data twice"
+      "Exact results at a fixed low latency",
+      "Full speed, but only when k equals 1",
+      "Full speed, but only with labelled data",
+      "Speed gained by storing the data twice"
     ],
     "explain": "ANN methods answer \"a very-near neighbour, almost always the nearest\" instead of \"the provably nearest\" — recall ~95–99% at a tiny fraction of the cost. At web scale, exactness is a luxury nobody buys.",
     "simple": "Approximate search occasionally returns the 2nd-nearest instead of the very nearest — in exchange for being hundreds of times faster. At web scale nobody notices, and nobody pays for exact.",
@@ -495,9 +495,9 @@
     "q": "A sales forecaster scores 92% under random cross-validation but only 61% in production. The data is time-ordered. What is the classic cause?",
     "choices": [
       "Neighbours drawn from the future",
-      "Concept drift after launch",
-      "Validation folds too small",
-      "k tuned on the test folds",
+      "Concept drift setting in after launch",
+      "Validation folds that are too small",
+      "k accidentally tuned on the test folds",
       "A missing rescale at deployment"
     ],
     "explain": "With time-ordered data, random splits are a séance: the model consults the future. Honest evaluation must train on the past and test on the future — like deployment will.",
@@ -727,10 +727,10 @@
     "q": "On a brand-new problem, experienced people run KNN before building anything fancy. What role does it play?",
     "choices": [
       "The baseline to beat",
-      "A feature selector",
-      "A data cleaner",
-      "A label auditor",
-      "A speed benchmark"
+      "A quick feature selector",
+      "A data-cleaning step",
+      "A label-quality auditor",
+      "A speed benchmark tool"
     ],
     "explain": "KNN needs no training, assumes almost nothing, and captures any smooth boundary given decent features. It sets the bar: a complex model that can't clear it is complexity for nothing.",
     "simple": "KNN takes minutes to set up, assumes almost nothing, and handles curvy patterns. If a week of fancy modelling can't beat it, the fancy model isn't earning its keep. Run the cheap thing first — it keeps everyone honest.",
@@ -1018,10 +1018,10 @@
     "q": "Before computing any distances, you multiply one feature by w. What have you effectively declared that feature to be?",
     "choices": [
       "w times more important",
-      "w times noisier",
-      "w times better scaled",
-      "Fully standardised",
-      "Duplicated w times"
+      "w times noisier overall",
+      "w times more finely scaled",
+      "Fully standardised in effect",
+      "Duplicated into w columns"
     ],
     "explain": "Distance treats one unit of every feature equally, so rescaling a feature by w rescales its influence by w (w² in squared terms). Scaling isn't just cleanup — it's an importance dial.",
     "simple": "Multiply a feature by 3 and its gaps count 3× in every distance — you've just declared it 3× more important. All scaling is secretly importance-setting; better to set it on purpose.",

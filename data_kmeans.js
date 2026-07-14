@@ -137,10 +137,10 @@
     "q": "In clustering, what exactly is a 'cluster'?",
     "choices": [
       "A group of points more similar to each other than to the rest",
-      "A column of the dataset picked out as important",
-      "A single labelled example used as a reference",
-      "The centre point that all others are measured from",
-      "A rule that predicts a label from the features"
+      "A single column of the dataset singled out ahead of time as important",
+      "A single pre-labelled example set aside to act as the group's reference",
+      "The fixed central point that all of the other points are measured from",
+      "A learned rule that predicts each point's label from its feature values"
     ],
     "explain": "A cluster is a group of data points that resemble one another more than they resemble points outside the group. No labels are involved — the grouping itself is the discovery.",
     "simple": "It's a natural huddle in the data: points that sit close together, away from other huddles. Nobody labels them 'group A' — the algorithm finds the huddles by similarity alone. That's what makes clustering unsupervised: the groups ARE the answer, not a column you were given.",
@@ -182,10 +182,10 @@
     "q": "K-means represents each cluster by a 'centroid'. What is a centroid?",
     "choices": [
       "The average position of all the points in that cluster",
-      "The single point closest to the cluster's edge",
-      "The first point that was assigned to the cluster",
-      "The most typical labelled example in the group",
-      "The boundary line separating two clusters"
+      "The single member point sitting closest to the cluster's outer edge",
+      "The very first point that happened to be assigned to the cluster",
+      "The most typical pre-labelled example found inside the group",
+      "The straight boundary line that separates two neighbouring clusters"
     ],
     "explain": "A centroid is the mean location of a cluster's members — its centre of gravity. k-means summarises each cluster by this one point, and repeatedly moves it to the average of whatever points currently belong to it.",
     "simple": "It's the cluster's balance point: average all its members' positions and that's the centroid. k-means uses it as the cluster's stand-in — 'you belong to whichever centroid you're nearest'. It isn't a real data point or a boundary; it's the computed middle of the group.",
@@ -275,10 +275,10 @@
     "q": "Before running k-means on 'age' (years) and 'income' (pounds), why is scaling the features essential?",
     "choices": [
       "Distance is dominated by income's huge range unless features are put on comparable scales",
-      "k-means cannot read two columns of different names at once",
-      "Unscaled features make the centroids impossible to compute",
-      "Scaling is what tells k-means how many clusters to find",
-      "Without scaling the algorithm never stops iterating"
+      "k-means is simply unable to read two columns that carry different names at the same time",
+      "Leaving the features unscaled makes the cluster centroids mathematically impossible to compute",
+      "Scaling is really the step that quietly tells k-means how many clusters it should find",
+      "Without any scaling at all the algorithm never stops iterating and just runs forever"
     ],
     "explain": "k-means groups by Euclidean distance, and a £30,000 income gap dwarfs a 30-year age gap a million-fold in that sum. Whichever feature has the largest raw units silently dominates every distance — so you standardise first, or the clustering is really just income bands.",
     "simple": "Distance adds up the feature gaps, and income gaps are in the thousands while age gaps are in the tens. Income shouts, age whispers — so the clusters become income brackets and age barely counts. Scaling both to comparable ranges gives each feature an equal say. It's the most common beginner k-means bug.",

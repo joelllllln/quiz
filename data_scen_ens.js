@@ -18,10 +18,10 @@
     q: "You trained a random forest of 400 trees. A colleague asks for a validation estimate but you never held out a test set. What is the cheapest sound way to estimate generalisation error here?",
     choices: [
       "Use the out-of-bag (OOB) error — each tree scores the ~37% of rows it never saw in its bootstrap sample, giving a free cross-validation-like estimate",
-      "Report the training accuracy, since a 400-tree forest rarely overfits",
-      "Re-train on all the data and trust the in-sample R-squared",
-      "Average the predictions on the training rows and call it validation",
-      "You cannot estimate error without a separate held-out set; you must re-collect data"
+      "Report the training accuracy on all 400 trees, since a forest with that many estimators is mathematically guaranteed to never overfit the data",
+      "Re-train the whole forest on every available row and simply trust the in-sample R-squared value it reports as the generalisation estimate",
+      "Average each tree's predictions on the very rows it was trained on and report that averaged training score as your validation number",
+      "You cannot estimate generalisation error at all without a separate held-out set, so you must go back and re-collect a fresh batch of data first"
     ],
     explain: "Bagging draws each tree's training set as a bootstrap sample, so on average about 1/e (~37%) of rows are left out of any given tree. Predicting each row using only the trees that did NOT see it yields the OOB estimate, which behaves like built-in cross-validation and costs nothing extra. Training accuracy is optimistic and would not reveal overfitting. That is why OOB is the standard free validation signal for a random forest.",
     simple: "Every tree in the forest quietly skips about a third of the data. Grade each row using only the trees that never studied it, and you get a free exam score.",
@@ -37,10 +37,10 @@
     q: "A gradient-boosting model with learning_rate=0.3 and 500 trees overfits badly. You want a smoother, more accurate fit. What is the standard first lever to pull?",
     choices: [
       "Lower the learning rate (e.g. to 0.05) and add more trees, using early stopping to pick the count — small steps generalise better",
-      "Raise the learning rate to 0.6 so each tree corrects more of the error at once",
-      "Cut the number of trees to 20 and keep the rate at 0.3",
-      "Switch every tree to full depth so each one fits the residuals exactly",
-      "Remove the learning rate entirely so boosting uses raw residuals"
+      "Raise the learning rate to 0.6 so each individual tree corrects a much larger share of the remaining error in a single boosting sweep",
+      "Cut the number of trees right down to about 20 while keeping the aggressive 0.3 rate, so the shorter ensemble simply has less room to overfit",
+      "Switch every tree to full unbounded depth so that each one fits the current residuals exactly on its very first attempt each round",
+      "Remove the learning rate parameter entirely so that boosting just adds the raw residuals from each stage without any shrinkage at all"
     ],
     explain: "In gradient boosting the learning rate (shrinkage) scales each tree's contribution; smaller steps mean no single tree dominates and the ensemble converges more smoothly to a better optimum. The classic recipe is to shrink the rate and compensate with more trees, letting a validation set and early stopping choose where to stop. A high rate or very deep trees make boosting overfit faster, and too few trees underfit. Shrinkage-plus-more-trees is the textbook regularisation move.",
     simple: "Boosting is like walking to a target: many small careful steps land more precisely than a few giant leaps. Shrink the step, take more steps, and stop when you stop improving.",
@@ -56,10 +56,10 @@
     q: "You have 5,000 rows, 40 mostly-numeric features, non-linear interactions, and you want a strong tabular baseline with almost no tuning and little overfitting worry. Which model should you reach for first?",
     choices: [
       "A random forest — bagging plus random feature subsets gives a low-variance, high-accuracy baseline that works well out of the box",
-      "A single deep unpruned decision tree, because it captures every interaction",
-      "Linear regression, since it never overfits on 40 features",
-      "A hand-tuned XGBoost with 30 hyperparameters set by grid search before any baseline exists",
-      "k-nearest neighbours with k=1 for maximum flexibility"
+      "A single deep unpruned decision tree, because one fully grown tree captures every possible feature interaction with no averaging needed at all",
+      "Plain linear regression, since with only 40 mostly-numeric features a linear model is mathematically incapable of ever overfitting the data",
+      "A hand-tuned XGBoost with all 30 of its hyperparameters set by an exhaustive grid search before any simple baseline model even exists",
+      "k-nearest neighbours with k set to exactly 1, since a single-neighbour rule gives the most flexible possible decision boundary here"
     ],
     explain: "Random forests average many decorrelated deep trees, so their variance falls sharply while bias stays low, and default settings usually perform well without careful tuning. They handle non-linear interactions and mixed feature scales naturally, making them an excellent first tabular baseline. A single deep tree is high-variance and overfits, and linear regression misses interactions. Reaching straight for a heavily tuned XGBoost skips the cheap, robust baseline you should establish first.",
     simple: "Ask one expert and you get one opinion with all its quirks. Ask hundreds of slightly different experts and average them, and the quirks cancel out. That average is a random forest.",
@@ -75,10 +75,10 @@
     q: "In a random forest for a 30-feature classification task, two features are extremely strong predictors. If every tree is allowed to consider all 30 features at each split, what problem arises and what fixes it?",
     choices: [
       "Trees become correlated because they all split on the same top features first; restricting max_features (e.g. to sqrt(30)) decorrelates them and improves the ensemble",
-      "Nothing — considering all features at every split is exactly what makes a random forest random",
-      "The forest underfits, so you should reduce the number of trees",
-      "The two strong features should be removed so weaker features can be used",
-      "You must increase the learning rate to break the correlation"
+      "Nothing goes wrong — letting every split consider all thirty features is exactly the randomness that gives a random forest its name and its power",
+      "The forest will badly underfit the data as a result, so the correct remedy is to sharply reduce the total number of trees in the ensemble",
+      "The two strongest predictors should simply be removed from the data so that the many weaker features finally get their chance to be used at splits",
+      "You must increase the ensemble's learning rate substantially, because a higher rate is precisely what breaks the correlation between individual trees"
     ],
     explain: "The 'random' in random forest comes from giving each split only a random subset of features to choose from. If every split sees all features, all trees repeatedly pick the same dominant predictors and become highly correlated, so averaging them barely reduces variance. Limiting max_features (a common default is sqrt(p) for classification) forces trees to use different features and decorrelates them, which is what makes the ensemble strong. It is feature subsampling, not just row bagging, that gives forests their edge over plain bagging.",
     simple: "If every voter always cites the same headline, they all vote alike and averaging is pointless. Force each voter to sometimes ignore the headline, and their independent views make the average wise.",
@@ -94,10 +94,10 @@
     q: "You have three already-trained, roughly equally accurate classifiers: a logistic regression, an SVM, and a random forest. You want a quick accuracy bump without retraining anything. What is the simplest ensemble to try?",
     choices: [
       "A voting (or soft-voting) ensemble that combines their predictions — diverse models making independent errors often average out to better accuracy",
-      "Pick whichever single model had the highest validation accuracy and discard the others",
-      "A stacking meta-model, which is the only way to combine base learners",
-      "Retrain all three as one giant boosted model",
-      "Concatenate their feature sets and train a fourth model from scratch"
+      "Simply pick whichever single model happened to have the highest validation accuracy and discard the other two models entirely to save on effort",
+      "Build a stacking meta-model over the three, since training a meta-learner is the only mathematically valid way to ever combine separate base learners",
+      "Retrain all three of them together from scratch as one giant sequentially boosted model so their strengths are merged into a single estimator",
+      "Concatenate the feature sets used by all three models and train an entirely new fourth model from scratch on that combined feature matrix"
     ],
     explain: "Voting simply combines existing models' outputs — hard voting takes the majority label, soft voting averages predicted probabilities — and needs no retraining of the base models. It works best when the base learners are diverse and make uncorrelated errors, which a linear model, a margin-based SVM, and a tree ensemble tend to satisfy. Stacking can do better but requires training an extra meta-learner with cross-validated predictions; voting is the cheaper first step. Simply keeping the single best model throws away the error-cancelling benefit of combining diverse learners.",
     simple: "Three different experts who each make different mistakes will, by majority vote, usually beat any one of them alone. Just average their answers.",
@@ -113,10 +113,10 @@
     q: "On a 200,000-row tabular dataset with mixed numeric and categorical features, a well-tuned XGBoost consistently beats your neural network and your logistic regression on the leaderboard. Given this is structured tabular data, what is the reasonable takeaway?",
     choices: [
       "Gradient-boosted trees like XGBoost are frequently the strongest choice on medium-sized tabular data — prefer them here",
-      "The neural network must have a bug; deep learning always wins on enough data",
-      "XGBoost won only by luck and the ranking will reverse on any new split",
-      "You should abandon trees entirely and switch to k-NN for tabular data",
-      "The result proves logistic regression is never useful"
+      "The neural network must contain a bug somewhere, because with a dataset this large deep learning is guaranteed to win every tabular comparison",
+      "XGBoost came out ahead purely by luck this once, and the leaderboard ranking will certainly reverse the moment you try any fresh random split",
+      "You should abandon tree-based models entirely and switch over to k-nearest neighbours, which is the natural choice for structured tabular data",
+      "The result conclusively proves that logistic regression is never a useful model for any structured tabular classification problem at all"
     ],
     explain: "Gradient-boosted decision trees, and XGBoost in particular, are repeatedly the top performers on medium-sized tabular problems with heterogeneous features, which is exactly this setting. They capture non-linear interactions, handle mixed feature types with little preprocessing, and include strong regularisation. Neural networks tend to shine on high-dimensional unstructured data (images, text, audio) rather than modest tabular tables. Concluding the win was pure luck ignores a well-documented pattern, though you should still confirm it with cross-validation.",
     simple: "For spreadsheets of numbers and categories, boosted trees are usually the reigning champ. Deep learning's home turf is pictures and text, not tidy tables.",
@@ -134,10 +134,10 @@
     q: "A fraud team must choose between a random forest and a gradient-boosted ensemble for the same tabular problem. The forest is easy to tune and parallel to train; the boosting model is often a touch more accurate but slower to tune and more sensitive. How should they weigh the choice?",
     choices: [
       "Prefer the random forest when robustness, easy tuning and parallel training matter most; prefer boosting when squeezing out maximum accuracy justifies the extra tuning care",
-      "Always pick boosting — it is strictly better than bagging in every respect",
-      "Always pick the random forest — boosting is obsolete",
-      "The two are identical, so choose by coin flip",
-      "Pick whichever trains faster on one machine, ignoring accuracy entirely"
+      "Always pick the boosting model without weighing the trade-off, since gradient boosting is strictly and universally better than bagging in every single respect",
+      "Always pick the random forest and never consider boosting at all, because sequential boosting methods are now completely obsolete and offer nothing of value",
+      "The two approaches are mathematically identical in accuracy and behaviour, so the only sensible way to choose between them is to flip a fair coin",
+      "Pick whichever of the two happens to train faster on a single machine and ignore predictive accuracy entirely, since raw speed is the only factor worth weighing"
     ],
     explain: "Bagging (random forests) trains trees independently and in parallel, is famously insensitive to hyperparameters, and rarely overfits by adding trees — great when you need a robust model fast. Boosting trains trees sequentially to fix prior errors and often reaches higher accuracy, but it is more sensitive to learning rate, depth and tree count, and can overfit if those are set poorly. Neither dominates: the decision trades tuning effort and robustness against a usually-small accuracy gain. Declaring one universally superior ignores the real trade-off.",
     simple: "A random forest is a reliable workhorse you can saddle in minutes; boosting is a race car that goes faster but needs a careful mechanic. Pick by whether you value robustness or the last bit of speed.",
@@ -153,10 +153,10 @@
     q: "Your XGBoost model scores 0.995 AUC on training but only 0.82 on validation. You can add L2 regularisation (lambda), lower max_depth, add subsampling, or lower the learning rate. What is the right framing for tuning these?",
     choices: [
       "They are all regularisers fighting the same overfit — increase lambda, reduce max_depth, subsample rows/columns and shrink the learning rate to trade a little training fit for much better validation",
-      "Increase max_depth so the trees can finally capture the true pattern and close the gap",
-      "Raise the learning rate to make training converge faster and remove the gap",
-      "Add hundreds more trees without early stopping until validation catches up",
-      "Ignore the gap; a 0.995 training AUC proves the model is excellent"
+      "Increase max_depth well beyond its current setting so the individual trees can finally capture the true underlying pattern and close the gap that way",
+      "Raise the learning rate substantially so that training converges much faster, which will make the large gap between training and validation AUC disappear",
+      "Add several hundred more boosting rounds without any early stopping and simply wait until the validation AUC eventually climbs up to catch the training AUC",
+      "Ignore the gap between the two numbers completely, since a training AUC as high as 0.995 already proves beyond any doubt that the model is genuinely excellent"
     ],
     explain: "A large train-minus-validation gap is classic overfitting, and XGBoost exposes several controls that all reduce model complexity: L2/L1 penalties (lambda, alpha), shallower trees (max_depth), row and column subsampling, min_child_weight, and a smaller learning rate. Turning these up sacrifices some training fit but usually lifts validation performance, which is the number that matters. Deepening trees or raising the learning rate would worsen the overfit, and piling on trees without early stopping memorises noise. The skill is balancing enough capacity to learn the signal against enough regularisation to not memorise noise.",
     simple: "The model has memorised the training set instead of learning the pattern. Every XGBoost knob that makes it simpler — shallower trees, penalties, subsampling, smaller steps — trades showy training scores for real-world accuracy.",
@@ -173,10 +173,10 @@
     q: "You can either (a) build a stacking ensemble with a meta-learner over three base models, or (b) use a simple soft-voting average of the same three. Stacking scored slightly higher in one experiment. What should guide the choice?",
     choices: [
       "Weigh stacking's small accuracy gain against its higher complexity and leakage risk — voting is simpler and safer, so favour stacking only when the gain is real and cross-validated properly",
-      "Always stack — a meta-learner can never do worse than voting",
-      "Always vote — stacking is just voting with extra steps and no benefit",
-      "Use stacking but train the meta-learner on the same rows the base models saw, to save time",
-      "Combine six copies of the same model, since more models always help"
+      "Always choose stacking without a second thought, because a trained meta-learner is mathematically guaranteed to never perform any worse than a plain vote",
+      "Always choose the simple vote, because stacking is nothing more than voting with a lot of extra steps bolted on and it delivers no real benefit whatsoever",
+      "Use stacking but, to save time, train the meta-learner on the very same rows the base models were fitted on rather than bothering with out-of-fold folds",
+      "Combine six identical copies of the single same model into the ensemble, since adding more members to any ensemble always helps its final accuracy"
     ],
     explain: "Stacking trains a meta-learner on the base models' out-of-fold predictions and can capture which model to trust in which region, sometimes beating a plain average. But it adds complexity and, critically, will overfit or leak if the meta-learner is trained on in-sample base predictions instead of cross-validated (out-of-fold) ones. Voting is simpler, has fewer ways to go wrong, and is often nearly as good. A small, non-cross-validated stacking gain may not survive on new data, so favour stacking only when the improvement is real and the folds are done correctly.",
     simple: "Voting is a plain average; stacking hires a manager to learn who to trust when. The manager can help — but only if it is trained on honest out-of-fold predictions, and only if the extra complexity earns its keep.",
@@ -192,10 +192,10 @@
     q: "For a real-time bidding system you must score requests in under 5 ms, but accuracy still matters. A 1,000-tree random forest is most accurate; a 50-tree forest is faster. How should you set the number of trees?",
     choices: [
       "Pick the smallest tree count whose accuracy is within your tolerance, because accuracy gains flatten quickly while latency grows linearly with tree count",
-      "Always use 1,000 trees — more trees always means better predictions worth any latency",
-      "Use a single tree, since only latency matters in real time",
-      "Increase trees until training time, not inference time, hits the limit",
-      "Randomly pick a tree count; it has no effect on latency"
+      "Always use the full 1,000 trees no matter what, because more trees always means strictly better predictions and that is worth absolutely any amount of latency",
+      "Use just a single decision tree for scoring, since in a hard real-time setting only inference latency matters and predictive accuracy can be safely disregarded",
+      "Keep increasing the number of trees until the model's training time, rather than its per-request inference time, finally bumps up against your budget limit",
+      "Simply pick a tree count at random for the forest, because the number of trees has no measurable effect on the per-request inference latency anyway"
     ],
     explain: "In a random forest, inference cost scales roughly linearly with the number of trees, while accuracy gains diminish sharply and plateau after a few hundred trees. Under a hard latency budget, the right move is to find where the accuracy curve flattens and choose the smallest count that still meets your accuracy tolerance. Maxing out trees wastes latency for negligible accuracy, and a single tree throws away the variance reduction that makes forests good. This is a speed-versus-quality trade-off resolved by reading the diminishing-returns curve against the latency budget.",
     simple: "The first hundred trees do almost all the work; the next nine hundred barely move accuracy but each one still costs time. Stop where the curve flattens and you still fit the clock.",
@@ -211,10 +211,10 @@
     q: "You are choosing tree depth for a gradient-boosting model. Deep trees (depth 10) capture rich interactions but each corrects a lot; shallow stumps (depth 1-3) capture little alone. Given boosting adds trees sequentially, how do you weigh depth?",
     choices: [
       "Favour shallow trees (often depth 3-6) as boosting's base learners, because boosting combines many weak learners; deep trees per round overfit fast and defeat the sequential correction",
-      "Always use the deepest trees possible so each round needs fewer trees",
-      "Use depth-1 stumps only, since boosting requires the weakest possible learner with no exceptions",
-      "Depth does not matter in boosting; only the number of trees does",
-      "Match the depth to the number of features, one level per feature"
+      "Always use the deepest possible trees as the base learners so that each boosting round is far more powerful and the ensemble needs far fewer total trees",
+      "Use only depth-1 decision stumps as the base learners, since boosting strictly requires the very weakest possible learner in every case with no exceptions",
+      "The depth of the individual trees does not matter at all in boosting; the only hyperparameter that actually affects the final result is the number of trees",
+      "Match the depth of each tree directly to the number of input features, adding exactly one extra level of depth for every feature present in the dataset"
     ],
     explain: "Boosting works by adding many weak learners that each nudge the fit, so its base trees are deliberately shallow — depths of about 3 to 6 are common, capturing limited interactions per round. Very deep trees each fit a large chunk of the residuals, which makes the ensemble overfit quickly and undermines the gradual, self-correcting nature of boosting. Pure depth-1 stumps can work but often miss useful interactions, so the sweet spot is shallow-but-not-trivial. This trades per-tree expressiveness against the ensemble's need to improve slowly and generalise.",
     simple: "Boosting is a team of specialists each fixing a small mistake. If every member tries to fix everything at once (deep trees), the team overcorrects and overfits. Keep each member modest.",
@@ -230,10 +230,10 @@
     q: "Building a stacking ensemble, you must pick base learners. You can add either three more gradient-boosted models (all similar) or a logistic regression, a k-NN and a random forest (varied). Accuracy of each individual model is similar. Which set of base learners is better and why?",
     choices: [
       "The varied set — stacking benefits most from base learners that are individually strong but make DIFFERENT errors, so diverse model families add more than near-identical ones",
-      "The three similar boosted models, because higher individual accuracy always makes the best stack",
-      "It makes no difference; the meta-learner erases any effect of base-model choice",
-      "Whichever set trains fastest, since base-learner diversity is irrelevant to stacking",
-      "Always pick the set with the most models, regardless of their similarity"
+      "The three similar boosted models, because in stacking it is always the highest individual base-model accuracy, not diversity, that produces the best final stack",
+      "It makes absolutely no difference which set you choose, since the trained meta-learner completely erases any effect that the choice of base models could have had",
+      "Whichever of the two sets happens to train the fastest overall, since the diversity of the base learners is entirely irrelevant to how well stacking performs",
+      "Always pick the set that contains the largest number of individual models, completely regardless of how similar or near-identical those models are to each other"
     ],
     explain: "An ensemble only gains when its members make uncorrelated errors, so the meta-learner has genuinely different signals to combine. Three near-identical boosted models err in the same places, leaving little for stacking to exploit, whereas a linear model, a distance-based model, and a tree ensemble fail on different cases and complement each other. Diversity, not just raw individual accuracy, drives stacking's improvement. This is why practitioners deliberately mix model families as base learners rather than stacking clones.",
     simple: "A panel of judges helps only if they see the problem differently. Three clones of the same judge just repeat one opinion; a lawyer, a doctor and an engineer cover each other's blind spots.",
@@ -251,10 +251,10 @@
     q: "A random forest reports that 'customer_id' is the single most important feature (by impurity-based importance) for predicting churn, far above behavioural features. What is the most likely explanation and correct action?",
     choices: [
       "High-cardinality features like IDs inflate impurity-based importance because they offer many split points; drop the ID and re-check with permutation importance instead",
-      "customer_id genuinely causes churn and should be the primary predictor going forward",
-      "The forest is broken and should be replaced with a single decision tree",
-      "You should one-hot encode customer_id so the forest can use it even more",
-      "Importance scores are always reliable, so trust the ranking as-is"
+      "The customer_id field genuinely causes customers to churn and therefore should be treated as the primary predictor in every future version of this model",
+      "The forest itself is fundamentally broken and should be thrown out and replaced with a single decision tree, which reports its feature importances more reliably",
+      "You should one-hot encode the customer_id column into thousands of indicators so that the forest is able to exploit that top feature even more heavily",
+      "Impurity-based importance scores are always completely reliable, so you should simply trust the reported feature ranking exactly as it stands and act on it"
     ],
     explain: "Gini/impurity-based feature importance is biased toward high-cardinality features: an ID with thousands of unique values offers many possible split points and can reduce impurity on training data by essentially memorising rows, inflating its importance without real predictive value. This is a leakage-adjacent artifact, not a genuine signal — an identifier cannot generalise to new customers. The fix is to drop such identifiers and rely on permutation importance or SHAP, which measure impact on held-out predictions. Trusting the raw ranking would build a model that has memorised IDs.",
     simple: "An ID column is a unique fingerprint, so the forest can 'cheat' by memorising who churned rather than learning why. It looks like the top feature but predicts nothing about new customers.",
@@ -270,10 +270,10 @@
     q: "You add early stopping to XGBoost, but you monitor the validation metric on the SAME data you also use to select the final feature set and threshold. Test performance later disappoints. What went wrong?",
     choices: [
       "The early-stopping/validation set was reused for other tuning decisions, so it leaked into model selection and stopped being an honest estimate — use a separate untouched test set",
-      "Early stopping itself is unreliable and should never be used with XGBoost",
-      "The learning rate was too low, which always causes disappointing test scores",
-      "XGBoost cannot do early stopping, so the feature was silently ignored",
-      "The training set was too large, diluting the signal"
+      "Early stopping as a technique is inherently unreliable and should simply never be used together with XGBoost under any circumstances at all, which is the issue",
+      "The learning rate you chose was far too low, and an excessively low rate is what always leads directly to disappointing performance on the final held-out test set",
+      "XGBoost is actually incapable of performing early stopping at all, so the feature you thought you had enabled was silently ignored during the entire training run",
+      "The training set you used was simply far too large, and that excessive volume of data diluted the signal until the model could no longer learn the real pattern"
     ],
     explain: "Early stopping picks the tree count that maximises a metric on a watch set, so that watch set has been used to make a modelling decision and is no longer a neutral estimate of generalisation. If the same set also chooses features and thresholds, you have optimised against it multiple times and it now overstates performance — a subtle form of leakage. The remedy is a clean three-way split (or nested cross-validation): train, a validation set for early stopping and tuning, and a final test set touched only once. Blaming early stopping or the learning rate misses that the evaluation protocol leaked.",
     simple: "If you keep peeking at the same 'held-out' set to make choices, it quietly becomes part of training. You need one final exam you never looked at while studying.",
@@ -289,10 +289,10 @@
     q: "A gradient-boosting churn model is retrained monthly. It looks great in backtests but degrades in production each month. You discover one feature is 'days_since_last_support_ticket', computed at scoring time. What is the likely trap?",
     choices: [
       "Target leakage / drift: the feature's meaning shifts over time and at training you may have used values recorded after the churn event, so backtests are optimistic — audit feature timing and monitor for drift",
-      "Gradient boosting simply cannot handle time series and must be replaced by a random forest",
-      "The model has too few trees; adding thousands more will fix production decay",
-      "Monthly retraining is the problem; you should train once and never update",
-      "The learning rate drifts on its own between months and must be frozen"
+      "Gradient boosting simply cannot handle any kind of time-series data at all, so the only real fix here is to replace it wholesale with a random forest instead",
+      "The model has far too few trees in it, and simply adding several thousand more boosting rounds to the ensemble will completely fix the monthly decay in production",
+      "The monthly retraining schedule is itself the entire problem, so you should train the model exactly once and then never update it again against any newer data",
+      "The learning rate quietly drifts on its own between one month and the next, so the real fix is to freeze that one hyperparameter permanently across all retrains"
     ],
     explain: "Two subtle issues combine here. First, if 'days_since_last_support_ticket' was computed using events that occurred around or after the churn label was set, it leaks future information and inflates backtest accuracy — a point-in-time correctness failure. Second, the relationship between features and churn drifts month to month, so a model tuned on old patterns decays as the distribution shifts. Neither is a defect of gradient boosting itself. The fix is to audit exactly when each feature is available relative to the label and to monitor for concept/data drift, retraining or recalibrating as the world changes.",
     simple: "If a feature secretly peeks at what happened after the thing you are predicting, your backtest is cheating. And even honest features go stale as customer behaviour shifts month to month.",
@@ -308,10 +308,10 @@
     q: "To speed things up, you build a bagging ensemble but skip the bootstrap — every tree is trained on the exact same full dataset with the same algorithm. The ensemble is no more accurate than a single tree. Why?",
     choices: [
       "Without bootstrap sampling (or feature randomness) every tree is identical, so averaging clones reduces no variance — bagging needs diversity among the base learners",
-      "Bagging always fails on this dataset regardless of sampling",
-      "You needed a higher learning rate to make the trees differ",
-      "The trees were too shallow; deep identical trees would have helped",
-      "Averaging always leaves accuracy unchanged, so this is expected for any ensemble"
+      "Bagging as a method always fails completely on this particular dataset no matter how you sample the rows, so the identical result you got is simply to be expected",
+      "You needed to set a much higher learning rate on the trees, because a larger rate is the mechanism that would have forced the individual trees to differ from each other",
+      "The trees you grew were far too shallow, and a hundred deep but still identical trees would each capture more detail and would have made the averaging finally pay off",
+      "Averaging predictions always leaves the final accuracy completely unchanged, so getting no improvement at all here is exactly the expected outcome for any ensemble"
     ],
     explain: "Bagging reduces variance by averaging models whose errors are at least partly independent, and that independence comes from training each tree on a different bootstrap resample (and, in random forests, a random feature subset per split). If every tree sees the identical data with a deterministic algorithm, they are the same tree, and averaging identical predictions changes nothing. The whole benefit hinges on injected randomness creating decorrelated learners. Depth or learning rate are irrelevant; the missing ingredient is the diversity that bootstrapping provides.",
     simple: "Photocopying one expert's answer sheet a hundred times and averaging still gives that one expert's answer. Bagging only helps when each copy studied slightly different data.",
@@ -327,10 +327,10 @@
     q: "Two of your XGBoost model's features are 0.98-correlated (e.g. 'price_usd' and 'price_eur'). SHAP shows each with only moderate importance, and dropping one barely changes accuracy. A colleague concludes both features are unimportant. What is the subtle error?",
     choices: [
       "Correlated features share credit, so importance is split between them — the underlying signal may be very important even though each feature's individual score looks moderate",
-      "The features are genuinely useless and both should be dropped immediately",
-      "XGBoost cannot use correlated features at all, so importance is random noise",
-      "Correlation always doubles a feature's importance, so the scores are inflated, not deflated",
-      "SHAP values are meaningless for tree ensembles and should be ignored"
+      "The two features are genuinely useless to the model, and so both of them should be dropped from the dataset immediately without any further investigation at all",
+      "XGBoost is simply unable to make any use of correlated features at all, so the moderate importance scores it reported for them are nothing but random meaningless noise",
+      "Strong correlation always doubles each feature's measured importance, so the two moderate scores are actually inflated rather than deflated and should be trusted less",
+      "SHAP values are fundamentally meaningless when they are applied to tree ensembles like XGBoost, so the whole attribution here should simply be ignored altogether"
     ],
     explain: "When two features are nearly redundant, the model can split on either one, so the credit for their shared predictive signal is divided between them and each shows only moderate importance. Dropping one barely hurts accuracy precisely because the other carries the same information — that is evidence of redundancy, not unimportance. Concluding the underlying signal is weak confuses per-feature attribution with the value of the information itself. The right read is that price is important but its importance is spread across correlated encodings; consolidate or interpret them together.",
     simple: "If two witnesses tell the same story, the court splits the credit between them, so each looks half as crucial. Remove one and the story still stands — that means they overlap, not that the story is unimportant.",
@@ -346,10 +346,10 @@
     q: "A hard-voting ensemble of five classifiers scores worse than its single best member. Investigating, you find four of the five models are minor variants of the same decision tree and tend to be wrong together. What is the real problem?",
     choices: [
       "The voters are correlated, so the majority is dominated by four near-identical models that err in unison — voting helps only with diverse, independent base learners",
-      "Hard voting is always worse than using the single best model, so never use voting",
-      "You needed an even number of voters; five is the problem",
-      "The single best model must have leaked, so its score is the fake one",
-      "Adding a sixth copy of the same tree would fix the majority"
+      "Hard voting is always strictly worse than simply using the single best member on its own, so a voting ensemble is something you should never actually build at all",
+      "You needed an even number of voters rather than an odd one, and using exactly five classifiers is the specific reason that the majority vote turned out worse here",
+      "The single best model must have quietly leaked information during training, so it is really its inflated score that is fake rather than the honest voting ensemble's",
+      "Simply adding a sixth copy of the very same decision tree to the ensemble would tip the majority back the other way and fully fix the correlated voting bloc"
     ],
     explain: "Majority voting improves on its members only when their errors are roughly independent, so mistakes are outvoted by correct models. Here four of five voters are essentially the same tree and make the same errors, so they form a correlated bloc that outvotes the one genuinely different (and better) model whenever they are jointly wrong. The ensemble inherits the shared blind spot instead of averaging it away. The fix is to build voters from diverse model families, not near-clones — adding more copies of the same tree only entrenches the problem.",
     simple: "A jury of five where four are identical triplets of one person is really a jury of two, and the clones can outvote the wise outsider. Independent jurors, not copies, make voting work.",

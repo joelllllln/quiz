@@ -39,8 +39,8 @@
       "Manhattan (L1) — in high dimensions it keeps neighbours more distinguishable than Euclidean",
       "Euclidean (L2), because squaring the gaps sharpens differences in high dimensions",
       "Chebyshev (max coordinate), which always separates high-dimensional points best",
-      "No distance metric matters in high dimensions; only k does",
-      "Cosine on the raw counts, which removes any need to scale the features"
+      "No distance metric matters in high dimensions; only the number of neighbours k changes the result",
+      "Cosine on the raw counts, which removes any need to scale or reduce the features beforehand"
     ],
     explain: "In many dimensions all pairwise distances bunch together (distance concentration), so nearest and farthest look alike. Manhattan (L1) sums absolute gaps and degrades more gracefully than Euclidean (L2), which squares gaps and concentrates faster — so L1 usually keeps neighbours more distinguishable. The bigger fix is fewer dimensions (feature selection / PCA). Whatever metric you pick, scale first; cosine still needs sensible features and doesn't remove scaling.",
     simple: "In a crowd where everyone seems the same distance away, counting block-by-block steps (Manhattan) tells people apart better than one straight-line ruler.",
@@ -70,9 +70,9 @@
     choices: [
       "Manhattan (L1) — it adds absolute gaps, so one large gap is not squared",
       "Euclidean (L2), because squaring the gap keeps outliers from mattering",
-      "Cosine distance, because it is unaffected by any outlier",
-      "Chebyshev distance, which reports only the single largest gap",
-      "There is no difference; both treat a large gap identically"
+      "Cosine distance, since it looks only at angle and so ignores any outlier value",
+      "Chebyshev distance, which reports only the single largest coordinate gap",
+      "There is no real difference; both metrics treat one large gap identically"
     ],
     explain: "Euclidean squares each coordinate gap, so one very large difference dominates the total distance. Manhattan sums the absolute gaps, so a single big gap contributes linearly rather than being squared — making it more robust to outliers and to grid-like or ordinal features. (Chebyshev goes the other way: it reports only the largest gap, so it is the most outlier-dominated.) Note this is about robustness to a big single-axis gap; you should still handle genuine outliers and scale features.",
     simple: "Squaring punishes one big miss enormously; adding the plain gaps lets that one big miss count just once, so it doesn't swamp everything else.",

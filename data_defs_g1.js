@@ -10,10 +10,10 @@
     q: "In machine learning, what is reinforcement learning?",
     choices: [
       "Learning by trial and error, where an agent takes actions and is guided by rewards and penalties",
-      "Learning a mapping from labelled examples to their known correct outputs",
-      "Grouping unlabelled data into clusters of similar points",
-      "Reducing the number of features while preserving most of the information",
-      "Copying the predictions of a larger model into a smaller one"
+      "Learning a fixed mapping from many labelled examples to their known correct outputs, with no reward signal at all",
+      "Grouping unlabelled data into clusters of similar points using only distances, with no actions or rewards involved",
+      "Reducing the number of input features while preserving most of the variance, done before any model is trained",
+      "Copying the predictions of a larger trained model into a smaller student network purely to compress it"
     ],
     explain: "Reinforcement learning trains an agent that interacts with an environment: it chooses actions, receives numerical rewards or penalties, and adjusts its behaviour to maximise long-run reward. Unlike supervised learning there are no labelled correct answers, only feedback signals. It underlies game-playing and robotics systems.",
     simple: "It is learning like training a dog: the agent tries things, gets a treat or a scolding, and slowly learns which actions pay off. Nobody hands it the right answer; it discovers it by experimenting.",
@@ -33,10 +33,10 @@
     q: "In machine learning, what is classification?",
     choices: [
       "A supervised task whose goal is to predict a discrete category or class label for each input",
-      "A supervised task whose goal is to predict a continuous numeric value",
-      "An unsupervised task that splits data into clusters without labels",
-      "A method for shrinking many features down to a few components",
-      "A rule that decides how fast a model updates its weights"
+      "A supervised task whose goal is to predict a continuous numeric value on an unbounded sliding scale",
+      "An unsupervised task that splits unlabelled data into clusters of similar points without any target",
+      "A method for shrinking many correlated features down to a few uncorrelated components before training",
+      "A tuning rule that decides how fast a model updates its weights during gradient descent optimisation"
     ],
     explain: "Classification is supervised learning where the target is categorical: spam vs not-spam, digit 0-9, disease vs healthy. The model learns from labelled examples and outputs one of a fixed set of classes. It contrasts with regression, whose target is a number.",
     simple: "It is sorting things into named buckets: is this email spam or not? Is this photo a cat, dog, or bird? The answer is always one of a fixed list of labels, never a measured amount.",
@@ -56,10 +56,10 @@
     q: "In machine learning, what is regression?",
     choices: [
       "A supervised task whose goal is to predict a continuous numeric value for each input",
-      "A supervised task whose goal is to predict a discrete class label",
-      "The tendency of a model to memorise its training data",
-      "An unsupervised task that groups points into clusters",
-      "A technique for encoding categories as binary columns"
+      "A supervised task whose goal is to predict a discrete class label from a fixed list of categories",
+      "The tendency of an over-complex model to memorise noise in its training data instead of the signal",
+      "An unsupervised task that groups unlabelled points into clusters of similar examples without targets",
+      "A preprocessing technique for encoding nominal categories as several binary indicator columns"
     ],
     explain: "Regression is supervised learning where the target is a real-valued number: house price, temperature, tomorrow's demand. The model learns from labelled examples and outputs a quantity on a continuous scale. It contrasts with classification, whose output is a category.",
     simple: "It is predicting an amount, like a price or a temperature, rather than a category. The answer can be any number on a sliding scale, not one of a short list of labels.",
@@ -79,10 +79,10 @@
     q: "In machine learning, what is a feature?",
     choices: [
       "An individual measurable input variable used to describe each example",
-      "The known correct answer attached to a training example",
-      "The final prediction the model produces",
-      "A single row of the dataset representing one example",
-      "The rule used to split data into train and test sets"
+      "The known correct answer or target label attached to each training example for it",
+      "The final numeric or class prediction the model eventually produces at inference time",
+      "A single complete row of the dataset representing one whole labelled example",
+      "The fixed rule used to split the data into separate train and test sets"
     ],
     explain: "A feature is one input attribute the model reads to make predictions — a column in the dataset, such as age, pixel intensity, or word count. Each example is described by a vector of feature values. Choosing and transforming good features is central to model performance.",
     simple: "A feature is one piece of information you know about each item, like a person's height or age. It is a column in your spreadsheet — one of the clues the model uses to guess the answer.",

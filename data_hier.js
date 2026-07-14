@@ -237,10 +237,10 @@
     "q": "The output of hierarchical clustering is a 'dendrogram'. What is a dendrogram?",
     "choices": [
       "A tree diagram recording which groups merged, and at what distance",
-      "A scatter plot with each cluster shaded a colour",
-      "A table listing every point's final cluster number",
-      "A single line showing accuracy against cluster count",
-      "A grid of distances between every pair of points"
+      "A scatter plot of the points with each final cluster shaded its own colour",
+      "A flat table listing every single point next to its final cluster number",
+      "A line chart showing clustering accuracy plotted against the cluster count",
+      "A square grid holding the distance between every possible pair of points"
     ],
     "explain": "A dendrogram is the tree of merges: leaves are individual points, and each branch shows two clusters joining at the height equal to their distance. It captures the entire merge history, not one fixed grouping.",
     "simple": "Picture a family tree built upward: individuals join into pairs, pairs into groups, groups into one root — and the HEIGHT of each join shows how far apart the two were. That tree is the dendrogram. It's not a scatter plot or a label table; it's the whole record of what merged with what, and when.",
@@ -273,10 +273,10 @@
     "q": "A dendrogram holds every possible grouping. How do you turn it into an actual set of clusters?",
     "choices": [
       "Cut the tree at a chosen height — everything still separate below it becomes a cluster",
-      "Keep only the two branches that merged last",
-      "Take the average of all the merge heights",
-      "Count the leaves and divide by two",
-      "Re-run the algorithm with the number of clusters fixed"
+      "Keep only the two branches that happened to merge last, right at the top of the tree",
+      "Take the plain arithmetic average of all the recorded merge heights in the tree",
+      "Count how many leaves the tree has and simply divide that total by two",
+      "Re-run the whole algorithm again from scratch with the number of clusters fixed"
     ],
     "explain": "Drawing a horizontal line at some height splits the tree: each branch that hasn't yet merged below that line is one cluster. Cut low for many small clusters, high for a few big ones — the tree already contains them all.",
     "simple": "You slice the tree horizontally. Everything that has joined up BELOW your slice counts as one group; the slice height decides how many groups you get. Low slice, lots of little clusters; high slice, a few big ones. You never re-run anything — the answer was always in the tree, waiting for a cut.",
@@ -309,10 +309,10 @@
     "q": "Hierarchical clustering repeatedly merges the two 'closest' clusters. But clusters are groups, not points — so how is the distance between two CLUSTERS defined?",
     "choices": [
       "By a linkage rule — e.g. their closest pair, farthest pair, or average pairwise distance",
-      "Always by the distance between their first-added members",
-      "By subtracting their sizes and taking the difference",
-      "By whichever cluster has the larger spread",
-      "By the number of points that separate them"
+      "Always by the straight-line distance between the first point added to each cluster",
+      "By subtracting the two clusters' member counts and taking the absolute difference",
+      "By whichever of the two clusters happens to have the larger internal spread",
+      "By simply counting how many other stray points physically separate the two clusters"
     ],
     "explain": "Point-to-point distance is obvious, but cluster-to-cluster needs a rule for summarising many pairwise distances into one number. That rule is the 'linkage': single (closest pair), complete (farthest pair), average (mean pair), or Ward (variance growth).",
     "simple": "Two crowds — how far apart are they? You must pick a rule. Nearest two people (single linkage)? Farthest two (complete)? The average over all pairs? Each rule is a 'linkage', and it quietly decides the whole shape of your clusters. Distance between groups isn't one obvious number; it's a choice you make.",
