@@ -686,19 +686,31 @@
   // topic really does cover the whole topic — not just the handful of concepts a note happened to name.
   function learnConcepts(topicKey) {
     var out = [];
-    notesTopics().forEach(function (t) {
+    // Every topic that has study notes OR concept cards — not just those with a Notes-reader entry, so
+    // note-less topics (e.g. Applied Scenarios) are still fully covered via their concept flashcards.
+    TOPICS.forEach(function (t) {
       if (topicKey && t.key !== topicKey) return;
       var notes = [];
-      (window.NOTES[t.key].groups || []).forEach(function (g) {
+      var nt = window.NOTES && window.NOTES[t.key];
+      if (nt) (nt.groups || []).forEach(function (g) {
         (g.items || []).forEach(function (it) { notes.push({ t: it.t, d: it.d, f: it.f, group: g.h, topic: t.name }); });
       });
-      var cards = flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); });
-      if (!notes.length && !cards.length) return;
-      var byConcept = {};
+      // Build the concept list from THIS topic's own questions. A concept can be shared across topics
+      // (e.g. "feature scaling" in both kNN and Feature Engineering); the global flashcard deck assigns
+      // it to just one topic, but the dashboard counts each question under its own topic — so a topic must
+      // cover every concept its questions test, including ones "owned" elsewhere. Otherwise those
+      // questions can never be marked seen by studying the topic they live in.
+      var byConcept = {}, cardsMap = {};
       buildIndex().filter(function (e) { return e.key === t.key && diffOk(e.level); }).forEach(function (e) {
-        var wf = widgetFor(e.q), nm = wf && wf.reveal && wf.reveal.name;
-        if (nm) { var k = normkey(nm); (byConcept[k] || (byConcept[k] = [])).push(e.q); }
+        var wf = widgetFor(e.q), r = wf && wf.reveal;
+        if (!r || !r.name) return;
+        var k = normkey(r.name);
+        (byConcept[k] || (byConcept[k] = [])).push(e.q);
+        if (!cardsMap[k]) cardsMap[k] = { front: r.name, formula: r.formula || '', back: r.text || e.q.simple || e.q.explain || '', topic: t.name, key: t.key, level: e.level };
+        else if (e.level < cardsMap[k].level) cardsMap[k].level = e.level;
       });
+      var cards = Object.keys(cardsMap).map(function (k) { return cardsMap[k]; });
+      if (!notes.length && !cards.length) return;
       var items = notes.map(function (n) { return { note: n, concept: matchConcept(n, cards) }; });
       var noteCovered = {};
       items.forEach(function (x) { if (x.concept) noteCovered[normkey(x.concept.front)] = 1; });
