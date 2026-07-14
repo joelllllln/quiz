@@ -595,6 +595,7 @@
         (g.items || []).forEach(function (it) { notes.push({ t: it.t, d: it.d, f: it.f, group: g.h, topic: t.name }); });
       });
       if (!notes.length) return;
+      notes = shuffle(notes);   // fresh order every time Start is pressed (the ordered read-through lives in the Notes reader)
       var cards = flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); });
       // Questions for this topic, grouped by the concept each one teaches (its reveal name).
       var byConcept = {};
