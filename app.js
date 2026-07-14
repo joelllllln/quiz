@@ -604,13 +604,6 @@
     });
     return bestScore >= 4 ? best : null;
   }
-  var LEARN_GENERIC = ['what it is', 'why it works', 'the idea', 'the setup', 'in short', 'the point', 'the core idea', 'watch out', 'the gotcha', 'the catch', 'the twist', 'the extra twist', 'the trade-off', 'the tradeoff', 'when to use it', 'when to use', 'strengths', 'weakness', 'weaknesses', 'how it works', 'the mechanism', 'the result', 'reading the result'];
-  // The concept a note is really about: its own label if specific, otherwise the matched concept or its section heading.
-  function noteSubject(n, concept) {
-    var t = (n.t || '').toLowerCase().trim();
-    if (LEARN_GENERIC.indexOf(t) >= 0) return concept ? concept.front : (n.group || n.t);
-    return n.t;
-  }
   function learnSequence(topicKey, testType) {
     var seq = [];
     notesTopics().forEach(function (t) {
@@ -630,11 +623,13 @@
       });
       notes.forEach(function (n) {
         seq.push({ type: 'read', note: n });
-        var concept = matchConcept(n, cards);            // for MC lookup + mastery recording
-        var conceptQs = concept ? (byConcept[normkey(concept.front)] || []) : [];
-        // The recall test is built FROM THIS NOTE: same term, same explanation you just read.
-        var testCard = { front: noteSubject(n, concept), back: n.d, formula: n.f || '', topic: n.topic,
-          record: concept ? concept.front : null, level: concept ? concept.level : 0 };
+        var concept = matchConcept(n, cards);
+        // Never quiz a raw note heading (e.g. "The fix", "Junk features hurt"): if the note maps to no
+        // real concept, it stays read-only. Otherwise the test IS that concept's proper flashcard —
+        // a well-formed name + its own definition — so the prompt and the graded reference always agree.
+        if (!concept) return;
+        var conceptQs = byConcept[normkey(concept.front)] || [];
+        var testCard = { front: concept.front, back: concept.back, formula: concept.formula || '', topic: n.topic, record: concept.front, level: concept.level };
         var pick = testType;
         if (pick === 'mix') {
           var opts = ['card'];
@@ -877,12 +872,17 @@
   function gradeWriting(concept, reference, answer, cb) {
     var key = apiKey();
     if (!key) { cb({ error: 'nokey' }); return; }
-    var sys = "You are a supportive but rigorous machine-learning tutor marking a beginner's free-text answer. " +
-      "The learner is meeting this material for the first time. Grade their answer out of 5 for how correct and complete it is versus the reference answer. " +
-      "Award partial credit generously for partially-right answers, but be honest — a blank, off-topic, or pure-guess answer scores 0 or 1. " +
-      "Keep feedback warm, specific and short: what they got right, what is missing or wrong, and one concrete tip to improve.";
-    var user = "CONCEPT TO EXPLAIN:\n" + concept + "\n\nREFERENCE ANSWER (the ground truth):\n" + reference +
-      "\n\nLEARNER'S ANSWER:\n" + (answer && answer.trim() ? answer.trim() : '(blank)') + "\n\nMark the learner's answer.";
+    var sys = "You are a supportive machine-learning tutor marking a beginner's free-text explanation of a named concept. " +
+      "The task is only to explain that CONCEPT — nothing more. Grade 0-5 on whether the learner captured the CORE idea of the concept. " +
+      "Give 5 for a correct core explanation, 4 if the core is right with a small gap or looser wording; wording need not match the reference. " +
+      "The reference answer is just ONE correct version — treat any explanation that conveys the same core idea as fully correct. " +
+      "Do NOT lower the score for omitting extra details, examples, algorithm-specific points, or anything the concept's name did not explicitly ask for. " +
+      "Only give 0-2 for answers that are blank, off-topic, or actually wrong. When unsure between two scores, give the higher one. " +
+      "Keep feedback warm, specific and short: what they got right, and at most one thing to add.";
+    var user = "CONCEPT TO EXPLAIN (this is the whole question):\n" + concept +
+      "\n\nONE CORRECT REFERENCE (not the only right answer):\n" + reference +
+      "\n\nLEARNER'S ANSWER:\n" + (answer && answer.trim() ? answer.trim() : '(blank)') +
+      "\n\nMark the learner's answer on whether it explains the concept's core idea. Do not require anything the concept name didn't ask for.";
     fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
