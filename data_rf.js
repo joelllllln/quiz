@@ -50,9 +50,9 @@
     "q": "A trained random forest has 300 trees. How does it turn 300 tree outputs into ONE final prediction?",
     "choices": [
       "Majority vote for classification, average for regression",
-      "It keeps only the single most confident tree's answer",
+      "It keeps only the single most confident tree's answer and discards the other 299",
       "It chains the trees so each corrects the previous one",
-      "It picks whichever tree had the lowest training error",
+      "It picks whichever single tree scored the lowest error on the training set",
       "It multiplies all the trees' probabilities then rounds"
     ],
     "explain": "A random forest aggregates by democracy: for classification each tree casts a vote and the majority class wins (or the class probabilities are averaged), while for regression the trees' numeric predictions are simply averaged. Because the trees are decorrelated, their independent errors partly cancel in the pool, so the combined answer is steadier than any single tree's.",
@@ -142,8 +142,8 @@
     "q": "Before any 'forest', the base idea is an ENSEMBLE. In one sentence, what is an ensemble model?",
     "choices": [
       "Many models whose predictions are combined into one answer",
-      "One large model trained for extra epochs",
-      "A model that retrains itself every night",
+      "One large single model trained for many extra epochs on all the data",
+      "A model that automatically retrains itself from scratch every night",
       "The single most accurate model, chosen by a vote",
       "A model built from many features instead of a few"
     ],
@@ -189,9 +189,9 @@
     "choices": [
       "High variance — the model swinging wildly when the data changes a little",
       "High bias — the model being too simple to fit the pattern",
-      "Slow training — too many rows to process at once",
-      "Missing values scattered through the columns",
-      "Features measured on wildly different scales"
+      "Slow training speed — simply far too many rows for the trees to process at once",
+      "Missing values scattered unpredictably across many of the feature columns",
+      "Features measured on wildly different numeric scales and units"
     ],
     "explain": "A deep decision tree is a low-bias, HIGH-variance learner: retrain it on a slightly different sample and it can look completely different. Averaging many such trees keeps the shared signal and cancels the per-tree wobble — variance drops, bias barely moves.",
     "simple": "A single deep tree is jumpy: nudge the data and it redraws itself. That jumpiness is called variance, and averaging is its natural enemy — many jumpy trees, each wrong in its own random way, average into something steady. Averaging can't fix a model that's too simple (that's bias); it fixes a model that's too twitchy.",
@@ -234,10 +234,10 @@
     "q": "Put it together: what, precisely, is a RANDOM FOREST?",
     "choices": [
       "Many decision trees, each on a random data sample and random features, whose votes are averaged",
-      "A single very deep decision tree grown until every leaf is pure",
-      "A tree whose split thresholds are chosen at random each time",
-      "A boosted chain of trees, each fixing the previous tree's errors",
-      "A tree that regrows its branches whenever new data arrives"
+      "A single very deep decision tree grown greedily until every one of its leaves is perfectly pure",
+      "A tree whose split thresholds at every node are simply chosen at random each time",
+      "A boosted chain of trees in which each successive tree is fitted to fix the previous tree's errors",
+      "A single tree that regrows all of its branches from scratch whenever new data arrives"
     ],
     "explain": "A random forest is bagging applied to decision trees, plus one twist: at each split a tree may only consider a random subset of features. Random samples + random features make the trees genuinely different, so averaging their votes cancels more error.",
     "simple": "Take many decision trees. Give each a different random slice of the rows AND restrict each split to a random handful of columns, so no two trees think alike. Then let them vote. The randomness is the whole point: it makes the committee members disagree, and disagreement is what averaging turns into accuracy.",
@@ -278,10 +278,10 @@
     "q": "A random forest hands you 'feature importances'. As a beginner, how should you read a number like income = 0.41?",
     "choices": [
       "A rough hint that income drove many splits — useful, but not an exact or stable truth",
-      "The exact percentage of predictions that depend on income",
-      "The correlation between income and the target label",
-      "Proof that income causes the outcome being predicted",
-      "The weight income would get in a linear model"
+      "The exact percentage of the forest's final predictions that end up depending on income",
+      "The straightforward linear correlation between income and the target label",
+      "Firm proof that a higher income genuinely causes the outcome being predicted",
+      "The coefficient weight that income would receive inside a linear model"
     ],
     "explain": "Impurity importances tally how much each feature reduced impurity across all the trees' splits. That's a helpful ranking hint, but it's computed on training data, inflated by high-cardinality features, and unstable when features are correlated — so treat it as a clue, not a verdict.",
     "simple": "It's a rough popularity score: how often, and how usefully, the forest split on that feature. Handy for a first look at 'what matters', but it isn't a percentage of predictions, isn't correlation, and definitely isn't proof of cause. For decisions, you'd double-check with a sturdier method (permutation importance) on held-out data.",
@@ -323,10 +323,10 @@
     "q": "More trees in a forest — does adding them ever cause OVERFITTING the way a deeper single tree does?",
     "choices": [
       "No — extra trees only steady the average, so accuracy plateaus rather than degrading",
-      "Yes — each new tree adds capacity that eventually memorises noise",
-      "Yes — but only past about 50 trees",
-      "No — because each tree is deliberately kept shallow",
-      "Only if the trees are trained in sequence rather than parallel"
+      "Yes — each additional tree adds fresh capacity that eventually memorises the training noise",
+      "Yes — but only once the forest grows past about fifty or so trees",
+      "No — because each individual tree in the forest is deliberately kept shallow",
+      "Only if the trees happen to be trained in sequence rather than fully in parallel"
     ],
     "explain": "Bagged trees are trained independently and averaged, so more of them just refines the estimate of the average vote — variance keeps dropping toward a floor and accuracy plateaus. Unlike a single tree's depth (which is real capacity), 'number of trees' is not a knob that overfits.",
     "simple": "Adding trees is like polling more people: past a point the average barely moves, and it never gets WORSE from more voters. That's totally unlike growing one tree deeper, where every extra level is fresh capacity to memorise noise. So you pick tree-count for speed and stability, not as an overfitting risk.",
@@ -561,7 +561,7 @@
     "q": "A random forest goes one step beyond bagging: at every split, each tree may only consider a RANDOM SUBSET of the features. Why add that?",
     "choices": [
       "To decorrelate the trees — otherwise they all lean on the same strong feature",
-      "To speed each split up by scanning far fewer candidate features every time",
+      "To speed each split up by scanning far fewer candidate features at every single node",
       "To stop any individual tree from overfitting its own bootstrap sample",
       "To ensure every feature gets used somewhere across the whole forest",
       "To let the forest cope with far more features than it has training rows"

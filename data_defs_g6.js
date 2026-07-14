@@ -178,10 +178,10 @@
     q: "What is a scree plot in PCA?",
     choices: [
       "A chart of each component's eigenvalue (or explained variance) against its rank, used to spot the 'elbow' where extra components stop adding much",
-      "A scatter of the data projected onto the first two principal components",
-      "A bar chart of how much each original feature loads onto PC1",
-      "A heatmap of the covariance matrix before decomposition",
-      "A curve of training error against the number of trees in a model"
+      "A scatter plot of all the data points after they have been projected down onto just the first two principal components purely for visual inspection",
+      "A bar chart showing how strongly each original input feature loads onto the first principal component, one bar per feature across the whole set of inputs",
+      "A colour-coded heatmap of the raw covariance matrix drawn before any eigen-decomposition is carried out on the feature pairs",
+      "A curve plotting a model's training error against the growing number of decision trees added into an ensemble as it is built"
     ],
     explain: "A scree plot lists the components on the x-axis in order of importance and plots their eigenvalues (or explained-variance ratios) on the y-axis. The curve typically drops steeply and then flattens; the 'elbow' where it levels off suggests how many components are worth keeping, since components past it contribute little variance. The name evokes the loose rubble ('scree') that piles up at the flat base of a cliff.",
     simple: "A scree plot draws the importance of each component from biggest to smallest. You look for the bend where the line flattens out — components after that bend are barely worth keeping.",
@@ -206,10 +206,10 @@
     q: "In PCA, what is a loading?",
     choices: [
       "The weight an original feature carries in the formula for a principal component — how much that feature contributes to the component's direction",
-      "The coordinate of a data point along a principal component",
-      "The eigenvalue attached to a principal component",
-      "The number of components you choose to keep",
-      "The amount of variance lost when the data is reconstructed"
+      "The coordinate, or score, that locates a single data point along a given principal component after the whole dataset has been projected onto that axis",
+      "The eigenvalue attached to a principal component, reporting the total variance the data happens to spread out along that direction",
+      "The total number of leading principal components that you deliberately choose to keep and carry forward into the next stage after the reduction is done",
+      "The amount of original variance that ends up lost when the compressed data is reconstructed back into the full feature space again"
     ],
     explain: "Each principal component is a weighted sum of the original features, and the loadings are those weights — one per feature per component. Large-magnitude loadings mark the features that most define a component's direction, so loadings are how you interpret what a component 'means'. They are the entries of the eigenvectors and are distinct from scores, which are the projected positions of the data points.",
     simple: "A loading tells you how much each original column pulls on a component. Big loadings show which features that component is really about, which is how you give the component a plain-language meaning.",
@@ -234,10 +234,10 @@
     q: "In PCA, what is the covariance matrix that gets decomposed?",
     choices: [
       "A square table whose entries record how each pair of features varies together, whose eigenvectors become the principal components",
-      "A table of the raw data values with one row per example and one column per feature",
-      "A list of the eigenvalues, one for each principal component",
-      "The matrix of projected scores after dimensionality reduction",
-      "A confusion matrix comparing predicted and true labels"
+      "A plain table of the raw data values holding one row for every training example and one separate column for each measured feature",
+      "A simple list of the eigenvalues, holding exactly one number for each principal component to record its variance",
+      "The matrix of projected score values that is produced only after the dimensionality reduction has already been carried out on the data",
+      "A confusion matrix that cross-tabulates a classifier's predicted labels against the true labels to count its mistakes"
     ],
     explain: "The covariance matrix is a symmetric square matrix with one row and column per feature; its diagonal holds each feature's variance and its off-diagonal entries hold the covariance between feature pairs. PCA diagonalises this matrix: its eigenvectors give the directions of the principal components and its eigenvalues give the variance along them. Strong off-diagonal covariances are exactly the redundancy PCA exploits to compress the data.",
     simple: "It is a grid showing how every pair of columns moves together — do they rise and fall in sync or independently? PCA cracks this grid open to find the directions that summarise all that shared movement.",
@@ -262,10 +262,10 @@
     q: "In PCA, what does it mean that the principal components are orthogonal?",
     choices: [
       "Each component points at a right angle to all the others, so the new axes are mutually perpendicular and their scores are uncorrelated",
-      "Each component is parallel to one of the original feature axes",
-      "The components all have the same length of one unit",
-      "The components are ranked from smallest to largest variance",
-      "Each component passes exactly through the mean of the data"
+      "Each component ends up running exactly parallel to one of the original feature axes rather than cutting across them at an angle",
+      "The components are all rescaled to share the very same length of exactly one unit, so none of them is drawn any longer than any other one at all",
+      "The components are strictly ranked in order from the smallest amount of variance up to the very largest, weakest one listed first",
+      "Each component is arranged so that it passes exactly through the mean point of the data cloud at the centre of the coordinate system itself"
     ],
     explain: "PCA constructs its components to be mutually orthogonal: every component is perpendicular to all the earlier ones. Geometrically this makes the new axes a rigid rotation of the original ones; statistically it means the projected scores on different components are uncorrelated, so each component adds genuinely new, non-overlapping information. This is why the components can be interpreted and their variances simply added.",
     simple: "The components all sit at right angles to each other, like a fresh set of perpendicular axes. Because none of them overlap in direction, each captures a different, non-repeating piece of the data.",

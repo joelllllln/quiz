@@ -18,10 +18,10 @@
     q: "A cancer screening model flags patients for a follow-up biopsy. Missing a real cancer (false negative) is far worse than an unnecessary biopsy (false positive). Which single metric should you optimise first?",
     choices: [
       "Recall (sensitivity) — it measures the fraction of true cancers the model actually catches",
-      "Precision — of the patients flagged, how many truly have cancer",
-      "Overall accuracy across all patients",
-      "Specificity — the fraction of healthy patients correctly cleared",
-      "The false-positive rate, minimised as far as possible"
+      "Precision — of all the patients the model flags for a biopsy, how many of them truly have cancer",
+      "Overall accuracy computed across every patient in the whole screening population at once",
+      "Specificity — the fraction of the genuinely healthy patients that the model correctly clears",
+      "The false-positive rate, minimised and driven down as far as it can possibly go on validation"
     ],
     explain: "When a false negative (a missed cancer) is the costly error, you want to maximise recall = TP / (TP + FN), which directly penalises missed positives. Precision cares about false alarms, which are the cheaper error here. Accuracy is dominated by the healthy majority and ignores the asymmetry, and minimising the false-positive rate pushes exactly the wrong way — it would let the model flag fewer people and miss more cancers.",
     simple: "If missing a real case is the disaster, grade the model on how many real cases it catches. That is recall.",
@@ -38,10 +38,10 @@
     q: "A spam filter sends flagged mail straight to a hidden folder users rarely check. Deleting a real, important email (false positive) is much worse than letting a spam through (false negative). Which metric should lead?",
     choices: [
       "Precision — of the messages marked spam, how many truly are spam",
-      "Recall — the fraction of all spam the filter catches",
-      "Accuracy over the whole inbox",
-      "The true-positive rate maximised without limit",
-      "F1 with recall weighted more heavily than precision"
+      "Recall — the fraction of all the truly spam messages that the filter manages to catch",
+      "Overall classification accuracy computed across the whole inbox at once",
+      "The true-positive rate, maximised without any limit at all",
+      "The F1 score with recall weighted more heavily than precision"
     ],
     explain: "Here the costly error is a false positive: a genuine email wrongly binned. Precision = TP / (TP + FP) directly penalises false alarms, so optimising it protects real mail. Recall and the true-positive rate reward catching spam even at the cost of deleting good mail, which is exactly the risk you want to avoid. Accuracy hides the asymmetry, and weighting recall higher in F1 moves in the wrong direction for this cost structure.",
     simple: "If wrongly binning a real email is the disaster, grade the filter on how trustworthy its 'spam' label is. That is precision.",
@@ -58,10 +58,10 @@
     q: "Your model gets 99% accuracy on a dataset with 99% negatives and 1% positives. To get one trustworthy number that stays honest under this extreme imbalance and rewards balance across all four confusion-matrix cells, which metric fits best?",
     choices: [
       "Matthews correlation coefficient (MCC) — it uses TP, TN, FP and FN together and stays near 0 for a trivial classifier",
-      "Accuracy, since it is already 99%",
-      "Recall alone, which fully summarises rare-class performance",
-      "Precision alone, which is enough on imbalanced data",
-      "The ROC-AUC, which is unaffected by class imbalance and threshold"
+      "Accuracy, since the model already reports a very impressive 99% on this dataset as it stands",
+      "Recall alone, which on its own fully and completely summarises the model's rare-class performance",
+      "Precision alone, which is entirely sufficient as a single summary number on heavily imbalanced data",
+      "The ROC-AUC, which is completely unaffected by the class imbalance and by the chosen decision threshold"
     ],
     explain: "MCC is a correlation between predictions and truth built from all four confusion-matrix cells; a majority-only classifier scores about 0, so it cannot be fooled by imbalance the way accuracy is. Recall or precision alone each capture only one column of the matrix. ROC-AUC is threshold-free but on severe imbalance it can look optimistic because the huge true-negative count inflates the false-positive-rate axis — PR-AUC or MCC give a more honest single number.",
     simple: "MCC is like a report card that checks all four boxes of right-and-wrong at once, so a lazy 'always say no' model still scores near zero.",
@@ -98,10 +98,10 @@
     q: "Your learning curve shows training accuracy at 99% but validation accuracy stuck at 74%, with a wide, non-closing gap as you add data. What does this diagnose and what should you do?",
     choices: [
       "High variance (overfitting) — add regularisation, reduce model complexity, or gather more data",
-      "High bias (underfitting) — make the model much more complex immediately",
-      "The model is well fitted; the gap is normal and needs no action",
-      "A data-loading bug, since training accuracy should never exceed validation",
-      "Label noise in the training set that regularisation cannot help"
+      "High bias (underfitting) — the right move here is to make the model substantially more complex right away",
+      "The model is actually well fitted here; a gap of this size is completely normal and needs no action at all",
+      "A data-loading bug of some kind, since training accuracy should never be able to exceed validation accuracy",
+      "Label noise present in the training set, which no amount of added regularisation could ever hope to help with"
     ],
     explain: "A large gap between high training accuracy and lower validation accuracy is the signature of high variance: the model memorises training data but generalises poorly. The cures are to constrain the model (stronger regularisation, fewer features, shallower trees) or to feed it more data so it cannot memorise. High bias looks different — both curves would be low and close together — so adding complexity would make overfitting worse, not better.",
     simple: "The model aces its practice tests but flunks the real exam. It memorised instead of learning — simplify it or give it more examples.",
@@ -119,10 +119,10 @@
     q: "You want to search 4 hyperparameters over a wide range with a limited compute budget, and you care more about finding a good region fast than exhaustively testing every combination. Which scikit-learn search should you use?",
     choices: [
       "RandomizedSearchCV — it samples a fixed number of configurations, covering wide ranges efficiently",
-      "GridSearchCV over every combination, since it guarantees the exact optimum",
-      "A single train/test split tuned by hand until the score stops improving",
-      "GridSearchCV with only one value per parameter to save time",
-      "Fitting the model once with defaults and skipping the search"
+      "GridSearchCV over every possible combination, since exhaustively checking them all guarantees you find the exact optimum",
+      "A single fixed train/test split that you tune by hand until the validation score finally stops improving any further",
+      "GridSearchCV configured with only one value per parameter, chosen mainly in order to save on compute time",
+      "Fitting the model just once with its default hyperparameters and then skipping the search step entirely"
     ],
     explain: "RandomizedSearchCV draws n_iter random configurations from the parameter distributions, so its cost is fixed regardless of how many parameters or how wide the ranges are. With several parameters, a full grid explodes combinatorially, and much of that budget is wasted on unimportant dimensions. Random search reaches good regions with far fewer fits, which is why it is the standard choice under a tight budget for high-dimensional searches.",
     simple: "Instead of testing every point on a huge grid, throw a fixed number of darts across the whole board — you find a good area much faster.",
@@ -142,10 +142,10 @@
     q: "A loan-default model outputs probabilities. Approving a defaulter costs the bank about 5x more than rejecting a good applicant. The default 0.5 threshold approves too many defaulters. What is the principled move?",
     choices: [
       "Tune the decision threshold using the 5:1 cost ratio, choosing the operating point that minimises expected cost on validation data",
-      "Keep 0.5, because it is the mathematically optimal threshold for any classifier",
-      "Retrain with a more complex model until the 0.5 threshold behaves",
-      "Lower the threshold toward 0 so almost everyone is approved",
-      "Optimise for maximum overall accuracy, which will handle the costs automatically"
+      "Keep the threshold at 0.5, because 0.5 is the single mathematically optimal decision threshold for any classifier no matter the costs",
+      "Retrain the model with a much more complex architecture until the default 0.5 threshold finally starts behaving the way you want it to",
+      "Lower the decision threshold steadily toward 0 so that almost every single applicant who applies ends up being approved for a loan",
+      "Optimise the model purely for maximum overall accuracy, which will end up handling the asymmetric costs automatically on its own"
     ],
     explain: "The 0.5 threshold is optimal only when the two error costs are equal. Here a false approval costs 5x a false rejection, so you should raise the threshold (demand higher predicted safety before approving) and pick the operating point that minimises expected cost = 5*FN_cost + FP_cost on validation data. Accuracy ignores the asymmetry, and a fancier model does not change the fact that the wrong threshold is the real problem.",
     simple: "The model gives a probability; you choose where to draw the line. When one mistake costs 5x the other, move the line to avoid the expensive mistake.",
