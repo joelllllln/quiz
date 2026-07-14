@@ -1,6 +1,6 @@
 DataSense — Every Definition
 ============================
-Total definitions: 290
+Total definitions: 313
 
 
 ## Core Definitions  (20)
@@ -996,3 +996,108 @@ scale_pos_weight
 
 Gain importance
   Ranks features by how much they reduced the objective.
+
+## Interpretability & Explainability  (5)
+-----------------------------------------
+
+SHAP values
+  Game-theory credit assignment: each feature's fair contribution to a single prediction, 
+  summing exactly to the model's output.
+
+LIME
+  Fits a simple, readable model around one prediction to explain it locally; model-agnostic 
+  but only faithful near that point.
+
+Partial dependence plot (PDP)
+  The average effect of one feature on predictions, marginalising over the others; shows the 
+  shape of the relationship globally.
+
+Global vs local explanation
+  Global explains the whole model's behaviour across all data; local explains one specific 
+  prediction.
+
+Model card
+  A spec sheet documenting a model's intended use, training data, metrics, and limits; 
+  increasingly expected by regulators.
+
+## Class Imbalance  (4)
+-----------------------
+
+Class imbalance
+  When one class massively outnumbers the others; accuracy lies, so you resample, reweight, 
+  or move the threshold.
+
+SMOTE
+  Synthesises new minority-class rows by interpolating between near neighbours rather than 
+  duplicating existing ones.
+
+Over/undersampling
+  Duplicate the minority or drop the majority to rebalance; simple but blunt, and fit only 
+  on training data to avoid leakage.
+
+Class weights
+  Tell the loss to penalise minority-class mistakes more heavily, rebalancing without 
+  touching the data itself.
+
+## Extra Evaluation Metrics  (6)
+--------------------------------
+
+Balanced accuracy
+  The average recall across classes; the honest version of accuracy when the classes are 
+  imbalanced.
+
+Matthews correlation coefficient (MCC)
+  One balanced score built from all four confusion-matrix cells; robust even when classes 
+  are skewed.
+
+Cohen's kappa
+  Classification agreement corrected for what pure chance would already produce.
+
+Brier score
+  The mean squared error of predicted probabilities; lower means better-calibrated 
+  confidence.
+
+Calibration curve
+  Plots predicted probability against observed frequency; a diagonal line means the 
+  probabilities are trustworthy.
+
+Average precision (PR-AUC)
+  The area under the precision-recall curve; the go-to summary metric when positives are 
+  rare.
+
+## Regression & Boosting  (5)
+-----------------------------
+
+Linear regression
+  Fits a weighted sum of features to a numeric target by minimising squared error; the 
+  baseline regressor.
+
+Elastic Net regularisation
+  Blends L1 and L2 penalties: Lasso's feature-zeroing sparsity plus Ridge's stability on 
+  correlated features.
+
+RMSE
+  The root of mean squared error, expressed back in the target's own units for readable 
+  error size.
+
+LightGBM
+  Leaf-wise, histogram-based gradient boosting; very fast and memory-light on large tabular 
+  data.
+
+CatBoost
+  Gradient boosting with native categorical handling and ordered boosting to curb target 
+  leakage.
+
+## Validation  (3)
+------------------
+
+Group k-fold
+  Keeps all rows from the same entity (user, firm, patient) inside one fold so information 
+  never leaks across the split.
+
+Time-series validation split
+  Always train on the past and validate on the future; never shuffle time-ordered data.
+
+Leave-one-out (LOOCV)
+  k-fold taken to the extreme — each row is its own validation fold, so you train n times; 
+  nearly unbiased but expensive.

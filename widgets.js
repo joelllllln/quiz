@@ -1297,6 +1297,7 @@
 
   /* ================= the shell: story → knob → live number → insight → reveal LAST ================= */
   window.renderWidget = function (container, cfg) {
+    if (!cfg || !cfg.type) return;                 // reveal-only widget (e.g. a plain definition): nothing to simulate
     var maker = TYPES[cfg.type];
     if (!maker) { container.appendChild(el('div', 'ws', 'Interactive lesson unavailable (' + cfg.type + ')')); return; }
     var inst = maker(cfg);

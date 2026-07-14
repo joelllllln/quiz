@@ -56,7 +56,17 @@
     { key: 'xgb', no: '20', name: 'XGBoost', desc: 'Regularised gradient boosting, engineered for speed and accuracy.',
       levels: [{ qk: 'xgb1', part: 'Part I', name: 'Foundations' }, { qk: 'xgb2', part: 'Part II', name: 'Practice' }, { qk: 'xgb3', part: 'Part III', name: 'Advanced Study' }] },
     { key: 'scen', no: '21', name: 'Applied Scenarios', desc: 'Real situations, real trade-offs: pick the model, metric and fix that fit.',
-      levels: [{ qk: 'scen1', part: 'Part I', name: 'Clear Calls' }, { qk: 'scen2', part: 'Part II', name: 'Weighing Trade-offs' }, { qk: 'scen3', part: 'Part III', name: 'Subtle Traps' }] }
+      levels: [{ qk: 'scen1', part: 'Part I', name: 'Clear Calls' }, { qk: 'scen2', part: 'Part II', name: 'Weighing Trade-offs' }, { qk: 'scen3', part: 'Part III', name: 'Subtle Traps' }] },
+    { key: 'interp', no: '22', name: 'Interpretability & Explainability', desc: 'Open the black box: explain what a model does, globally and case by case.',
+      levels: [{ qk: 'interp', part: 'Part I', name: 'Definitions' }] },
+    { key: 'imbal', no: '23', name: 'Class Imbalance', desc: 'When one class swamps the rest: resample, reweight, move the threshold.',
+      levels: [{ qk: 'imbal', part: 'Part I', name: 'Definitions' }] },
+    { key: 'evalx', no: '24', name: 'Extra Evaluation Metrics', desc: 'Beyond accuracy: balanced scores, agreement, calibration and PR-AUC.',
+      levels: [{ qk: 'evalx', part: 'Part I', name: 'Definitions' }] },
+    { key: 'regr', no: '25', name: 'Regression & Boosting', desc: 'Predicting numbers, plus the fast modern boosting libraries.',
+      levels: [{ qk: 'regr', part: 'Part I', name: 'Definitions' }] },
+    { key: 'valid', no: '26', name: 'Validation', desc: 'Split honestly: grouped, time-ordered and leave-one-out cross-validation.',
+      levels: [{ qk: 'valid', part: 'Part I', name: 'Definitions' }] }
   ];
   var GROUPS = [
     { label: 'Start here — core definitions', keys: ['found'] },
@@ -65,6 +75,7 @@
     { label: 'Features & model choice', keys: ['feng', 'fsel', 'msel'] },
     { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
     { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] },
+    { label: 'Beyond the basics', keys: ['regr', 'imbal', 'evalx', 'valid', 'interp'] },
     { label: 'Putting it together', keys: ['scen'] }
   ];
   var UPCOMING = [
