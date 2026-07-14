@@ -1,0 +1,998 @@
+DataSense — Every Definition
+============================
+Total definitions: 290
+
+
+## Core Definitions  (20)
+------------------------
+
+Algorithm vs model
+  One algorithm can produce endless models. You choose the algorithm, but what you deploy is 
+  the model.
+
+Example (row)
+  Rows are what you count when you ask 'how much data do I have?'. More independent examples 
+  almost always means better generalisation.
+
+Model
+  Training chooses the function's internal numbers; the model is the finished input-output 
+  recipe. In sklearn it's the fitted estimator object.
+
+Supervised learning
+  When every training row carries the right answer, the model can learn to reproduce it on 
+  new rows.
+
+Unsupervised learning
+  No targets are given; the model reveals the patterns the data already holds.
+
+Hyperparameter
+  You tune hyperparameters; the algorithm learns the parameters.
+
+Loss function
+  One number scoring how wrong the model is; learning drives it down.
+
+Gradient descent
+  Follow the loss's slope downhill, step after step, to fit the model.
+
+Reinforcement learning
+  An agent learns which actions to take by maximising rewards received from its environment.
+
+Classification
+  Classification predicts which discrete category an input belongs to.
+
+Regression
+  Regression predicts a numeric quantity on a continuous scale.
+
+Feature
+  A feature is a single measurable attribute the model uses as input.
+
+Label (target)
+  The label is the ground-truth answer a supervised model learns to predict.
+
+Training set
+  The training set is the labelled data a model learns from.
+
+Test set
+  The test set is untouched data used to measure performance on unseen examples.
+
+Overfitting
+  Overfitting is fitting noise in the training data so the model fails on new data.
+
+Underfitting
+  Underfitting is a model too simple to capture the underlying pattern.
+
+Generalization
+  Generalization is how well a model performs on new data it did not train on.
+
+Learning rate
+  The learning rate controls how large a step the optimiser takes on each update.
+
+One-hot encoding
+  One-hot encoding represents a category as binary indicator columns with a single 1.
+
+## k-Nearest Neighbours  (12)
+----------------------------
+
+Feature space
+  KNN plots every example as a point in this space and reasons purely about who is near 
+  whom.
+
+Euclidean distance
+  The straight-line ("as the crow flies") measure you ended on is Euclidean distance — KNN's 
+  default. The street-grid one you started on has a name too: Manhattan distance.
+
+K-nearest neighbours
+  KNN predicts a point's label from the labels of its k nearest neighbours.
+
+Distance metric
+  A distance metric measures how far apart points are so KNN can find nearest neighbours.
+
+Manhattan distance
+  Manhattan distance sums the absolute coordinate differences, like grid-walking.
+
+Feature scaling (for KNN)
+  Scaling stops large-range features from dominating KNN's distance calculation.
+
+Lazy (instance-based) learning
+  A lazy learner does no upfront fitting; it defers all work to query time.
+
+Decision boundary
+  The decision boundary separates feature-space regions assigned to different classes.
+
+Majority vote
+  Majority vote assigns the class held by most of the k nearest neighbours.
+
+Curse of dimensionality
+  In high dimensions points become near-equidistant, so 'nearest' loses meaning.
+
+Weighted KNN
+  Weighted KNN lets nearer neighbours influence the prediction more than farther ones.
+
+Non-parametric model
+  A non-parametric model like KNN keeps the data instead of fitting fixed parameters.
+
+## Logistic Regression  (14)
+---------------------------
+
+Weighted score
+  One number summing every feature's weighted push plus the baseline, ready for the sigmoid.
+
+Odds
+  The belief rewritten as a yes-to-no ratio, running from 0 to infinity instead of 0 to 1.
+
+Log-odds (logit)
+  The straight-line scale the model thinks in; the sigmoid is just its inverse back to 
+  probability.
+
+Sigmoid function
+  Turns any real score into a probability between 0 and 1.
+
+Logistic regression
+  Logistic regression maps a weighted feature sum through the sigmoid to a class 
+  probability.
+
+Sigmoid (logistic) function
+  The sigmoid squashes any real number into a probability between 0 and 1.
+
+Decision threshold
+  The threshold is the probability cutoff that turns a predicted chance into a class.
+
+Coefficient (weight)
+  A coefficient is the learned multiplier setting how strongly a feature affects the 
+  prediction.
+
+Odds ratio
+  The odds ratio is the factor by which a one-unit feature change multiplies the odds.
+
+Softmax
+  Softmax converts a vector of scores into a probability distribution over classes.
+
+Log loss (cross-entropy)
+  Log loss penalises predicted probabilities by how confidently they miss the truth.
+
+Linear decision boundary
+  The boundary is the flat surface where the score is zero, dividing the two classes.
+
+Intercept (bias)
+  The intercept is the constant that sets the baseline score independent of the features.
+
+Maximum likelihood estimation
+  MLE chooses the coefficients that make the observed labels most probable.
+
+## Naive Bayes  (14)
+-------------------
+
+Evidence
+  Evidence is the raw observed clues Naive Bayes conditions on, one nudge each.
+
+Likelihood
+  Likelihood asks how typical a clue is inside each class, estimated straight from counts.
+
+Likelihood ratio
+  Dividing the two likelihoods turns any clue into one number that scales the odds.
+
+Posterior
+  The posterior is the prior updated by every clue, Bayes' rule's finished answer.
+
+Bayes' theorem
+  It turns a prior belief into a posterior one by scaling with how well the evidence fits 
+  the hypothesis.
+
+Prior probability
+  It is the belief in a class before seeing any features, read straight off how common the 
+  class is.
+
+Naive independence assumption
+  Given the class, features are treated as independent so their likelihoods just multiply.
+
+Class-conditional probability
+  The likelihood of a feature value within one specific class, learned from that class's 
+  training counts.
+
+Laplace (additive) smoothing
+  A pseudo-count added to every tally so no feature value ever gets probability zero.
+
+MultinomialNB
+  The count-based Naive Bayes variant, the default choice for bag-of-words text 
+  classification.
+
+GaussianNB
+  The Naive Bayes variant that models continuous features as class-specific bell curves.
+
+Evidence (marginal likelihood)
+  The total probability of the features over all classes, used to normalise the posteriors.
+
+MAP estimate
+  The class with the highest posterior probability — Naive Bayes's final prediction rule.
+
+Bag-of-words
+  A text is reduced to how often each word appears, ignoring sequence and grammar.
+
+## Decision Trees  (15)
+----------------------
+
+Node / split
+  Every internal node asks about exactly one feature; stacking them builds the whole 
+  flowchart.
+
+Root
+  One question every case sees first: the tree's single most valuable split.
+
+Gini / entropy
+  Interchangeable impurity measures; splits are chosen to reduce whichever one you pick.
+
+Pruning
+  Cut the branches that fit noise; the smaller tree generalises better.
+
+The decision tree
+  Everything a tree does reduces to sliding questions like this one until each group is as 
+  pure as possible — then asking more questions inside each group.
+
+Decision tree
+  A branching set of yes/no questions that routes each example to a leaf holding the answer.
+
+Leaf node
+  The end of a branch where the tree stops and outputs its answer for arriving examples.
+
+Split
+  The rule at a node that partitions arriving examples into branches, chosen to purify the 
+  children.
+
+Node impurity
+  How blended the labels are in a node; splits try to drive it down toward zero.
+
+Gini impurity
+  The chance of mislabelling a random example from the node's own class mix.
+
+Entropy
+  A measure of label disorder in a node, peaking at an even class mix and zero when pure.
+
+Information gain
+  The drop in impurity a split produces; trees greedily pick the split with the most.
+
+max_depth
+  A limit on tree depth that trades underfitting (too shallow) against overfitting (too 
+  deep).
+
+Greedy splitting
+  Trees are built by locally optimal choices at each node, not a global search.
+
+Axis-aligned decision boundary
+  Trees split one feature at a time, so their boundaries are staircases of axis-parallel 
+  segments.
+
+## Support Vector Machines  (12)
+-------------------------------
+
+Decision boundary
+  Everything the SVM does is in service of positioning this one separating surface.
+
+Kernel trick
+  Only inner products between points are ever needed, so the feature space can be huge or 
+  infinite while the work stays pairwise.
+
+Support vector machine
+  A classifier that separates classes with the widest-margin boundary, fixed by the closest 
+  points.
+
+Separating hyperplane
+  The flat decision surface of an SVM; each example's class is set by which side it falls 
+  on.
+
+Margin
+  The width of the buffer between the boundary and the closest examples on each side.
+
+Support vectors
+  The few borderline examples that alone determine the SVM's boundary.
+
+Kernel
+  A similarity function that lets an SVM act in a high-dimensional space to form non-linear 
+  boundaries.
+
+RBF kernel
+  A distance-based kernel giving high similarity to nearby points, enabling smooth curved 
+  boundaries.
+
+C parameter
+  The regularisation knob trading margin width against training misclassifications.
+
+gamma
+  The RBF kernel's reach knob, controlling how local each training point's influence is.
+
+Soft margin
+  A margin that tolerates some misclassified or inside-margin points to handle non-separable 
+  data.
+
+Hinge loss
+  Zero when a point is correctly beyond the margin, rising linearly as it violates it — the 
+  SVM's loss.
+
+## Random Forests & Bagging  (12)
+--------------------------------
+
+Decision tree
+  A decision tree is a chain of yes/no splits ending in a prediction; grown deep it 
+  overfits, and that instability is what forests average away.
+
+Ensemble learning
+  Two main recipes: bagging (train members in parallel on random samples, then average) and 
+  boosting (train members in sequence, each fixing the last's mistakes). Forests are 
+  bagging.
+
+Random forest
+  Different trees, different mistakes — the vote keeps what they agree on.
+
+Bagging
+  Same learner, many resamples, one combined vote — variance falls.
+
+Bootstrap sample
+  Repeats and gaps are the point — that variation de-correlates the models.
+
+Out-of-bag error
+  Free, near-unbiased generalization estimate baked into bagging.
+
+Feature bagging / random subspace
+  Randomizing the columns de-correlates the trees so the vote actually helps.
+
+Variance reduction
+  Ensembles cut variance, not bias — that's their whole trick.
+
+Tree decorrelation
+  Randomness in rows and features lowers ρ so averaging pays off.
+
+n_estimators
+  Bigger is safer but slower; pick where the curve flattens.
+
+Majority voting
+  The crowd's plurality beats any one tree.
+
+Averaging (regression)
+  For continuous targets the forest reports the mean of its trees.
+
+## Gradient Boosting & XGBoost  (13)
+-----------------------------------
+
+Ensemble
+  Gradient boosting is a sequential ensemble that adds one small model at a time.
+
+Weak learner
+  In gradient boosting the weak learner is almost always a shallow tree (max_depth 3–6). 
+  Many small corrections beat one greedy fit.
+
+Residual
+  In gradient boosting the residual is the (negative) gradient of the loss. Fit it, add a 
+  shrunken version, repeat.
+
+Gradient boosting
+  Gradient descent in function space, one weak tree at a time.
+
+Boosting
+  Many barely-better-than-chance learners, chained, become one strong model.
+
+Learning rate / shrinkage
+  Small η + more trees usually beats big η + few trees.
+
+Additive model
+  The prediction is a running total of simple base learners.
+
+Sequential training
+  Ordered dependency: the opposite of bagging's parallel, independent trees.
+
+Loss gradient (pseudo-residual)
+  Fit each tree to the negative gradient — gradient descent in function space.
+
+Decision stump
+  The archetypal weak learner boosting stacks together.
+
+Early stopping
+  Keep the tree count that generalized best, not the one that memorized.
+
+Regularization (boosting)
+  Constrain complexity to trade a little fit for a lot of generalization.
+
+Subsampling (stochastic GB)
+  A dash of randomness per tree regularizes and speeds boosting.
+
+## Stacking & Voting  (12)
+-------------------------
+
+Base models
+  Choose base models from different families so they fail in different places — that 
+  diversity is the ensemble's fuel.
+
+Blending
+  The quick version of stacking: one fit per base model, but the meta-model learns from only 
+  that slice.
+
+Leakage (here)
+  The cardinal sin of stacking; prevented by out-of-fold predictions so every base score is 
+  honest.
+
+Stacking
+  A second-level model learns the blend instead of you fixing it by hand.
+
+Meta-learner (blender)
+  It learns whom to trust; keep it simple to avoid overfitting.
+
+Hard voting
+  Majority of discrete labels — ignores probabilities.
+
+Soft voting
+  Average the probabilities — richer than counting labels, if calibrated.
+
+Out-of-fold predictions
+  Leakage-free meta-features: the base model never sees its own answers.
+
+Ensemble diversity
+  Combine models that fail differently, not models that fail alike.
+
+Model averaging
+  A fixed-rule combiner: simplest way to cut variance across models.
+
+Weighted vote
+  Trust the good models more — equal weighting is just the special case.
+
+Voting classifier
+  A preset combiner, not a learned one — stacking learns the blend instead.
+
+## Model Evaluation  (16)
+------------------------
+
+Threshold
+  A cutoff you choose after training that converts probability scores into hard decisions.
+
+Confusion matrix
+  The count table every classification metric is computed from.
+
+F1 score
+  A balanced single metric, high only when precision and recall are both high.
+
+ROC curve
+  Shows the full catch-vs-false-alarm trade-off; AUC summarises it in one number.
+
+Accuracy
+  The overall hit rate — simple, but shaky on imbalanced classes.
+
+Precision
+  Of the positives you predicted, how many were truly positive.
+
+Recall (sensitivity)
+  Of the real positives, how many the model actually caught.
+
+Specificity
+  Of the real negatives, how many the model correctly left alone.
+
+False-positive rate
+  Of the real negatives, how many the model wrongly flagged.
+
+AUC (ROC)
+  Threshold-free grade of ranking quality: 1 perfect, 0.5 chance.
+
+Precision-recall curve
+  Shows the trade-off; precision typically falls as recall climbs.
+
+Log loss
+  Rewards calibrated probabilities; hammers confident errors.
+
+R-squared
+  Fraction of target variance explained; 1 perfect, 0 mean-level.
+
+Mean squared error
+  Averages squared errors; heavily penalises large misses.
+
+Mean absolute error
+  Averages error magnitudes; robust to outliers, in target units.
+
+Support
+  How many real cases each per-class metric is based on.
+
+## Performance Optimisation  (14)
+--------------------------------
+
+Baseline
+  The cheapest, highest-return habit in ML: establish the do-nothing score on day one, so 
+  every later number means something.
+
+Holdout / validation set
+  The honest referee for every tuning decision. Keep a separate test set sealed for the 
+  final number.
+
+Data leakage
+  The most common silent bug in applied ML. A too-good-to-be-true score usually is — hunt 
+  the leak before celebrating.
+
+Bias-variance tradeoff
+  Pick the complexity that minimises the sum, not either part alone.
+
+Cross-validation
+  A reliable, data-efficient estimate of how a model will generalise.
+
+Regularization
+  Trade a little training fit for a lot less overfitting.
+
+Train/validation/test split
+  Separate roles keep the final performance estimate honest.
+
+Generalization gap
+  A wide gap flags overfitting; a narrow gap means it generalises.
+
+Learning curve
+  Diagnoses whether more data would help, and bias vs variance.
+
+Grid search
+  Exhaustive and simple, but cost multiplies with each knob.
+
+Random search
+  Cheaper than a full grid; efficient when few knobs matter.
+
+Early stopping
+  A cheap regulariser: quit before the model overfits.
+
+L2 (ridge) penalty
+  Shrinks all weights smoothly toward zero; keeps every feature.
+
+L1 (lasso) penalty
+  Sends weights to exact zero — sparse models and feature selection.
+
+## Advanced Scikit-learn  (14)
+-----------------------------
+
+Estimator
+  The shared interface lets you swap any estimator for another without touching the code 
+  around it.
+
+Transformer & .transform
+  Fit learns the recipe from training data only; transform applies that same recipe to any 
+  set.
+
+Calibration
+  Calibrate whenever you act on the probability itself - pricing, thresholds, expected 
+  value.
+
+Permutation importance
+  Model-agnostic and computed on held-out data - trust it over raw feature_importances_.
+
+.fit()
+  The training step: turn data into learned model parameters.
+
+.predict()
+  Applies the trained model to new data; does not retrain it.
+
+.fit_transform()
+  Learn the transform and apply it at once — used on training data.
+
+Pipeline
+  Chains preprocessing and model; prevents leakage in CV.
+
+StandardScaler
+  Centres features at 0 with unit variance for fair comparison.
+
+train_test_split
+  Randomly partitions data into aligned train and test sets.
+
+GridSearchCV
+  Automated hyperparameter tuning with built-in cross-validation.
+
+cross_val_score
+  One-line cross-validation returning a score per fold.
+
+predict_proba
+  Soft confidence scores you can threshold, rank, or score.
+
+random_state
+  Seeds the RNG so shuffles, splits, and models repeat exactly.
+
+## K-Means  (13)
+---------------
+
+Centroid
+  k-means alternates: assign points to the nearest centroid, then move each centroid to its 
+  members' mean. Repeat until stable.
+
+k (number of clusters)
+  sklearn: KMeans(n_clusters=k). Choosing k is the method's main burden; density methods 
+  like DBSCAN sidestep it.
+
+Inertia (k-means)
+  Lower means tighter clusters; the elbow in its curve helps pick k.
+
+K-means clustering
+  Alternate assign-to-nearest-mean and recompute-the-mean until the groups stabilise.
+
+Inertia (WCSS)
+  One number for cluster tightness; smaller is tighter. K-means minimises it.
+
+Elbow method
+  Pick the k where more clusters stop meaningfully tightening the fit.
+
+Silhouette score
+  Near 1 = tight, well-separated clusters; peaks at a good choice of k.
+
+k-means++
+  Spread the initial centres apart so k-means avoids bad local minima.
+
+Assignment step
+  With centroids fixed, label every point by its closest centre.
+
+Update step
+  With assignments fixed, move each centre to its cluster's average.
+
+Voronoi cell
+  The territory of nearest points around each centroid; boundaries are the decision lines.
+
+Lloyd's algorithm
+  The standard k-means iteration; converges to a local minimum of inertia.
+
+Feature scaling for k-means
+  Distance-based clustering is fair only when features share a scale.
+
+## Hierarchical Clustering  (12)
+-------------------------------
+
+Dendrogram
+  It holds all groupings at once. You extract one by cutting the tree at a chosen height — 
+  the next idea.
+
+Agglomerative vs divisive
+  sklearn ships agglomerative. Bisecting k-means is the practical divisive method.
+
+Hierarchical clustering
+  Produces a hierarchy, not one fixed partition; cut it to get k clusters.
+
+Linkage
+  Defines 'closest clusters' so the algorithm knows which pair to merge.
+
+Single linkage
+  Nearest-pair distance; traces elongated shapes but can chain clusters together.
+
+Complete linkage
+  Farthest-pair distance; yields compact clusters and resists chaining.
+
+Average linkage
+  All-pairs average distance; a balanced compromise between single and complete.
+
+Ward linkage
+  Variance-minimising merges; produces compact, similarly sized clusters.
+
+Divisive clustering
+  Top-down hierarchy building; the mirror image of agglomerative merging.
+
+Merge height
+  Higher joins = more dissimilar groups; big gaps hint at natural clusters.
+
+Cophenetic distance
+  The tree's notion of point distance; its match to real distances gauges fit.
+
+Cutting the dendrogram
+  Turns the full hierarchy into a flat clustering; cut height chooses the number.
+
+## DBSCAN  (14)
+--------------
+
+Density
+  Density, set by eps and min_samples, is DBSCAN's whole definition of what a cluster is.
+
+Border point
+  Border points belong to the cluster's edge — pulled in by a core neighbour, but unable to 
+  grow the cluster themselves.
+
+eps (neighbourhood radius)
+  Read a sensible eps off the 'k-distance plot' — sort each point's distance to its k-th 
+  neighbour and find the elbow.
+
+Core point
+  Border points sit in a core point's neighbourhood but aren't dense themselves; noise 
+  points belong to no dense region at all.
+
+Noise label (−1)
+  This makes DBSCAN a natural outlier/anomaly detector — the noise set IS the anomalies.
+
+DBSCAN
+  Density-based clustering; finds arbitrary shapes and needs no preset cluster count.
+
+min_samples (minPts)
+  The density threshold; higher values demand denser regions and yield more noise.
+
+eps-neighbourhood
+  All points within eps of p; its size is the local density DBSCAN reads.
+
+Directly density-reachable
+  The single-hop reach from a core point to a neighbour inside its eps circle.
+
+Density-reachable
+  Transitive reach along core points; lets a cluster span an elongated dense region.
+
+Density-connected
+  Symmetric link through a shared core; a cluster is a maximal density-connected set.
+
+DBSCAN cluster
+  Core points plus their border points; any shape, grown until it can grow no more.
+
+k-distance graph
+  The bend separates dense points from noise, suggesting eps for DBSCAN.
+
+HDBSCAN
+  Hierarchical DBSCAN; handles varied densities and needs no single eps.
+
+## PCA  (14)
+-----------
+
+Dimension
+  Dimensionality counts features, not samples; PCA replaces many axes with a few 
+  high-variance ones.
+
+Projection
+  Dimensionality reduction is projection onto fewer directions. PCA chooses the directions 
+  that keep the most spread.
+
+Variance explained (PCA)
+  Sum it over kept components to see how much information you retained.
+
+Principal Component Analysis
+  PCA replaces many correlated columns with a few high-variance directions.
+
+Principal component
+  Components are ranked by how much variance each one explains.
+
+First principal component (PC1)
+  No single direction captures more of the data's spread than PC1.
+
+Eigenvector
+  The covariance matrix's eigenvectors are PCA's principal components.
+
+Eigenvalue
+  Rank components by eigenvalue to rank them by variance explained.
+
+Explained-variance ratio
+  It reports each component's share of the total variance.
+
+Scree plot
+  The bend where the curve flattens suggests how many components to retain.
+
+Loading
+  Loadings show which original features drive each component.
+
+Covariance matrix
+  PCA decomposes it into eigenvectors (components) and eigenvalues (variances).
+
+Orthogonal components
+  Perpendicular axes ensure each component carries new information.
+
+Whitening
+  It leaves uncorrelated features all scaled to variance one.
+
+## t-SNE  (12)
+-------------
+
+UMAP
+  The modern cousin of t-SNE — read cluster membership from it, not literal distances.
+
+Embedding
+  t-SNE/UMAP make 2-D embeddings for the eye; word2vec-style embeddings use many dimensions 
+  you compute with. Same deal: closeness encodes similarity.
+
+t-SNE
+  A nonlinear map that preserves local neighbourhoods for visualisation.
+
+Perplexity
+  It controls how local or global t-SNE's view of the data is.
+
+Nonlinear dimensionality reduction
+  It unfolds curved structure that linear methods cannot.
+
+Neighbourhood preservation
+  t-SNE keeps local neighbours together, trading away global accuracy.
+
+KL-divergence objective
+  t-SNE moves points to minimise this mismatch between the two similarity distributions.
+
+Learning rate (t-SNE)
+  Too small stalls, too large diverges — a middle value gives the best map.
+
+Local structure
+  t-SNE preserves fine local detail at the cost of global geometry.
+
+Crowding problem
+  t-SNE's Student-t tail spreads points out to relieve the crowding.
+
+Early exaggeration
+  It forms tight, well-separated clusters at the start of the run.
+
+init='pca'
+  A PCA start yields more stable, globally faithful t-SNE maps.
+
+## Feature Engineering  (16)
+---------------------------
+
+Feature engineering
+  Reshaping data into good features often helps more than swapping in a fancier model.
+
+Feature
+  A feature is a measurable column describing each example; models learn from features to a 
+  target.
+
+One-hot encoding
+  Each category gets its own indicator column, avoiding any fake ordering.
+
+Ordinal encoding
+  Map categories to integers only when their order is genuine.
+
+Feature scaling
+  Rescaling stops big-numbered features from dominating distance- and gradient-based models.
+
+Standardization
+  Recenters to mean 0 and rescales to standard deviation 1; values become z-scores.
+
+Min-max normalization
+  Maps values into 0–1; simple but sensitive to outliers stretching the range.
+
+Imputation
+  Fill gaps instead of deleting rows; learn the fill value from training data only.
+
+Binning
+  Discretizes a number into ranges; exposes stage effects and curbs outliers, losing fine 
+  detail.
+
+Interaction feature
+  Combines two features to capture joint effects a linear model can't otherwise see.
+
+Log transform
+  Compresses large values, reducing right-skew and stabilizing variance; needs positive 
+  inputs.
+
+Feature extraction
+  Creates informative columns from raw text/images/dates; distinct from selecting existing 
+  ones.
+
+Polynomial feature
+  Powers and products of features let linear models fit curves and interactions.
+
+Target encoding
+  Collapses high-cardinality categories into one number; compute out-of-fold to avoid 
+  leakage.
+
+TF-IDF
+  Boosts words frequent in a document but rare across the corpus; down-weights ubiquitous 
+  words.
+
+Feature hashing
+  Hashes categories into a fixed number of columns; constant memory, at the cost of rare 
+  collisions.
+
+## Feature Selection  (15)
+-------------------------
+
+Feature selection
+  A carefully chosen subset usually beats keeping every column.
+
+Filter method
+  Filters score features once, fast, with no model in the loop.
+
+Wrapper method
+  Wrappers train the model on many subsets — accurate but expensive.
+
+Embedded method
+  Embedded methods select features as a side effect of training.
+
+Univariate selection
+  Each feature is tested on its own — fast but blind to combinations.
+
+Variance threshold
+  Near-constant columns carry no signal and are the easiest to remove.
+
+Redundant vs irrelevant
+  Redundant columns repeat known info; irrelevant columns carry none.
+
+Feature importance
+  Importance ranks how much the model relied on each feature.
+
+SelectKBest
+  Pick K by validation — too small starves, too large adds noise.
+
+Mutual information
+  MI catches non-linear dependence that correlation misses.
+
+Correlation-based selection
+  Keep signal, cut duplicated information.
+
+RFE
+  RFE peels features off backwards, retraining each round.
+
+Lasso (L1) selection
+  Lasso selects by shrinking weak weights all the way to zero.
+
+Multicollinearity
+  Highly correlated features make linear coefficients untrustworthy.
+
+Permutation importance
+  Break a feature's signal and measure the damage to rank it.
+
+## Model Selection  (15)
+-----------------------
+
+Model selection
+  Compare candidates on data they didn't train on, then keep the best. Bigger is not 
+  automatically better.
+
+Baseline model
+  The reference point that turns a raw score into a judgement. Beat it, or your model earns 
+  nothing.
+
+Train/validation/test split
+  Three piles with three distinct jobs. Blur them and your scores stop meaning anything.
+
+Holdout (validation) set
+  Your practice exam. It exposes overfitting that the training score happily hides.
+
+Cross-validation
+  Every row takes a turn being validation. Averaging kills the luck of a single split.
+
+k-fold cross-validation
+  The workhorse recipe. k=5 or 10 balances a steady estimate against compute cost.
+
+Hyperparameter tuning
+  The model learns its weights; YOU choose its knobs by trying values and reading the 
+  validation dial.
+
+Occam's razor (parsimony)
+  Complexity must earn its place with a real gain. A tie goes to simplicity.
+
+Grid search
+  Exhaustive and simple, but the cost multiplies with every hyperparameter you add.
+
+Random search
+  Cheap, simple, and often better than a grid for the same budget when few knobs matter.
+
+Stratified k-fold
+  Keeps every fold a fair miniature of the whole. The sensible default for imbalanced 
+  classification.
+
+One-standard-error rule
+  Statistically-tied models are a tie; break it toward simplicity. Parsimony, made rigorous.
+
+Nested cross-validation
+  Tuning lives inside each outer fold, so the outer score never sees data the tuning used. 
+  Honest, but costly.
+
+Bias-variance tradeoff
+  Rigid models are biased; flexible ones are high-variance. Model selection finds the 
+  balance point.
+
+No Free Lunch theorem
+  There is no universally best model. Let evidence on your own data choose the winner.
+
+## XGBoost  (11)
+---------------
+
+XGBoost
+  A fast, regularized gradient-boosting library for tabular data.
+
+Gradient boosting
+  Add models in sequence, each reducing the current error.
+
+Regularized boosting
+  A complexity penalty on top of boosting to control overfitting.
+
+Learning rate (eta)
+  Shrinks each tree's step; small eta needs more trees but generalizes better.
+
+n_estimators
+  More helps up to a point, then overfits -- pair with eta and early stopping.
+
+max_depth
+  Caps single-tree complexity; shallow trees resist overfitting.
+
+Objective function
+  The measure of wrongness that training minimizes; choose it to match the task.
+
+Early stopping
+  Auto-picks the tree count and prevents over-boosting.
+
+DMatrix
+  XGBoost's efficient data container for speedy training.
+
+scale_pos_weight
+  Up-weights the minority class to handle imbalance.
+
+Gain importance
+  Ranks features by how much they reduced the objective.
