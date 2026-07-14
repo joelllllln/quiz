@@ -652,6 +652,9 @@
   var LEARN_OPTS = [10, 25, 50, 0];
   function learnN() { var n; try { n = +localStorage.getItem('ds_learn_n'); } catch (e) {} return LEARN_OPTS.indexOf(n) >= 0 ? n : 25; }
   function setLearnN(n) { try { localStorage.setItem('ds_learn_n', String(n)); } catch (e) {} }
+  // Scope of a read+recall pass: every concept, or just the tagged definitions.
+  function getLearnScope() { return localStorage.getItem('ds_learn_scope') === 'defs' ? 'defs' : 'all'; }
+  function setLearnScope(v) { try { localStorage.setItem('ds_learn_scope', v); } catch (e) {} }
   // Match a note to the concept it is actually about, so the test that follows tests THAT concept.
   var LEARN_STOP = ['the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'its', 'you', 'your', 'from', 'into', 'not', 'but', 'how', 'why', 'what', 'when', 'one', 'two', 'per', 'via', 'use', 'used', 'uses', 'each', 'they', 'them', 'has', 'have', 'can', 'all', 'any', 'set', 'get'];
   function learnTokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && LEARN_STOP.indexOf(w) < 0; }); }
@@ -684,7 +687,7 @@
   // Every distinct concept in a topic that read+recall can cover: a study note where one names the
   // concept, otherwise the concept's own flashcard used as the thing to read. This is why finishing a
   // topic really does cover the whole topic — not just the handful of concepts a note happened to name.
-  function learnConcepts(topicKey) {
+  function learnConcepts(topicKey, scope) {
     var out = [];
     // Every topic that has study notes OR concept cards — not just those with a Notes-reader entry, so
     // note-less topics (e.g. Applied Scenarios) are still fully covered via their concept flashcards.
@@ -706,12 +709,16 @@
         if (!r || !r.name) return;
         var k = normkey(r.name);
         (byConcept[k] || (byConcept[k] = [])).push(e.q);
-        if (!cardsMap[k]) cardsMap[k] = { front: r.name, formula: r.formula || '', back: r.text || e.q.simple || e.q.explain || '', topic: t.name, key: t.key, level: e.level };
-        else if (e.level < cardsMap[k].level) cardsMap[k].level = e.level;
+        var isDef = !!(window.DEFS && window.DEFS[e.q.q]);
+        if (!cardsMap[k]) cardsMap[k] = { front: r.name, formula: r.formula || '', back: r.text || e.q.simple || e.q.explain || '', topic: t.name, key: t.key, level: e.level, def: isDef };
+        else { if (e.level < cardsMap[k].level) cardsMap[k].level = e.level; if (isDef) cardsMap[k].def = true; }
       });
       var cards = Object.keys(cardsMap).map(function (k) { return cardsMap[k]; });
+      if (scope === 'defs') cards = cards.filter(function (c) { return c.def; });   // definitions-only pass
       if (!notes.length && !cards.length) return;
       var items = notes.map(function (n) { return { note: n, concept: matchConcept(n, cards) }; });
+      // In definitions-only scope, don't read non-definition notes — keep only notes that map to a def concept.
+      if (scope === 'defs') items = items.filter(function (x) { return x.concept; });
       var noteCovered = {};
       items.forEach(function (x) { if (x.concept) noteCovered[normkey(x.concept.front)] = 1; });
       cards.forEach(function (c) {
@@ -728,8 +735,8 @@
     var st = (qs && qs.length) ? cardStatus(qs[0]) : 'new';
     return st === 'learnt' ? 3 : st === 'ready' ? 2 : st === 'learning' ? 1 : 0;   // new / struggling first
   }
-  function learnSequence(topicKey, testType, cap) {
-    var items = learnConcepts(topicKey);
+  function learnSequence(topicKey, testType, cap, scope) {
+    var items = learnConcepts(topicKey, scope);
     // Split into testable concepts (deduped) and pure read-only notes (headings with no concept).
     var seenC = {}, concepts = [], readOnly = [];
     items.forEach(function (x) {
@@ -766,7 +773,7 @@
     return seq;
   }
   function startLearn(topicKey) {
-    var seq = learnSequence(topicKey, getLearnTest(), learnN());
+    var seq = learnSequence(topicKey, getLearnTest(), learnN(), getLearnScope());
     if (!seq.length) return noContent('Read + recall');
     var i = 0, seen = 0, known = 0;
     function advance() { i++; if (i >= seq.length) return finish(); draw(); }
@@ -1619,7 +1626,7 @@
         if (mode === 'mc') return buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); }).length;
         if (mode === 'written') return writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); }).length;
         if (mode === 'defs') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); }).length;
-        if (mode === 'learn') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
+        if (mode === 'learn') { var seenC = {}, n = 0; learnConcepts(tkey, getLearnScope()).forEach(function (x) { if (x.concept) { var k = normkey(x.concept.front); if (!seenC[k]) { seenC[k] = 1; n++; } } }); return n; }
         return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
       }
       var avail = studyCount();
@@ -1633,7 +1640,7 @@
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
       else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start typing →'; }
       else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start matching →'; }
-      else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; var ln = learnN(); var lnLabel = ln ? ln + ' concepts a session (least-known first)' : 'the whole topic in one go'; desc = 'Read a note, then test yourself with ' + ltName + ' — ' + lnLabel + ' · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
+      else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; var ln = learnN(); var lnLabel = ln ? ln + ' concepts a session (least-known first)' : 'the whole topic in one go'; var scopeWord = getLearnScope() === 'defs' ? 'definitions only' : 'every concept'; desc = 'Read a note, then test yourself with ' + ltName + ' — ' + lnLabel + ' · ' + scopeWord + ' · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
       desc += ' <span class="study-avail">' + avail + ' available</span>';
       var sec = h('<section class="study-card">' +
@@ -1647,6 +1654,8 @@
             '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
             (mode === 'learn' ?
+            '<div class="filt-row"><span class="filt-lab">Cover</span>' +
+              chips('lscope', getLearnScope(), [{ v: 'all', t: 'Every concept' }, { v: 'defs', t: 'Definitions only' }]) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">Test with</span>' +
               chips('ltest', getLearnTest(), [{ v: 'mix', t: 'Mixed' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'card', t: 'Flashcards' }]) + '</div>' +
             '<div class="filt-row"><span class="filt-lab">How many</span>' +
@@ -1669,6 +1678,9 @@
       });
       sec.querySelectorAll('[data-lnum]').forEach(function (b) {
         b.onclick = function () { setLearnN(+b.getAttribute('data-lnum')); renderStudy(); };
+      });
+      sec.querySelectorAll('[data-lscope]').forEach(function (b) {
+        b.onclick = function () { setLearnScope(b.getAttribute('data-lscope')); renderStudy(); };
       });
       sec.querySelectorAll('[data-diff]').forEach(function (b) {
         b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(); };
