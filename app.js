@@ -367,6 +367,7 @@
       view.querySelector('.fr-again').onclick = function () { recordConcept(c.front, 'wrong'); advance(); };
       view.querySelector('.flash-shuffle').onclick = function () { deck = shuffle(deck); i = 0; flipped = false; draw(); };
       view.querySelector('.flash-topic').onchange = function () { startFlashcards(this.value); };
+      view.insertBefore(aiExplainConcept(c.front, c.back), view.querySelector('.flash-shuffle'));
       app.appendChild(view);
       window.scrollTo(0, 0);
     }
@@ -410,7 +411,7 @@
         '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
         '<label class="type-lab" for="type-in">Which term is this?</label>' +
         '<form class="type-form"><input id="type-in" class="type-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type the term…">' +
-        '<button class="btn type-go" type="submit">Check</button></form>' +
+        '<button class="btn type-go" type="submit">Check</button><button class="btn ghost type-skip" type="button">Skip →</button></form>' +
         '<div class="type-result" hidden></div></article>');
       card.querySelector('.type-deftext').textContent = c.back;
       if (c.formula) card.querySelector('.type-formula').textContent = c.formula;
@@ -418,35 +419,39 @@
       var input = card.querySelector('.type-in');
       var result = card.querySelector('.type-result');
       var answered = false;
-      form.onsubmit = function (ev) {
-        ev.preventDefault();
+      function goNext() {
+        i++;
+        if (i < deck.length) return draw();
+        app.innerHTML = '';
+        var doneCard = h('<div class="result-card"><div class="r-eyebrow">Type the term · ' + deck.length + ' definitions</div>' +
+          '<div class="score-big">' + score + ' <small>/ ' + deck.length + '</small></div>' +
+          '<p class="r-msg">Recalling a term cold is harder than recognising it — every one of these strengthened your learning map.</p>' +
+          '<div class="next-row" style="justify-content:center"><button class="btn">Another round</button><button class="btn ghost">Contents</button></div></div>');
+        doneCard.querySelector('.btn').onclick = function () { startTypeIt(topicKey); };
+        doneCard.querySelector('.btn.ghost').onclick = home;
+        app.appendChild(doneCard);
+      }
+      function reveal(outcome) {   // 'right' | 'wrong' | 'skip'
         if (answered) return;
         answered = true;
-        var right = termMatches(input.value, c.front);
+        var right = outcome === 'right';
         input.disabled = true;
         card.querySelector('.type-go').disabled = true;
+        card.querySelector('.type-skip').disabled = true;
         if (right) score++;
-        recordConcept(c.front, right ? 'right' : 'wrong');
+        recordConcept(c.front, outcome === 'skip' ? 'seen' : (right ? 'right' : 'wrong'));
         result.hidden = false;
-        result.className = 'type-result ' + (right ? 'tr-good' : 'tr-bad');
-        result.innerHTML = '<span class="tr-mark">' + (right ? '✓ That\'s it' : '✗ Not quite') + '</span>' +
+        result.className = 'type-result ' + (right ? 'tr-good' : (outcome === 'skip' ? '' : 'tr-bad'));
+        result.innerHTML = '<span class="tr-mark">' + (right ? '✓ That\'s it' : (outcome === 'skip' ? 'Skipped — the term is' : '✗ Not quite')) + '</span>' +
           '<div class="tr-term"></div>' +
           '<div class="next-row"><button class="btn tr-next">' + (i + 1 < deck.length ? 'Next definition →' : 'See the score →') + '</button></div>';
         result.querySelector('.tr-term').textContent = c.front;
-        result.querySelector('.tr-next').onclick = function () {
-          i++;
-          if (i < deck.length) return draw();
-          app.innerHTML = '';
-          var doneCard = h('<div class="result-card"><div class="r-eyebrow">Type the term · ' + deck.length + ' definitions</div>' +
-            '<div class="score-big">' + score + ' <small>/ ' + deck.length + '</small></div>' +
-            '<p class="r-msg">Recalling a term cold is harder than recognising it — every one of these strengthened your learning map.</p>' +
-            '<div class="next-row" style="justify-content:center"><button class="btn">Another round</button><button class="btn ghost">Contents</button></div></div>');
-          doneCard.querySelector('.btn').onclick = function () { startTypeIt(topicKey); };
-          doneCard.querySelector('.btn.ghost').onclick = home;
-          app.appendChild(doneCard);
-        };
+        result.insertBefore(aiExplainConcept(c.front, c.back), result.querySelector('.next-row'));
+        result.querySelector('.tr-next').onclick = goNext;
         input.blur();
-      };
+      }
+      form.onsubmit = function (ev) { ev.preventDefault(); reveal(termMatches(input.value, c.front) ? 'right' : 'wrong'); };
+      card.querySelector('.type-skip').onclick = function () { reveal('skip'); };
       app.appendChild(card);
       window.scrollTo(0, 0);
       setTimeout(function () { input.focus(); }, 50);
@@ -638,6 +643,8 @@
     if (!seq.length) return noContent('Read + recall');
     var i = 0, seen = 0, known = 0;
     function advance() { i++; if (i >= seq.length) return finish(); draw(); }
+    // Skip this note AND its attached test (if any), jumping to the next note.
+    function skipPair() { i += (seq[i + 1] && seq[i + 1].type !== 'read') ? 2 : 1; if (i >= seq.length) return finish(); draw(); }
     function bar() {
       var b = h('<div class="exbar"><button class="back">← Contents</button>' +
         '<div class="ruler"><div style="width:' + (100 * i / seq.length) + '%"></div></div>' +
@@ -667,11 +674,13 @@
       var card = h('<article class="qcard learn-read">' +
         '<div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div>' +
         '<div class="note-item lr-item"><div class="ni-t"></div><div class="ni-d"></div>' + (n.f ? '<div class="ni-f"></div>' : '') + '</div>' +
-        '<div class="next-row"><button class="btn lr-next">' + nextLabel() + '</button></div></article>');
+        '<div class="next-row"><button class="btn lr-next">' + nextLabel() + '</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
       card.querySelector('.ni-t').textContent = n.t;
       card.querySelector('.ni-d').textContent = n.d;
       if (n.f) card.querySelector('.ni-f').textContent = n.f;
+      card.appendChild(aiExplainConcept(n.t, n.d));
       card.querySelector('.lr-next').onclick = advance;
+      card.querySelector('.lr-skip').onclick = skipPair;
       app.appendChild(card);
     }
     // Multiple-choice test step: the FULL question experience — lab bench, skip, plain-English
@@ -727,6 +736,7 @@
         });
       }
       mark.onclick = runMark;
+      view.appendChild(aiExplainConcept(c.front, c.back));
       app.appendChild(view);
       setTimeout(function () { ta.focus(); }, 60);
     }
@@ -740,18 +750,21 @@
         '</button></div>' +
         '<div class="flash-rate" hidden><span class="fr-lab">Did you get it?</span>' +
           '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Not yet</button></div>' +
-        '<div class="next-row lr-reveal"><button class="btn">Show the answer →</button></div></article>');
+        '<div class="next-row lr-reveal"><button class="btn lr-show">Show the answer →</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
       view.querySelector('.flash-term').textContent = c.front;
       view.querySelector('.flash-def').textContent = c.back;
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
       var fc = view.querySelector('.flash-card');
       var rate = view.querySelector('.flash-rate');
       var revealRow = view.querySelector('.lr-reveal');
-      function reveal() { if (flipped) return; flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; }
+      var eli = aiExplainConcept(c.front, c.back); eli.hidden = true;
+      function reveal() { if (flipped) return; flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; eli.hidden = false; }
       fc.onclick = reveal;
-      revealRow.querySelector('.btn').onclick = reveal;
+      view.querySelector('.lr-show').onclick = reveal;
+      view.querySelector('.lr-skip').onclick = function () { seen++; recordConcept(c.record || c.front, 'seen'); advance(); };
       view.querySelector('.fr-good').onclick = function () { seen++; known++; recordConcept(c.record || c.front, 'right'); advance(); };
       view.querySelector('.fr-again').onclick = function () { seen++; recordConcept(c.record || c.front, 'wrong'); advance(); };
+      view.appendChild(eli);
       app.appendChild(view);
     }
     function finish() {
@@ -1125,9 +1138,11 @@
       })
       .catch(function () { cb({ error: 'You appear to be offline.' }); });
   }
+  // ELI5 for a bare concept (flashcards, notes): reuse the same API-backed re-explainer.
+  function aiExplainConcept(name, text) { return aiExplainEl({ q: name, choices: [text || name], explain: text || name }); }
   function aiExplainEl(q) {
     var el = h('<div class="eli5"><div class="eli5-btns"><span class="eli5-lab">AI tutor</span>' +
-      '<button class="eli5-btn" type="button" data-m="simpler">Even simpler, please</button>' +
+      '<button class="eli5-btn" type="button" data-m="simpler">🧸 Explain like I\'m 5</button>' +
       '<button class="eli5-btn" type="button" data-m="deeper">Go deeper</button></div>' +
       '<div class="eli5-out" hidden></div></div>');
     var out = el.querySelector('.eli5-out');
