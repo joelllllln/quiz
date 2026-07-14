@@ -655,22 +655,28 @@
   // Scope of a read+recall pass: every concept, or just the tagged definitions.
   function getLearnScope() { return localStorage.getItem('ds_learn_scope') === 'defs' ? 'defs' : 'all'; }
   function setLearnScope(v) { try { localStorage.setItem('ds_learn_scope', v); } catch (e) {} }
-  // Match a note to the concept it is actually about, so the test that follows tests THAT concept.
+  // Tokenise a title/definition for the read↔concept matching below (drops short/stop words).
   var LEARN_STOP = ['the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'its', 'you', 'your', 'from', 'into', 'not', 'but', 'how', 'why', 'what', 'when', 'one', 'two', 'per', 'via', 'use', 'used', 'uses', 'each', 'they', 'them', 'has', 'have', 'can', 'all', 'any', 'set', 'get'];
   function learnTokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && LEARN_STOP.indexOf(w) < 0; }); }
-  function matchConcept(note, cards) {
-    var nt = normkey(note.t), ntTok = learnTokens(note.t + ' ' + (note.group || '')), ndTok = learnTokens(note.d || '');
-    var best = null, bestScore = 0;
-    cards.forEach(function (c) {
-      var fk = normkey(c.front), ftok = learnTokens(c.front), s = 0;
-      if (fk && fk === nt) s += 10;
-      if (fk && nt && (nt.indexOf(fk) >= 0 || fk.indexOf(nt) >= 0)) s += 4;
-      if (ftok.length && ftok.every(function (w) { return ntTok.indexOf(w) >= 0; })) s += 6;
-      if (ftok.length && ftok.every(function (w) { return ndTok.indexOf(w) >= 0; })) s += 4;
-      ftok.forEach(function (w) { if (ntTok.indexOf(w) >= 0) s += 3; else if (ndTok.indexOf(w) >= 0) s += 1; });
-      if (s > bestScore) { bestScore = s; best = c; }
+  // The study note that IS the given concept — used as the richer READ material before recalling it.
+  // A note qualifies only when its title genuinely names the concept: an exact match, or a ≥2-word
+  // full containment either way (so "Manhattan distance" pairs with "Manhattan (city-block) distance",
+  // but a generic single word like "Small"/"Large" never drags an adjacent note onto the wrong concept).
+  // No qualifying note → we fall back to the concept's own definition, so read and test always agree.
+  function bestNoteForConcept(concept, notes) {
+    var cName = normkey(concept.front), cTok = learnTokens(concept.front);
+    var exact = null, contained = null;
+    notes.forEach(function (n) {
+      if (exact) return;
+      var nt = normkey(n.t);
+      if (nt === cName) { exact = n; return; }
+      if (contained) return;
+      var ntTok = learnTokens(n.t);
+      if (ntTok.length >= 2 && cTok.length >= 2 &&
+        (ntTok.every(function (w) { return cTok.indexOf(w) >= 0; }) ||
+         cTok.every(function (w) { return ntTok.indexOf(w) >= 0; }))) contained = n;
     });
-    return bestScore >= 4 ? best : null;
+    return exact || contained || null;
   }
   // Of a concept's questions, the one whose wording overlaps the note you just read the most —
   // so the multiple-choice step tests THAT note, not a random sibling question of the concept.
@@ -715,17 +721,17 @@
       });
       var cards = Object.keys(cardsMap).map(function (k) { return cardsMap[k]; });
       if (scope === 'defs') cards = cards.filter(function (c) { return c.def; });   // definitions-only pass
-      if (!notes.length && !cards.length) return;
-      var items = notes.map(function (n) { return { note: n, concept: matchConcept(n, cards) }; });
-      // In definitions-only scope, don't read non-definition notes — keep only notes that map to a def concept.
-      if (scope === 'defs') items = items.filter(function (x) { return x.concept; });
-      var noteCovered = {};
-      items.forEach(function (x) { if (x.concept) noteCovered[normkey(x.concept.front)] = 1; });
+      if (!cards.length) return;
+      // Concept-driven: one read → recall per concept. The read is ALWAYS titled with the concept being
+      // tested; its body is a strongly-matching study note's explanation where one exists, otherwise the
+      // concept's own definition. Read and test therefore describe the exact same thing — always aligned.
       cards.forEach(function (c) {
-        if (noteCovered[normkey(c.front)]) return;
-        items.push({ note: { t: c.front, d: c.back, f: c.formula || '', group: 'Key concept', topic: t.name }, concept: c });
+        var best = bestNoteForConcept(c, notes);
+        var readNote = best
+          ? { t: c.front, d: best.d, f: best.f || c.formula || '', group: 'From the notes', topic: t.name }
+          : { t: c.front, d: c.back, f: c.formula || '', group: 'Key concept', topic: t.name };
+        out.push({ note: readNote, concept: c, topic: t.name, byConcept: byConcept });
       });
-      items.forEach(function (x) { out.push({ note: x.note, concept: x.concept, topic: t.name, byConcept: byConcept }); });
     });
     return out;
   }
