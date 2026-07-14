@@ -254,10 +254,10 @@
     "q": "KNN gets slower at predicting as the training set grows. Why? What must every single prediction do?",
     "choices": [
       "Measure distance to every stored point",
-      "Re-sort the whole dataset",
-      "Re-fit its parameters",
-      "Grow k to match the data",
-      "Recompute the class centres"
+      "Re-sort the whole stored dataset by label",
+      "Re-fit its internal parameters from scratch",
+      "Grow k to match the current dataset size",
+      "Recompute every class centre from scratch"
     ],
     "explain": "To find the k nearest, plain KNN computes the distance from the query to all n stored points — so prediction cost grows with n.",
     "simple": "To find the closest points it has to check the distance to EVERY stored point, one by one, every time you ask. More stored points = more checking = slower answers.",
@@ -731,10 +731,10 @@
     "q": "You test 1-NN on the same data it trained on. It scores 100%. Why does that score mean nothing?",
     "choices": [
       "Each point's nearest neighbour is itself",
-      "The data must be noise-free",
-      "Smooth models always ace training",
-      "It only proves the classes separate",
-      "The metric happens to fit perfectly"
+      "The data must be completely noise-free",
+      "Smooth models always ace the training set",
+      "It only proves the two classes fully separate",
+      "The distance metric happens to fit perfectly"
     ],
     "explain": "Asked about a training point, 1-NN finds that exact point at distance 0 and copies its own label — a perfect score by cheating, saying nothing about new data.",
     "simple": "Ask 'who's closest to this point?' when the point is already IN the data — the answer is itself, at distance zero. Of course it gets its own label right. It's an open-book exam.",
@@ -1048,10 +1048,10 @@
     "q": "An app uses daily steps (0–20,000) and sleep hours (0–12) in KNN. What should you do before computing any distances?",
     "choices": [
       "Rescale both to a shared range",
-      "Log-transform sleep",
-      "Drop the weaker feature",
-      "Do nothing — it self-corrects",
-      "Multiply steps by k"
+      "Log-transform the sleep-hours feature only",
+      "Drop the weaker feature from the dataset",
+      "Do nothing — the vote self-corrects the scale",
+      "Multiply the step counts by the value of k"
     ],
     "explain": "Normalising (min-max to 0–1) or standardising (z-scores) puts steps and sleep on equal footing so both genuinely influence who counts as similar.",
     "simple": "Squash both features onto the same 0-to-1 scale, so a 'big' step difference and a 'big' sleep difference count about the same. Now both features get a fair say.",
@@ -1175,7 +1175,7 @@
     "choices": [
       "Measure all → keep k nearest → combine",
       "Keep k nearest → measure → combine",
-      "Vote → keep winners → measure",
+      "Vote first → keep the winners → then measure",
       "Sample k at random → measure → vote",
       "Measure all → drop outliers → average"
     ],

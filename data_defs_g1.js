@@ -102,10 +102,10 @@
     q: "In machine learning, what is the label (or target)?",
     choices: [
       "The known correct output attached to an example that the model learns to predict",
-      "An individual input variable describing the example",
-      "The learning rate that controls weight updates",
-      "The set of examples held back to measure final performance",
-      "The number of passes made over the training data"
+      "An individual measurable input variable or feature column describing the example",
+      "The learning-rate hyperparameter that controls the size of each weight update step",
+      "The held-out set of examples kept back only to measure final generalisation performance",
+      "The number of complete passes the optimiser makes over the whole training data"
     ],
     explain: "The label, also called the target or ground-truth output, is the answer the model is trained to reproduce: the class of an image, the price of a house. Supervised learning needs labelled examples to learn the mapping from features to label. At prediction time the model outputs its estimate of this label.",
     simple: "The label is the right answer written next to each training example, like 'this photo = cat'. The model studies the clues and the answers together so it can guess the answer on new items.",
@@ -126,9 +126,9 @@
     choices: [
       "The portion of data the model learns from by fitting its parameters",
       "The portion of data held back to estimate performance on unseen data",
-      "A small sample used only to tune hyperparameters",
-      "The complete list of features available in the dataset",
-      "The final answer the model outputs for each example"
+      "A small validation sample used only to tune the model's hyperparameters during development",
+      "The complete list of input features and columns that are available in the dataset",
+      "The final answer or prediction the model outputs for each example at test time"
     ],
     explain: "The training set is the subset of labelled data the model actually fits to, adjusting its parameters to minimise error on these examples. It is kept separate from the test set so that evaluation reflects generalisation, not memorisation. Larger, more representative training sets usually improve learning.",
     simple: "It is the practice material the model studies from, like the questions with answers you revise before an exam. The model tunes itself to do well on these examples.",
@@ -148,10 +148,10 @@
     q: "In machine learning, what is the test set?",
     choices: [
       "Held-out data, never used in training, used to estimate performance on unseen examples",
-      "The data the model fits its parameters to during learning",
-      "A sample used to choose hyperparameters during development",
-      "The list of input variables describing each example",
-      "The rate at which the model adjusts its weights"
+      "The portion of data the model fits its parameters to during the learning phase",
+      "A separate validation sample used to choose hyperparameters during model development",
+      "The complete list of input variables and feature columns describing each example",
+      "The learning rate that controls how fast the model adjusts its weights each step"
     ],
     explain: "The test set is data set aside and never touched during training or tuning, used once at the end to estimate how the model will perform on new, unseen data. Because it is untouched, its error is an honest measure of generalisation. Reusing it for tuning would leak information and inflate the estimate.",
     simple: "It is the final exam the model has never seen before. You keep these questions locked away while it studies, then use them once to check how well it really learned.",
@@ -171,10 +171,10 @@
     q: "In machine learning, what is overfitting?",
     choices: [
       "When a model learns the training data's noise and detail so closely that it generalises poorly to new data",
-      "When a model is too simple to capture the underlying pattern in the data",
-      "When the training set is much larger than the test set",
-      "When features are measured on very different scales",
-      "When class labels are wrong in the training data"
+      "When a model is far too simple to capture the underlying pattern, underfitting both train and test data",
+      "When the training set is much larger than the test set, leaving too little data to evaluate on fairly",
+      "When features are measured on very different numeric scales and distort distance-based calculations",
+      "When many class labels are simply wrong in the training data, corrupting what the model learns"
     ],
     explain: "Overfitting happens when a model fits the training data too well, memorising noise and idiosyncrasies rather than the true signal. It shows as low training error but high test error. Remedies include more data, regularisation, and simpler models.",
     simple: "It is like memorising the exact practice questions instead of understanding the topic: you ace the practice but flunk the real exam. The model learned the quirks, not the lesson.",
@@ -194,10 +194,10 @@
     q: "In machine learning, what is underfitting?",
     choices: [
       "When a model is too simple to capture the underlying pattern, giving high error on both training and test data",
-      "When a model memorises noise in the training data and fails on new data",
-      "When the test set is accidentally used during training",
-      "When categorical features are turned into binary columns",
-      "When the learning rate is set too high to converge"
+      "When an over-complex model memorises random noise in the training data and then fails badly on new data",
+      "When the test set is accidentally used during training, leaking answers and inflating the accuracy",
+      "When categorical features are turned into several binary indicator columns before the model is fit",
+      "When the learning rate is set far too high, so the optimiser overshoots and never converges"
     ],
     explain: "Underfitting occurs when a model lacks the capacity or is trained too little to represent the true relationship, so it performs poorly even on training data. Both training and test error are high. Remedies include a richer model, better features, or more training.",
     simple: "It is like using a straight ruler to trace a curvy line: the model is too basic to follow the real shape, so it gets things wrong everywhere, even on the practice set.",
@@ -217,10 +217,10 @@
     q: "In machine learning, what is generalization?",
     choices: [
       "A model's ability to perform well on new, unseen data rather than just the data it trained on",
-      "The process of fitting a model's parameters to the training data",
-      "The act of encoding categorical features as numbers",
-      "The tendency of a model to memorise the training examples",
-      "The step of scaling features to a common range"
+      "The process of fitting a model's parameters to the training data by minimising its error",
+      "The act of encoding categorical features as numeric indicator columns before training begins",
+      "The tendency of an over-complex model to memorise the exact training examples and their noise",
+      "The preprocessing step of scaling features to a common range so distances stay comparable"
     ],
     explain: "Generalization is how well a model's learned pattern transfers to data it has never seen. It is the true goal of learning: low error on unseen data, not merely on training data. The gap between training and test performance measures how well a model generalises.",
     simple: "It is whether the model actually learned the lesson or just memorised the practice. Good generalisation means it handles brand-new examples well, not only the ones it studied.",
@@ -240,10 +240,10 @@
     q: "In machine learning, what is the learning rate?",
     choices: [
       "A hyperparameter that controls how big a step the model takes when updating its parameters each iteration",
-      "The fraction of data set aside for testing",
-      "The number of complete passes made over the training data",
-      "The known correct output attached to each example",
-      "The share of predictions the model gets correct"
+      "The fraction of the labelled data that is deliberately set aside for final testing instead of for training the model",
+      "The number of complete passes the optimiser makes over the entire training dataset, a quantity usually called epochs",
+      "The known correct output or target label attached to each example in supervised learning",
+      "The share of predictions the model gets correct, reported as its overall accuracy score"
     ],
     explain: "The learning rate scales the size of each parameter update during gradient-based optimisation. Too small and training crawls; too large and it overshoots or diverges. It is one of the most important hyperparameters to tune.",
     simple: "It is the size of the steps the model takes while learning. Tiny steps are slow but safe; huge steps are fast but can leap right past the answer.",
@@ -263,10 +263,10 @@
     q: "In machine learning, what is one-hot encoding?",
     choices: [
       "Representing a categorical variable as several binary columns, one per category, with a single 1 marking the value",
-      "Scaling a numeric feature to have zero mean and unit variance",
-      "Replacing missing values with the column's average",
-      "Reducing many features to a few principal components",
-      "Splitting data into training and test portions"
+      "Scaling a numeric feature to have exactly zero mean and unit variance so its range matches every other feature",
+      "Replacing each missing entry in a column with that column's mean average as a preprocessing step before training",
+      "Reducing many correlated input features down to a few uncorrelated principal components that still capture most variance",
+      "Splitting the full dataset into separate training and test portions before the learning phase begins"
     ],
     explain: "One-hot encoding turns a categorical feature with k categories into k binary columns; each row has a 1 in the column for its category and 0 elsewhere. This lets models that expect numbers handle categories without imposing a false numeric order. It is standard preprocessing for nominal variables.",
     simple: "Instead of writing 'colour = red', you make a checkbox for each colour and tick exactly one. Red becomes [1,0,0], green [0,1,0], blue [0,0,1] — so the model never thinks blue is 'bigger' than red.",
@@ -288,10 +288,10 @@
     q: "What is the k-nearest neighbours (KNN) algorithm?",
     choices: [
       "A method that classifies or predicts a point using the labels of its k closest examples in the training data",
-      "A method that fits a straight line through the data by minimising squared error",
-      "A method that splits data with a sequence of yes/no questions",
-      "A method that groups unlabelled points into k clusters",
-      "A method that combines many weak trees into a strong ensemble"
+      "A method that fits a single straight line through the data by minimising the total sum of squared errors",
+      "A method that repeatedly splits the data with a branching sequence of yes/no questions to grow a decision tree",
+      "A method that groups unlabelled points into k clusters by minimising the within-cluster distance",
+      "A method that combines many weak decision trees into one strong boosted ensemble predictor"
     ],
     explain: "KNN makes a prediction for a query point by finding the k training examples closest to it (by some distance metric) and letting them vote (classification) or average (regression). It stores all training data and does the work at prediction time. The choice of k and distance metric drives its behaviour.",
     simple: "To label something new, KNN asks its nearest neighbours what they are and goes with the majority. It is 'you are who you hang out with' turned into an algorithm.",
@@ -311,10 +311,10 @@
     q: "In KNN, what is a distance metric?",
     choices: [
       "A rule that measures how far apart two points are so 'nearest' neighbours can be found",
-      "The number of neighbours that vote on each prediction",
-      "The fraction of predictions the model gets right",
-      "The label assigned to the majority of neighbours",
-      "The step size used when updating model weights"
+      "The count of nearest neighbours k that are permitted to cast a vote on each individual prediction",
+      "The fraction of predictions the model gets right, otherwise known as its accuracy",
+      "The class label finally assigned by the majority vote of the nearest neighbours",
+      "The learning-rate step size used when updating the model weights during training"
     ],
     explain: "A distance metric defines closeness in feature space — for example Euclidean or Manhattan distance. KNN depends entirely on it to decide which training points count as 'nearest'. Changing the metric can change which neighbours are chosen and therefore the prediction.",
     simple: "It is the ruler KNN uses to measure how close two points are. Different rulers can give different 'nearest' neighbours, so the choice matters.",
@@ -334,10 +334,10 @@
     q: "In KNN, what is the Manhattan distance between two points?",
     choices: [
       "The sum of the absolute differences of their coordinates, like walking along a city grid",
-      "The straight-line distance between them measured across open space",
-      "The largest single coordinate difference between them",
-      "The number of neighbours separating them in the ranking",
-      "The angle between the two points' feature vectors"
+      "The straight-line Euclidean distance between the two points measured diagonally across open space",
+      "The largest single coordinate difference between them, taken over all of the axes",
+      "The number of other neighbours separating them in the sorted distance ranking",
+      "The cosine angle between the two points' feature vectors, ignoring their magnitudes"
     ],
     explain: "Manhattan (L1) distance adds up the absolute differences along each axis: |x1-x2| + |y1-y2| + .... It is the distance you travel on a grid of streets where you cannot cut diagonally. It differs from Euclidean distance, which takes the straight-line hypotenuse.",
     simple: "Imagine walking city blocks: you can only go along streets, not through buildings. Add up the blocks east-west and north-south, and that total is the Manhattan distance.",
@@ -357,10 +357,10 @@
     q: "In KNN, why is feature scaling important?",
     choices: [
       "Because distances are dominated by large-range features unless all features are put on comparable scales",
-      "Because scaling changes how many neighbours vote on each prediction",
-      "Because unscaled features make the algorithm train faster but less accurately",
-      "Because scaling converts categorical labels into numbers",
-      "Because it decides the value of k automatically"
+      "Because scaling changes how many nearest neighbours k are chosen to vote on each prediction",
+      "Because unscaled features make the lazy algorithm store data faster but then predict far less accurately overall",
+      "Because feature scaling automatically converts categorical class labels into ordered numbers",
+      "Because the scaling procedure decides the best value of the neighbour count k automatically"
     ],
     explain: "KNN measures distance across all features, so a feature with a large numeric range (e.g. salary in the thousands) can swamp one with a small range (e.g. age). Scaling — such as standardisation or min-max — puts features on comparable footing so each contributes fairly to the distance. Without it, KNN effectively ignores small-range features.",
     simple: "If one column is in the thousands and another in single digits, the big one bullies the distance and the small one is ignored. Scaling shrinks them to the same size so every feature gets a fair say.",
@@ -380,10 +380,10 @@
     q: "In KNN, what is meant by 'lazy' (instance-based) learning?",
     choices: [
       "The algorithm does no real training up front; it just stores the data and computes at prediction time",
-      "The algorithm trains slowly because it uses a small learning rate",
-      "The algorithm ignores most features to save computation",
-      "The algorithm updates its weights only when it makes a mistake",
-      "The algorithm discards the training data after fitting a model"
+      "The algorithm trains very slowly because it relies on a tiny learning rate for each update",
+      "The algorithm deliberately ignores most of the input features in order to save on computation at prediction time",
+      "The algorithm updates its stored weights only on the examples where it happens to make a mistake",
+      "The algorithm discards all of the training data once it has finished fitting a compact model"
     ],
     explain: "KNN is 'lazy' because it builds no explicit model during training — it simply memorises the training examples. All the work happens at query time, when it searches for neighbours and votes. This makes training trivial but prediction potentially slow on large datasets.",
     simple: "KNN does its homework at the last minute. It just remembers all the examples, and only when you ask it a question does it scramble to find the closest ones and answer.",
@@ -403,10 +403,10 @@
     q: "In KNN, what is a decision boundary?",
     choices: [
       "The surface in feature space where the predicted class changes from one label to another",
-      "The number of neighbours used to make each prediction",
-      "The distance metric used to rank neighbours",
-      "The average distance between all pairs of points",
-      "The fraction of the data used for training"
+      "The fixed count of nearest neighbours k that are used to make each single prediction by majority voting",
+      "The distance metric rule that is used to rank and order the neighbours by their closeness",
+      "The average distance measured between every possible pair of points in the whole dataset",
+      "The fraction of the labelled data that is used for training rather than for testing"
     ],
     explain: "The decision boundary is the dividing line (or surface) separating regions the model assigns to different classes. For KNN it is generally jagged, shaped by where neighbour votes tip from one class to another. Its smoothness depends on k: small k gives a wiggly boundary, large k a smoother one.",
     simple: "It is the line on the map where the answer flips from one class to the other. Step across it and KNN changes its guess.",
@@ -426,10 +426,10 @@
     q: "In KNN classification, what is majority vote?",
     choices: [
       "Assigning the query point the class that is most common among its k nearest neighbours",
-      "Averaging the numeric values of the k nearest neighbours",
-      "Choosing the single closest neighbour's label and ignoring the rest",
-      "Weighting each neighbour by its distance before summing",
-      "Picking the class with the fewest neighbours to avoid bias"
+      "Averaging the numeric target values of the k nearest neighbours, as is done in regression",
+      "Choosing the single closest neighbour's label and completely ignoring all the other ones",
+      "Weighting each neighbour's vote by its inverse distance before summing them all together",
+      "Picking the class held by the fewest neighbours in order to deliberately avoid majority bias"
     ],
     explain: "In KNN classification, the k neighbours each 'vote' for their own class, and the query is assigned whichever class receives the most votes. Ties are broken by rules such as reducing k or using distance. It is the mechanism that turns neighbour labels into a single prediction.",
     simple: "The nearest neighbours each shout out their class, and KNN goes with whatever the crowd says most. Democracy among the closest points.",
@@ -449,10 +449,10 @@
     q: "In KNN, what is the curse of dimensionality?",
     choices: [
       "As feature dimensions grow, points become nearly equidistant and 'nearest' loses meaning",
-      "As the dataset grows, KNN runs out of memory to store the points",
-      "As k grows, the decision boundary becomes too jagged to use",
-      "As classes multiply, majority votes end in frequent ties",
-      "As features are scaled, distances shrink toward zero"
+      "As the stored dataset grows very large, KNN eventually runs out of memory to hold all the points",
+      "As the neighbour count k grows too large, the decision boundary becomes far too jagged to use",
+      "As the number of classes multiplies, majority votes increasingly end in frequent unbroken ties",
+      "As features are scaled down, all of the pairwise distances shrink steadily toward exactly zero"
     ],
     explain: "In high-dimensional spaces, the volume grows so fast that data becomes sparse and the distances between points concentrate: the nearest and farthest neighbours become almost equally far. This undermines KNN, whose whole premise is that nearby points are similar. It motivates dimensionality reduction and careful feature selection.",
     simple: "Add too many features and everything ends up roughly the same distance from everything else. 'Nearest neighbour' stops meaning much when nothing is really near.",
@@ -472,10 +472,10 @@
     q: "In KNN, what is weighted (distance-weighted) KNN?",
     choices: [
       "A variant where closer neighbours count more toward the prediction than farther ones",
-      "A variant that gives every neighbour an equal vote regardless of distance",
-      "A variant that uses only the single nearest neighbour",
-      "A variant that reweights features to be equally scaled",
-      "A variant that increases k automatically for rare classes"
+      "A variant that gives every neighbour an exactly equal vote regardless of how far away it is",
+      "A variant that uses only the single nearest neighbour and ignores every other one entirely",
+      "A variant that reweights the input features so they end up equally scaled before any voting",
+      "A variant that automatically increases the neighbour count k for the rarer classes"
     ],
     explain: "In distance-weighted KNN, each neighbour's vote (or value) is multiplied by a weight that decreases with distance — often 1/distance. Nearer neighbours therefore have more influence than distant ones. This can improve accuracy and reduces sensitivity to the exact choice of k.",
     simple: "Instead of every neighbour getting one equal vote, the closer ones shout louder. A neighbour right next door counts for more than one across town.",
@@ -495,10 +495,10 @@
     q: "In KNN, what does it mean that the algorithm is non-parametric?",
     choices: [
       "It makes no fixed assumption about the data's form and its complexity grows with the data itself",
-      "It has no hyperparameters that need to be chosen",
-      "It fits a fixed number of weights regardless of dataset size",
-      "It cannot be used for regression, only classification",
-      "It requires the data to follow a normal distribution"
+      "It has no hyperparameters at all that ever need to be chosen or tuned by the user",
+      "It fits a single fixed number of weights regardless of how large the dataset becomes",
+      "It cannot ever be used for regression tasks and only works for discrete classification problems",
+      "It strictly requires all of the input data to follow a normal Gaussian bell-shaped distribution"
     ],
     explain: "A non-parametric method does not summarise the data into a fixed set of parameters or assume a particular functional form; instead it keeps the data and lets model complexity scale with the number of examples. KNN is the classic example: it stores every training point rather than fitting coefficients. This flexibility comes at the cost of memory and prediction speed.",
     simple: "KNN doesn't boil the data down to a handful of numbers or assume a shape for it. It keeps all the examples, so the more data you give it, the more detailed it gets.",
@@ -520,10 +520,10 @@
     q: "What is logistic regression?",
     choices: [
       "A model that predicts the probability of a class by passing a weighted sum of features through the logistic (sigmoid) function",
-      "A model that predicts a continuous value by fitting a straight line to the data",
-      "A model that splits data using a tree of yes/no questions",
-      "A model that labels points by the vote of their nearest neighbours",
-      "A model that groups unlabelled points into clusters"
+      "A model that predicts a continuous numeric value by fitting a single straight regression line through the training data by least squares",
+      "A model that repeatedly splits the data using a branching tree of yes/no questions to reach a leaf",
+      "A model that labels each point by taking the majority vote of its k nearest stored neighbours",
+      "A model that groups unlabelled points into clusters of similar examples without using any labels"
     ],
     explain: "Despite its name, logistic regression is a classification model. It computes a linear combination of the features and squashes it through the sigmoid to produce a probability between 0 and 1, then thresholds it to pick a class. Its weights are learned by maximising the likelihood of the observed labels.",
     simple: "It is a classifier that outputs a probability, like '80% chance this email is spam'. It adds up weighted clues and bends the total into a 0-to-1 chance.",

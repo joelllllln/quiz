@@ -22,10 +22,10 @@
     q: "What is feature engineering?",
     choices: [
       "Transforming raw data into input columns (features) that help a model learn better",
-      "Choosing which machine-learning algorithm to train",
-      "Tuning a model's hyperparameters such as the learning rate",
-      "Collecting more rows of raw data from a database",
-      "Measuring a trained model's accuracy on a test set"
+      "Choosing which machine-learning algorithm to train, then picking its software library",
+      "Tuning a model's hyperparameters such as the learning rate, tree depth, and batch size",
+      "Collecting more rows of raw data from a database to enlarge the overall training set",
+      "Measuring a trained model's accuracy on a held-out test set and reporting that score"
     ],
     explain: "Feature engineering is the craft of shaping raw data — cleaning, encoding, scaling, combining, and deriving new columns — so the patterns a model needs become easy to read. It happens before training and is often the biggest lever on real-world performance, more than the choice of algorithm. Better features frequently beat a fancier model on the same raw data.",
     simple: "It is prep-cooking for a model: raw ingredients rarely go straight in the pot. You chop, measure, and mix the data into features the model can actually digest.",
@@ -50,10 +50,10 @@
     q: "In machine learning, what is a 'feature'?",
     choices: [
       "A single measurable input column the model reads, like age or price",
-      "The final prediction the model outputs",
-      "One row of data representing a single example",
-      "The algorithm used to fit the data",
-      "The error between the prediction and the truth"
+      "The final prediction the model outputs after reading all of its input columns",
+      "One row of data representing a single labeled example in the training table",
+      "The learning algorithm used to fit the data and estimate the model's weights",
+      "The error between the prediction and the truth, averaged over the whole test set"
     ],
     explain: "A feature is one input variable — a column in your table — that describes each example, such as square footage, temperature, or category. A model learns a relationship from the features to the target it predicts. More informative features give the model more to work with.",
     simple: "Think of a spreadsheet: each row is one example, and each column describing it is a feature. Age, price, and color would each be separate features.",
@@ -78,10 +78,10 @@
     q: "What does one-hot encoding do to a categorical column like Color (red / green / blue)?",
     choices: [
       "Creates one new 0/1 column per category, with a 1 marking the row's category",
-      "Replaces each category with a single integer code (0, 1, 2)",
-      "Ranks the categories from smallest to largest",
-      "Scales the column to have mean 0 and standard deviation 1",
-      "Deletes the column because models cannot use text"
+      "Replaces each category with a single integer code such as 0, 1, or 2 in one column",
+      "Ranks the categories from smallest to largest and stores their position as a number",
+      "Scales the column so it has mean 0 and a standard deviation of exactly 1 per row",
+      "Deletes the column entirely because most models cannot read raw text categories"
     ],
     explain: "One-hot encoding turns one category column into several 0/1 indicator columns — one per possible value — where exactly one column is 1 for each row. This lets a model use categories as numbers without inventing a false order between them. It is the standard encoding for unordered categories with few distinct values.",
     simple: "It gives every category its own on/off switch. A red row flips the 'red' switch to 1 and leaves 'green' and 'blue' at 0.",
@@ -106,10 +106,10 @@
     q: "What is ordinal encoding?",
     choices: [
       "Replacing ordered categories with integers that reflect their rank (small=0, medium=1, large=2)",
-      "Creating a separate 0/1 column for every category",
-      "Rescaling numbers to the range 0 to 1",
-      "Removing rows that have missing category labels",
-      "Averaging the target value within each category"
+      "Creating a separate 0/1 indicator column for every distinct category and dropping the original",
+      "Rescaling the raw numbers into the fixed range 0 to 1 using the column's minimum and maximum",
+      "Removing every row that has a missing or blank category label before the model is ever trained",
+      "Averaging the target value observed within each category and storing that mean as the new code"
     ],
     explain: "Ordinal encoding maps categories to integers whose order matches a real ranking, like sizes S < M < L < XL. It is appropriate only when the categories genuinely have an order, because the model will treat the numbers as ordered. Using it on unordered labels invents a false ranking.",
     simple: "It numbers categories that already come in order, like clothing sizes 0, 1, 2, 3. The numbers mean 'bigger', so use it only when bigger is real.",
@@ -134,10 +134,10 @@
     q: "What is feature scaling?",
     choices: [
       "Putting numeric features onto a comparable range so no single one dominates by sheer size",
-      "Selecting which features to keep and which to delete",
-      "Turning categories into 0/1 indicator columns",
-      "Filling in missing values with the column mean",
-      "Taking the logarithm of every numeric column"
+      "Selecting which of the many features to keep and which ones to delete before any training",
+      "Turning unordered category labels into separate 0/1 indicator columns, one per category value",
+      "Filling in every missing value in the column with that column's arithmetic mean or median",
+      "Taking the natural logarithm of every numeric column to squash its long right-hand tail"
     ],
     explain: "Feature scaling rescales numeric columns so they occupy comparable ranges, for example by standardization or min-max normalization. Without it, a feature measured in thousands can swamp one measured in single digits for models that use distances or gradients. It changes the numbers' scale, not their information.",
     simple: "It is like converting everyone's measurements to the same units before comparing. Otherwise a feature in dollars would shout over a feature in years.",
@@ -162,10 +162,10 @@
     q: "What is standardization (z-score scaling) of a feature?",
     choices: [
       "Subtracting the mean and dividing by the standard deviation, so it has mean 0 and spread 1",
-      "Squeezing the values into the fixed range 0 to 1",
-      "Replacing the values with their rank order",
-      "Taking the logarithm of every value",
-      "Turning the feature into 0/1 category columns"
+      "Squeezing the values into the fixed range 0 to 1 using the column's minimum and maximum",
+      "Replacing each value with its rank order position, so the smallest becomes 1 and so on up",
+      "Taking the natural logarithm of every value to pull in a long, heavy right-hand tail",
+      "Turning the numeric feature into several 0/1 category columns split at equal-width cutoffs"
     ],
     explain: "Standardization transforms a feature to z = (x − mean) / std, giving it mean 0 and standard deviation 1. Values then read as 'how many standard deviations from average', which suits many linear, distance, and gradient-based models. It does not bound values to a fixed range.",
     simple: "It re-centers a column on zero and stretches it so a spread of 1 is normal. A value of +2 then simply means 'two standard deviations above average'.",
@@ -190,10 +190,10 @@
     q: "What is min-max normalization?",
     choices: [
       "Rescaling a feature so its smallest value becomes 0 and its largest becomes 1",
-      "Subtracting the mean and dividing by the standard deviation",
-      "Replacing each value with its logarithm",
-      "Grouping the values into equal-width bins",
-      "Averaging the target within each value"
+      "Subtracting the column mean and then dividing by its standard deviation to get a z-score",
+      "Replacing each value with its natural logarithm to compress the largest numbers the most",
+      "Grouping the continuous values into a handful of equal-width bins labeled low up to high",
+      "Averaging the target value seen within each distinct value and storing that as the code"
     ],
     explain: "Min-max normalization maps a feature with x' = (x − min) / (max − min), placing every value into the fixed range 0 to 1. It preserves the shape of the distribution but is sensitive to outliers, since a single extreme value stretches the range. It is handy when a bounded 0–1 input is desired.",
     simple: "It stretches or squeezes a column so the smallest number lands on 0 and the biggest on 1, with everything else in between.",
@@ -218,10 +218,10 @@
     q: "What is imputation?",
     choices: [
       "Filling in missing values with a substitute such as the column's mean or median",
-      "Deleting every column that contains any blank",
-      "Scaling features to the range 0 to 1",
-      "Encoding categories as 0/1 columns",
-      "Selecting the most predictive features"
+      "Deleting every column that contains even a single blank or missing entry anywhere in it",
+      "Scaling the numeric features into the range 0 to 1 using their own minimum and maximum",
+      "Encoding each unordered category as its own separate 0/1 indicator column of values",
+      "Selecting only the handful of most predictive features and discarding the weaker columns"
     ],
     explain: "Imputation replaces missing entries with estimated stand-ins so the row can still be used, commonly the mean or median for numbers and the most frequent value for categories. It avoids throwing away otherwise-good rows. Like any transform, its statistics must be learned from the training data only.",
     simple: "When a cell is blank, imputation pencils in a sensible guess — often the column's typical value — instead of tossing out the whole row.",
@@ -246,10 +246,10 @@
     q: "A k-nearest-neighbours model uses income (0–100,000) and age (0–100) with no scaling. Why do its distances become almost meaningless?",
     choices: [
       "Income's huge range dominates the distance, so age barely counts",
-      "kNN cannot read numeric columns without one-hot encoding first",
-      "Age and income are correlated, which breaks the distance formula",
-      "Distances only work when every feature is a category",
-      "The model automatically ignores the smaller feature anyway"
+      "kNN cannot read numeric columns at all unless you one-hot encode each of them first",
+      "Age and income are strongly correlated, which quietly breaks the distance formula itself",
+      "Distances only ever work when every single feature in the table is a category label",
+      "The model automatically decides to ignore the smaller-ranged feature all on its own"
     ],
     explain: "Distance-based models like kNN add up squared differences across features, so a feature spanning tens of thousands drowns out one spanning tens. Age differences become invisible next to income differences, and 'nearest' effectively means 'similar income'. Standardizing or normalizing first puts both features on equal footing.",
     simple: "If you measure closeness by adding dollars and years together, dollars win by a landslide. Scaling first lets age get a fair vote.",
@@ -274,10 +274,10 @@
     q: "You switch from kNN to a decision tree / random forest. Do you still need to scale income and age first?",
     choices: [
       "No — trees split one feature at a time by thresholds, so feature scale does not matter",
-      "Yes — trees also measure straight-line distances between points",
-      "Yes — trees fail unless every feature is between 0 and 1",
-      "No — but only because trees secretly scale the data for you",
-      "Yes — otherwise the tree can only ever use the largest feature"
+      "Yes — trees also measure straight-line Euclidean distances between all of the data points",
+      "Yes — trees simply fail to run unless every feature lies between exactly 0 and 1 first",
+      "No — but only because tree libraries quietly scale the data for you behind the scenes",
+      "Yes — otherwise the tree can only ever split on the single largest-ranged feature there"
     ],
     explain: "Trees split on questions like 'income > 50,000?', comparing a single feature to a threshold. Rescaling that feature just moves the threshold, so the resulting splits and predictions are unchanged. This scale-invariance is why tree-based models generally do not need feature scaling, unlike distance- and gradient-based ones.",
     simple: "A tree asks yes/no questions one feature at a time, so stretching a column's numbers does not change the answers. Scaling is optional for trees.",
@@ -358,10 +358,10 @@
     q: "Your data has a raw timestamp like 2026-07-13 09:00. Which engineered features are most likely to help predict store sales?",
     choices: [
       "Day-of-week, month, and is-weekend pulled from the timestamp",
-      "The raw timestamp string fed in as text",
-      "The number of characters in the timestamp",
-      "A single 0/1 column marking that a date exists",
-      "The timestamp multiplied by the row number"
+      "The raw timestamp string fed straight into the model as unparsed text characters",
+      "The number of characters in the timestamp string counted as a single numeric feature",
+      "A single 0/1 column simply marking that some date value exists in that row at all",
+      "The timestamp converted to a number and then multiplied by the row's index position"
     ],
     explain: "Sales patterns follow the calendar, so extracting day-of-week, month, and weekend flags exposes the seasonality a raw timestamp hides. The model can then learn 'weekends sell more' directly. The raw string or its character count carries none of that structure in usable form.",
     simple: "A timestamp is packed with clues — which day, which month, weekend or not. Unpacking those into their own columns hands the model the pattern.",
@@ -414,10 +414,10 @@
     q: "Why might you bin a continuous 'age' feature into groups like child / adult / senior?",
     choices: [
       "To capture non-linear effects and blunt the impact of outliers",
-      "To make the model train more slowly on purpose",
-      "Because models cannot read any numeric column",
-      "To guarantee higher accuracy in every case",
-      "To convert the numbers into a date"
+      "To make the model train much more slowly on purpose for easier step-by-step debugging",
+      "Because most models simply cannot read any raw numeric column without bucketing it first",
+      "To guarantee strictly higher accuracy in every single case, with no possible downside at all",
+      "To convert the plain age numbers into a proper calendar date the model can then parse"
     ],
     explain: "Binning turns a continuous value into ordered groups, letting a simple model capture effects that jump at certain ages rather than assuming a straight line. It also reduces the sway of extreme values by lumping them into an end bucket. The trade-off is some loss of fine-grained detail.",
     simple: "Sometimes what matters is the life stage, not the exact age. Grouping ages into child/adult/senior lets the model react to the stage and ignore odd outliers.",
@@ -444,10 +444,10 @@
     q: "What is binning (discretization)?",
     choices: [
       "Grouping a continuous number into a small set of ranges or buckets",
-      "Scaling a feature to have mean 0 and standard deviation 1",
-      "Creating a 0/1 column for each category",
-      "Filling missing values with the column median",
-      "Multiplying two features together"
+      "Scaling a numeric feature so that it ends up with a mean of 0 and a standard deviation of 1",
+      "Creating one separate 0/1 indicator column for each distinct category found in the data",
+      "Filling in all of the missing values in a column with that column's own median value",
+      "Multiplying two separate numeric features together to form a single new interaction term"
     ],
     explain: "Binning (discretization) cuts a continuous feature into intervals — such as ages 0–17, 18–64, 65+ — and represents each value by its bucket. This can expose stage-like effects and reduce outlier influence, though it discards within-bucket detail. Bins can be equal-width, equal-frequency, or chosen by domain knowledge.",
     simple: "It sorts a range of numbers into labeled boxes, like grouping ages into child, adult, and senior. Each value is then just 'which box'.",
@@ -472,10 +472,10 @@
     q: "What is an interaction feature?",
     choices: [
       "A new feature made by combining two others (e.g., price × quantity) to capture their joint effect",
-      "A feature scaled to the range 0 to 1",
-      "A category turned into 0/1 indicator columns",
-      "The single most predictive feature in the dataset",
-      "A feature with its missing values filled in"
+      "A single existing feature that has simply been rescaled into the fixed range 0 to 1 using min-max",
+      "One unordered category column that has been turned into a set of separate 0/1 indicator columns",
+      "The single most predictive feature in the whole dataset, ranked first by its own importance score",
+      "An ordinary feature whose missing values have all been filled in with the column's mean value first"
     ],
     explain: "An interaction feature encodes how two features act together — often their product — capturing effects that neither explains alone, like price × quantity giving total spend. Linear models cannot represent such combined effects unless you build the interaction explicitly. Trees can find some interactions on their own.",
     simple: "It multiplies two clues into one, like price times quantity to get the total. The whole tells the model something the parts alone cannot.",
@@ -500,10 +500,10 @@
     q: "What is a log transform of a feature?",
     choices: [
       "Replacing each value with its logarithm to compress large values and reduce right-skew",
-      "Scaling the feature to the range 0 to 1",
-      "Splitting the feature into equal-width bins",
-      "Turning the feature into 0/1 category columns",
-      "Averaging the target value within the feature"
+      "Scaling the numeric feature into the range 0 to 1 using its own minimum and maximum values",
+      "Splitting the continuous feature into several equal-width bins labeled from low up to high",
+      "Turning the numeric feature into a set of separate 0/1 category indicator columns per bucket",
+      "Averaging the observed target value within each level of the feature and storing that mean"
     ],
     explain: "A log transform maps x to log(x), shrinking big values far more than small ones and pulling in a long right tail. It stabilizes variance and helps models that assume roughly symmetric, additive effects. It requires positive values, so a small offset like log(x + 1) is common.",
     simple: "It replaces each number with its logarithm, squashing the giants so a lopsided column becomes more even.",
@@ -528,10 +528,10 @@
     q: "What is feature extraction?",
     choices: [
       "Deriving new, more informative features from raw data such as text, images, or dates",
-      "Selecting a subset of existing features and deleting the rest",
-      "Removing rows that contain missing values",
-      "Scaling features to mean 0 and variance 1",
-      "Choosing the model with the highest accuracy"
+      "Selecting a smaller subset of the existing features and then deleting all of the rest of them",
+      "Removing every row that happens to contain one or more missing values before any training",
+      "Scaling the numeric features so that each ends up with a mean of 0 and a variance of exactly 1",
+      "Choosing the single model with the highest measured accuracy on the held-out test set of rows"
     ],
     explain: "Feature extraction builds new representations from raw or complex data — for example word counts from text, edges from images, or day-of-week from a timestamp. It differs from feature selection, which keeps a subset of features you already have. The goal is to turn hard-to-use raw data into columns a model can learn from.",
     simple: "It mines useful new columns out of messy raw stuff like text or dates. Selection just picks among columns you already have; extraction creates them.",
@@ -556,10 +556,10 @@
     q: "Hour-of-day runs 0…23, but hour 23 and hour 0 are actually adjacent. How do you encode this so the model knows midnight wraps around?",
     choices: [
       "Use the sine and cosine of the hour (cyclical encoding)",
-      "Feed the raw hour 0–23 as a single number",
-      "One-hot encode into 24 unrelated columns and stop",
-      "Take the logarithm of the hour",
-      "Standardize the hour to mean 0 and spread 1"
+      "Feed the raw hour value 0 to 23 straight into the model as one plain number",
+      "One-hot encode the hour into 24 completely unrelated columns and simply stop there",
+      "Take the natural logarithm of the hour value to compress the later hours of the day",
+      "Standardize the hour so it has a mean of exactly 0 and a spread of exactly 1"
     ],
     explain: "Encoding an angle as (sin, cos) places 23:00 and 00:00 right next to each other on a circle, so the model sees them as similar. A raw number makes them look 23 apart, and plain one-hot treats every hour as unrelated, losing the ordering entirely. This cyclical trick suits hours, days-of-week, and months.",
     simple: "Put the clock on a circle instead of a line: then 11pm sits next to midnight, not 23 steps away. Sine and cosine draw that circle for the model.",
@@ -584,10 +584,10 @@
     q: "A column has 5,000 unique product IDs. Why is plain one-hot encoding a poor choice here?",
     choices: [
       "It explodes into 5,000 sparse columns, bloating memory and hurting learning",
-      "One-hot only works on numeric columns, not IDs",
-      "One-hot would rank the products in the wrong order",
-      "One-hot deletes rare products automatically",
-      "One-hot requires the target column in order to work"
+      "One-hot encoding only ever works on numeric columns, never on product ID labels like these",
+      "One-hot would silently rank the 5,000 products into the wrong numerical order for the model",
+      "One-hot automatically deletes the rare products, quietly dropping most of the 5,000 IDs first",
+      "One-hot encoding actually requires access to the target column before it can run at all here"
     ],
     explain: "One-hot encoding adds one column per category, so 5,000 IDs create 5,000 mostly-zero columns — huge, sparse, and starved of examples per column. This inflates memory and can hurt models that struggle with very wide, sparse input. High-cardinality columns are better handled by target encoding, feature hashing, or grouping rare values.",
     simple: "Giving 5,000 IDs their own switch each makes a giant, nearly-empty table. For that many categories you need a smarter, more compact encoding.",
@@ -612,10 +612,10 @@
     q: "You standardize your features using the mean and standard deviation of the ENTIRE dataset, then split into train/test. What is wrong?",
     choices: [
       "Test information leaks into training; fit the scaler on train only, then apply it to test",
-      "Nothing — using all the data makes the scaling more accurate",
-      "You should never standardize features under any circumstances",
-      "The mean must be computed from the test set only",
-      "Scaling should be redone separately for every single row"
+      "Nothing at all is wrong here — using every available row makes the scaling far more accurate",
+      "You should never standardize any features under any circumstances, since it distorts them all",
+      "The mean and standard deviation must instead be computed only from the held-out test set rows",
+      "Scaling should really be redone from scratch separately for each and every single data row"
     ],
     explain: "Computing the mean and std over all data lets the test set influence the transform, so your test score is optimistically biased and won't hold up in production. The fix is to fit the scaler on the training split alone and merely apply the learned statistics to the test set. Wrapping steps in a Pipeline enforces this automatically inside cross-validation.",
     simple: "If your scaler has already peeked at the test data, the test score is a rehearsal, not an exam. Learn the scaling from training data only, then apply it.",
@@ -668,10 +668,10 @@
     q: "A straight-line model underfits data that clearly curves. Adding x² and x³ as new features lets it…",
     choices: [
       "Fit curved (non-linear) relationships while still using a linear model",
-      "Reduce the number of features it must consider",
-      "Guarantee that it will never overfit",
-      "Convert the target into categories",
-      "Remove the need to scale the data"
+      "Reduce the total number of input features that the linear model has to consider at once",
+      "Guarantee that the model will never overfit its training data no matter the chosen degree",
+      "Convert the continuous numeric target column into a set of discrete category labels first",
+      "Remove any need to scale the data because polynomial terms already share one common scale"
     ],
     explain: "Polynomial features (x², x³, cross terms) give a linear model extra inputs it can weight to bend its fit, capturing curvature without changing the algorithm. Raising the degree too far, though, lets the model chase noise and overfit — test error rises even as training error falls. The degree is a knob to tune.",
     simple: "Feed the model x, x², and x³ and it can draw curves instead of just straight lines. Go too high and it starts memorizing wiggles that aren't real.",
@@ -698,10 +698,10 @@
     q: "What is a polynomial feature?",
     choices: [
       "A feature built by raising an existing feature to a power (x², x³) or multiplying features together",
-      "A feature rescaled to the range 0 to 1",
-      "A category turned into 0/1 indicator columns",
-      "A feature with its missing values filled in",
-      "The single most important feature in the data"
+      "An existing feature that has simply been rescaled into the fixed range 0 to 1 using min-max scaling",
+      "An unordered category column that has been turned into several separate 0/1 indicator columns each",
+      "An ordinary feature whose missing values have all been filled in using the column mean or median value",
+      "The single most important feature in the whole dataset, as ranked first by its model importance score"
     ],
     explain: "Polynomial features are derived columns like x², x³, or x·y that let a linear model represent curves and interactions. Generating them up to a chosen degree expands the feature set quickly, so the degree trades expressive power against overfitting and cost. They are usually scaled, since powers spread the range widely.",
     simple: "It is an old feature raised to a power or multiplied by another, like x² or price×area. These give a straight-line model the ability to bend.",
@@ -726,10 +726,10 @@
     q: "What is target (mean) encoding of a categorical feature?",
     choices: [
       "Replacing each category with the average target value seen for that category",
-      "Creating one 0/1 column per category",
-      "Ranking the categories alphabetically as integers",
-      "Scaling the category counts to mean 0",
-      "Dropping the category column entirely"
+      "Creating one separate 0/1 indicator column for every distinct category value in the column",
+      "Ranking all of the categories alphabetically and replacing each one with its integer position",
+      "Scaling the raw category counts so that they end up with a mean of 0 and unit variance too",
+      "Dropping the entire category column from the dataset because models cannot read text at all"
     ],
     explain: "Target encoding swaps each category for a statistic of the target within it — typically the mean — collapsing a high-cardinality column into a single informative number. It is compact and powerful but leaks the label, so it must be computed out-of-fold and smoothed toward the global mean for rare categories. Done naively it badly overfits.",
     simple: "Replace 'City = Paris' with the average outcome for Paris. One clever number instead of thousands of columns — but it must be computed carefully to avoid cheating.",
@@ -754,10 +754,10 @@
     q: "What does TF-IDF do to a piece of text?",
     choices: [
       "Weights each word by how often it appears here but how rare it is across all documents",
-      "Counts only the total number of characters in the text",
-      "Translates the text into another language",
-      "Keeps only the first word of every sentence",
-      "Replaces each word with its alphabetical rank"
+      "Counts only the total number of characters in the text and uses that single number as a feature",
+      "Translates the whole piece of text into another language before the model ever reads any of it",
+      "Keeps only the very first word of every sentence and throws away the entire rest of the text",
+      "Replaces each word with its alphabetical rank position in a fixed, pre-sorted dictionary list"
     ],
     explain: "TF-IDF multiplies term frequency (how often a word appears in a document) by inverse document frequency (how rare the word is across the whole corpus). Words common everywhere, like 'the', get down-weighted, while distinctive words that mark a document stand out. It turns text into numeric feature vectors for models.",
     simple: "It scores a word high when it's frequent in this document but rare overall. So 'the' barely counts, while a telling word like 'refund' gets real weight.",
@@ -782,10 +782,10 @@
     q: "What is feature hashing (the 'hashing trick')?",
     choices: [
       "Mapping categories to a fixed number of columns via a hash function, avoiding a giant one-hot matrix",
-      "Encrypting the feature values for security",
-      "Sorting the features by their importance",
-      "Filling missing values with a hash of the row",
-      "Deleting duplicate rows using a checksum"
+      "Encrypting each of the feature values for data security so the raw categories can no longer be read",
+      "Sorting all of the features by their measured importance and keeping only the very top-ranked ones",
+      "Filling every missing value in the row with a hash computed from that same row's other columns first",
+      "Deleting all of the duplicate rows from the dataset by comparing a checksum of each full row first"
     ],
     explain: "Feature hashing runs each category through a hash function that assigns it to one of a fixed number of columns, so the output width stays constant no matter how many categories appear. It is memory-efficient and handles unseen categories, at the cost of occasional collisions where two categories share a slot. It suits very high-cardinality data.",
     simple: "It drops each category into one of a fixed set of buckets using a hash, so the table never grows even with millions of categories. Rarely, two categories land in the same bucket.",
@@ -810,10 +810,10 @@
     q: "Target encoding uses the label, so it can leak information from the target into the features. What is the standard defense?",
     choices: [
       "Compute each category's mean out-of-fold (via cross-validation) and fit on train only",
-      "Compute the category means on the test set instead",
-      "Use the whole dataset including test for extra stability",
-      "Never split the data into train and test at all",
-      "Add random noise to the target before training"
+      "Compute all of the category means directly on the held-out test set instead of the training set",
+      "Use the whole combined dataset, including all the test rows, for extra stability in the encoding",
+      "Never split the data into separate train and test sets at all, so every row can be encoded once",
+      "Add a little random noise to the target column before training the model so as to hide any leakage"
     ],
     explain: "If a row's category mean includes that row's own label, the feature secretly encodes the answer and the model looks brilliant until deployment. The fix is out-of-fold encoding: compute each row's category mean from other folds only, often with smoothing toward the global mean for rare categories. All of this is fit on training data alone.",
     simple: "If Paris's average outcome already includes today's Paris row, you've told the model the answer. Compute the average from other rows only, so it can't peek at itself.",
@@ -838,10 +838,10 @@
     q: "What is the cleanest way to guarantee every transform — scaling, imputation, encoding — is fit on training data only during cross-validation?",
     choices: [
       "Wrap all transforms and the model in a single Pipeline and fit it inside cross-validation",
-      "Transform the full dataset once, before you ever split it",
-      "Fit each transform by hand on all the data first, then split",
-      "Scale using statistics computed from the test set",
-      "Skip cross-validation entirely to avoid the problem"
+      "Transform the full dataset exactly once, well before you ever split it into train and test sets",
+      "Fit each of the transforms by hand on all of the data first, and only then split it into folds",
+      "Scale every feature using the mean and standard deviation computed from the held-out test set",
+      "Skip cross-validation entirely so that the leakage problem can never actually arise in the first place"
     ],
     explain: "A Pipeline chains preprocessing steps with the estimator so that, on each CV fold, every transform is fit on that fold's training portion and merely applied to its validation portion. This makes leakage structurally impossible and keeps the whole workflow reproducible. Fitting transforms outside the CV loop lets validation data influence them and inflates the score.",
     simple: "Bundle every prep step and the model into one Pipeline, then cross-validate that. Each fold re-learns the prep from its own training data, so no test information can sneak in.",

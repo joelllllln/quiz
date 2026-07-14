@@ -3,7 +3,7 @@
 
 {
   q: "Out of every prediction a classifier makes, what fraction did it get right? Which metric is this?",
-  choices: ["The share of all predictions that are correct", "The share of flagged cases that are correct", "The share of real cases the model catches", "The balance of precision against recall", "The share of cases that are truly positive"],
+  choices: ["The share of all predictions that are correct", "The share of flagged cases that are correct", "The share of real positive cases the model manages to catch", "The harmonic balance struck between precision and recall", "The share of cases that are truly positive"],
   explain: "Accuracy is (TP + TN) divided by the total number of predictions: every correct call over every call made. It is the most intuitive metric, but it says nothing about WHICH kind of case the model gets right, so it can be badly misleading when one class dominates.",
   simple: "Imagine grading a multiple-choice test by counting how many answers were right out of the total. That single percentage is accuracy. It is easy to read, but it treats every question as equally important — which is not always true in the real world.",
   widget: {

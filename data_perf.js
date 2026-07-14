@@ -106,7 +106,7 @@
     "q": "What does k-fold cross-validation do?",
     "choices": [
       "Rotates which slice is held out, scores each, then averages",
-      "Trains one model and tests it on a single held-out slice",
+      "Trains a single model and tests it just once on one held-out slice",
       "Adds more folds of data into training to reduce the bias",
       "Picks the single split that gives the best possible score",
       "Repeats training until the validation loss stops improving"
@@ -271,7 +271,7 @@
     "choices": [
       "Forty rounds of choices slowly overfit the validation set — only untouched data gives an honest final number",
       "Cross-validating across those forty rounds averages the creep away, so a third split really adds nothing",
-      "The final model is retrained on the test set once the validation search has settled on its winning setting",
+      "The final model is retrained directly on the test set once the validation search has finally settled on its single winning setting",
       "Validation scores only creep upward here because the held-out set was simply far too small to stay stable",
       "A third split exists mainly to triple your training rows once the tuning on the other sets has finished"
     ],
@@ -450,7 +450,7 @@
       "Better inputs usually beat better algorithms — features first, models second",
       "Simpler models nearly always generalise better than more complex ones do",
       "Swapping model families almost never changes real-world accuracy at all",
-      "A six-point jump like that sits comfortably inside normal run-to-run noise",
+      "A six-point jump like that sits comfortably inside the normal run-to-run measurement noise band",
       "Team B just drew a lucky validation split that flattered its final score"
     ],
     "explain": "Models can only recombine the information you feed them. One feature that directly encodes the signal ('recency') hands every model — even the simplest — what no amount of algorithmic sophistication could reconstruct from weak inputs.",
@@ -490,7 +490,7 @@
     "q": "A pipeline scales features using statistics computed on ALL the data — including the test set — before splitting. Scores look great; production disappoints. What happened?",
     "choices": [
       "Data leakage — test-set information seeped into training through the scaler",
-      "The scaler was simply too aggressive and squashed the useful signal away",
+      "The scaler was simply far too aggressive and squashed the genuinely useful signal clean away",
       "The test set was far too small to give a stable estimate of accuracy",
       "Production traffic arrives unscaled, so the model never needed scaling",
       "The train-test split ratio was wrong, leaving too little data to test on"

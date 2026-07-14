@@ -18,10 +18,10 @@
     q: "You have a categorical column 'city' with 3 unevenly-populated but unordered values (Austin, Denver, Miami) feeding a logistic regression. How should you encode it?",
     choices: [
       "One-hot encode into indicator columns — the categories have no order, and 3 levels adds only a couple of columns",
-      "Label-encode as 0, 1, 2 so the model treats it as a single numeric feature",
-      "Drop the column because text cannot be used by a linear model",
-      "Target-encode with the raw training means and no smoothing or cross-fitting",
-      "Hash the strings into 1000 buckets to be safe"
+      "Label-encode the three cities as 0, 1 and 2 so that the linear model treats the whole column as a single ordered numeric feature",
+      "Drop the city column entirely from the data, because free-text category names simply cannot be used by a linear model of any kind",
+      "Target-encode each city using its raw training-set mean, applying no smoothing and no cross-fitting so as to keep the pipeline simple",
+      "Hash the three city strings into a thousand separate buckets ahead of time just to be safe against any brand-new categories later"
     ],
     explain: "The categories are nominal (no inherent order), so mapping them to 0/1/2 would falsely tell a linear model that Miami (2) is 'twice' Denver (1), inventing a ranking that does not exist. One-hot encoding creates one indicator per level so each city gets its own coefficient with no spurious ordering. With only 3 levels the added width is trivial, so there is no cardinality problem that would push you toward target or hash encoding.",
     simple: "Cities are names, not amounts. Give each its own on/off switch instead of pretending they sit on a number line.",
@@ -38,10 +38,10 @@
     q: "A feature 'hour_of_day' runs 0 to 23. Your model keeps treating 23:00 and 00:00 as far apart, hurting a demand forecast. What transform fixes this?",
     choices: [
       "Encode the hour as two cyclical features, sin(2*pi*hour/24) and cos(2*pi*hour/24)",
-      "Standardize the hour column to mean 0 and variance 1",
-      "Log-transform the hour to compress the range",
-      "One-hot encode all 24 hours and drop the raw column",
-      "Bin the hour into morning/afternoon/evening and label-encode 0/1/2"
+      "Standardize the raw hour column so that it has a mean of 0 and a variance of 1 before it is fed to the model",
+      "Log-transform the hour values to compress their range and pull the larger hours of the day closer together",
+      "One-hot encode all 24 distinct hours into separate indicator columns and drop the original raw hour column",
+      "Bin the hour into morning, afternoon and evening buckets and then label-encode those three as 0, 1 and 2"
     ],
     explain: "Hour is a cyclical quantity: 23 and 0 are adjacent in time but numerically 23 apart, so a raw or scaled column misleads the model about that boundary. Mapping the hour onto a circle with sin and cos gives two coordinates where 23:00 and 00:00 sit right next to each other, preserving true adjacency. Standardizing or logging only rescales the same broken straight line, and coarse binning throws away resolution.",
     simple: "A clock is a circle, not a ruler. Put the hours back on the circle so midnight and 11pm are neighbors again.",
@@ -58,10 +58,10 @@
     q: "Your income feature is strongly right-skewed (most values small, a long tail of high earners) and you plan to use linear regression. What preprocessing helps most?",
     choices: [
       "Apply a log (or log1p) transform to compress the tail and make the distribution more symmetric",
-      "Min-max scale income to the 0-1 range and leave the shape unchanged",
-      "One-hot encode income into deciles",
-      "Remove every high-income row as an outlier so the tail disappears",
-      "Square the income values to spread them out further"
+      "Min-max scale the income feature into the 0-to-1 range and leave its lopsided distribution shape completely unchanged",
+      "One-hot encode the continuous income variable into ten separate decile indicator columns before fitting the linear model",
+      "Remove every single high-income row from the dataset as an outlier so that the long right tail disappears entirely",
+      "Square all of the income values so that the gaps between them are spread out even further across the whole range"
     ],
     explain: "Linear models fit a straight-line relationship and are sensitive to a heavy right tail, where a few huge incomes dominate the loss and distort the slope. A log transform pulls the long tail in and makes multiplicative gaps look additive, so the relationship becomes more linear and residuals more even. Min-max scaling only shifts and stretches the same skewed shape, deleting the tail throws away real customers, and squaring makes the skew worse.",
     simple: "When a few giant values drown out the rest, take logs so the crowd and the giants sit on a fairer scale.",
@@ -78,10 +78,10 @@
     q: "You have 40 candidate features and want a fast, model-agnostic first pass to drop obviously useless ones before any training. Which selection approach fits?",
     choices: [
       "A filter method — rank features by a cheap univariate score (correlation, mutual information, chi-squared) and cut the weakest",
-      "Recursive feature elimination wrapped around a slow gradient-boosted model",
-      "Exhaustive search over all 2^40 feature subsets scored by cross-validation",
-      "Train the final deep network on all 40 and read its saliency maps",
-      "Forward selection that refits the model after adding each feature one at a time"
+      "Recursive feature elimination wrapped tightly around a slow gradient-boosted model that must be refitted at every single elimination step",
+      "An exhaustive search over all 2^40 possible feature subsets, scoring each and every one of those subsets with a full cross-validation run",
+      "Train the final deep neural network on all 40 features at once and then read the feature importances off its computed saliency maps",
+      "Forward selection that refits the whole model from scratch after adding each candidate feature to the working set one at a time"
     ],
     explain: "A filter method scores each feature against the target with a cheap statistic and never trains the downstream model, so it is fast and model-agnostic — exactly what a quick first pass needs. Wrapper methods (RFE, forward selection) repeatedly retrain the model and are far more expensive, and exhaustively searching 2^40 subsets is computationally impossible. Filters can miss interactions, but as a coarse pre-screen before real modeling they are the right tool.",
     simple: "Before the real interviews, do a quick resume screen: cheaply rank each feature against the target and drop the clearly weak ones.",
@@ -98,10 +98,10 @@
     q: "Numeric features range wildly: age (0-90), income (0-200000), and you are training a k-nearest-neighbours classifier that uses Euclidean distance. What must you do first?",
     choices: [
       "Standardize or normalize the features so each contributes comparably to the distance",
-      "Nothing — KNN handles raw scales automatically",
-      "One-hot encode the numeric columns to remove the scale difference",
-      "Log-transform only the target variable",
-      "Increase k until the scale difference stops mattering"
+      "Nothing at all is required first, because a KNN classifier handles wildly different raw feature scales completely automatically on its own",
+      "One-hot encode each of the numeric columns into indicator variables so that the large scale difference between age and income is removed",
+      "Log-transform only the target variable and leave every one of the numeric input features exactly as it is in its raw original units",
+      "Steadily increase the neighbour count k until the huge scale difference between age and income finally stops mattering to the result"
     ],
     explain: "KNN measures similarity with Euclidean distance, which sums squared differences across features, so a feature with a huge numeric range dominates the distance regardless of its real importance. Income spanning 0-200000 would swamp age spanning 0-90, making neighbors effectively chosen by income alone. Standardizing (mean 0, variance 1) or min-max normalizing puts every feature on a comparable scale so distance reflects all of them. KNN has no built-in scaling, and raising k does not fix a distorted distance metric.",
     simple: "If one ruler is in miles and another in inches, the miles win every comparison. Put both on the same scale before measuring who is nearest.",
@@ -118,10 +118,10 @@
     q: "You must impute missing values in a numeric column that is roughly symmetric with a few extreme outliers, and you want a simple, robust fill. Which statistic should you use?",
     choices: [
       "The median, because it is not pulled by the extreme outliers",
-      "The mean, because it uses every value",
-      "Zero, because it is neutral",
-      "A random value drawn from the column each time",
-      "The maximum, to be conservative"
+      "The mean, because it makes use of every single value present in the column",
+      "Zero, since it is a neutral value that biases the column in no particular direction",
+      "A random value freshly drawn from the column for each individual missing entry",
+      "The maximum observed value, so as to stay deliberately conservative and high"
     ],
     explain: "The mean is dragged toward extreme outliers, so filling with it can bias every imputed row in the direction of a few unusual values. The median sits at the middle rank and ignores how far the outliers stretch, giving a robust central fill. Filling with zero injects a value that may be far from typical and distorts the distribution, and random or maximum fills add noise or a systematic upward bias.",
     simple: "To guess a typical value when a few readings are wild, use the middle one, not the average that those wild readings can yank around.",
@@ -140,10 +140,10 @@
     q: "A ZIP-code feature has 4000 distinct values and clearly predicts churn. One-hot would add 4000 sparse columns; you need to keep width manageable. What is the best-balanced choice?",
     choices: [
       "Target-encode ZIP with cross-fitting and smoothing so rare ZIPs shrink toward the global mean",
-      "One-hot encode all 4000 ZIPs and let regularization sort it out",
-      "Label-encode ZIP as 0..3999 and feed it as one numeric feature",
-      "Drop ZIP entirely to avoid the high cardinality",
-      "Naive target-encode using each ZIP's raw mean on the full training set"
+      "One-hot encode all 4000 distinct ZIP codes into sparse indicator columns and simply let the model's regularization sort the whole mess out",
+      "Label-encode the ZIP as the integers 0 through 3999 and feed that straight into the model as a single ordered numeric feature",
+      "Drop the ZIP-code feature entirely from the dataset just to avoid having to deal with its very high cardinality altogether",
+      "Naively target-encode ZIP using each code's raw churn mean computed on the full training set, with no folds and no smoothing"
     ],
     explain: "This trades information against dimensionality and leakage. One-hot at 4000 levels explodes width and leaves rare ZIPs with almost no signal, while label-encoding invents a meaningless order and dropping ZIP discards a real predictor. Target encoding collapses ZIP to a single informative number, but done naively it leaks the label and overfits rare ZIPs; cross-fitting (out-of-fold means) plus smoothing toward the global mean keeps the signal while controlling both problems.",
     simple: "For thousands of categories, summarize each by its churn rate instead of adding thousands of columns — but compute that rate out-of-fold and pull rare ones toward the average so you do not cheat.",
@@ -160,10 +160,10 @@
     q: "Filter selection ranked 25 features by univariate correlation, but two of your strongest predictors only work together (an interaction) and each looks weak alone. You can afford some extra compute. What selection strategy balances this?",
     choices: [
       "Use a wrapper method like recursive feature elimination that evaluates features by their effect on the actual model, capturing joint value",
-      "Trust the univariate filter and drop both weak-looking features",
-      "Keep only the single top-correlated feature and discard the rest",
-      "Add every feature regardless of score to be safe",
-      "Rank by correlation but keep the bottom features instead of the top ones"
+      "Trust the univariate correlation filter completely and drop both of the weak-looking features, since each one scores poorly on its own in isolation",
+      "Keep only the single most highly correlated feature out of the whole set and discard every one of the remaining candidate features to stay simple",
+      "Add every available feature into the model regardless of its univariate score, just to be completely safe against dropping anything useful",
+      "Rank all the features by correlation exactly as before but keep the bottom-scoring features instead of the top-scoring ones this time around"
     ],
     explain: "Univariate filters score each feature in isolation, so two features that only help in combination each look weak and get cut — the filter is blind to interactions. Wrapper methods evaluate subsets by training the model and measuring its performance, so they can detect that the pair together lifts accuracy even though neither shines alone. The cost is more compute from repeated model fits, which you said you can afford; keeping everything or inverting the ranking ignores the signal entirely.",
     simple: "Two players who only score as a duo look useless in solo tryouts. Judge them by how the team plays with them, not by solo stats.",
@@ -180,10 +180,10 @@
     q: "You have 5000 rows and must choose between a linear model and a deep neural network. Both must be validated. What model-selection procedure gives a trustworthy comparison without wasting data?",
     choices: [
       "k-fold cross-validation (e.g. 5-fold) so every row serves as both training and validation across folds",
-      "A single 50/50 train-test split evaluated once",
-      "Train both on all 5000 rows and compare their training accuracy",
-      "Pick the model with more parameters since it can fit more",
-      "Use leave-one-out on the deep net so it trains 5000 times"
+      "A single fixed 50/50 train-test split that is evaluated exactly once to compare the two candidate models against each other",
+      "Train both of the models on all 5000 available rows and then directly compare the training-set accuracy that each one reports",
+      "Simply pick whichever of the two models has the most free parameters, on the grounds that it is able to fit strictly more of the data",
+      "Use full leave-one-out cross-validation on the deep neural network so that it is retrained a total of 5000 separate times over"
     ],
     explain: "With a moderate 5000 rows, a single split wastes half the data and gives a noisy, high-variance estimate that depends on which rows landed in the test set. k-fold cross-validation rotates the validation fold so every row is used for both training and testing, averaging out that noise and using the data efficiently. Comparing training accuracy rewards overfitting rather than generalization, choosing by parameter count ignores performance, and leave-one-out would retrain the expensive net thousands of times for little gain.",
     simple: "Instead of grading on one random quiz, rotate the quiz so everyone gets tested once and average the scores — a fairer read on which model really generalizes.",
@@ -200,10 +200,10 @@
     q: "Grid search over your model's 6 hyperparameters would need 15625 fits; you have a limited compute budget and suspect only 2 of the 6 truly matter. What search strategy is the better trade-off?",
     choices: [
       "Random search over the hyperparameter space, which explores the important dimensions more efficiently under a fixed budget",
-      "Full grid search over all 6 parameters regardless of budget",
-      "Tune one parameter at a time, freezing the others, for a single pass",
-      "Pick hyperparameters by their default values and skip tuning",
-      "Grid search but only over the 4 parameters you think are unimportant"
+      "A full exhaustive grid search over all 6 hyperparameters at once, running every one of the 15625 fits regardless of your limited budget",
+      "Tune just one hyperparameter at a time while freezing all of the others at their defaults, making only a single pass through the six",
+      "Pick every one of the model's hyperparameters by their library default values and skip the tuning search entirely to save the compute",
+      "Run a grid search but only over the 4 hyperparameters that you happen to suspect are the unimportant ones, leaving the key two fixed"
     ],
     explain: "When only a few hyperparameters actually matter, a grid wastes most of its fits sampling irrelevant dimensions at fixed values, and its cost explodes multiplicatively with the number of parameters. Random search draws each configuration from the whole space, so within the same budget it tries many distinct values of the important parameters instead of repeating them — it tends to find good settings faster. Full grid ignores the budget, one-at-a-time tuning misses interactions between parameters, and defaults skip tuning altogether.",
     simple: "If only two dials matter, do not methodically test every combination of all six. Sprinkle random guesses across the space and you will hit good settings of the two that count much sooner.",
@@ -220,10 +220,10 @@
     q: "Cross-validation shows a complex model at 0.902 accuracy (SD 0.02 across folds) and a much simpler model at 0.888 (SD 0.02). You value robustness and easy deployment. Which does the one-standard-error rule favor?",
     choices: [
       "The simpler model, since 0.888 is within one standard error of the best score, so you prefer the least complex model in that band",
-      "The complex model, because 0.902 is numerically the highest",
-      "Neither — you must always pick the model with the most parameters",
-      "The complex model, because a 0.014 gap is always decisive regardless of variance",
-      "Average the two models' predictions to split the difference"
+      "The complex model, purely because its cross-validation score of 0.902 is the numerically highest of the two and higher accuracy always wins",
+      "Neither of the two qualifies, because in this situation you must always default to picking whichever model happens to have the most parameters",
+      "The complex model, because a raw accuracy gap of 0.014 between the two is always decisive no matter how large the fold-to-fold variance is",
+      "Simply average the two models' predictions together into an ensemble so that you neatly split the difference between their two scores"
     ],
     explain: "The one-standard-error rule says: find the best CV score, then among all models whose score is within one standard error of it, choose the simplest. Here one SE is about 0.02, and the simpler model's 0.888 is within 0.02 of the best 0.902, so the two are statistically indistinguishable. Given that tie, the rule favors the simpler model for its lower variance, better generalization, and easier deployment — chasing the tiny raw-accuracy edge risks overfitting to noise in the folds.",
     simple: "When two models are basically within measurement noise of each other, take the simpler one — the extra decimal on the complex model is probably luck.",
@@ -240,10 +240,10 @@
     q: "Your regression model underfits: both training and validation error are high and close together (high bias). You must decide your next move under limited time. What is the right lever?",
     choices: [
       "Increase model capacity or add informative features — high bias means the model is too simple to capture the pattern",
-      "Gather far more training rows, since more data always fixes underfitting",
-      "Add stronger L2 regularization to reduce error",
-      "Remove features to simplify the model further",
-      "Switch to a simpler model to close the small train-validation gap"
+      "Gather far more training rows for the model, on the principle that collecting additional data always fixes an underfitting problem like this",
+      "Add much stronger L2 regularization to the regression so that the penalty term drives the overall error down toward a lower value",
+      "Remove several of the input features from the model in order to simplify it even further than it already happens to be right now",
+      "Switch over to an even simpler model than the current one so as to close the small remaining gap between training and validation error"
     ],
     explain: "High training error that is close to validation error is the signature of high bias: the model is too simple to represent the true relationship, so it errs even on data it has seen. The cure is more capacity — a richer model, engineered features, interaction terms, or fewer constraints — not more data, because extra rows do not help a model that cannot express the pattern. Adding regularization or removing features increases bias further, making underfitting worse.",
     simple: "If a model does poorly even on its practice questions, it is too simple to learn the material. Give it more power, not more practice sheets.",

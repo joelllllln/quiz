@@ -22,10 +22,10 @@
     q:"What is feature selection?",
     choices:[
       "Choosing a useful subset of the input columns to keep, and discarding the rest, before or during training",
-      "Creating brand-new columns by combining or transforming the existing ones",
-      "Rescaling every column to the same range so no single column dominates by its units",
-      "Splitting the rows of the dataset into a training portion and a test portion",
-      "Filling in missing values in a column using the average of the other rows"
+      "Creating brand-new columns by combining, multiplying, or transforming the existing ones into engineered inputs",
+      "Rescaling every column to the same 0-to-1 range so no single column dominates just because of its measurement units",
+      "Splitting the rows of the dataset into a training portion and a separate held-out test portion for final scoring",
+      "Filling in the missing values within a column by substituting the average computed from all of the other rows"
     ],
     explain:"Feature selection is about columns: you pick a subset of the available features to feed the model and drop the rest. It is different from feature engineering (which creates new columns) and from scaling (which changes a column's units). The goal is a smaller, cleaner input that trains faster, overfits less, and is easier to explain.",
     simple:"Feature selection is picking which input columns to keep and which to throw away. You want the handful that actually help and none of the clutter.",
@@ -45,10 +45,10 @@
     q:"Why bother REMOVING features instead of just keeping every column you have?",
     choices:[
       "Fewer, well-chosen features reduce overfitting, cut compute cost, and make the model easier to interpret",
-      "More features always help accuracy, so you only ever remove a column if it has missing values",
-      "Removing features is guaranteed to raise the accuracy measured on the training data you already have",
-      "The only real reason to drop columns is to save disk space when storing the dataset",
-      "Dropping features removes the need to ever do a train/test split afterwards"
+      "More features always help accuracy, so you should only ever remove a column when it happens to contain missing values",
+      "Removing features is mathematically guaranteed to raise the accuracy you measure on the training data you already collected",
+      "The only genuine reason to drop columns is to save disk space when storing the raw dataset on a server somewhere",
+      "Dropping features conveniently removes any need to ever perform a train/test split on the data afterwards at all"
     ],
     explain:"Extra columns are not free: irrelevant ones give the model more ways to latch onto noise (overfitting), they slow training and prediction, and they clutter any explanation of what the model does. In high dimensions data also becomes sparse, which hurts many algorithms. A lean feature set generalises better and is cheaper to run.",
     simple:"Useless columns give the model junk to memorise, cost time, and make it harder to understand. Cutting them usually helps on new data.",
@@ -68,10 +68,10 @@
     q:"What is a FILTER method for feature selection?",
     choices:[
       "It scores each feature with a quick statistic (like correlation with the target) independently of any model, then keeps the top scorers",
-      "It trains and re-trains a model on many different feature subsets and keeps whichever subset the model scores best on",
-      "It lets one model select features automatically as a built-in side effect of its own training",
-      "It removes any ROW whose values look like outliers before the model ever sees the data",
-      "It smooths each column with a moving average to filter out measurement noise"
+      "It trains and re-trains a fresh model on many different candidate feature subsets and keeps whichever subset the model happens to score best on",
+      "It lets one model select its own features automatically as a built-in side effect of its ordinary training procedure, with no separate step",
+      "It removes any ROW whose values look like statistical outliers before the model is ever allowed to see or train on the data at all",
+      "It smooths each column out with a rolling moving average in order to filter measurement noise out of the raw sensor readings first"
     ],
     explain:"Filter methods rank features using a cheap statistic — correlation, a chi-squared score, mutual information — computed once, without training a model. You then keep the highest-ranked features. Because no model is trained during selection, filters are very fast, but they judge each feature in isolation and can miss features that only help in combination.",
     simple:"A filter method gives each column a quick score against the target and keeps the best-scoring ones. It's fast because no model is trained to decide.",
@@ -91,10 +91,10 @@
     q:"What is a WRAPPER method for feature selection?",
     choices:[
       "It repeatedly trains a model on different feature subsets and keeps the subset that gives the best validation score",
-      "It scores each feature once with a cheap statistic and never trains a model during selection",
-      "It relies on a model's own training penalty to shrink useless features away automatically",
-      "It wraps every feature in a scaler so all columns share the same numeric range",
-      "It selects rows rather than columns by wrapping outliers out of the dataset"
+      "It scores each feature just once with a cheap statistic and never actually trains any model at all during the selection step",
+      "It relies entirely on a single model's own built-in training penalty to shrink the useless features away automatically as it fits",
+      "It wraps every feature inside a standard scaler so that all of the columns end up sharing exactly the same numeric range",
+      "It selects the rows rather than the columns by wrapping the outlier records out of the dataset before any training begins"
     ],
     explain:"Wrapper methods treat selection as a search over feature subsets, using the actual model's validation performance as the score for each candidate subset. Because they train the model many times, they capture how features work together and often find strong subsets — but they are slow and can overfit the search itself. Forward selection and RFE are common wrappers.",
     simple:"A wrapper method tries out different sets of columns by actually training the model on each set and keeping whichever set scores best. It's smarter but much slower than a filter.",
@@ -114,10 +114,10 @@
     q:"What is an EMBEDDED method for feature selection?",
     choices:[
       "Selection happens automatically DURING a single model's training, as part of how that model fits",
-      "Selection is done with a cheap statistic computed before any model is trained",
-      "Selection requires training the model many separate times on different feature subsets",
-      "Selection is delegated to a human expert who hand-picks columns before modelling",
-      "Selection means embedding categorical text columns as dense numeric vectors"
+      "Selection is carried out with a cheap statistic that is computed just once before any model has been trained at all",
+      "Selection requires training the very same model many separate times, each run on a different candidate feature subset",
+      "Selection is delegated entirely to a human domain expert who hand-picks the columns by intuition before any modelling starts",
+      "Selection means embedding the raw categorical text columns as dense numeric vectors that the network can read directly"
     ],
     explain:"Embedded methods build selection into the training process itself. Lasso (L1) regression shrinks weak coefficients to exactly zero as it fits; tree ensembles produce feature importances as they grow. You get selection almost for free with one training run — a middle ground between fast filters and expensive wrappers.",
     simple:"An embedded method picks features while it trains, as a natural part of fitting one model. You get selection and a model together in a single run.",
@@ -137,10 +137,10 @@
     q:"What is UNIVARIATE feature selection?",
     choices:[
       "Testing each feature ONE AT A TIME against the target and keeping those that pass a statistical threshold",
-      "Testing every possible combination of features together to find the single best group",
-      "Selecting features by how strongly they correlate with each OTHER rather than with the target",
-      "Reducing many columns into a few new combined columns like principal components",
-      "Choosing features at random and keeping whichever set happens to score well"
+      "Testing every possible combination of the features together all at once to find the single best-performing group",
+      "Selecting features purely by how strongly they correlate with each OTHER rather than with the actual target column itself",
+      "Reducing many of the columns down into just a few new combined columns, much like principal components analysis does",
+      "Choosing the features completely at random and then simply keeping whichever set happens to score well by sheer luck"
     ],
     explain:"Univariate selection examines each feature separately, scoring its relationship with the target using a test like an F-test, chi-squared, or mutual information, then keeping the top-scoring ones. It is a filter approach: simple and fast, but blind to interactions because it never looks at features together. SelectKBest is a common implementation.",
     simple:"Univariate selection checks each column on its own against the target and keeps the ones with a strong relationship. It never looks at columns in combination.",
@@ -160,10 +160,10 @@
     q:"What does a VARIANCE THRESHOLD do?",
     choices:[
       "It drops features whose values barely change across rows, since a near-constant column carries almost no information",
-      "It drops features that correlate too strongly with the target to avoid data leakage",
-      "It drops rows whose target value has unusually high variance",
-      "It keeps only the features with the LOWEST variance because they are the most stable",
-      "It rescales every feature so they all end up with exactly the same variance"
+      "It drops any feature that correlates too strongly with the target, on the grounds that such columns cause data leakage",
+      "It drops the individual rows whose target value happens to show an unusually high variance right across the dataset",
+      "It keeps only the handful of features with the very LOWEST variance, because those steady columns are the most stable",
+      "It rescales every feature up or down so that they all end up sharing exactly the same variance before any training"
     ],
     explain:"A variance threshold removes columns whose variance falls below a set level. A feature that is the same (or nearly the same) for every row cannot help distinguish rows, so it is safe to drop. It is the simplest filter, needs no target at all, and is handy for clearing out constant or near-constant columns before real selection.",
     simple:"A variance threshold throws out columns that hardly change from row to row. If a column is almost always the same value, it can't help predict anything.",
@@ -183,10 +183,10 @@
     q:"A column records the temperature on Mars for each of your loan applicants. It has nothing to do with whether they repay. What kind of feature is this?",
     choices:[
       "An IRRELEVANT feature — it carries no information about the target and only adds noise",
-      "A REDUNDANT feature — it repeats information another column already provides",
-      "A leaky feature — it secretly contains the answer the model is trying to predict",
-      "A high-variance feature that must be kept because it changes a lot between rows",
-      "An interaction feature that only matters when combined with another column"
+      "A REDUNDANT feature — it simply repeats the very same information that another kept column already provides you with",
+      "A leaky feature — it secretly contains the exact answer that the model is actually trying its best to predict here",
+      "A high-variance feature that must always be kept precisely because its value happens to change a lot between the rows",
+      "An interaction feature that only ever matters at all once it has been combined together with some other column"
     ],
     explain:"An irrelevant feature has no real relationship with the target — knowing it never changes your best guess. Keeping irrelevant columns can only hurt: they give the model extra chances to fit noise. This is different from a redundant feature, which IS related to the target but merely duplicates information another kept column already provides.",
     simple:"An irrelevant feature has nothing to do with what you're predicting. It's pure clutter — the model can only misuse it.",
@@ -206,10 +206,10 @@
     q:"A REDUNDANT feature differs from an IRRELEVANT one because a redundant feature is...",
     choices:[
       "Related to the target, but it only repeats information another kept feature already gives you",
-      "Completely unrelated to the target and therefore pure noise",
-      "A feature with too many missing values to be usable",
-      "A feature measured on the wrong scale that must be normalised first",
-      "The single most important feature, kept because it dominates the prediction"
+      "Completely unrelated to the target column and therefore nothing more than pure, unhelpful noise sitting in the data",
+      "A feature that simply happens to have far too many missing values scattered right through its rows to be usable at all",
+      "A feature that happens to be measured on entirely the wrong numeric scale and so must be carefully normalised first",
+      "The single most important feature of them all, kept only because it completely dominates every last prediction made"
     ],
     explain:"A redundant feature genuinely relates to the target — on its own it looks useful — but once you already have a correlated sibling column, it adds no NEW information. An irrelevant feature, by contrast, relates to nothing. Both are candidates for removal, but for different reasons: redundancy is about duplication, irrelevance is about having no signal at all.",
     simple:"Redundant means useful-but-duplicate: it tells you the same thing a column you already kept does. Irrelevant means it tells you nothing at all.",
@@ -229,10 +229,10 @@
     q:"A feature is strongly correlated with the target. Does that guarantee it will improve your model?",
     choices:[
       "No — it may just duplicate a feature you already have, or the link may vanish once other features are present",
-      "Yes — any feature correlated with the target is always worth keeping on its own merit",
-      "Yes — correlation with the target is the definition of a feature the model needs",
-      "No — correlation is meaningless and should never be used to judge features",
-      "Only if the correlation is exactly 1.0, otherwise the feature is useless"
+      "Yes — any feature that is correlated with the target is always automatically worth keeping purely on its own merit",
+      "Yes — correlation with the target column is essentially the textbook definition of a feature that the model truly needs",
+      "No — correlation with the target is basically meaningless and so it should never once be used to judge a feature at all",
+      "Only when the correlation is exactly 1.0 across every single row, because otherwise the feature is completely useless"
     ],
     explain:"Correlation with the target flags a feature as promising, but usefulness is about MARGINAL value: what does it add given the features you already keep? A column highly correlated with the target may simply echo another kept column, contributing nothing new. Correlation is a helpful screen, not a promise of improvement.",
     simple:"A column can line up nicely with the target and still be useless if another column already says the same thing. Correlation flags candidates; it doesn't guarantee value.",
@@ -255,10 +255,10 @@
     q:"What is FEATURE IMPORTANCE?",
     choices:[
       "A score for each feature saying how much it contributed to the model's predictions",
-      "The correlation between two features, used to spot duplicates",
-      "The number of missing values a feature has",
-      "The order in which columns appear in the raw data file",
-      "A guarantee that the top feature causes the outcome"
+      "The plain correlation coefficient measured between two different features, used mainly to spot near-duplicate columns",
+      "The total number of missing or blank values that a given feature happens to contain across all of the rows in the data",
+      "The particular order in which the columns happen to appear from left to right within the original raw data file",
+      "A firm guarantee that whichever single feature ranks at the very top must therefore directly cause the predicted outcome"
     ],
     explain:"Feature importance assigns each feature a number reflecting how much the model relied on it. Tree ensembles derive it from how much each feature reduced error at its splits; other methods use coefficient sizes or permutation. High importance means the model leaned on that feature — though importance reflects predictive contribution, not proof of causation.",
     simple:"Feature importance is a score of how much each column mattered to the model's predictions. Bigger score, more the model leaned on it.",
@@ -278,10 +278,10 @@
     q:"Besides accuracy, why do teams often prefer a model built on FEWER features?",
     choices:[
       "It predicts faster, costs less to collect data for, and is far easier to explain to stakeholders",
-      "A smaller feature set always produces a mathematically higher accuracy score",
-      "Fewer features removes the need to validate the model on held-out data",
-      "Models with fewer features never need any hyperparameter tuning",
-      "The number of features has no effect on prediction speed at all"
+      "A smaller feature set always produces a strictly and mathematically higher accuracy score on any dataset you try",
+      "Fewer features conveniently removes the entire need to ever validate the finished model on any held-out data at all",
+      "Models that are built on fewer features simply never require any hyperparameter tuning of any kind before deployment",
+      "The number of features that a model uses has absolutely no effect on its final prediction speed whatsoever at all"
     ],
     explain:"A leaner model has practical advantages beyond accuracy: each feature it needs is a column someone must collect, clean, and store, and every feature adds compute at prediction time. Fewer inputs also make the model's behaviour easier to describe and audit. In regulated or high-stakes settings, interpretability and low cost can matter as much as raw performance.",
     simple:"Fewer columns means quicker predictions, less data to gather, and a model you can actually explain. That's often worth as much as a tiny accuracy bump.",
@@ -301,10 +301,10 @@
     q:"What does scikit-learn's SelectKBest do?",
     choices:[
       "It scores every feature with a chosen statistic and keeps the K highest-scoring ones",
-      "It trains K different models and keeps the best-performing model",
-      "It selects the K rows that are most representative of the dataset",
-      "It builds K new features by combining the originals",
-      "It picks K features completely at random as a baseline"
+      "It trains K entirely different models one after another and then simply keeps the single best-performing one of them",
+      "It selects the K individual rows out of the data that are judged to be the most representative of the overall dataset",
+      "It builds K brand-new engineered features by carefully combining the original columns together in various ways",
+      "It picks K of the features completely at random to serve as a simple baseline for comparison against real selection"
     ],
     explain:"SelectKBest is a univariate filter: you give it a scoring function (like f_classif or mutual_info_classif) and a number K, and it keeps the K features with the highest scores. It is fast and simple, but because it scores each feature independently, choosing K too small can drop features that only help in combination, and too large keeps noise.",
     simple:"SelectKBest scores each column and keeps the K with the best scores. You just tell it how many features to keep.",
@@ -324,10 +324,10 @@
     q:"You must choose between a FILTER method and a WRAPPER method on a big dataset with limited time. What is the core trade-off?",
     choices:[
       "Filters are much faster but ignore feature interactions; wrappers are slower but can find stronger subsets",
-      "Filters are slower but more accurate; wrappers are faster but always worse",
-      "There is no difference — both train the model the same number of times",
-      "Wrappers never train a model, so they are the cheap option",
-      "Filters can only be used for regression and wrappers only for classification"
+      "Filters are consistently slower but far more accurate, whereas wrappers are much faster yet somehow always end up worse",
+      "There is genuinely no practical difference at all — both approaches train the underlying model the exact same number of times",
+      "Wrappers never actually train any model at all during the search, which is precisely why they are the far cheaper option here",
+      "Filters can only ever be used for regression tasks, while wrappers are strictly limited to classification problems alone"
     ],
     explain:"Filters score features with cheap statistics and never train the model, so they scale to huge feature sets in seconds — but they judge features in isolation and miss combinations. Wrappers use the model's own validation score over many subsets, capturing interactions and often finding better sets, at the cost of training the model many times. It is speed versus thoroughness.",
     simple:"Filters are fast but shallow; wrappers are slow but thorough. On a big dataset with little time, filters win on speed.",
@@ -350,10 +350,10 @@
     q:"What is the 'curse of dimensionality' and why does it motivate feature selection?",
     choices:[
       "As feature count grows with fixed data, points spread thin so patterns get harder to learn — fewer features help",
-      "Adding features always makes training crash once you pass 1000 columns",
-      "It means high-dimensional data is impossible to store on modern computers",
-      "It refers to models running out of memory, fixed only by buying more RAM",
-      "It is the rule that more features always give a higher accuracy score"
+      "Adding more features will always make the training process crash outright the very moment you happen to pass one thousand columns",
+      "It means that high-dimensional data is simply impossible to store on any modern computer at all, no matter how large its disk is",
+      "It refers to models steadily running out of memory, a problem that can be fixed only by continually buying more and more RAM",
+      "It is the reliable rule stating that adding more and more features to any model will always yield a strictly higher accuracy score"
     ],
     explain:"In high dimensions, the same number of rows is scattered across a vastly larger space, so every point looks far from every other and 'nearby' loses meaning. Distance-based and density-based methods degrade, and models need exponentially more data to fill the space. Cutting features shrinks the space, packing the data more densely and making patterns learnable.",
     simple:"The more columns you add, the emptier the space gets around each data point, so the model has less to lean on. Fewer features keep the data dense enough to learn from.",

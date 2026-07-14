@@ -376,10 +376,10 @@
     q: "In a decision tree, what is 'node impurity'?",
     choices: [
       "A measure of how mixed the class labels are within a node, which is high when classes are evenly blended and zero when all examples share one class",
-      "The number of examples that pass through a node on their way to a leaf",
-      "The depth of the node measured as its distance from the root",
-      "The probability that the node's feature test is applied in the wrong order",
-      "The count of features that are never used anywhere in the tree"
+      "The raw number of training examples that happen to pass through a node on their way down to a leaf, a headcount of the traffic flowing through that point in the tree",
+      "The depth of the node measured purely as its distance from the root, counting how many splits had to be applied before an example could ever arrive at it",
+      "The probability that the node's feature test ends up being applied in the wrong order relative to the other tests, a sequencing error that scrambles the routing of examples",
+      "The count of features that are never once used anywhere in the whole tree, a tally of the unused columns that no split ever bothered to threshold on"
     ],
     explain: "Impurity quantifies how heterogeneous the labels are at a node: a node where every example is the same class has zero impurity, while an even 50/50 mix is maximally impure. Criteria like Gini impurity and entropy put a number on it. Splitting aims to reduce total impurity, so children are purer than their parent.",
     simple: "It measures how mixed-up the labels are in a group. All one class is perfectly pure; a 50/50 jumble is as impure as it gets.",
@@ -404,10 +404,10 @@
     q: "In a decision tree, what is 'Gini impurity'?",
     choices: [
       "The probability that a randomly chosen example in a node would be misclassified if labelled by the node's class distribution, equal to 1 minus the sum of squared class proportions",
-      "The total number of examples that fall into a node during training",
-      "The information gained about the label by learning the value of a feature",
-      "The maximum number of levels the tree is permitted to grow",
-      "The average path length from the root to every leaf in the tree"
+      "The total number of training examples that fall into a node during training, a plain headcount of the points routed there that grows larger the nearer the node sits to the root of the tree",
+      "The amount of information gained about the label by learning the value of one feature, equal to the parent node's entropy minus the size-weighted entropy of the children the split produces",
+      "The maximum number of levels the tree is permitted to grow to, a ceiling set in advance that caps how deep and elaborate the branching may become before splitting is forced to stop",
+      "The average path length measured from the root down to every leaf in the finished tree, a mean depth that summarises how many feature tests a typical example must pass through"
     ],
     explain: "Gini impurity is a specific impurity measure, 1 − Σ p_k², where p_k is the proportion of class k in the node. It equals the chance of mislabelling a random example if you guessed labels according to the node's class frequencies. It is zero for a pure node and is CART's default splitting criterion, favouring splits that lower it most.",
     simple: "It is one way to score how mixed a group is: the odds you would mislabel a random member by guessing from the group's makeup. Zero means everyone shares one class.",
@@ -432,10 +432,10 @@
     q: "In a decision tree, what is 'entropy'?",
     choices: [
       "An impurity measure of the disorder in a node's class labels, maximal when classes are evenly mixed and zero when the node is pure",
-      "The depth of the deepest leaf in the finished tree",
-      "The count of splits performed while growing the tree",
-      "The proportion of the data reserved for validating the tree",
-      "The threshold above which a numeric feature triggers the right branch"
+      "The depth of the single deepest leaf in the finished tree, counting how many feature tests had to be chained together before that longest branch finally reached its answer",
+      "The total count of splits performed while the tree was being grown, a tally of every feature test added at every internal node from the root all the way down to the leaves",
+      "The proportion of the data deliberately reserved for validating the tree, the held-out slice used to check its accuracy rather than to choose any of the splits during training",
+      "The threshold value above which a numeric feature triggers the right-hand branch, the cut point at a node that decides whether an arriving example is sent left or right"
     ],
     explain: "Entropy, −Σ p_k log₂ p_k, measures the uncertainty or disorder in a node's label distribution: it is zero when all examples share one class and peaks (1 bit for two equal classes) at an even mix. Decision trees can use it as the impurity criterion, choosing splits that reduce it. The reduction in entropy from a split is called information gain.",
     simple: "It measures how disordered a group's labels are, in bits. All one class is zero disorder; a perfect 50/50 mix is the most disordered.",
@@ -460,10 +460,10 @@
     q: "In a decision tree, what is 'information gain'?",
     choices: [
       "The reduction in impurity (such as entropy) achieved by a split, equal to the parent's impurity minus the weighted impurity of its children",
-      "The total number of features available for the tree to split on",
-      "The count of examples correctly classified by the finished tree",
-      "The depth at which the tree first reaches a pure leaf",
-      "The probability that a feature test is applied before another one"
+      "The total number of features made available for the tree to split on, a count of the candidate columns the algorithm may choose among when deciding each node's test",
+      "The count of examples correctly classified by the finished tree, a raw tally of the points it labels right that is read off the data once all the splitting is done",
+      "The depth at which the tree first manages to reach a perfectly pure leaf, counting how many chained feature tests it took before one branch became fully one-class",
+      "The probability that one feature test happens to be applied before another one in the routing order, a sequencing chance that governs which split an example meets first"
     ],
     explain: "Information gain scores a candidate split by how much it lowers impurity: parent impurity minus the size-weighted average impurity of the resulting children. A split that produces much purer children has high gain, so tree algorithms greedily choose the split with the largest gain at each node. With entropy as the impurity, it is literally the bits of uncertainty removed.",
     simple: "It is how much cleaner a split makes your groups — how much confusion it removes. The tree picks the question that gains the most clarity at each step.",
@@ -488,10 +488,10 @@
     q: "In a decision tree, what does the 'max_depth' hyperparameter control?",
     choices: [
       "The maximum number of levels of splits allowed from the root, capping how deep and complex the tree can grow",
-      "The minimum number of examples a node must hold before it may be split",
-      "The number of features randomly sampled at each split",
-      "The impurity criterion used to evaluate candidate splits",
-      "The fraction of the data held out for pruning after training"
+      "The minimum number of examples a node must still hold before the algorithm is allowed to split it any further, a floor that stops tiny groups from being carved up",
+      "The number of features randomly sampled as candidates at each split, a subset drawn afresh at every node so that no single dominant column controls the whole tree",
+      "The impurity criterion, such as Gini or entropy, used to score and compare the candidate splits at a node, deciding which feature test purifies the children the most",
+      "The fraction of the training data deliberately held out for pruning the tree after it has been grown, the slice used to decide which weak branches should be trimmed away"
     ],
     explain: "max_depth limits how many layers of splits the tree may have below the root; a small value forces a shallow, simpler tree while a large value lets it grow deep and fit fine detail. It is a key regularisation knob: too deep and the tree overfits, too shallow and it underfits. It caps complexity independently of how the data happens to split.",
     simple: "It sets how many rounds of questions the tree is allowed to ask. Keep it small and the tree stays simple; let it grow tall and it can memorise the training data.",
@@ -516,10 +516,10 @@
     q: "In decision-tree learning, what is 'greedy splitting'?",
     choices: [
       "Choosing the locally best split at each node without reconsidering earlier choices, rather than searching for the globally optimal tree",
-      "Growing every possible tree and keeping the one with the highest test accuracy",
-      "Splitting only on the feature with the most missing values first",
-      "Removing branches after training until validation accuracy stops improving",
-      "Assigning the majority class to every leaf regardless of the splits above"
+      "Exhaustively growing every possible tree that the features permit and then keeping only the single one that scores the highest test accuracy, a global search over all structures",
+      "Splitting always and only on whichever feature currently has the most missing values first, prioritising the gappiest column at every node regardless of how much it purifies anything",
+      "Removing branches from the tree after it has finished training, snipping them back one by one until the validation accuracy stops improving, a post-hoc pruning rather than a growing rule",
+      "Assigning the plain majority class to every single leaf regardless of the particular splits sitting above it, ignoring the feature tests and labelling purely by the overall base rate"
     ],
     explain: "Standard tree algorithms are greedy: at each node they pick the single split that most reduces impurity right now, then move on, never backtracking to revise a chosen split. Finding the truly optimal tree is computationally intractable, so this locally optimal, step-by-step strategy is used instead. It is fast but can miss combinations a global search would find.",
     simple: "The tree grabs the best-looking question at each step and never looks back. It is quick, though the best move now isn't always best for the whole tree.",
@@ -544,10 +544,10 @@
     q: "In a decision tree, what does an 'axis-aligned decision boundary' mean?",
     choices: [
       "A boundary made of horizontal and vertical cuts, because each split thresholds a single feature at a time",
-      "A boundary that can be any smooth curve fitted through the data points",
-      "A single straight line at an arbitrary angle chosen to separate the classes",
-      "A boundary defined by the distance to the nearest training example",
-      "A boundary that follows the direction of greatest variance in the data"
+      "A boundary that can bend into any smooth curve fitted through the data points, flexing freely in every direction to trace whatever winding shape best separates the two classes",
+      "A single straight line drawn at an arbitrary slanted angle chosen to separate the classes, tilted however the geometry demands rather than being locked to the horizontal or vertical",
+      "A boundary defined entirely by the distance to the nearest training example, so that each new point is labelled by whichever stored example it happens to sit closest to",
+      "A boundary that follows the direction of greatest variance found in the data, aligning itself along the principal axis that the spread of the points stretches out the most"
     ],
     explain: "Because each split tests one feature against a threshold (e.g. x < 3), a decision tree carves the feature space with cuts perpendicular to one axis at a time. The overall boundary is therefore a staircase of axis-parallel segments rather than a slanted line or curve. This is why trees can approximate diagonal boundaries only in blocky steps.",
     simple: "Every question splits on just one feature, so the tree draws only straight up-down or left-right lines. A slanted boundary comes out looking like a staircase of little steps.",
@@ -574,10 +574,10 @@
     q: "What is a support vector machine?",
     choices: [
       "A classifier that separates classes with the hyperplane placed to leave the widest possible margin to the nearest points of each class",
-      "A classifier that follows a chain of yes/no feature tests down to a leaf",
-      "A classifier that multiplies independent feature probabilities to score each class",
-      "A classifier that averages the labels of the k nearest training points",
-      "A classifier that fits a smooth S-shaped curve to model class probability"
+      "A classifier that follows a branching chain of yes-or-no feature tests from a root node down to a leaf, routing each example through the questions until it lands on a final label",
+      "A classifier that multiplies together the independent probabilities of each feature to score every class, treating the clues as separate and picking whichever class ends up most probable",
+      "A classifier that stores the whole training set and averages the labels of the k nearest points to a query, letting its closest neighbours cast the deciding vote on its class",
+      "A classifier that fits a smooth S-shaped logistic curve to model the probability of a class, squashing a weighted sum of the features through a sigmoid to produce that estimate"
     ],
     explain: "A support vector machine finds the decision boundary (hyperplane) that maximises the margin, the distance to the closest training points of either class. Only those closest points, the support vectors, determine the boundary. Kernels let the same idea produce non-linear boundaries by working in a higher-dimensional space.",
     simple: "It draws the dividing line that sits as far as possible from the closest examples of each class, giving the widest safety gap. Only the borderline points really decide where it goes.",
@@ -602,10 +602,10 @@
     q: "In an SVM, what is the 'separating hyperplane'?",
     choices: [
       "The flat decision surface the SVM places between the classes, on one side of which examples are assigned to one class and on the other to the other",
-      "The set of training points that lie closest to the boundary and pin it in place",
-      "The width of the empty gap the model keeps between the two classes",
-      "The function that maps features into a higher-dimensional space",
-      "The penalty applied to examples that fall on the wrong side of the margin"
+      "The small set of training points that lie closest to the boundary and pin it firmly in place, the critical examples on the margin's edge that alone determine where the surface sits",
+      "The width of the empty gap the model deliberately keeps between the two classes, the buffer stretching from the boundary out to the nearest points that the SVM works to maximise",
+      "The function that maps the original features up into a higher-dimensional space, letting a curved split in the input become a flat separation once the coordinates have been transformed",
+      "The penalty applied to each example that falls on the wrong side of the margin, a slack cost scaled by the C parameter that the training procedure tries to keep as small as it can"
     ],
     explain: "The separating hyperplane is the SVM's decision boundary: a point in 1-D, a line in 2-D, a plane in 3-D, and a flat 'hyperplane' in higher dimensions. Examples are classified by which side of it they fall on. The SVM chooses the particular hyperplane that maximises the margin to the nearest points.",
     simple: "It is the flat divider the model puts between the two groups. Land on one side and you're class A, on the other you're class B.",
@@ -630,10 +630,10 @@
     q: "In an SVM, what is the 'margin'?",
     choices: [
       "The width of the empty band between the separating hyperplane and the nearest training points of either class, which the SVM tries to maximise",
-      "The fraction of training examples the model classifies incorrectly",
-      "The penalty term added for each misclassified point during training",
-      "The number of features used to describe each example",
-      "The curve that the kernel function fits through the data"
+      "The fraction of training examples the model ends up classifying incorrectly, an overall error rate read off the mistakes it makes rather than any distance to the boundary",
+      "The penalty term added to the objective for each misclassified point during training, a slack cost scaled by C that the optimiser tries to keep small while fitting the boundary",
+      "The total number of features used to describe each example, a dimension count of the input vector that fixes how many coordinates the separating surface must live within",
+      "The particular curve that the chosen kernel function fits through the data, the winding shape a non-linear kernel traces as it bends the decision surface around the points"
     ],
     explain: "The margin is the perpendicular distance from the decision boundary to the closest points on each side; those closest points sit on the margin's edges. An SVM is a maximum-margin classifier because a wider margin tends to generalise better. The points touching the margin are the support vectors that define it.",
     simple: "It is the width of the no-man's-land gap on each side of the dividing line. The SVM tries to make that gap as wide as it can.",
@@ -658,10 +658,10 @@
     q: "In an SVM, what are the 'support vectors'?",
     choices: [
       "The training points lying closest to the boundary, on or inside the margin, that alone determine where the hyperplane sits",
-      "The full set of features used to describe each training example",
-      "The weights the model assigns to each input feature",
-      "The points that lie farthest from the decision boundary in each class",
-      "The extra dimensions a kernel adds to make classes separable"
+      "The full set of input features used to describe each training example, the complete list of measured attributes that together form the coordinate vector fed into the model",
+      "The weights the trained model assigns to each input feature, the coefficients in the vector w that tilt and orient the separating surface across the space of attributes",
+      "The points that lie farthest from the decision boundary within each class, the comfortably classified examples sitting deep in their own region well away from the dividing line",
+      "The extra dimensions that a kernel quietly adds to make the classes separable, the higher-dimensional coordinates in which a curved split becomes a plain flat separation"
     ],
     explain: "Support vectors are the critical training examples that touch the margin's edges (or violate it); the optimal hyperplane depends only on them. Points far from the boundary can be moved or removed without changing the model. This is why SVMs are often memory-efficient at prediction time: only the support vectors matter.",
     simple: "They are the handful of borderline examples sitting right next to the dividing line. Move them and the line moves; the far-away points don't matter.",

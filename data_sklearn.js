@@ -4,7 +4,7 @@
     "q": "Why do many scikit-learn functions like train_test_split and RandomForestClassifier accept a random_state argument?",
     "choices": [
       "It fixes the random seed so the same run reproduces identical results",
-      "It sets how many random features each tree split is allowed to weigh",
+      "It sets how many random features each individual tree split is allowed to weigh",
       "It controls how much random noise gets added to the training labels",
       "It tells the model the maximum number of random restarts to attempt",
       "It picks a random subset of rows to permanently discard as outliers"
@@ -273,7 +273,7 @@
     "q": "What does GridSearchCV do?",
     "choices": [
       "Tries every hyperparameter combo with cross-validation, refits the best",
-      "Samples random hyperparameter combos until the score stops improving",
+      "Randomly samples a few hyperparameter combos until the validation score stops improving",
       "Trains one model per fold and averages all their predictions together",
       "Selects the most important features before the final model is fitted",
       "Splits the data once into train and validation to tune the parameters"

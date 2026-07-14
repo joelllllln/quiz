@@ -22,10 +22,10 @@
     q: "What is model selection?",
     choices: [
       "Choosing which model (and settings) to use, by comparing candidates on data they were not trained on",
-      "Training a single model until its error on the training data reaches zero",
-      "Collecting more features so one model can fit the data more tightly",
-      "Deploying whichever model was fastest to train, regardless of accuracy",
-      "Averaging the predictions of every model you tried into one output"
+      "Training one single fixed model on all the rows until its error on that very training data finally reaches exactly zero",
+      "Collecting as many extra input features as possible so that one fixed model can fit every training row far more tightly",
+      "Deploying whichever candidate happened to finish training fastest on your hardware, paying no attention at all to accuracy",
+      "Averaging together the predictions produced by every single model you tried, blending them all into one combined output"
     ],
     explain: "Model selection is the decision step: you have several candidates — different algorithms, or one algorithm with different hyperparameters — and you pick the one that performs best on held-out data. The key is that the judging happens on data the candidate never trained on, because fit on training data is easy to fake.",
     simple: "You have a few models to choose from. Model selection is trying them out on fresh examples and keeping the one that does best. Judging them on the data they memorised would be like grading students on the exact questions they studied.",
@@ -49,10 +49,10 @@
     q: "What is a baseline model?",
     choices: [
       "A deliberately simple model whose score any serious model must beat to prove it is worth anything",
-      "The final model you ship to production after all tuning is finished",
-      "The model with the most parameters, used as the gold standard",
-      "A model trained only on the test set to set an upper bound",
-      "The average of all candidate models' predictions"
+      "The final polished model you ship straight to production after every last round of tuning and validation is finished",
+      "The single model with the very most parameters and features, kept aside and used as the untouchable gold standard",
+      "A reference model trained directly and only on the locked test set in order to establish a firm upper bound on scores",
+      "The plain arithmetic average of the predictions made by all of the candidate models you happened to build and try"
     ],
     explain: "A baseline is something trivial: always predict the most common class, or always predict the average value. Its job is to give your real model's score a meaning — 85% sounds great until you learn a baseline already gets 84%. If you can't beat the baseline, your fancy model is adding nothing.",
     simple: "A baseline is the laziest possible guess. It tells you what an easy score looks like, so you know whether your real model is actually clever or just lucky. Beat the baseline first, or go back to the drawing board.",
@@ -76,10 +76,10 @@
     q: "What is a train / validation / test split?",
     choices: [
       "Cutting the data into three roles: one to learn from, one to tune and compare on, one to report the final honest score",
-      "Splitting the data into three equal thirds and training a separate model on each",
-      "Using two-thirds of the columns to train and one-third to test",
-      "Randomly reshuffling the data three times and averaging the results",
-      "Dividing the data by date into three calendar quarters"
+      "Splitting the rows into three exactly equal thirds and then training one completely separate, independent model on each third",
+      "Using two-thirds of the feature columns to train the model and holding the remaining one-third of columns back for testing",
+      "Randomly reshuffling every row of the dataset three separate times and then simply averaging together the three results",
+      "Dividing the dataset strictly by calendar date into three consecutive quarters and treating each quarter as its own split"
     ],
     explain: "Three piles, three jobs. The training set teaches the model; the validation set is where you compare candidates and tune settings; the test set is opened once, at the very end, to estimate real-world performance. Keeping them separate is what stops you from fooling yourself.",
     simple: "Split your data into three: one part to learn from, one part to pick the best model on, and one part you don't touch until the end to see how you really did. Mixing these jobs is how people trick themselves into thinking a model is better than it is.",
@@ -103,10 +103,10 @@
     q: "What is a holdout (validation) set?",
     choices: [
       "A slice of data kept out of training, used to compare models and pick settings during development",
-      "The portion of data used to train the final model once tuning is done",
-      "A copy of the training data used to double-check the model memorised it",
-      "The single hardest example, held back to stress-test the model",
-      "Extra data collected after deployment to retrain the model"
+      "The portion of the data actually used to train the one final model, once all tuning and comparison work is completely done",
+      "An exact duplicate copy of the training data, kept aside purely to double-check that the model truly memorised every row",
+      "The single hardest and most unusual example in the set, deliberately held back on its own to stress-test the model later",
+      "Extra fresh data collected only after deployment and used to periodically retrain the model as the world changes over time"
     ],
     explain: "A holdout set is data you set aside and do NOT train on, so you can see how the model behaves on unseen examples. You use it to compare candidates and choose hyperparameters. Because you look at it repeatedly, it slowly loses its innocence — which is why you keep a separate test set for the final word.",
     simple: "A holdout set is practice-exam data the model never studied. You use it to see which model looks best. But because you check it again and again, it can't be your final honest grade — that's the test set's job.",
@@ -130,10 +130,10 @@
     q: "What is cross-validation?",
     choices: [
       "Rotating which slice of data is held out so every row gets a turn as validation, then averaging the scores",
-      "Training the same model twice and keeping whichever run scored higher",
-      "Testing a model on a completely different dataset from another project",
-      "Checking that two different models agree on every prediction",
-      "Validating the data for typos and missing values before training"
+      "Training the exact same model on the exact same data two separate times and then simply keeping whichever run scored higher",
+      "Testing your trained model on a completely different, unrelated dataset borrowed from an entirely separate past project",
+      "Checking carefully that two different candidate models happen to agree with each other on every single prediction they make",
+      "Validating the raw dataset for typos, duplicates, and missing values before any model training is allowed to begin at all"
     ],
     explain: "Instead of trusting one lucky (or unlucky) holdout split, cross-validation splits the data several ways, each time holding out a different slice, and averages the results. This gives a far more stable estimate of how the model generalises, because the answer no longer depends on which single split you happened to draw.",
     simple: "One practice exam might be easy or hard by chance. Cross-validation gives the model several practice exams, each using a different chunk as the test, and averages the grades. The average is much more trustworthy than any single try.",
@@ -157,10 +157,10 @@
     q: "What is k-fold cross-validation?",
     choices: [
       "Splitting data into k equal folds, then training k times, each time holding out a different fold as validation",
-      "Training the model k times on the exact same data to reduce randomness",
-      "Keeping k percent of the data for testing and the rest for training",
-      "Running k different algorithms and picking the fastest one",
-      "Folding the data in half k times until only one row remains"
+      "Training the very same model k separate times on the exact same unchanged data purely as a way to reduce random variation",
+      "Keeping exactly k percent of the rows aside for a single test and then using all of the remaining rows for training only",
+      "Running k completely different learning algorithms side by side and then picking out whichever one of them trains fastest",
+      "Physically folding the dataset in half k separate times in a row until only one single lonely row of data is left over"
     ],
     explain: "k-fold is the standard recipe for cross-validation. You cut the data into k equal folds (k=5 or 10 is common); each fold gets one turn as the validation set while the other k-1 folds train the model. You average the k scores. Higher k means more training data per run and a steadier estimate, at the cost of more compute.",
     simple: "Cut the data into k equal slices. Train k times, each time testing on a different slice and learning from the rest. Average the k scores. It's cross-validation with a fixed, tidy recipe.",
@@ -184,10 +184,10 @@
     q: "What is hyperparameter tuning?",
     choices: [
       "Trying different values for settings you choose (like depth or k) and keeping the value that validates best",
-      "Letting the model learn its own weights from the training data",
-      "Adjusting the model's predictions by hand after it is trained",
-      "Adding more rows to the dataset until accuracy stops improving",
-      "Rewriting the model's code to run faster on new hardware"
+      "Letting the model quietly learn all of its own internal weights and coefficients directly from the labelled training data",
+      "Manually adjusting each of the trained model's individual predictions by hand, one at a time, after training has finished",
+      "Adding more and more fresh rows to the training dataset repeatedly until the measured accuracy finally stops improving",
+      "Rewriting the model's underlying source code and internals so that it runs noticeably faster on newer, specialised hardware"
     ],
     explain: "Hyperparameters are the knobs you set before training — tree depth, number of neighbours, regularisation strength. Tuning means systematically trying values and measuring each on validation data, then keeping whichever scored best. Unlike the model's learned weights, these knobs won't set themselves.",
     simple: "Some settings the model can't learn on its own — you have to pick them. Tuning is trying a bunch of values, seeing which does best on the validation set, and going with that one. It's turning knobs and reading the dial.",
@@ -211,10 +211,10 @@
     q: "What is Occam's razor (parsimony) in modelling?",
     choices: [
       "When two models fit about equally well, prefer the simpler one",
-      "Always pick the model with the most features and parameters",
-      "Shave away any model that scores below the baseline",
-      "Choose the model that trains in the shortest time",
-      "Combine every model you built into one large ensemble"
+      "Always pick out the one model that has the very most features and parameters, no matter what the scores turn out to be",
+      "Shave away and discard any candidate model that happens to score anywhere below the trivial always-guess baseline",
+      "Always choose whichever one candidate model manages to finish all of its training in the very shortest amount of time",
+      "Combine every single model you have ever built together into one enormous stacked ensemble of all the candidates at once"
     ],
     explain: "Occam's razor says: don't add complexity you don't need. If a simple model and a complex one perform about the same on unseen data, the simple one is the better choice — it's easier to understand, cheaper to run, and less likely to be fitting noise. Complexity should have to earn its place with a real, measurable gain.",
     simple: "If two models are basically tied, go with the simpler one. Extra complexity that doesn't buy you real improvement is just extra ways to overfit and extra headaches. Simpler is a feature, not a compromise.",
@@ -238,10 +238,10 @@
     q: "Why must you NOT use the test set to choose between models — only look at it once, at the very end?",
     choices: [
       "Every peek lets you tune to the test set's quirks, so its score stops predicting real-world performance",
-      "The test set is always too small to compare models reliably",
-      "Test sets contain the labels, so comparing on them is cheating by definition",
-      "Looking at the test set erases it and you can't use it again technically",
-      "Models are legally required to be evaluated on validation data instead"
+      "The test set is essentially always far too small a sample to ever compare two competing models against each other reliably",
+      "Test sets are the only split that secretly contains the true labels, so comparing models on them counts as cheating by definition",
+      "Merely looking once at the test set physically erases every row in it, so you technically cannot ever load or reuse it again",
+      "Models are formally required by machine-learning standards to be evaluated only on the validation split and never the test split"
     ],
     explain: "The test set's only value is being untouched: it stands in for future, unseen data. The moment you use it to pick a model, you start (even unconsciously) fitting to its particular noise, and its score becomes optimistic. Use the validation set for all comparisons; open the test set once, report the number, and stop.",
     simple: "The test set is your one honest final exam. If you keep peeking to decide things, you start memorising that exam, and the grade no longer reflects the real world. Look once, at the end, then leave it alone.",
@@ -265,10 +265,10 @@
     q: "You compared two models with a single 80/20 holdout and model B won by 2 points. A colleague warns this could be luck. What is the more reliable way to compare them?",
     choices: [
       "Use k-fold cross-validation and compare their AVERAGE scores across the folds",
-      "Rerun the same single split a few times and trust whichever wins most",
-      "Pick model B — a win is a win, regardless of how it was measured",
-      "Compare them on the training data instead, where more rows are available",
-      "Choose the model that trained faster, since their scores are close"
+      "Rerun the exact same single 80/20 split a few more times over and simply trust whichever of the two models wins most often",
+      "Just pick model B and move on, since a two-point win is a win regardless of how carefully or carelessly it was measured",
+      "Compare the two models on the training data instead, where many more rows are conveniently available for the comparison",
+      "Choose whichever of the two models happened to finish its training faster, given that their held-out scores are so close"
     ],
     explain: "A single holdout is one roll of the dice — a 2-point gap can easily flip on a different split. Cross-validation scores each model on several rotating folds and averages, so the comparison rests on the whole dataset rather than one lucky slice. Compare the averages (and ideally the spread) rather than a single number.",
     simple: "One practice exam can go either way by chance. Give both models several exams (cross-validation) and compare their averages. A 2-point win on a single split often disappears once you look at more splits.",
@@ -292,10 +292,10 @@
     q: "Two models are essentially tied on validation accuracy: a 3-line logistic regression and a giant black-box ensemble. Which should you generally ship?",
     choices: [
       "The simple logistic regression — a tie should go to the model that's easier to run, explain, and trust",
-      "The giant ensemble — more complexity always means more real-world robustness",
-      "Neither — retrain both from scratch until one clearly wins",
-      "Whichever one scored higher on the training set",
-      "Alternate between them in production to hedge your bets"
+      "The giant black-box ensemble, because more raw complexity always automatically means more genuine real-world robustness",
+      "Neither of the two just yet, so instead retrain both models from scratch again and again until one of them clearly wins",
+      "Whichever one of the two candidate models happened to score even slightly higher on the raw training set during fitting",
+      "Alternate randomly between the two models in live production as a way to hedge your bets and spread out the overall risk"
     ],
     explain: "This is Occam's razor in action. When two models perform about the same on unseen data, the simpler one wins on every practical axis: it's cheaper to serve, easier to debug and explain, and less prone to overfitting quirks. Save the heavy machinery for when it delivers a real, measurable edge.",
     simple: "If a tiny model and a monster model tie, ship the tiny one. It's easier to run, easier to explain, and less likely to break in weird ways. Complexity is only worth it when it actually wins you something.",
@@ -319,10 +319,10 @@
     q: "What are the distinct roles of the validation set versus the test set?",
     choices: [
       "Validation is looked at repeatedly to choose models; test is opened once at the end for the honest score",
-      "Validation gives the final score; test is used to tune hyperparameters",
-      "They are interchangeable — any held-out data can play either role at any time",
-      "Validation is for classification and test is for regression problems",
-      "Validation trains the model; test also trains it but with fewer rows"
+      "Validation is what gives the final honest score, while the test set is the one you use over and over to tune hyperparameters",
+      "The two sets are completely interchangeable, so any held-out data at all can freely play either role at absolutely any time",
+      "The validation set is used only for classification problems, while the test set is used strictly for regression problems",
+      "The validation set trains the actual model, and the test set also trains that same model but simply using far fewer rows"
     ],
     explain: "The two held-out sets do different jobs. You consult the validation set again and again to compare models and pick settings — so it slowly becomes 'used up' and optimistic. The test set stays sealed until the very end and is read exactly once, which is what makes its number a trustworthy estimate of future performance.",
     simple: "The validation set is where you shop around and compare models — you look at it a lot. The test set is the sealed envelope you open only at the end. Keeping the jobs separate is what keeps the final grade honest.",
@@ -346,10 +346,10 @@
     q: "Your model reports 88% accuracy. Before celebrating, what single fact do you most need to judge whether that's good?",
     choices: [
       "The baseline score — what a trivial always-guess model gets on the same problem",
-      "How many lines of code the model took to write",
-      "How long the model took to train on your laptop",
-      "The number of hyperparameters the model has",
-      "Whether the model is a neural network or a decision tree"
+      "Exactly how many total lines of source code the finished model happened to take you to write and carefully debug",
+      "Precisely how long the model took to fully train from the very start to the very finish on your own particular laptop",
+      "The exact total number of separate hyperparameters and tunable knobs that the chosen model happens to expose to you",
+      "Whether the underlying model is technically a deep neural network or is instead just a plain single decision tree"
     ],
     explain: "A raw score is meaningless in isolation. If the classes are 88% one type, a model that always guesses that type also scores 88% — your model adds nothing. The baseline converts '88%' from a number into a judgement: impressive if the baseline is 60%, embarrassing if it's 87%.",
     simple: "88% could be amazing or terrible — you can't tell until you know what an easy guess scores. If always guessing gets 87%, your 88% is nothing special. The baseline is the context that gives the number meaning.",
@@ -373,10 +373,10 @@
     q: "You're tuning the number of neighbours k in k-NN. Concretely, what does 'tuning' this hyperparameter involve?",
     choices: [
       "Trying several values of k, scoring each on validation data, and keeping the k that scores best",
-      "Letting the model discover the best k on its own during training",
-      "Setting k equal to the number of features in the dataset",
-      "Picking the k that gives the highest score on the training data",
-      "Choosing k at random once and never revisiting it"
+      "Simply letting the k-NN model quietly discover the single best value of k entirely on its own during ordinary training",
+      "Automatically setting the value of k to be exactly equal to the total number of feature columns present in the dataset",
+      "Picking whichever value of k happens to give the very highest accuracy score measured on the raw training data itself",
+      "Choosing one value of k purely at random a single time at the start and then deliberately never revisiting it again"
     ],
     explain: "Tuning is a search over candidate values. You try k=1, 3, 5, 7, ..., train and score each on held-out validation data, and keep the value at the peak. Note the scoring must be on validation, not training data — k=1 always fits the training set perfectly, which is exactly the trap.",
     simple: "You don't guess k once — you try a bunch of values and see which does best on the validation set. The model can't pick k for you; that's your knob to turn. And you judge on fresh data, because k=1 always looks perfect on the training data.",
@@ -400,10 +400,10 @@
     q: "Why can't you select the best model by simply picking whichever one scores highest on the training data?",
     choices: [
       "A complex enough model can memorise the training data and score near 100% while failing on new data",
-      "Training scores are always lower than validation scores, so they mislead",
-      "The training data usually has more errors than the validation data",
-      "Training scores can only be computed for regression, not classification",
-      "The model with the highest training score is always the simplest one"
+      "Training scores are always systematically lower than validation scores, so they consistently mislead you in every case",
+      "The training data almost always contains far more labelling errors and noise than the held-out validation data does",
+      "Training scores can only ever be computed for regression problems and never for ordinary classification problems at all",
+      "The one model that happens to reach the highest training score is reliably always also the very simplest model of them all"
     ],
     explain: "Training score measures memorisation, not understanding. A flexible model can fit the training rows almost perfectly — including their noise — and still generalise terribly. That's why model selection judges candidates on held-out data: it rewards the model that learned the pattern, not the one that memorised the answers.",
     simple: "Any model can ace the exam it already studied. A fancy model can memorise the training data and look perfect, then bomb on new cases. So you compare models on data they haven't seen, not on their training score.",

@@ -352,10 +352,10 @@
     "q": "Hierarchical clustering is usually 'agglomerative'. What does that mean, and what's the alternative?",
     "choices": [
       "Agglomerative builds bottom-up by merging; the rare alternative, divisive, splits top-down",
-      "Agglomerative works on numbers; divisive works on categories",
-      "Agglomerative needs k in advance; divisive discovers it",
-      "Agglomerative is for small data; divisive scales to millions",
-      "Agglomerative averages centroids; divisive moves them around"
+      "Agglomerative works only on numeric features, while divisive is built for categories",
+      "Agglomerative needs the number of clusters k set in advance; divisive discovers it alone",
+      "Agglomerative is meant for small data, while divisive is the version that scales to millions",
+      "Agglomerative averages the cluster centroids, while divisive keeps shifting them around"
     ],
     "explain": "Agglomerative = bottom-up: start with every point alone and repeatedly merge the two closest clusters until one remains. Divisive = top-down: start with everything in one cluster and recursively split. Agglomerative is far more common because merging is cheaper than deciding how to split.",
     "simple": "Agglomerative starts from the bottom — every point solo — and marries the closest pairs upward into a tree. Divisive does the mirror image: start with one giant group and keep splitting it. Almost everyone uses agglomerative, because 'find the closest pair to merge' is easy, while 'find the best way to cut a group in two' is hard.",
@@ -394,10 +394,10 @@
     "q": "Given that hierarchical clustering produces a whole tree, why do people still reach for k-means on large datasets?",
     "choices": [
       "Hierarchical needs all pairwise distances (~n²), so it's too slow and memory-hungry at scale",
-      "Hierarchical can only find two clusters at a time",
-      "Hierarchical requires labelled data to build the tree",
-      "Hierarchical cannot handle more than three features",
-      "Hierarchical always produces worse clusters than k-means"
+      "Hierarchical clustering can only ever discover exactly two separate clusters at any moment",
+      "Hierarchical clustering requires fully labelled data before it can begin building its tree",
+      "Hierarchical clustering cannot cope with datasets that carry more than three features",
+      "Hierarchical clustering always produces strictly worse clusters than k-means ever does"
     ],
     "explain": "Building the full merge tree needs the distances between all pairs of points — memory and time grow like n², which is fine for thousands of points but hopeless for millions. k-means scales roughly linearly, so it wins on big data despite giving only one flat grouping.",
     "simple": "The lovely tree isn't free: to build it you compare every point with every other point, and that cost explodes as the dataset grows (n² is brutal at a million rows). k-means only compares points to a handful of centroids, so it scales. On big data you trade the tree for speed.",

@@ -3,7 +3,7 @@
 
 {
   q: "In probability, what does the notation P(A | B) — 'the probability of A given B' — mean?",
-  choices: ["The chance of A once you already know B is true", "The chance that A and B both end up happening", "The chance of B once you already know A holds", "The chance of either A or B turning out true", "The chance of A whether or not B ever occurred"],
+  choices: ["The chance of A once you already know B is true", "The chance that A and B both end up happening together", "The chance of B once you already know A holds", "The chance of either A or B, or possibly both, turning out true", "The chance of A whether or not B ever occurred"],
   explain: "P(A | B) is a conditional probability: it restricts attention to only the cases where B holds, then asks how often A happens among those. Conditioning on B can change the number a lot, and P(A | B) is generally NOT the same as P(B | A). Every likelihood and posterior in Naive Bayes is a conditional probability of this form.",
   simple: "It means 'given that we already know B, how likely is A?'. Knowing the sky is stormy changes how likely rain is, compared with knowing nothing. The word 'given' just tells you to look only at the slice of the world where B is true.",
   widget: {
@@ -54,7 +54,7 @@
 
 {
   q: "In Naive Bayes, what does the 'likelihood' of a clue measure?",
-  choices: ["How probable that clue is within each class", "How common each class is before any clue", "How the two class likelihoods divide out", "How updated the belief is after the clue", "How many clues an email happens to contain"],
+  choices: ["How probable that clue is within each class", "How common each class is overall before any clue arrives", "How the two class likelihoods divide out into a single ratio", "How updated the belief is after the clue", "How many clues an email happens to contain"],
   explain: "The likelihood is P(clue | class): among spam, how often does 'FREE' appear, and separately, how often among legit mail. It is estimated per class straight from training counts. These per-class numbers are the raw ingredients that Bayes' rule combines.",
   simple: "Imagine asking two crowds, spammers and normal senders, 'how many of you say FREE?'. The fraction of hands raised in each crowd is the likelihood for that group. It is a within-group frequency, measured one crowd at a time.",
   widget: {
@@ -105,7 +105,7 @@
 
 {
   q: "What makes Naive Bayes a 'generative' model?",
-  choices: ["It learns each class's pattern, then asks which fits", "It draws a boundary that separates the two classes", "It stores every case and matches the nearest one", "It tunes weights to minimise its prediction error", "It fabricates extra emails to grow the training set"],
+  choices: ["It learns each class's pattern, then asks which fits", "It draws a decision boundary that cleanly separates the two classes", "It stores every past case and matches each new one to its nearest neighbour", "It tunes weights to minimise its prediction error", "It fabricates extra emails to grow the training set"],
   explain: "A generative model learns P(features | class), a picture of what each class's data typically looks like, plus the prior. For a new case it asks which class would most likely have generated these features. This contrasts with discriminative models, which model the boundary P(class | features) directly.",
   simple: "Two people each describe their typical junk mail and typical real mail. When a new letter arrives you ask 'whose description does this match better?' rather than drawing a fence between them. Building a picture of each class, then checking fit, is the generative way.",
   widget: {

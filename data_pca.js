@@ -171,10 +171,10 @@
     "q": "PCA works by 'projecting' data onto fewer directions. What does projecting a point onto a line mean?",
     "choices": [
       "Dropping it straight onto the line, like a shadow — keeping its position along the line, losing the rest",
-      "Moving it to the nearest existing data point on the line",
-      "Rounding its coordinates to the closest whole numbers",
-      "Deleting the point if it falls off the line",
-      "Rotating the whole dataset until it lies flat"
+      "Moving the point sideways to the nearest already-existing data point that happens to sit on the line",
+      "Rounding every one of the point's coordinates to the closest whole number before it is plotted",
+      "Deleting the point from the dataset entirely whenever it happens to fall off to the side of the line",
+      "Rotating the whole dataset around until it finally comes to lie completely flat on the floor"
     ],
     "explain": "Projection casts each point onto a chosen line (or lower-dimensional space) — like a shadow falling onto the floor. You keep the point's position ALONG the line and discard the perpendicular part. PCA's job is choosing the line that loses the least.",
     "simple": "Think of shadows. Shine a light straight down and every point drops onto the floor, keeping its left-right position but losing its height. That's projection: squash onto a line, keep the along-the-line position, throw away the rest. Reducing dimensions IS projecting — and PCA just picks the smartest direction to cast the shadow.",
@@ -212,10 +212,10 @@
     "q": "PCA's first output is the 'first principal component' (PC1). What is it?",
     "choices": [
       "The single direction along which the data is most spread out",
-      "The most important original feature, kept unchanged",
-      "The average of all the data points",
-      "The line connecting the two farthest points",
-      "The direction with the least variation in the data"
+      "The one most important original feature, kept exactly as it is and unchanged",
+      "The single average position of every one of the data points combined",
+      "The straight line that connects up the two single farthest-apart points",
+      "The one direction that happens to carry the very least variation in all the data"
     ],
     "explain": "PC1 is the direction of MAXIMUM variance — the line along which the cloud is stretched most. Projecting onto it preserves as much spread (information) as any single direction can. PC2 is the most-spread direction at right angles to it, and so on.",
     "simple": "PC1 is the cloud's long axis — the direction it's stretched the most. Flatten the data onto that one line and you keep more of how the points differ than any other line could manage. It's a new blended direction, not an original column, not the average, and definitely not the FLATTEST direction (that's the one PCA throws away).",
@@ -253,10 +253,10 @@
     "q": "PCA ranks components by 'variance'. Why does more variance mean more useful information?",
     "choices": [
       "A direction where points barely differ tells you almost nothing; spread is what distinguishes them",
-      "Variance measures how accurate the model's predictions are",
-      "High variance means the feature is measured in larger units",
-      "Variance counts how many points lie exactly on the line",
-      "More variance always means the data is noisier, not richer"
+      "Variance is really just a direct measure of how accurate the model's predictions turn out to be",
+      "High variance simply means that the feature happens to be measured in much larger, coarser units",
+      "Variance really just counts how many of the data points lie exactly on top of the line",
+      "More variance in a direction always means that the data lying there is far noisier rather than richer"
     ],
     "explain": "If every point projects to nearly the same spot along a direction, that direction can't tell the points apart — it carries little information. Spread (variance) is exactly what separates one point from another, so PCA keeps the high-variance directions and drops the flat ones.",
     "simple": "Imagine a direction where everyone lands on the same spot — it distinguishes nobody, so it's useless for telling points apart. A direction where points spread out widely separates them clearly. Spread is information. That's why PCA ranks directions by variance and keeps the spread-out ones, discarding the flat directions where nothing varies.",

@@ -10,10 +10,10 @@
     q: "What is a random forest?",
     choices: [
       "An ensemble of many decision trees, each grown on a bootstrap sample using a random subset of features, whose predictions are combined by majority vote (classification) or averaging (regression)",
-      "A single very deep decision tree that is pruned repeatedly until its validation error stops improving",
-      "A sequence of trees where each new tree is trained to correct the errors of the tree before it",
-      "A method that grows one tree per class and picks whichever tree reports the highest confidence",
-      "A clustering method that groups training rows into a branching tree of nested clusters"
+      "A single very deep decision tree that is pruned repeatedly on a validation set until its error stops improving, then bagged with copies of itself to smooth out its remaining prediction variance",
+      "A sequence of trees where each new tree is trained to correct the errors of the tree before it, reweighting the misclassified rows more heavily every round until the summed predictions converge",
+      "A method that grows exactly one decision tree per class label and, at prediction time, picks whichever tree reports the single highest confidence score for the row being classified",
+      "A hierarchical clustering method that groups the training rows into a branching tree of nested clusters and reads off the leaf a new point falls into as its predicted label"
     ],
     explain: "A random forest combines many de-correlated decision trees. Each tree sees a bootstrap resample of the rows and, at every split, only a random subset of the features, so the trees make different mistakes. Averaging (or voting over) their predictions cancels much of the individual-tree variance and yields a more stable, accurate model.",
     simple: "A random forest is a crowd of decision trees that each saw slightly different data, then take a vote. One tree can be wildly wrong; the crowd usually isn't.",
@@ -38,10 +38,10 @@
     q: "What is bagging (bootstrap aggregating)?",
     choices: [
       "Training many copies of a model on different bootstrap resamples of the data, then aggregating their predictions by voting or averaging to reduce variance",
-      "Training one model and re-weighting the misclassified rows more heavily on each pass",
-      "Splitting the features into bags and training a separate model on each feature group",
-      "Compressing a trained model so it fits in a smaller memory footprint",
-      "Repeatedly pruning a model's parameters until only the most important ones remain"
+      "Training a single model and then re-weighting the misclassified rows more heavily on each pass, so later passes focus on the examples the earlier ones kept getting wrong",
+      "Splitting the features into disjoint bags and training a separate model on each feature group, then concatenating their outputs into one long combined prediction vector",
+      "Compressing a fully trained model so it fits in a smaller memory footprint, pruning redundant weights until inference runs faster on limited hardware without much accuracy loss",
+      "Repeatedly pruning a model's parameters until only the most important ones remain, retraining after each round to recover the accuracy lost by the earlier cuts"
     ],
     explain: "Bagging is the general recipe behind random forests. You draw many bootstrap samples (random draws with replacement) from the training set, fit one model per sample, and combine their outputs. Because each model overfits a different resample, aggregating cancels much of that noise and lowers variance without much added bias.",
     simple: "Bagging means: train the same kind of model many times on shuffled-up copies of your data, then average their answers. The averaging smooths out flukes.",
@@ -66,10 +66,10 @@
     q: "What is a bootstrap sample?",
     choices: [
       "A dataset of the same size as the original, drawn by sampling rows uniformly at random WITH replacement, so some rows repeat and others are left out",
-      "A small fixed holdout carved off the front of the dataset before any training begins",
-      "The subset of features randomly chosen at a single tree split",
-      "A perfectly stratified sample that preserves the exact class balance of the original",
-      "The first few rows of the data used to sanity-check that the pipeline runs"
+      "A small fixed holdout carved off the front of the dataset before any training begins, kept untouched so it can later report an unbiased estimate of test error",
+      "The subset of features randomly chosen at a single tree split, resampled independently at every node so that no one column is ever considered twice in one path",
+      "A perfectly stratified sample that preserves the exact class balance of the original, drawn without replacement so that every distinct row appears at most one time",
+      "The first few rows of the data, taken in their original order, used to sanity-check that the whole pipeline runs end to end before the real training begins"
     ],
     explain: "A bootstrap sample is built by drawing rows one at a time, with replacement, until you have as many rows as the original set. Because of replacement, a given row may appear several times or not at all — on average about 63% of the unique rows appear, and the rest are 'out-of-bag'. This resampling is what makes each bagged model see a different dataset.",
     simple: "A bootstrap sample is your data reshuffled by picking rows at random and allowing repeats. Some rows show up twice, some don't show up at all.",
@@ -94,10 +94,10 @@
     q: "What is out-of-bag (OOB) error?",
     choices: [
       "An estimate of a bagged model's test error computed by scoring each training row using only the trees whose bootstrap sample did NOT include that row",
-      "The error the forest makes on rows that fall outside the range seen during training",
-      "The training error averaged across every tree in the forest",
-      "The error introduced when a tree runs out of features to split on",
-      "The gap between the best and worst single tree in the ensemble"
+      "The error the forest makes on rows whose feature values fall outside the numeric range seen during training, where every tree is forced to extrapolate past its own leaves",
+      "The plain training error averaged across every tree in the forest, measured on the very rows each tree was fit on, before any aggregation of their individual votes",
+      "The error introduced when a tree runs out of unused features to split on and is forced to stop growing before it has fully separated the remaining classes",
+      "The gap between the best and the worst single tree in the ensemble, measured on a shared holdout and used as a rough proxy for how unstable the whole forest is"
     ],
     explain: "Because each bootstrap sample leaves out roughly a third of the rows, every training row is 'out-of-bag' for the subset of trees that never saw it. Predicting each row with only those trees and comparing to the truth gives an almost-free, nearly unbiased estimate of generalization error — no separate validation set required.",
     simple: "Each tree skipped some rows during training. To grade the forest for free, ask each row's opinion only from the trees that never saw it. That score is the OOB error.",
@@ -125,10 +125,10 @@
     q: "What is feature bagging (the random subspace method)?",
     choices: [
       "Restricting each tree split to a random subset of the features, so no single strong feature dominates every tree and the trees become less correlated",
-      "Discarding the least important features once, up front, before any tree is grown",
-      "Giving each tree the full feature set but a random subset of the rows",
-      "Averaging the feature values across rows to create a smaller, denser feature set",
-      "Sorting features into bags by type and training one tree per type"
+      "Discarding the least important features once, up front, using a filter score computed before any tree is grown, so every tree then trains on the same reduced column set",
+      "Giving each tree the full feature set but only a random subset of the rows, so the columns never vary while the sampled training examples differ from tree to tree",
+      "Averaging the feature values across groups of rows to create a smaller, denser feature set, then growing every tree in the forest on those compressed synthetic columns",
+      "Sorting the features into bags by their data type and training one separate tree per type, then concatenating the per-type trees together into the final forest"
     ],
     explain: "On top of row bootstrapping, random forests add feature bagging: at each split a tree may only consider a randomly chosen subset of the columns (often √p for classification). This stops one very predictive feature from being chosen first in every tree, which would make all the trees look alike. Weaker features get their turn, the trees de-correlate, and the ensemble average improves.",
     simple: "At every split, a forest's tree is only allowed to look at a random handful of features. That forces variety, so the trees don't all copy each other.",
@@ -153,10 +153,10 @@
     q: "In an ensemble, what does 'variance reduction' mean?",
     choices: [
       "Lowering how much a model's predictions swing when it is retrained on different samples, achieved by averaging many models so their independent errors cancel",
-      "Shrinking the numeric range of the input features so they share a common scale",
-      "Reducing the number of features until the model has fewer parameters to estimate",
-      "Cutting the training set size so the model trains faster on each pass",
-      "Forcing every tree in the forest to make the same prediction for consistency"
+      "Shrinking the numeric range of the input features so they all share a common scale, which keeps distance-based splits from being dominated by the widest-ranged column",
+      "Reducing the number of input features until the model has fewer parameters to estimate, trading a little accuracy for a smaller, faster model that is easier to interpret",
+      "Cutting the training set down to fewer rows so the model trains faster on each pass, accepting a noisier fit in exchange for shorter wall-clock training time overall",
+      "Forcing every tree in the forest to make the exact same prediction for consistency, so the ensemble always returns one agreed answer no matter which tree is queried"
     ],
     explain: "A single deep tree is a low-bias, high-variance learner: small changes in the data can flip its predictions. Averaging many such trees, each fit to a different resample, reduces variance because their fluctuations are partly independent and cancel out. This is the core reason bagging and random forests generalize better than one tree.",
     simple: "One tree's answer wobbles a lot depending on the data it saw. Average many trees and the wobble mostly cancels — that steadier answer is variance reduction.",
@@ -181,10 +181,10 @@
     q: "In random forests, what is 'tree decorrelation'?",
     choices: [
       "Deliberately making the individual trees less similar to one another — via row bootstrapping and random feature subsets — so that averaging their errors cancels more of them",
-      "Removing features that are correlated with each other before training the forest",
-      "Ordering the trees so that correlated predictions are placed next to each other",
-      "Ensuring every tree reaches the same depth so their outputs are comparable",
-      "Rotating the feature axes so the inputs become statistically independent"
+      "Removing input features that are strongly correlated with one another before training the forest, keeping just one column from each correlated group to avoid double-counting",
+      "Ordering the finished trees so that ones with correlated predictions are placed next to each other, making the whole ensemble easier to inspect when you walk through it",
+      "Ensuring every tree in the forest reaches the exact same depth so that their leaf outputs stay directly comparable and can be averaged on one common numeric scale",
+      "Rotating the feature axes with a linear transform so the inputs become statistically independent, then growing each of the trees inside that decorrelated coordinate space"
     ],
     explain: "Averaging only reduces variance to the extent the models' errors are independent. If all trees were trained the same way they would make the same mistakes and averaging would help little. Random forests inject randomness (bootstrap rows plus random feature subsets at each split) specifically to de-correlate the trees, so their errors diverge and the ensemble average benefits fully.",
     simple: "If all your trees think alike, averaging them is pointless. Random forests force the trees to differ — that difference is decorrelation, and it's what makes the vote worthwhile.",
@@ -209,10 +209,10 @@
     q: "In a random forest, what is the n_estimators hyperparameter?",
     choices: [
       "The number of trees grown in the forest, whose votes are aggregated — more trees stabilize predictions but with diminishing returns and higher cost",
-      "The maximum depth any individual tree is allowed to reach",
-      "The number of features each tree is allowed to consider at a split",
-      "The number of rows drawn into each bootstrap sample",
-      "The number of classes the forest is trained to distinguish"
+      "The maximum depth any individual tree is allowed to reach before it must stop splitting, capping how many nested questions a single decision path is able to ask",
+      "The number of candidate features each tree is allowed to consider at a split, drawn fresh at every node to keep the trees from all picking the very same column",
+      "The number of rows drawn with replacement into each bootstrap sample, setting how much of the data every individual tree in the forest gets to see while training",
+      "The number of distinct classes the forest is trained to distinguish, fixing how many separate vote tallies the ensemble has to keep when it aggregates its trees"
     ],
     explain: "n_estimators sets how many trees the forest contains. Adding trees reduces the variance of the aggregated prediction and never causes overfitting on its own, but the gains flatten out: past a few hundred trees accuracy barely moves while training and prediction time keep growing. It is one of a forest's most important tuning knobs.",
     simple: "n_estimators is just 'how many trees'. More trees make the vote steadier, but after a while extra trees only cost time and add almost nothing.",
@@ -237,10 +237,10 @@
     q: "How does a random forest aggregate its trees' predictions for CLASSIFICATION (majority voting)?",
     choices: [
       "Each tree casts one vote for a class, and the forest outputs the class that receives the most votes across all trees",
-      "The forest averages the raw feature values the trees split on and thresholds the result",
-      "The forest returns the prediction of whichever single tree is most confident",
-      "The forest multiplies the trees' class labels together and takes the sign",
-      "The forest picks the class predicted by the deepest tree in the ensemble"
+      "The forest averages the raw feature values that the trees happened to split on and thresholds that combined average to read off a single final class",
+      "The forest returns the prediction of whichever single tree reports the highest confidence, ignoring how all of the remaining trees actually voted",
+      "The forest multiplies the trees' predicted class labels together and then takes the sign of the resulting product as its answer",
+      "The forest simply picks the class predicted by the single deepest, most fully grown tree in the whole ensemble"
     ],
     explain: "For classification, a random forest combines trees by majority (plurality) vote: every tree predicts a class, the votes are tallied, and the class with the most votes wins. (Averaging the trees' predicted class probabilities — 'soft' voting — is a common variant.) This aggregation is what turns many noisy tree opinions into one robust decision.",
     simple: "Each tree names a class; the forest goes with the class most trees named. It's a show of hands.",
@@ -265,10 +265,10 @@
     q: "How does a random forest aggregate its trees' predictions for REGRESSION (averaging)?",
     choices: [
       "Each tree outputs a number and the forest reports the mean of those numbers as its prediction",
-      "The forest reports the prediction of the tree with the lowest training error",
-      "The forest takes the median split threshold used across all trees",
-      "The forest sums the trees' outputs without dividing, giving a total",
-      "The forest returns the range between the smallest and largest tree output"
+      "The forest reports the single prediction of whichever one tree achieved the very lowest training error",
+      "The forest takes the median of the split thresholds that were used across all of its trees",
+      "The forest sums every tree's numeric output together without ever dividing, giving one running grand total",
+      "The forest returns the range spanning the smallest and the largest individual tree output value"
     ],
     explain: "For regression there are no classes to vote on, so a random forest averages the numeric outputs of its trees. Because each tree's error is partly independent, the mean has lower variance than any single tree while keeping roughly the same bias — the same variance-reduction logic as classification voting, applied to continuous outputs.",
     simple: "For predicting a number, each tree gives its guess and the forest just averages them. Averaging cancels the trees' over- and under-shoots.",
@@ -295,10 +295,10 @@
     q: "What is gradient boosting?",
     choices: [
       "A boosting method that builds an additive model of trees one at a time, where each new tree is fit to the negative gradient (pseudo-residuals) of the loss so it corrects the current ensemble's errors",
-      "A method that trains many deep trees in parallel on bootstrap samples and averages their votes",
-      "A method that grows a single tree and boosts its accuracy by increasing its maximum depth",
-      "A method that re-scales the input features by their gradients before fitting one tree",
-      "A clustering method that boosts dense regions and shrinks sparse ones"
+      "A method that trains many deep trees fully in parallel on independent bootstrap samples and averages their votes into one prediction, so no tree ever depends on the residual errors left behind by another",
+      "A method that grows a single decision tree and then boosts its accuracy purely by increasing its maximum depth, letting it keep splitting until it perfectly fits every training row it was given",
+      "A method that re-scales each input feature by the gradient of the loss with respect to that feature before fitting one final tree on the reweighted, gradient-scaled columns",
+      "A clustering method that boosts the density of crowded regions and shrinks sparse ones, then labels each new point by whichever region it lands in after the density reshaping settles"
     ],
     explain: "Gradient boosting builds an ensemble sequentially: it starts with a simple prediction, computes the gradient of the loss with respect to the current predictions (the pseudo-residuals), and fits a new weak tree to those. Each tree is added, scaled by a learning rate, to nudge predictions downhill on the loss. It is gradient descent performed in function space, one tree per step.",
     simple: "Gradient boosting adds small trees one after another, each one fixing the leftover mistakes of the trees so far. It's like sanding a surface smoother with each pass.",

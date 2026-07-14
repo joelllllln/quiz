@@ -8,10 +8,10 @@
     q: "In machine learning, what is supervised learning?",
     choices: [
       "Learning a mapping from inputs to outputs using examples that are each already labelled with the correct answer",
-      "Finding hidden structure in data that carries no labels at all, such as grouping similar items together",
-      "Learning by trial and error from rewards and penalties collected while acting in an environment",
-      "Compressing a dataset down to fewer columns while preserving as much of its variation as possible",
-      "Hand-writing a fixed set of if-then rules and then running them quickly over a large dataset"
+      "Finding hidden structure inside data that carries no labels at all, such as grouping broadly similar items together",
+      "Learning purely by trial and error from the rewards and penalties gathered while acting within an environment",
+      "Compressing a wide dataset down to far fewer columns while preserving as much of its variation as is possible",
+      "Hand-writing a fixed set of rigid if-then rules and then running each of them quickly over a very large dataset"
     ],
     explain: "Supervised learning trains a model on input-output pairs where every training example carries a known target (the label), so the algorithm can learn the relationship that maps inputs to those targets. Classification (discrete labels) and regression (numeric labels) are its two main forms. Because the correct answers are supplied during training, the model's errors can be measured directly and minimised.",
     simple: "It is like learning with an answer key: you show the computer thousands of questions together with their right answers, and it works out the pattern that connects them. Later it can answer brand-new questions on its own.",
@@ -36,10 +36,10 @@
     q: "In machine learning, what is unsupervised learning?",
     choices: [
       "Finding structure or patterns in data that has no labels, such as grouping similar points or reducing dimensions",
-      "Learning an input-to-output mapping from examples that each already carry the correct target label",
-      "Learning a policy by collecting rewards and penalties while taking actions in an environment",
-      "Tuning the settings you fix before training so that validation accuracy is as high as possible",
-      "Measuring a trained model against a held-back test set to estimate how it will perform in the wild"
+      "Learning a direct input-to-output mapping from examples that each already carry the one correct target label",
+      "Learning a policy purely by collecting rewards and penalties while repeatedly taking actions in an environment",
+      "Tuning the configuration settings you fix before training begins so that final validation accuracy is as high as possible",
+      "Measuring an already-trained model against a held-back test set to estimate how well it will perform out in the wild"
     ],
     explain: "Unsupervised learning works on data with no target labels; the goal is to uncover hidden structure the data contains on its own. Clustering (grouping similar examples) and dimensionality reduction (compressing many features into a few) are the classic tasks. Because there are no correct answers to compare against, success is judged by how coherent or useful the discovered structure is.",
     simple: "Here nobody hands the computer an answer key. You just pour in raw data and let it find the natural groupings or patterns by itself — like sorting a pile of mixed photos into look-alike stacks without being told the categories.",
@@ -64,10 +64,10 @@
     q: "In machine learning, what is a hyperparameter?",
     choices: [
       "A configuration setting you choose before training that controls the learning process, rather than being learned from data",
-      "A weight inside the model whose value the training algorithm adjusts automatically to fit the data",
-      "A single column of the input data describing one measurable property of each example",
-      "The final accuracy score a trained model achieves when checked on the held-out test set",
-      "A row of the dataset representing one recorded example the model learns from"
+      "A weight living inside the model whose value the training algorithm keeps adjusting automatically to slowly fit the data closely",
+      "A single column of the raw input data describing exactly one measurable numeric property belonging to each individual example",
+      "The final accuracy score that a fully trained model happens to achieve when it is checked on the held-out test set",
+      "A single row of the dataset representing one recorded example that the model actually learns its pattern from"
     ],
     explain: "A hyperparameter is a knob set before training begins — things like the learning rate, the number of trees, k in k-nearest-neighbours, or a regularisation strength. Unlike ordinary parameters (the weights) which the algorithm learns from the data, hyperparameters are chosen by you and govern HOW the learning happens. They are usually tuned by trying several values and keeping whichever gives the best validation performance.",
     simple: "Think of the dials on an oven you set before baking — temperature, timer. You pick them up front; they shape the result but the cake itself is what actually comes out. Hyperparameters are those pre-set dials for a learning algorithm.",
@@ -92,10 +92,10 @@
     q: "In machine learning, what is a loss function?",
     choices: [
       "A function that measures how far a model's predictions are from the true targets, giving one number to minimise",
-      "The procedure that repeatedly nudges the model's weights downhill until the error stops falling",
-      "A setting fixed before training that controls how the learning algorithm behaves",
-      "The fraction of test predictions that a trained classifier gets exactly correct",
-      "A table cross-tabulating a classifier's predicted classes against the actual classes"
+      "The procedure that repeatedly nudges the model's weights a little downhill until the error finally stops falling",
+      "A configuration setting fixed before training begins that controls how the learning algorithm actually behaves",
+      "The fraction of held-out test predictions that a fully trained classifier happens to get exactly correct",
+      "A table cross-tabulating a classifier's predicted class labels against the true actual classes cell by cell"
     ],
     explain: "A loss function quantifies the mismatch between predictions and the true answers, collapsing the model's total error into a single number that training tries to make as small as possible. Common choices include mean squared error for regression and cross-entropy for classification. The learning algorithm reads this number (and its gradient) to decide how to adjust the model.",
     simple: "It is the model's scorecard for being wrong: the bigger the number, the worse the predictions. Training is just the effort to push that score as low as it will go.",
@@ -120,10 +120,10 @@
     q: "In machine learning, what is gradient descent?",
     choices: [
       "An iterative optimisation method that repeatedly adjusts the weights in the direction that lowers the loss the fastest",
-      "A function that measures how far the model's predictions sit from the true target values",
-      "A rule for splitting a dataset into training and test portions before any learning starts",
-      "A penalty added to the loss so the model keeps its weights small and avoids overfitting",
-      "A way to combine several weak models into one stronger prediction by averaging their votes"
+      "A scoring function that measures how far the model's current predictions sit from the true target values",
+      "A fixed rule for splitting a dataset into separate training and test portions before any learning starts",
+      "A penalty term added onto the loss so that the model keeps all of its weights small and thereby avoids overfitting badly",
+      "A way to combine several deliberately weak models together into one much stronger prediction by simply averaging their votes"
     ],
     explain: "Gradient descent minimises the loss by computing its gradient — the direction of steepest increase — and stepping the weights the opposite way, then repeating. The step size is set by the learning rate. Over many iterations the loss falls toward a minimum, which is how most modern models, from logistic regression to neural networks, are actually trained.",
     simple: "Imagine standing on a foggy hillside and wanting the lowest point: you feel which way is downhill and take a step, then repeat. Gradient descent does that on the model's error surface until it reaches the bottom.",
@@ -148,10 +148,10 @@
     q: "In machine learning, what is the sigmoid (logistic) function?",
     choices: [
       "A function that squashes any real number into a value between 0 and 1, giving an S-shaped curve, via 1/(1+e^-z)",
-      "A function that turns a vector of scores into a probability distribution that sums to one across many classes",
-      "A penalty term added to the loss to shrink large weights and curb overfitting",
-      "The straight boundary a linear classifier draws to separate two classes in feature space",
-      "The number of times a training algorithm passes over the entire dataset"
+      "A function that turns a whole vector of scores into a probability distribution that sums to one across many classes",
+      "A penalty term added to the loss that shrinks large weights and thereby helps to curb overfitting on new data",
+      "The perfectly straight boundary that a linear classifier draws to separate two classes within a feature space",
+      "The total number of times that a training algorithm passes over the entire dataset from start to finish"
     ],
     explain: "The sigmoid function, 1/(1+e^-z), maps the whole real line onto the open interval (0,1) with a smooth S shape. In logistic regression it converts the model's raw weighted score z into a probability of the positive class. Its output is near 0 for very negative inputs, near 1 for very positive inputs, and exactly 0.5 at z = 0.",
     simple: "It takes any number — huge, tiny, negative — and gently squeezes it into the 0-to-1 range so it can be read as a probability. Big positive inputs come out near 1, big negative near 0, and zero lands right in the middle at 0.5.",
@@ -176,10 +176,10 @@
     q: "In machine learning, what is a confusion matrix?",
     choices: [
       "A table cross-tabulating predicted classes against actual classes, showing counts of true and false positives and negatives",
-      "A curve plotting the true-positive rate against the false-positive rate across every decision threshold",
-      "The single fraction of all predictions that a classifier gets correct",
-      "A penalty added to the loss function to discourage overly complex models",
-      "A ranked list of the input features ordered by how much each one influences the prediction"
+      "A curve plotting the true-positive rate against the false-positive rate measured across every possible decision threshold value",
+      "The single overall fraction of all of the predictions that a given classifier happens to get exactly correct out of the total",
+      "A penalty term added to the loss function during training to discourage the model from becoming overly complex",
+      "A ranked list of all the input features ordered by how strongly each individual one influences the prediction"
     ],
     explain: "A confusion matrix lays out, for a classifier, how many examples of each actual class were predicted as each class. For binary problems it has four cells: true positives, false positives, false negatives, and true negatives. Nearly every classification metric — precision, recall, accuracy, F1 — is computed directly from these counts.",
     simple: "It is a scorecard grid that says exactly which kinds of mistakes a classifier made: how often it cried wolf, how often it missed a real wolf, and how often it got things right. The diagonal is correct calls; everything off it is an error.",
@@ -204,10 +204,10 @@
     q: "In machine learning, what is the F1 score?",
     choices: [
       "The harmonic mean of precision and recall, giving a single balanced score that is high only when both are high",
-      "The fraction of all predictions the classifier gets correct out of the total number of predictions",
-      "The area under the curve of true-positive rate plotted against false-positive rate",
-      "The number of correct positive predictions divided by the number of actual positive cases",
-      "The average squared difference between predicted and actual numeric values"
+      "The plain fraction of all predictions that the classifier gets correct out of the total number of predictions made",
+      "The whole area sitting under the curve of the true-positive rate plotted against the false-positive rate over thresholds",
+      "The number of correct positive predictions divided by the total number of genuinely actual positive cases",
+      "The average squared difference between each predicted numeric value and its true actual numeric value"
     ],
     explain: "The F1 score combines precision and recall into one number using their harmonic mean: 2·(precision·recall)/(precision+recall). Because the harmonic mean is dragged down by the smaller of the two, F1 is high only when precision and recall are both high. It is especially useful on imbalanced data where plain accuracy can be misleading.",
     simple: "It is a single fairness score that rewards a model only if it is good at BOTH catching the real positives and not raising false alarms. Ace one but flunk the other and F1 stays low.",
@@ -232,10 +232,10 @@
     q: "In machine learning, what is an ROC curve?",
     choices: [
       "A plot of the true-positive rate against the false-positive rate as the decision threshold is varied across its range",
-      "A table listing counts of true positives, false positives, false negatives, and true negatives",
-      "A curve showing training loss falling as the number of gradient-descent steps increases",
-      "The harmonic mean of precision and recall summarised as a single number",
-      "A plot of model error against complexity showing where underfitting turns into overfitting"
+      "A square table listing the raw counts of true positives, false positives, false negatives, and true negatives",
+      "A curve showing the training loss steadily falling as the total number of gradient-descent steps increases",
+      "The harmonic mean of precision and recall summarised together as one single balanced number between zero and one",
+      "A plot of overall model error against model complexity showing where underfitting gives way to overfitting"
     ],
     explain: "The ROC (Receiver Operating Characteristic) curve traces a classifier's true-positive rate versus its false-positive rate as the decision threshold sweeps from strict to lenient. Each threshold gives one point; connecting them shows the whole trade-off between catching positives and raising false alarms. The area under it (AUC) summarises overall ranking quality, with 1.0 perfect and 0.5 no better than chance.",
     simple: "It is a curve that shows, for every possible strictness setting, how many real positives you catch versus how many false alarms you set off. A curve hugging the top-left corner means a great classifier.",
@@ -260,10 +260,10 @@
     q: "In machine learning, what is the bias-variance tradeoff?",
     choices: [
       "The tension whereby simpler models risk high bias (underfitting) and complex ones risk high variance (overfitting), with total error lowest in between",
-      "The rule that a model's training error always equals its test error once enough data is collected",
-      "The choice between optimising precision at the expense of recall when setting a decision threshold",
-      "The balance between how fast a model trains and how much memory it consumes at prediction time",
-      "The difference between a learning algorithm and the specific model it produces from data"
+      "The mistaken rule that a model's training error must always exactly equal its own test error once enough training data has finally been collected",
+      "The forced choice between optimising precision at the direct expense of recall whenever you set a single fixed decision threshold on a classifier",
+      "The engineering balance between how fast a model can be trained and how much memory it ends up consuming at prediction time in production",
+      "The conceptual difference between a general learning algorithm and the one specific fitted model that it happens to produce from a training dataset"
     ],
     explain: "A model's expected error decomposes into bias (error from overly simple assumptions that underfit) and variance (error from sensitivity to the particular training sample, which overfits), plus irreducible noise. Reducing one tends to raise the other: increasing complexity cuts bias but inflates variance. The best generalisation comes from the complexity that minimises their sum.",
     simple: "Too simple a model misses the real pattern (high bias); too complex a model chases every wiggle in the training data and fails on new data (high variance). The trick is finding the middle ground where total error is smallest.",
@@ -288,10 +288,10 @@
     q: "In machine learning, what is cross-validation?",
     choices: [
       "A resampling method that rotates the data through several train/test splits and averages the scores to estimate performance reliably",
-      "A penalty added to the loss function that shrinks large weights to prevent overfitting",
-      "The single split of data into one training set and one test set used once",
-      "The procedure of stepping the weights downhill along the gradient of the loss",
-      "A table cross-tabulating a classifier's predicted labels against the true labels"
+      "A penalty term added directly to the loss function that shrinks large weights in order to prevent the model overfitting",
+      "The single fixed split of the data into exactly one training set and one held-out test set that is used just the once",
+      "The iterative procedure of repeatedly stepping the model weights downhill along the computed gradient of the loss surface",
+      "A square table cross-tabulating a classifier's predicted class labels against the genuinely true labels cell by cell"
     ],
     explain: "Cross-validation estimates how well a model generalises by splitting the data into k folds, training on k−1 of them and testing on the remaining one, then rotating so every fold serves as the test set once. Averaging the k scores gives a more stable, less luck-dependent estimate than a single train/test split, and it uses all the data for both roles.",
     simple: "Instead of trusting one lucky train/test split, you slice the data into several parts and take turns holding each part out for testing. Averaging the results gives a much fairer sense of how the model really performs.",
@@ -316,10 +316,10 @@
     q: "In machine learning, what is regularization?",
     choices: [
       "Adding a penalty on model complexity (such as the size of the weights) to the loss so the model generalises better and overfits less",
-      "Rescaling each feature so it has zero mean and unit variance before training begins",
-      "Rotating the data through several train/test splits and averaging the resulting scores",
-      "Combining the predictions of many separate models into one aggregated prediction",
-      "Converting a categorical column into several 0/1 indicator columns, one per category"
+      "Rescaling every input feature so that it has zero mean and unit variance across the data before any training begins",
+      "Rotating the whole dataset through several different train/test splits and then averaging all of the resulting scores",
+      "Combining the separate predictions of many independently trained models into one single aggregated overall prediction",
+      "Converting a single categorical column into several distinct 0/1 indicator columns, using exactly one column per category"
     ],
     explain: "Regularization discourages a model from becoming too complex by adding a penalty term to the loss — commonly the sum of squared weights (L2/ridge) or absolute weights (L1/lasso). This shrinks the weights toward zero, trading a little extra training error for better performance on unseen data. It is one of the main tools for combating overfitting.",
     simple: "It is a leash on the model: you fine it for getting too complicated, which stops it from memorising quirks in the training data. A slightly humbler model usually does better on new data.",
@@ -344,10 +344,10 @@
     q: "In k-means clustering, what is inertia?",
     choices: [
       "The total sum of squared distances from each point to the centroid of the cluster it was assigned to",
-      "The number of clusters k that you must choose before the algorithm runs",
-      "The average distance between the centroids of different clusters",
-      "The count of points that end up unassigned to any cluster after the algorithm converges",
-      "The number of iterations the algorithm takes before the centroids stop moving"
+      "The number of clusters k that you yourself must choose up front before the k-means algorithm even runs",
+      "The average straight-line distance measured between the separate centroids of the different clusters",
+      "The total count of data points that end up left unassigned to any cluster after the algorithm converges",
+      "The number of full iterations that the algorithm takes before all of its centroids finally stop moving"
     ],
     explain: "Inertia (also called within-cluster sum of squares) measures how tightly k-means clusters are packed: for every point it takes the squared distance to its cluster's centroid and adds them all up. Lower inertia means tighter, more compact clusters. It always decreases as k grows, which is why the 'elbow' in the inertia-versus-k plot is used to pick a sensible k rather than the minimum.",
     simple: "It is a tightness score for the clusters: add up how far each point sits from its group's centre. Small inertia means the groups are nice and compact; large means they are loose and spread out.",
@@ -372,10 +372,10 @@
     q: "In PCA, what does 'variance explained' mean?",
     choices: [
       "The fraction of the data's total variance that a principal component (or set of them) captures",
-      "The number of original features that were dropped from the dataset before analysis",
-      "The distance between two data points measured along the first principal axis",
-      "The penalty added to the loss to keep the principal component weights small",
-      "The proportion of examples that PCA assigns to the correct class label"
+      "The total number of original input features that were dropped from the dataset before the analysis began",
+      "The straight-line distance between two given data points measured along the very first principal axis",
+      "The penalty term added onto the loss that keeps each of the principal component weights suitably small",
+      "The overall proportion of examples that PCA directly assigns to the one correct class label each time"
     ],
     explain: "Each principal component captures some share of the total variance in the data, and 'variance explained' is that share, usually written as a percentage. Components are ordered so the first explains the most, the second the next most, and so on. Summing the explained variance of the components you keep tells you how much of the original information you have retained after reducing dimensions.",
     simple: "It is how much of the data's spread each new direction accounts for. Keep the top few directions and add up their shares to see what percentage of the whole picture you have kept while throwing away the rest.",

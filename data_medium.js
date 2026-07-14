@@ -107,10 +107,10 @@
     "q": "Standardising a feature means turning each value x into a z-score. Which formula does that?",
     "choices": [
       "(x − mean) ÷ standard deviation",
-      "(x − min) ÷ (max − min)",
-      "x ÷ mean",
-      "(x − mean)²",
-      "rank(x) ÷ n"
+      "(x − min) ÷ (max − min), rescaled to 0–1",
+      "x ÷ mean, dividing out the average",
+      "(x − mean)², the squared distance",
+      "rank(x) ÷ n, the percentile"
     ],
     "explain": "z = (x − μ) / σ recentres each feature at 0 and rescales its spread to 1, so all features contribute comparably to distances.",
     "simple": "A z-score asks 'how many typical steps from average is this value?' Subtract the mean, divide by the usual spread. Afterwards every feature speaks the same language: 'typical steps'.",
@@ -223,10 +223,10 @@
     "q": "You want a big k, but you don't want far-away voters to drown out a tight, correct local cluster. Which KNN variant fixes this?",
     "choices": [
       "Distance-weighted voting",
-      "A larger training set",
-      "Manhattan distance",
-      "Standardised features",
-      "An even k"
+      "A larger training set overall",
+      "Manhattan instead of Euclidean",
+      "Standardising every feature first",
+      "An even number for k"
     ],
     "explain": "With weights like 1/d, the far-away voters you accidentally included carry almost no weight, so growing k stops being destructive.",
     "simple": "With weights like 1-over-distance, far neighbours barely count for anything. So accidentally including a bunch of far voters (a too-big k) can no longer flip the answer.",
@@ -292,10 +292,10 @@
     "q": "You keep adding features (dimensions), and the distances between random points all bunch together. What does the 'nearest neighbour' become?",
     "choices": [
       "Barely nearer than the farthest",
-      "Sharper and more reliable",
-      "Always the same point",
-      "Undefined below k points",
-      "Negative in some dimensions"
+      "Sharper and more reliable than ever",
+      "Always the same single point",
+      "Undefined until you reach k points",
+      "Negative in some of the dimensions"
     ],
     "explain": "In high dimensions, distances concentrate: everyone is roughly the same distance from everyone. KNN's core signal — \"this one is clearly closest\" — dissolves.",
     "simple": "Add enough dimensions and everyone becomes roughly the same distance from everyone — like a huge dark warehouse where every shelf feels 'kind of far'. 'Nearest' stops meaning anything.",
@@ -320,10 +320,10 @@
     "q": "Two features truly predict the label. You add 20 columns of random junk. What happens to KNN's accuracy?",
     "choices": [
       "Drops — junk noise drowns the signal",
-      "Rises — more information helps",
-      "Holds — junk gets outvoted",
-      "Holds, but queries slow down",
-      "Drops only when k is even"
+      "Rises — more information always helps",
+      "Holds — the junk columns get outvoted",
+      "Holds, but the queries slow right down",
+      "Drops only when k is an even number"
     ],
     "explain": "Every feature contributes to the distance, junk included. Columns of noise add random distance between genuinely similar points until true neighbours stop being nearest.",
     "simple": "Junk columns add random amounts to every distance. With enough random noise, the truly-similar points stop being the closest ones — the real signal drowns.",
@@ -632,10 +632,10 @@
     "q": "The data file is sorted by class. You cut the first 20% off as a validation set, without shuffling. What have you created?",
     "choices": [
       "A one-class, useless validation set",
-      "A perfectly stratified split",
-      "A slightly pessimistic split",
-      "A faster but equivalent split",
-      "Nothing — the split won't run"
+      "A perfectly stratified class split",
+      "A slightly pessimistic but usable split",
+      "A faster but otherwise equivalent split",
+      "Nothing — the split simply won't run"
     ],
     "explain": "Slicing a sorted file gives a validation set full of one class and a training set starved of it. Shuffle (and ideally stratify) before splitting.",
     "simple": "Slice the top off a file sorted by class and your validation set is all one class — while the training set barely contains that class at all. Shuffle first, so every slice looks like the real mix.",
@@ -665,10 +665,10 @@
     "q": "Two training points sit at EXACTLY the same distance from the query, but only one neighbour slot is left. What do most implementations do?",
     "choices": [
       "Pick arbitrarily (e.g. file order)",
-      "Include both, using k + 1",
-      "Average the two into one point",
-      "Re-measure with a second metric",
-      "Give each half a vote"
+      "Include both, quietly bumping to k + 1",
+      "Average the two into one merged point",
+      "Re-measure them with a second metric",
+      "Give each of the two half a vote"
     ],
     "explain": "Something must break the tie, and it's usually as mundane as data order. Harmless — but it means the \"k nearest\" set isn't always uniquely defined.",
     "simple": "Two points tied exactly for the last seat — something has to choose, so libraries just take whichever appears first in the file. Harmless, but good to know the choice is arbitrary.",

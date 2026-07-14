@@ -10,10 +10,10 @@
     q: "In classification, what is accuracy?",
     choices: [
       "The fraction of all predictions the classifier gets correct — correct predictions divided by the total number of predictions",
-      "The fraction of predicted positives that are actually positive",
-      "The fraction of actual positives that the classifier correctly flags",
-      "The average squared difference between predicted and true numeric values",
-      "The area under the curve of true-positive rate against false-positive rate"
+      "The fraction of the cases the model flagged as positive that genuinely turn out to be positive once the labels are checked",
+      "The fraction of the genuinely positive cases in the data that the classifier manages to correctly flag with a raised alert",
+      "The average of the squared differences between each predicted number and its true numeric value taken across the dataset",
+      "The area under the curve traced by the true-positive rate against the false-positive rate as the decision threshold varies"
     ],
     explain: "Accuracy is the simplest classification metric: it counts how many predictions match the truth and divides by the total number of predictions. It treats every class equally, which makes it easy to read but potentially misleading on imbalanced data, where always guessing the majority class can score high while being useless.",
     simple: "It is just the share of answers the model got right out of everything it guessed. Ninety right calls out of a hundred is 90% accuracy.",
@@ -38,10 +38,10 @@
     q: "In classification, what is precision?",
     choices: [
       "Of the cases the model flagged as positive, the fraction that are actually positive — TP / (TP + FP)",
-      "Of the actual positive cases, the fraction the model successfully flags — TP / (TP + FN)",
-      "The fraction of all predictions, positive or negative, that are correct",
-      "The harmonic mean of recall and specificity combined into one score",
-      "The average distance between a point and its assigned cluster centre"
+      "Of all the actual positive cases in the data, the fraction the model successfully flags with a raised alert — TP / (TP + FN)",
+      "The fraction of all predictions, whether positive or negative, that the classifier gets exactly correct across the whole set",
+      "The harmonic mean of recall and specificity, combining those two rates into a single balanced summary score",
+      "The average straight-line distance between a single data point and the centre of the cluster it was assigned to"
     ],
     explain: "Precision answers 'when the model raises a flag, how often is it right?' — it divides true positives by all predicted positives (true plus false). High precision means few false alarms. It is the metric to watch when a false positive is costly, such as flagging a legitimate email as spam.",
     simple: "Out of everything the model called positive, precision is the share that really was positive. High precision means it rarely cries wolf.",
@@ -66,10 +66,10 @@
     q: "In classification, what is recall?",
     choices: [
       "Of the actual positive cases, the fraction the model successfully flags — TP / (TP + FN)",
-      "Of the cases the model flagged positive, the fraction that are truly positive — TP / (TP + FP)",
-      "The fraction of all predictions the model gets correct overall",
-      "The average squared error between predicted and true numeric values",
-      "The number of examples belonging to a given class in the dataset"
+      "Of all the cases the model flagged positive, the fraction that genuinely turn out to be truly positive — TP / (TP + FP)",
+      "The fraction of all predictions the model gets correct overall, counting both its positive and its negative calls together",
+      "The average squared error between each predicted numeric value and its corresponding true target value in the data",
+      "The total number of examples that happen to belong to a given class within the dataset being evaluated here"
     ],
     explain: "Recall answers 'of all the real positives out there, how many did the model catch?' — it divides true positives by all actual positives (true positives plus false negatives). High recall means few misses. It matters most when missing a positive is costly, such as failing to detect a disease.",
     simple: "Out of all the cases that really were positive, recall is the share the model managed to catch. High recall means it rarely lets a real one slip past.",
@@ -94,10 +94,10 @@
     q: "In classification, what is specificity?",
     choices: [
       "Of the actual negative cases, the fraction the model correctly labels negative — TN / (TN + FP)",
-      "Of the actual positive cases, the fraction the model correctly flags — TP / (TP + FN)",
-      "Of the cases flagged positive, the fraction that are truly positive",
-      "The overall fraction of predictions the model gets correct",
-      "The average absolute difference between predicted and true values"
+      "Of all the actual positive cases in the data, the fraction the model correctly flags with an alert — TP / (TP + FN)",
+      "Of the cases the model flagged positive, the fraction that genuinely turn out to be truly positive when checked",
+      "The overall fraction of predictions the model gets correct across both the positive and the negative classes",
+      "The average absolute difference between each predicted value and its corresponding true numeric value in the data"
     ],
     explain: "Specificity, also called the true-negative rate, measures how well a classifier identifies the negatives: of all genuinely negative cases, how many it correctly leaves unflagged. It is the mirror image of recall (which focuses on positives) and equals one minus the false-positive rate. High specificity means the model rarely raises a false alarm on a true negative.",
     simple: "Out of all the cases that really were negative, specificity is the share the model correctly left alone. High specificity means it seldom sounds a false alarm.",
@@ -122,10 +122,10 @@
     q: "In classification, what is the false-positive rate?",
     choices: [
       "Of the actual negative cases, the fraction the model wrongly flags as positive — FP / (FP + TN)",
-      "Of the cases flagged positive, the fraction that are actually negative",
-      "Of the actual positives, the fraction the model misses",
-      "The overall fraction of predictions the model gets wrong",
-      "The average squared error between predicted and true numeric values"
+      "Of all the cases flagged positive, the fraction that turn out to be actually negative and thus false alarms",
+      "Of all the actual positives in the data, the fraction the model misses and never flags — the miss rate",
+      "The overall fraction of predictions the model gets wrong across both the positive and the negative classes",
+      "The average squared error between each predicted numeric value and its corresponding true target value in the data"
     ],
     explain: "The false-positive rate is the share of genuinely negative cases that a classifier mistakenly flags as positive: false positives divided by all actual negatives. It equals one minus specificity and forms the x-axis of the ROC curve. A low false-positive rate means the model rarely raises false alarms on true negatives.",
     simple: "Out of all the cases that were really negative, it is the share the model wrongly flagged. It measures how often the model sounds a false alarm.",
@@ -150,10 +150,10 @@
     q: "In classification, what is AUC (area under the ROC curve)?",
     choices: [
       "A single number, the area beneath the ROC curve, summarising how well the model ranks positives above negatives across all thresholds",
-      "The fraction of all predictions the classifier gets correct at one chosen threshold",
-      "The harmonic mean of precision and recall at the default cutoff",
-      "The average squared distance between predictions and true numeric targets",
-      "The number of positive examples present in the test set"
+      "The fraction of all predictions the classifier gets correct at one single chosen decision threshold, ignoring how it ranks everything else",
+      "The harmonic mean of precision and recall as measured at the default probability cutoff, blending those two rates into one balanced figure",
+      "The average squared distance between the model's numeric predictions and their true continuous target values taken across the dataset",
+      "The total number of positive examples that happen to be present within the particular test set used to evaluate the model here"
     ],
     explain: "AUC condenses the entire ROC curve into one value between 0 and 1: it equals the probability that the model scores a randomly chosen positive higher than a randomly chosen negative. An AUC of 1.0 is a perfect ranker, 0.5 is no better than chance, and it is threshold-independent, which makes it handy for comparing classifiers overall.",
     simple: "It is a single grade for how well the model separates positives from negatives, no matter where you set the cutoff. One is perfect, a half is pure guessing.",
@@ -178,10 +178,10 @@
     q: "In classification, what is a precision-recall curve?",
     choices: [
       "A plot of precision against recall as the decision threshold is varied, showing the trade-off between the two",
-      "A plot of the true-positive rate against the false-positive rate across thresholds",
-      "A table of counts of true and false positives and negatives",
-      "A curve of training loss falling as gradient-descent steps increase",
-      "A bar chart of how many examples belong to each class"
+      "A plot of the true-positive rate against the false-positive rate measured across the full range of decision thresholds",
+      "A table listing the counts of true positives, false positives, true negatives, and false negatives side by side",
+      "A curve of the training loss falling steadily as the number of gradient-descent steps increases during fitting",
+      "A bar chart showing how many individual examples happen to belong to each class within the dataset being used"
     ],
     explain: "A precision-recall curve traces how precision and recall move against each other as the classification threshold sweeps from strict to lenient. Typically precision is high when recall is low and falls as recall rises, because catching more positives means accepting more false alarms. It is especially informative on imbalanced data, where the ROC curve can look over-optimistic.",
     simple: "It is a curve showing the tug-of-war between precision and recall: as you push to catch more real positives, precision usually drops. It reveals the price of turning one dial up.",
@@ -206,10 +206,10 @@
     q: "In classification, what is log loss (cross-entropy loss)?",
     choices: [
       "A metric that penalises a probabilistic classifier by the negative log of the probability it assigned to the true class",
-      "The fraction of predictions the classifier gets exactly correct",
-      "The area under the true-positive-rate versus false-positive-rate curve",
-      "The average absolute gap between predicted and true numeric values",
-      "The count of examples the classifier assigns to each class"
+      "A metric giving the fraction of predictions the classifier gets exactly correct once its output probabilities are thresholded",
+      "A metric equal to the area under the true-positive-rate versus false-positive-rate curve swept across all decision thresholds",
+      "A metric equal to the average absolute gap between each predicted numeric value and its corresponding true target value",
+      "A metric that simply counts how many of the evaluation examples the classifier assigns to each of the possible classes"
     ],
     explain: "Log loss judges predicted probabilities, not just hard labels: for each example it takes the negative logarithm of the probability the model gave to the correct class and averages these. Confident correct predictions incur almost no penalty, while confident wrong predictions are punished heavily, so log loss rewards well-calibrated probabilities.",
     simple: "It scores how good the model's probabilities are, not just its yes/no calls. Being confident and right barely costs anything; being confident and wrong is punished hard.",
@@ -234,10 +234,10 @@
     q: "In regression, what is R-squared (the coefficient of determination)?",
     choices: [
       "The fraction of the variance in the target that the model explains, where 1 is perfect and 0 matches just predicting the mean",
-      "The average squared difference between predicted and actual values",
-      "The average absolute difference between predicted and actual values",
-      "The fraction of predictions that fall exactly on the true value",
-      "The area under the true-positive-rate versus false-positive-rate curve"
+      "The average of the squared differences between each predicted value and its actual observed value taken over the whole dataset",
+      "The average of the absolute differences between each predicted value and its actual observed value taken over the whole dataset",
+      "The fraction of the predictions that happen to fall exactly on the true target value with no error at all when rounded",
+      "The area under the curve of the true-positive rate plotted against the false-positive rate across all decision thresholds"
     ],
     explain: "R-squared measures how much of the target's total variation a regression model accounts for, comparing its errors against the errors of a naive model that always predicts the mean. A value of 1 means the model explains all the variance, 0 means it does no better than the mean, and negative values mean it does worse. It gives a scale-free sense of fit.",
     simple: "It says what share of the ups and downs in the target the model manages to explain. One is a perfect fit; zero is no better than always guessing the average.",
@@ -262,10 +262,10 @@
     q: "In regression, what is mean squared error (MSE)?",
     choices: [
       "The average of the squared differences between predicted and actual values",
-      "The average of the absolute differences between predicted and actual values",
-      "The fraction of the target's variance that the model explains",
-      "The share of predictions that exactly match the true value",
-      "The harmonic mean of precision and recall"
+      "The average of the absolute differences between the predicted and the actual values taken across the whole dataset",
+      "The fraction of the target's total variance that the model manages to explain relative to just predicting the mean",
+      "The share of the predictions that happen to exactly match the true target value with no error at all when rounded",
+      "The harmonic mean of precision and recall combined together into a single balanced summary score for the model"
     ],
     explain: "Mean squared error averages the squares of the gaps between predictions and truth. Squaring makes all errors positive and penalises large errors far more than small ones, so a few big misses dominate the score. It is a standard regression loss, though its units are the square of the target's units.",
     simple: "Take how far off each prediction is, square it, and average those. Squaring means big misses hurt much more than small ones.",
@@ -290,10 +290,10 @@
     q: "In regression, what is mean absolute error (MAE)?",
     choices: [
       "The average of the absolute differences between predicted and actual values",
-      "The average of the squared differences between predicted and actual values",
-      "The fraction of the target's variance the model explains",
-      "The proportion of predictions that exactly hit the true value",
-      "The area under the ROC curve for a ranking model"
+      "The average of the squared differences between the predicted and the actual values taken across the whole dataset",
+      "The fraction of the target's total variance that the model manages to explain relative to just predicting the mean",
+      "The proportion of the predictions that happen to exactly hit the true target value with no error at all when rounded",
+      "The area under the ROC curve traced out for a model that ranks its positive cases above the negative ones"
     ],
     explain: "Mean absolute error averages the sizes of the prediction errors, ignoring their sign. Because it does not square the gaps, it treats all errors in proportion to their magnitude and is less sensitive to outliers than mean squared error. It is reported in the same units as the target, which makes it easy to interpret.",
     simple: "Take how far off each prediction is, drop the minus sign, and average those distances. Unlike squaring, one big miss does not blow up the score.",
@@ -318,10 +318,10 @@
     q: "In a scikit-learn classification report, what is 'support'?",
     choices: [
       "The number of actual occurrences of each class in the dataset being evaluated",
-      "The fraction of predictions for a class that turn out correct",
-      "The confidence probability the model assigns to its predictions",
-      "The number of features used to make each prediction",
-      "The average squared error of the model's numeric predictions"
+      "The fraction of the predictions made for a class that ultimately turn out to be correct when checked against the labels",
+      "The confidence probability the model attaches to each of the individual predictions that it happens to make",
+      "The number of input features that were used by the model in order to make each individual prediction it produces",
+      "The average squared error of the model's numeric predictions taken across all of the cases that were evaluated"
     ],
     explain: "Support is simply the count of true instances of each class in the evaluation set. It appears alongside precision, recall, and F1 in a classification report to show how many examples each per-class metric is based on. Small support warns that a class's metrics rest on few examples and may be unreliable.",
     simple: "It is just how many real examples of each class there were. It tells you how much data each score is standing on — a big number means a more trustworthy score.",

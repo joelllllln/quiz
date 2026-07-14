@@ -139,10 +139,10 @@
     "q": "DBSCAN's first parameter is 'eps'. What does eps mean?",
     "choices": [
       "The radius that defines each point's neighbourhood — 'this close counts as near'",
-      "The number of clusters DBSCAN should return",
-      "The minimum size a cluster is allowed to be",
-      "The fraction of points allowed to be noise",
-      "The number of times the algorithm iterates"
+      "The exact number of separate clusters that DBSCAN should search for and then return",
+      "The minimum number of points that any valid cluster is ever allowed to contain",
+      "The maximum fraction of the whole dataset that is permitted to end up as noise",
+      "The total number of times the algorithm iterates before it finally comes to a stop"
     ],
     "explain": "eps is the neighbourhood radius: two points are neighbours if they sit within eps of each other. Together with minPts it defines what 'dense' means. Set eps too small and everything is noise; too large and everything merges into one cluster.",
     "simple": "eps is your definition of 'nearby'. Draw a circle of radius eps around a point, and whoever falls inside is a neighbour. That single distance sets the scale of the whole clustering — it's not a cluster count, a size limit, or an iteration count. It's how far 'near' reaches.",
@@ -185,10 +185,10 @@
     "q": "DBSCAN's second parameter is 'minPts' (or min_samples). What does it set?",
     "choices": [
       "How many neighbours a point needs within eps to count as being in a dense region",
-      "The maximum number of points allowed in one cluster",
-      "The number of clusters to search for",
-      "The smallest distance two clusters must keep apart",
-      "The number of features used to measure distance"
+      "The maximum number of points that any single one cluster is ever allowed to contain",
+      "The total number of separate clusters that the algorithm should go and search for",
+      "The smallest distance that any two finished clusters must always keep between them",
+      "The number of input features that get used when measuring the distance between points"
     ],
     "explain": "minPts is the crowd-size threshold: a point sitting in a region with at least minPts neighbours (within eps) is 'in the dense interior'. eps sets how far you look; minPts sets how many must be there. Together they define density.",
     "simple": "minPts is how big a crowd has to be before it counts as a crowd. Stand at a point, look within radius eps, and count the neighbours — if there are at least minPts of them, you're in a dense area. eps is the reach; minPts is the headcount. The two together are DBSCAN's whole definition of 'dense'.",
@@ -231,10 +231,10 @@
     "q": "DBSCAN sorts points into three roles. What is a 'core' point?",
     "choices": [
       "A point with at least minPts neighbours within eps — sitting inside a dense region",
-      "The single centre of gravity of a cluster",
-      "The first point DBSCAN happens to visit",
-      "A point exactly on the boundary between two clusters",
-      "The densest point in the entire dataset"
+      "The single centre-of-gravity point around which the whole of a cluster is balanced",
+      "The very first point that DBSCAN happens to visit when it starts its scan",
+      "A point sitting exactly on the shared boundary line between two neighbouring clusters",
+      "The one single densest point found anywhere in the entire dataset"
     ],
     "explain": "A core point has a full crowd around it (≥ minPts neighbours within eps), so it sits in a cluster's dense interior and can grow the cluster outward. Core points are the seeds and engine of every DBSCAN cluster.",
     "simple": "A core point is one standing in a crowd — enough neighbours nearby to count as dense. These are the cluster's beating heart: DBSCAN starts from a core point and expands outward through other core points. It's not a centroid, not the first point visited, not the single densest point — just any point with a full crowd around it.",
@@ -276,10 +276,10 @@
     "q": "After DBSCAN runs, some points are labelled −1. What does that mean, and why is it a feature?",
     "choices": [
       "They're noise — in no dense region — and being allowed to belong to nothing is genuinely useful",
-      "They form a hidden extra cluster numbered −1",
-      "They are the core points that seeded the clusters",
-      "They were skipped because the algorithm ran out of time",
-      "They belong to every cluster at once, so can't be assigned"
+      "They quietly form one hidden extra cluster that the algorithm has simply labelled as −1",
+      "They are in fact the dense interior core points that originally seeded all of the clusters",
+      "They were skipped over completely because the algorithm ran out of time before reaching them all",
+      "They belong to every single cluster all at once, and so they cannot be assigned to just one"
     ],
     "explain": "−1 is DBSCAN's noise label: points reachable from no dense region. Unlike k-means, which forces every point into some cluster, DBSCAN can say 'this point belongs to nothing' — which is exactly right for outliers and makes it double as an anomaly detector.",
     "simple": "−1 means 'noise — this point isn't part of any crowd'. That's a strength, not a bug: k-means shoves every outlier into the nearest cluster whether it fits or not, but DBSCAN is allowed to shrug and leave true oddballs unassigned. That honesty is why DBSCAN doubles as an outlier finder.",

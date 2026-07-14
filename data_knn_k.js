@@ -8,10 +8,10 @@
     q: "In k-NN you set k very small (say k = 1). In bias–variance terms, what does that do?",
     choices: [
       "Low bias, high variance — it hugs the training points and overfits, reacting to noise",
-      "High bias, low variance — it oversmooths and underfits",
-      "Low bias and low variance — the ideal, with no trade-off",
-      "High bias and high variance — always the worst of both",
-      "It changes neither; only the distance metric affects bias and variance"
+      "High bias, low variance — it oversmooths and underfits, ignoring nearly all local detail",
+      "Low bias and low variance — the ideal sweet spot with no bias–variance trade-off at all",
+      "High bias and high variance — simultaneously the worst of both worlds in every case",
+      "It changes neither; only the chosen distance metric affects bias and variance here"
     ],
     explain: "A tiny k means each prediction rests on one or a few nearest points, so the decision boundary is jagged and clings to the training data — low bias but high variance. That is overfitting: one mislabelled neighbour flips the answer, and k = 1 scores 100% on training while test accuracy sags. The fix is to raise k, which averages neighbours and cuts variance.",
     simple: "Trusting only the single closest neighbour lets one weird point decide everything — the model memorises quirks (overfits) instead of the general pattern.",
@@ -40,10 +40,10 @@
     q: "You raise k in k-NN toward the dataset size. What happens to bias and variance, and to the fit?",
     choices: [
       "High bias, low variance — it oversmooths and underfits, drifting toward the majority class",
-      "Low bias, high variance — it overfits the training data",
-      "Both bias and variance drop to zero — the perfect model",
-      "Variance rises sharply while bias vanishes",
-      "Nothing changes; k only affects prediction speed, not the fit"
+      "Low bias, high variance — it overfits the training data and chases every noisy outlier point",
+      "Both bias and variance drop all the way to zero — the flawless, mythical perfect model",
+      "Variance rises sharply while the bias vanishes entirely as you keep enlarging k",
+      "Nothing changes; k only affects prediction speed, never the fit of the model"
     ],
     explain: "A large k averages over many neighbours, so predictions are stable (low variance) but crude: the boundary is too smooth to capture real structure — high bias, underfitting. At k = n every query just returns the majority class. The cure for underfitting is the opposite of overfitting's: less smoothing — a smaller k (or better features).",
     simple: "Polling the whole town for every decision gives a steady but bland answer — it washes out the local detail you actually needed (underfits).",
@@ -72,10 +72,10 @@
     q: "What is the right way to choose the value of k in k-NN?",
     choices: [
       "Cross-validate: try a range of k, score each on held-out folds, and keep the k with the best average validation score",
-      "Pick the k with the highest training accuracy (which is always k = 1)",
-      "Always use k = 1 so the model fits the training data exactly",
-      "Set k equal to the number of features",
-      "Choose k once at random — it doesn't really affect accuracy"
+      "Pick the single k that gives the highest accuracy on the training set itself, which will always turn out to be k = 1",
+      "Always fix k = 1 so that the model fits every single training point exactly and simply memorises all of the data",
+      "Set k equal to the number of features in the dataset, using exactly one neighbour per input feature column",
+      "Choose a value of k just once at random, since the particular choice doesn't really affect the model's accuracy anyway"
     ],
     explain: "k is a hyperparameter, so you tune it on data the model hasn't fitted. k-fold cross-validation: split the training data into folds; for each candidate k, train on some folds and score on the held-out fold, then average across folds and pick the k with the best average. Training accuracy is useless here — it always favours k = 1, which overfits. Rules of thumb like k ≈ √n are only starting points to validate, and an odd k avoids ties in two-class votes.",
     simple: "Never judge k on data the model already saw. Try several k values, test each on fresh held-out slices, and keep whichever generalises best on average.",
