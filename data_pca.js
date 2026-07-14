@@ -173,7 +173,7 @@
       "Dropping it straight onto the line, like a shadow — keeping its position along the line, losing the rest",
       "Moving the point sideways to the nearest already-existing data point that happens to sit on the line",
       "Rounding every one of the point's coordinates to the closest whole number before it is plotted",
-      "Deleting the point from the dataset entirely whenever it happens to fall off to the side of the line",
+      "Deleting the point from the dataset entirely whenever it happens to fall somewhere off to the side of the line",
       "Rotating the whole dataset around until it finally comes to lie completely flat on the floor"
     ],
     "explain": "Projection casts each point onto a chosen line (or lower-dimensional space) — like a shadow falling onto the floor. You keep the point's position ALONG the line and discard the perpendicular part. PCA's job is choosing the line that loses the least.",

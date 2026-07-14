@@ -686,10 +686,10 @@
     q: "In scikit-learn, what is StandardScaler?",
     choices: [
       "A transformer that rescales each feature to have zero mean and unit variance, using statistics learned during fit",
-      "An estimator that predicts a numeric target from input features",
-      "A method that splits the data into training and test portions",
-      "A tool that combines several classifiers into a voting ensemble",
-      "A search over a grid of hyperparameter values"
+      "An estimator that predicts a single continuous numeric target value directly from the given input features",
+      "A method that divides the available data into one separate training portion and one separate test portion",
+      "A tool that combines several separate trained classifiers together into a single majority-vote ensemble model",
+      "A systematic search across a predefined grid of candidate hyperparameter values for the best-scoring setting"
     ],
     explain: "StandardScaler standardises features: during .fit() it learns each column's mean and standard deviation, and during .transform() it subtracts the mean and divides by the standard deviation so every feature ends up centred at zero with unit variance. This puts features on a comparable scale, which helps distance- and gradient-based methods that are sensitive to differing ranges.",
     simple: "It puts every feature on the same footing by centring it at zero and giving it a standard spread of one. That stops a big-numbered column from drowning out small-numbered ones.",
@@ -714,10 +714,10 @@
     q: "In scikit-learn, what does train_test_split do?",
     choices: [
       "It randomly divides arrays or datasets into separate training and test subsets in a specified proportion",
-      "It trains a model and then evaluates it in one call",
-      "It rescales features to zero mean and unit variance",
-      "It searches a grid of hyperparameters for the best combination",
-      "It rotates the data through k folds and averages the scores"
+      "It trains a model on the data and then evaluates that very same model in a single combined convenience call",
+      "It rescales each of the features so that they all end up with zero mean and unit variance across the dataset",
+      "It searches across a grid of candidate hyperparameters to find the single best-scoring combination among them",
+      "It rotates the whole dataset through k separate folds and then averages the validation scores that it obtains"
     ],
     explain: "train_test_split is a utility that shuffles and partitions your features and target into a training set and a test set according to a chosen fraction (for example 80/20). It keeps X and y aligned, supports a random_state for reproducibility, and can stratify by class to preserve label proportions. It is the standard first step in setting up an honest evaluation.",
     simple: "It randomly cuts your data into a bigger pile to train on and a smaller pile to test on, keeping the features and labels matched up. One line, and your held-out set is ready.",
@@ -742,10 +742,10 @@
     q: "In scikit-learn, what is GridSearchCV?",
     choices: [
       "A tool that searches every hyperparameter combination in a grid using cross-validation and refits the best one",
-      "A transformer that scales features to zero mean and unit variance",
-      "A utility that splits data into a single train and test set",
-      "A method that returns predicted class probabilities for each sample",
-      "A curve plotting true-positive rate against false-positive rate"
+      "A transformer that rescales each feature to have zero mean and unit variance using statistics learned during fit",
+      "A utility that divides the data into a single training set and a single held-out test set just one time",
+      "A method that returns the predicted probability of each class for every one of the individual input samples",
+      "A curve that plots the true-positive rate against the false-positive rate across all of the decision thresholds"
     ],
     explain: "GridSearchCV automates hyperparameter tuning: given an estimator and a grid of parameter values, it evaluates every combination with k-fold cross-validation, records the mean validation score for each, and (by default) refits the best-scoring configuration on all the data. It wraps model selection and cross-validation into a single fit/predict interface, and works cleanly around a Pipeline.",
     simple: "It automatically tries every combination of the settings you list, scoring each with cross-validation, and keeps the best one. Tuning by hand, done for you.",
@@ -770,10 +770,10 @@
     q: "In scikit-learn, what does cross_val_score do?",
     choices: [
       "It runs cross-validation for an estimator and returns the array of scores, one per fold",
-      "It permanently splits the data into a training and a test set",
-      "It rescales the features to zero mean and unit variance",
-      "It fits a model and returns its learned coefficients",
-      "It searches a grid of hyperparameters for the best combination"
+      "It permanently divides the data into one training set and one test set before any of the modelling begins",
+      "It rescales all of the features so that each one of them has zero mean and unit variance across the data",
+      "It fits a model to the data and then returns the learned coefficients that it estimated from that data",
+      "It searches across a grid of candidate hyperparameters looking for the single best-scoring combination"
     ],
     explain: "cross_val_score is a convenience function that takes an estimator, features, and target, splits the data into k folds, trains and scores the estimator on each fold in turn, and returns the array of per-fold scores. Averaging those scores gives a stable estimate of generalisation performance without you managing the splits yourself.",
     simple: "It runs the model through several train/test rotations for you and hands back a score for each. Average them and you get a fair read on how it performs.",
@@ -798,10 +798,10 @@
     q: "In scikit-learn, what does a classifier's predict_proba return?",
     choices: [
       "For each sample, the estimated probability of belonging to each class, with the row summing to one",
-      "For each sample, a single hard class label",
-      "The overall accuracy of the classifier on the test set",
-      "The learned coefficients of the fitted model",
-      "The features ranked by their importance to the prediction"
+      "For each input sample it returns a single hard predicted class label rather than any probabilities at all",
+      "The overall accuracy of the fitted classifier as measured on the held-out test set once training is done",
+      "The learned coefficients of the fitted model, with one weight for each of the input feature columns",
+      "The input features ranked in order of their measured importance to the model's individual predictions"
     ],
     explain: "predict_proba gives soft outputs rather than hard labels: for every input sample it returns a vector of class probabilities that sum to one, reflecting the model's confidence in each class. These probabilities let you apply a custom decision threshold, rank samples by likelihood, or compute metrics like log loss and AUC. Not every estimator provides it.",
     simple: "Instead of just saying 'class A', it gives the odds for each class — like 'A: 80%, B: 20%'. That lets you set your own cutoff or measure confidence.",

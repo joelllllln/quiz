@@ -98,7 +98,7 @@
   def("imbal",
     "What are over- and under-sampling for class imbalance?",
     "Duplicating minority-class rows (oversampling) or dropping majority-class rows (undersampling) to rebalance — done only on the training data to avoid leakage",
-    ["Adding a batch of extra engineered features that are computed only for the minority-class rows, hoping this makes them easier to separate",
+    ["Adding a whole batch of extra engineered features that are computed only for the minority-class rows, in the hope that this will somehow make them much easier to separate",
      "Scaling only the features of the minority-class rows onto a deliberately larger numeric range so that the model weights those rows more heavily",
      "Training two entirely separate models on the very same data and then averaging their predictions to smooth out the class imbalance",
      "Lowering the learning rate of the optimiser specifically whenever a rare-class example is encountered during the training loop"],

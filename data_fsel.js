@@ -665,10 +665,10 @@
     q:"You rerun feature selection on several random subsamples of your data and each run picks a DIFFERENT set. What does this instability mean?",
     choices:[
       "The selection is unstable — often from small data or correlated features — so the chosen set may not generalise",
-      "It proves the features are all equally useless and should be discarded",
-      "It is expected and irrelevant; only the final accuracy on one split matters",
-      "It means the model has too few features and you should add more",
-      "It guarantees the very first run found the correct set"
+      "It conclusively proves that all of the features are exactly equally useless and so every single one of them should simply be discarded",
+      "It is completely expected and entirely irrelevant; only the final accuracy that gets measured on one single data split truly matters",
+      "It means the model is currently working with far too few features and so you should just keep on adding many more of them",
+      "It effectively guarantees that the very first selection run you happened to do must have already found the one truly correct set"
     ],
     explain:"Selection stability measures how consistent the chosen feature set is across resamples of the data. Instability signals that the choice is driven by noise — common with small samples or when several correlated features are near-interchangeable, so tiny data changes swap one for another. Unstable selections are fragile; techniques like stability selection (aggregating over many resamples) yield more reliable sets.",
     simple:"If every data subsample picks a different feature set, your selection is riding on noise, not real signal. A trustworthy selection stays roughly the same across resamples.",
@@ -688,10 +688,10 @@
     q:"Two features are nearly perfect copies of each other, and both truly drive the target. What does PERMUTATION importance report for each, and why?",
     choices:[
       "Both look UNimportant, because shuffling one leaves its twin to compensate, so accuracy barely drops",
-      "Both look extremely important, because each is highly correlated with the target",
-      "One is randomly assigned all the importance and the other exactly zero",
-      "Both are automatically dropped before importance is computed",
-      "The importances add up to more than 100% because the signal is counted twice"
+      "Both of them look extremely important, precisely because each one is individually still highly correlated with the target",
+      "One of the two twins is randomly assigned the whole of the importance while the other one is simply left with exactly zero",
+      "Both of the features are automatically dropped from the model entirely before their importance is ever even computed at all",
+      "The two importances add up to well over one hundred percent, because the shared signal ends up being fully counted twice over"
     ],
     explain:"Permutation importance shuffles one feature at a time. When a shuffled feature has a near-identical twin still intact, the model reads the same information from the twin, so accuracy hardly falls — the feature scores as unimportant despite driving the target. Both correlated features can look weak individually. This is why you must interpret permutation importance carefully under correlation, ideally shuffling correlated groups together.",
     simple:"Scramble one of two identical columns and the other still tells the model everything, so accuracy barely moves. Both end up looking useless even though they matter.",
@@ -711,10 +711,10 @@
     q:"Your target depends on an INTERACTION between two features (their combination flips the answer). A univariate FILTER keeps missing them. Why, and what selects them better?",
     choices:[
       "Filters score each feature alone and can't see interactions; embedded or wrapper methods that use the model can",
-      "Filters are simply too slow to reach the interacting features in time",
-      "Univariate filters only work on regression, not on interaction targets",
-      "Interactions can never be captured by any feature-selection method",
-      "The filter needs the features scaled first and would then find the interaction"
+      "Filters are simply far too slow to ever manage to reach the pair of interacting features in time before the search finally ends",
+      "Univariate filters only ever work properly on plain regression problems, and they never work at all on targets involving an interaction",
+      "Interactions between two features quite simply can never be captured at all by any feature-selection method that currently exists",
+      "The filter just needs the features to be carefully scaled first, and it would then reliably go on to find the interaction after all"
     ],
     explain:"A univariate filter tests each feature's own relationship with the target, so a feature that only matters in combination with another shows weak individual signal and gets dropped. Methods that evaluate features THROUGH a model — embedded (trees, Lasso on interaction terms) or wrappers (RFE, forward selection) — can detect that the pair helps together. This is the classic blind spot of univariate selection.",
     simple:"A filter judges each column by itself, so it misses columns that only help in combination. Model-based methods that test features together can catch the interaction.",

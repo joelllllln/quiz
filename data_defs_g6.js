@@ -10,10 +10,10 @@
     q: "What is Principal Component Analysis (PCA)?",
     choices: [
       "A technique that finds new axes (principal components) capturing the directions of greatest variance, letting you describe the data with fewer coordinates",
-      "A clustering method that groups points by density and marks sparse points as noise",
-      "A supervised classifier that fits a straight boundary between two labelled classes",
-      "A resampling trick that builds many trees on bootstrap samples and averages their votes",
-      "A search over hyper-parameters that keeps whichever combination scores best on validation data"
+      "A density-based clustering method that grows groups from crowded regions and tags the isolated points sitting in sparse gaps as leftover background noise points",
+      "A supervised classifier that fits one straight decision boundary between two labelled classes, choosing the line that keeps the widest possible margin between them",
+      "A resampling ensemble that builds hundreds of decision trees on bootstrap samples of the rows and averages their separate predictions into one vote",
+      "A grid search over model hyper-parameters that trains one candidate per setting and keeps whichever combination scores best on held-out validation data"
     ],
     explain: "PCA is an unsupervised dimensionality-reduction method: it rotates the coordinate system so the new axes, the principal components, point along the directions in which the data varies most. Keeping only the first few components lets you represent high-dimensional data with far fewer numbers while losing as little variance as possible. It relies only on the data's own spread, so no labels are needed.",
     simple: "PCA finds the handful of directions in which your data spreads out the most and re-describes every point using just those. It is a way of squeezing many columns down to a few without throwing away much of the picture.",

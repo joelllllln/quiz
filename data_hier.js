@@ -273,7 +273,7 @@
     "q": "A dendrogram holds every possible grouping. How do you turn it into an actual set of clusters?",
     "choices": [
       "Cut the tree at a chosen height — everything still separate below it becomes a cluster",
-      "Keep only the two branches that happened to merge last, right at the top of the tree",
+      "Keep only the two separate branches that happened to merge together last, right at the very top of the tree",
       "Take the plain arithmetic average of all the recorded merge heights in the tree",
       "Count how many leaves the tree has and simply divide that total by two",
       "Re-run the whole algorithm again from scratch with the number of clusters fixed"
@@ -312,7 +312,7 @@
       "Always by the straight-line distance between the first point added to each cluster",
       "By subtracting the two clusters' member counts and taking the absolute difference",
       "By whichever of the two clusters happens to have the larger internal spread",
-      "By simply counting how many other stray points physically separate the two clusters"
+      "By simply counting up how many other stray points happen to physically separate the two clusters"
     ],
     "explain": "Point-to-point distance is obvious, but cluster-to-cluster needs a rule for summarising many pairwise distances into one number. That rule is the 'linkage': single (closest pair), complete (farthest pair), average (mean pair), or Ward (variance growth).",
     "simple": "Two crowds — how far apart are they? You must pick a rule. Nearest two people (single linkage)? Farthest two (complete)? The average over all pairs? Each rule is a 'linkage', and it quietly decides the whole shape of your clusters. Distance between groups isn't one obvious number; it's a choice you make.",
@@ -394,7 +394,7 @@
     "q": "Given that hierarchical clustering produces a whole tree, why do people still reach for k-means on large datasets?",
     "choices": [
       "Hierarchical needs all pairwise distances (~n²), so it's too slow and memory-hungry at scale",
-      "Hierarchical clustering can only ever discover exactly two separate clusters at any moment",
+      "Hierarchical clustering can only ever discover exactly two separate clusters at any single moment",
       "Hierarchical clustering requires fully labelled data before it can begin building its tree",
       "Hierarchical clustering cannot cope with datasets that carry more than three features",
       "Hierarchical clustering always produces strictly worse clusters than k-means ever does"

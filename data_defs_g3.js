@@ -407,7 +407,7 @@
     q: "In boosting, what does 'sequential training' mean?",
     choices: [
       "Each learner is trained AFTER the previous ones and depends on their results, because it targets the errors they left behind — so the learners cannot be built in parallel",
-      "The training rows are fed to the model in one fixed sorted order, cycling through that same sequence every epoch so the updates always arrive in the same arrangement",
+      "The training rows are fed to the model in one fixed pre-sorted order, cycling through that exact same sequence on every epoch so the updates always arrive in the identical arrangement",
       "Each learner is trained on a different sequential slice of the timeline, so earlier models cover the oldest data while later ones only ever see the most recent rows",
       "The input features are added to the model one column at a time in sequence, refitting after each addition until every available feature has finally been folded in",
       "Several learners are all trained at once in parallel and only afterward arranged into a sequence, so their ordering is purely cosmetic and carries no real dependency"
@@ -698,7 +698,7 @@
       "Predictions the base models make on the final held-out test set only after all of their training has finished, gathered once at the very end to score the whole finished stacked ensemble at once",
       "Predictions whose numeric values fall outside the valid probability range and therefore must be clipped back into the zero-to-one interval before the meta-learner is allowed to read them",
       "The predictions coming from whichever single cross-validation fold performed the worst overall, singled out and then fed to the meta-learner as its hardest, most informative training examples",
-      "Predictions that have been averaged across every cross-validation fold at once to smooth out the fold-to-fold noise, blending all of them into one smoothed consensus value for each training row"
+      "Predictions that have been averaged across every single cross-validation fold at once so as to smooth out the fold-to-fold noise, blending all of them into one smoothed consensus value for each training row"
     ],
     explain: "To build the meta-learner's training data without leakage, stacking uses cross-validation: the training set is split into folds, and for each fold a base model trained on the OTHER folds predicts the held-out fold. Stitching these held-out predictions together gives an out-of-fold prediction for every training row — honest inputs the base model didn't memorize, so the meta-learner learns a realistic combination.",
     simple: "Out-of-fold predictions are a model's guesses for data it wasn't trained on, gathered fold by fold. That keeps the meta-learner honest instead of learning from cheated answers.",
@@ -807,10 +807,10 @@
     q: "What is a voting classifier (voting ensemble)?",
     choices: [
       "An ensemble that trains several different classifiers on the same data and combines their predictions by a fixed rule — hard voting on labels or soft voting on averaged probabilities",
-      "A single classifier that is retrained several times and keeps whichever run scored best",
-      "A meta-model trained on the base models' out-of-fold predictions to learn the combination",
-      "A classifier that lets the user vote on which prediction looks most plausible",
-      "A boosting classifier whose trees vote on which row to reweight next"
+      "A single classifier that is retrained several times over from different random seeds and simply keeps whichever run happened to score the best on the held-out validation split",
+      "A meta-model trained on the base models' out-of-fold predictions to learn the best combination, discovering the weights from data instead of fixing them ahead of time by hand",
+      "A classifier that lets the human user step in and vote on whichever prediction looks the most plausible to them, manually overriding the model on every individual row",
+      "A boosting classifier whose successive trees vote on which training row to reweight next, steering more and more attention onto the hardest rows the ensemble keeps missing"
     ],
     explain: "A voting classifier is the simplest ensemble of diverse models: fit several classifiers, then combine them by a fixed aggregation rule rather than a learned one — hard voting takes the majority class label, soft voting averages the predicted probabilities. It differs from stacking, where a meta-learner learns the combination instead of using a preset rule.",
     simple: "A voting classifier runs several different models and just lets them vote on the answer — either by majority label or by averaging their confidence. No extra model learns the blend.",
