@@ -2077,6 +2077,9 @@
     question(false);
   }
 
+  // A question has an interactive lab only if its widget declares a renderable type; definition/contrast
+  // cards carry a reveal but no lab, so we must not promise one in the wrong-answer flow.
+  function hasLab(q) { var w = widgetFor(q); return !!(w && w.type); }
   function markAll(btns, chosenBtn, right) {
     btns.forEach(function (x) {
       x.b.disabled = true;
@@ -2110,7 +2113,7 @@
       var ww = whyOthersEl(q, null, false); if (ww) card.appendChild(ww);
       card.appendChild(aiExplainEl(q));
       var row = h('<div class="next-row"><button class="btn">Next exercise →</button>' +
-        (isRetry ? '' : '<button class="btn ghost">Open the lab anyway</button>') + '</div>');
+        (isRetry || !hasLab(q) ? '' : '<button class="btn ghost">Open the lab anyway</button>') + '</div>');
       row.children[0].onclick = next;
       if (row.children[1]) row.children[1].onclick = function () { row.children[1].remove(); renderWidget(card, widgetFor(q)); };
       card.appendChild(row);
@@ -2129,8 +2132,10 @@
       return;
     }
 
-    // first attempt, wrong → why THEIR pick fails → plain-English answer → lab → build-up → retry
-    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>Here\'s the answer in plain English. Then work the lab, build the answer up step by step, and take the question again.</div>'));
+    // first attempt, wrong → why THEIR pick fails → plain-English answer → (lab) → build-up → retry
+    card.appendChild(h('<div class="banner bad"><span class="b-label">Marked ✗</span>' +
+      (hasLab(q) ? 'Here\'s the answer in plain English. Then work the lab, build the answer up step by step, and take the question again.'
+                 : 'Here\'s the answer in plain English. Read it, build the answer up step by step, and take the question again.') + '</div>'));
     var wp = whyPickEl(q, chosen); if (wp) card.appendChild(wp);
     card.appendChild(h('<div class="plain"><span class="p-label">The answer, in plain English</span>' +
       '<div class="p-answer">' + esc(q.choices[0]) + '</div>' +

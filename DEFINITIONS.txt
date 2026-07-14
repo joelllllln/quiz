@@ -1001,8 +1001,8 @@ Gain importance
 -----------------------------------------
 
 SHAP values
-  Game-theory credit assignment: each feature's fair contribution to a single prediction, 
-  summing exactly to the model's output.
+  Game-theory credit assignment: each feature's fair contribution to a single prediction; 
+  the contributions plus a base value sum exactly to the model's output.
 
 LIME
   Fits a simple, readable model around one prediction to explain it locally; model-agnostic 

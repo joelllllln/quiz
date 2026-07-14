@@ -12,15 +12,15 @@
   /* ============ Interpretability & Explainability ============ */
   def("interp",
     "What are SHAP values?",
-    "A game-theory method that assigns each feature its fair share of credit for one prediction, with the contributions summing exactly to the model's output",
+    "A game-theory method that assigns each feature its fair share of credit for one prediction, with the contributions plus a base value summing exactly to the model's output",
     ["A global ranking of features by how much they cut impurity across the whole tree",
      "The plain correlation between each feature and the target, measured before training",
      "A penalty term that shrinks unimportant feature weights toward zero during fitting",
      "The raw gradient of the loss with respect to each input at the start of training"],
     "SHAP values",
-    "Game-theory credit assignment: each feature's fair contribution to a single prediction, summing exactly to the model's output.",
-    "SHAP borrows the Shapley value from cooperative game theory: it fairly splits a single prediction among the features, and the parts add up exactly to the output — so you can see who pushed the answer up or down, and by how much.",
-    "It's a fair way to share the blame (or credit) for one prediction across the features. Add up every feature's share and you get exactly the model's output for that row.");
+    "Game-theory credit assignment: each feature's fair contribution to a single prediction; the contributions plus a base value sum exactly to the model's output.",
+    "SHAP borrows the Shapley value from cooperative game theory: it fairly splits a single prediction among the features. Starting from a base value (the average prediction), each feature's SHAP value nudges the output up or down, and together they land exactly on the model's output for that row.",
+    "It's a fair way to share the blame (or credit) for one prediction across the features. Start from the average prediction, add every feature's push, and you land exactly on the model's output for that row.");
 
   def("interp",
     "What is LIME (Local Interpretable Model-agnostic Explanations)?",
