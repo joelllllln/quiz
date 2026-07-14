@@ -558,10 +558,10 @@
     q:"You must control overfitting on a noisy dataset. Which combined strategy is soundest?",
     choices:[
       "Lower eta with early stopping, modest max_depth, plus subsample/colsample and some lambda/gamma",
-      "Max out max_depth, eta = 1.0, and no subsampling for maximum fit",
-      "Use a single tree with unlimited depth and no regularization",
-      "Only raise n_estimators to 100000 and change nothing else",
-      "Disable the validation set so the model trains on everything"
+      "Max out max_depth to its highest ceiling, set eta all the way up to 1.0, and use no subsampling for maximum fit",
+      "Use just one single decision tree grown out to unlimited depth with absolutely no regularization applied at all",
+      "Only raise n_estimators to a full 100000 trees and deliberately change nothing else at all about the model",
+      "Disable the held-out validation set completely so that the model simply gets to train on all of the data"
     ],
     explain:"No single knob controls overfitting; the reliable approach combines several. A small learning rate with early stopping finds a good tree count, a modest max_depth caps single-tree complexity, row and column subsampling decorrelate trees, and lambda/gamma penalize complexity. Tuning these together on a validation set gives robust generalization on noisy data.",
     simple:"Fighting overfitting works best with several gentle knobs at once: small learning rate plus early stopping, shallow-ish trees, sampling rows and columns, and a bit of regularization. Cranking one setting to the extreme just trades one problem for another.",
@@ -577,10 +577,10 @@
     q:"A stakeholder points out feature 'customer_id' has the highest 'weight' importance in your XGBoost model. Why be cautious?",
     choices:[
       "High weight only means it was split on often; a near-unique ID can overfit yet add little real gain",
-      "Weight importance is always the most reliable, so no caution is needed",
-      "It proves customer_id is genuinely the best predictor of the target",
-      "Weight importance can only be computed for numeric targets",
-      "It means customer_id should immediately be dropped from every model"
+      "Weight importance is essentially always the single most reliable of all the measures, so no caution is needed here",
+      "It clearly proves that customer_id is genuinely the very best and strongest predictor of the target variable overall",
+      "Weight-based importance can only ever be computed at all for models that happen to predict a purely numeric target",
+      "It plainly means that customer_id should be immediately and permanently dropped from every single model you ever build"
     ],
     explain:"Weight (frequency) just counts how often a feature is used for splitting. A high-cardinality identifier like customer_id offers many split points, so it gets used a lot even when each split memorizes individual rows rather than learning a general pattern. Checking gain (loss reduction) and using permutation or SHAP importance gives a more honest picture, and such leakage-prone IDs often should be excluded.",
     simple:"A near-unique ID gives the tree tons of places to split, so it racks up a high 'weight' count without truly helping. Look at gain instead, and be wary that IDs can leak or just memorize rows.",

@@ -645,10 +645,10 @@
     q: "What is the one-standard-error rule in model selection?",
     choices: [
       "Among models within one standard error of the best CV score, pick the simplest one",
-      "Always pick the model with the single highest CV score, ignoring its variance",
-      "Reject any model whose error is more than one standard deviation from zero",
-      "Add one standard error to every score before comparing models",
-      "Keep only models that trained within one standard error of the fastest time"
+      "Always simply pick out the one model with the single highest cross-validation score, completely ignoring its variance",
+      "Reject and discard any candidate model whose measured error happens to sit more than one full standard deviation from zero",
+      "Add exactly one standard error onto every single model's raw score first, and only then start comparing the models to each other",
+      "Keep only those candidate models that managed to finish their training within one standard error of the very fastest time"
     ],
     explain: "Cross-validation scores come with a spread (a standard error). The one-standard-error rule says: find the best average score, then among all models whose score is within one standard error of it — statistically tied with the best — choose the simplest. It's a principled way to favour parsimony without meaningfully sacrificing performance.",
     simple: "The top model and a few simpler ones are often statistically tied. The one-standard-error rule tells you to take the simplest model that's close enough to the best. You lose almost nothing in score and gain simplicity.",
@@ -674,10 +674,10 @@
     q: "What is nested cross-validation?",
     choices: [
       "A CV loop for estimating performance wrapped around an inner CV loop that does the tuning",
-      "Cross-validation run twice on the same folds to reduce randomness",
-      "Cross-validation where each fold is itself split into a train and test set once",
-      "Averaging the results of two unrelated cross-validation runs",
-      "Cross-validation applied only to the hyperparameters, not the model"
+      "Ordinary cross-validation simply run through twice over on the exact same fixed folds purely to reduce random variation",
+      "A form of cross-validation where each individual fold is itself split just once into its own separate train and test set",
+      "Simply averaging together the final results obtained from two completely unrelated and independent cross-validation runs",
+      "A form of cross-validation that is applied only to the hyperparameters themselves and never to the underlying model at all"
     ],
     explain: "Nested CV has two loops. The inner loop does hyperparameter tuning on the training portion of each outer fold; the outer loop then measures the tuned model on that fold's held-out data. Because tuning happens fresh inside each outer fold — never touching that fold's test data — the outer scores give an unbiased estimate of a tuned model's performance. The price is many model fits.",
     simple: "It's cross-validation inside cross-validation. The inner loop tunes the settings; the outer loop grades the tuned model on data the tuning never saw. That separation is what makes the final estimate honest — but it's expensive.",
@@ -701,10 +701,10 @@
     q: "What is the bias-variance tradeoff?",
     choices: [
       "Simple models err by being too rigid (bias); complex ones err by chasing noise (variance); the best balances the two",
-      "The tradeoff between training time and prediction time for a model",
-      "The choice between biased and unbiased estimators of the mean",
-      "The balance between how much data goes to training versus testing",
-      "The conflict between a model's accuracy and its interpretability"
+      "The fundamental tradeoff between how long a model takes to train and how long it then takes to make each new prediction later",
+      "The core statistical choice you must make between using a biased estimator versus an unbiased estimator of the population mean",
+      "The delicate balance between exactly how much of your data gets allocated to training versus how much of it goes to testing",
+      "The underlying conflict between how accurate a finished model turns out to be and how easily a human can interpret and explain it"
     ],
     explain: "Prediction error splits into bias (error from a model too simple to capture the truth) and variance (error from a model so flexible it fits the training data's noise). Making a model more complex lowers bias but raises variance, and vice versa. Total error is U-shaped, minimised at the complexity that balances the two — which is exactly what model selection hunts for.",
     simple: "Too-simple models miss the real pattern (high bias). Too-complex models memorise noise (high variance). The best model sits in the middle, and finding that middle is the whole game of model selection.",
@@ -728,10 +728,10 @@
     q: "What does the No Free Lunch theorem say about model selection?",
     choices: [
       "No single algorithm is best across all possible problems — which model wins depends on the problem",
-      "Every model performs equally well if you tune it long enough",
-      "The most complex model always wins, given enough compute",
-      "You can always get a better model for free by adding more data",
-      "Cross-validation guarantees you find the globally optimal model"
+      "Every possible model ends up performing exactly equally well in the end, as long as you simply tune it for long enough",
+      "The single most complex model available will always win out in the end, provided only that you give it enough raw compute",
+      "You can reliably always get yourself a strictly better model completely for free just by adding more and more data to it",
+      "Running cross-validation formally guarantees that you will always locate the single globally optimal model every single time"
     ],
     explain: "The No Free Lunch theorem states that, averaged over all possible problems, every algorithm performs the same — so no method is universally superior. The practical lesson: there's no 'best model' in the abstract. You have to try several candidates on YOUR data and let evidence, not reputation, pick the winner.",
     simple: "There's no single best algorithm for everything. A model that shines on one problem can flop on another. So you can't just pick the trendy model — you have to test a few on your actual data and compare.",
@@ -755,10 +755,10 @@
     q: "You want to BOTH tune hyperparameters AND report an honest performance estimate. Why isn't a single cross-validation loop enough — why add an outer loop?",
     choices: [
       "If you tune and estimate on the same folds, the reported score is optimistic; the outer loop estimates on data the tuning never saw",
-      "One loop is enough; the outer loop only speeds up the computation",
-      "The outer loop is needed only to shuffle the data more times",
-      "A single loop can't handle more than one hyperparameter at a time",
-      "The outer loop retrains the final model on the full dataset for deployment"
+      "A single cross-validation loop is genuinely enough all on its own here; the extra outer loop only serves to speed up the overall computation",
+      "The outer loop is truly needed only so that it can go back and reshuffle all of the underlying data a few more additional times over again",
+      "One single cross-validation loop simply cannot handle or tune more than one hyperparameter at any given time under any circumstances at all",
+      "The outer loop exists purely to retrain the one final chosen model on the entire full dataset in preparation for its real-world deployment"
     ],
     explain: "If you pick the best hyperparameters using the same CV scores you then report, you've selected on that data — the winning score is inflated by the same noise you optimised against, just like overfitting a validation set. Nested CV fixes this: the inner loop tunes, and the outer loop scores the tuned model on folds the tuning never touched, giving an unbiased estimate.",
     simple: "If you use the same scores to both pick the settings and report the result, the result is too rosy — you optimised against that very data. The outer loop grades the tuned model on fresh folds, so the number you report is honest.",
@@ -782,10 +782,10 @@
     q: "A deep tree nails the training data but flops on new data, while a stump underperforms on both. Through the bias-variance lens, what's the fix?",
     choices: [
       "Pick a middle complexity — the deep tree is high-variance, the stump high-bias; the best model balances them",
-      "Always choose the deep tree; a perfect training fit is what matters",
-      "Always choose the stump; simpler models are correct by default",
-      "Add more features to the deep tree so it overfits even harder",
-      "Train the deep tree longer until its test error catches up"
+      "Always simply choose the deep tree every time, because in the end a perfect fit to the training data is all that really matters",
+      "Always simply choose the shallow stump every time, given that strictly simpler models are automatically correct by default",
+      "Add many more input features into the deep tree so that it manages to overfit the training data even harder than it did before",
+      "Just keep training the very same deep tree for far longer until its high test error eventually catches up and finally improves"
     ],
     explain: "The deep tree has low bias but high variance — it fits noise, so it generalises poorly. The stump has high bias — too rigid to capture the pattern. Neither extreme is right; the fix is to dial complexity (tree depth, pruning, regularisation) to the point where validation error is lowest, balancing the two error sources.",
     simple: "The deep tree memorises noise (high variance); the stump is too simple to learn the pattern (high bias). The answer is a tree in between — deep enough to learn, shallow enough not to memorise. That balance point is what you tune toward.",
@@ -809,10 +809,10 @@
     q: "Given the No Free Lunch theorem, what's the practical strategy when starting a new prediction problem?",
     choices: [
       "Try a few diverse model families and compare them fairly with cross-validation on your own data",
-      "Pick the model that won the most Kaggle competitions and skip comparison",
-      "Always start with the most complex model available and simplify only if it fails",
-      "Choose whichever model your last project used, to save time",
-      "Trust published benchmarks and never test on your own data"
+      "Simply pick the one model that has happened to win the most Kaggle competitions overall and skip doing any comparison of your own",
+      "Always start out with the single most complex model that is available to you and only bother simplifying it later if it happens to fail",
+      "Just choose whichever particular model your most recent past project happened to use, purely as a convenient way to save yourself time",
+      "Fully trust the published benchmark numbers from other papers and never once actually test any of those models on your own data"
     ],
     explain: "No Free Lunch means no model is best in the abstract, so reputation and benchmarks from other problems aren't decisive for yours. The sound move is to shortlist a few genuinely different model families, evaluate them fairly with cross-validation on your data, and let the evidence choose. Trying more families helps at first, then plateaus.",
     simple: "Since no model is best for everything, don't just pick the famous one. Try a handful of different models on your actual data and compare them fairly with cross-validation. Let your data pick the winner.",

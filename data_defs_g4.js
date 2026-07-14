@@ -516,10 +516,10 @@
     q: "In machine learning, what is an L2 (ridge) penalty?",
     choices: [
       "A regularization term that adds the sum of the squared weights to the loss, shrinking all weights smoothly toward zero",
-      "A term that adds the sum of the absolute weights, driving some weights exactly to zero",
-      "A rule that stops training when validation performance plateaus",
-      "The average squared difference between predictions and true values",
-      "A method that averages predictions from many separate models"
+      "A term that adds the sum of the absolute values of the weights to the loss, driving some of them exactly to zero",
+      "A rule that halts the training run just as soon as validation performance plateaus across several successive epochs",
+      "The average squared difference between the model's predictions and the corresponding true numeric target values",
+      "A method that averages together the predictions coming from many separately and independently trained models"
     ],
     explain: "An L2, or ridge, penalty adds the sum of squared weights (times a strength λ) to the loss function. This shrinks large weights more than small ones and pulls all of them smoothly toward zero without forcing any to vanish, which reduces variance and curbs overfitting. Unlike L1, it keeps every feature but with dampened influence.",
     simple: "It fines the model for having big weights, with the fine growing with the square of each weight. That gently shrinks all the weights and keeps the model from over-relying on any one thing.",
@@ -544,10 +544,10 @@
     q: "In machine learning, what is an L1 (lasso) penalty?",
     choices: [
       "A regularization term that adds the sum of the absolute weights to the loss, driving some weights exactly to zero and selecting features",
-      "A term that adds the sum of the squared weights, shrinking all weights smoothly but never to zero",
-      "A rule for stopping training when validation loss stops improving",
-      "The average absolute difference between predictions and true values",
-      "A method that combines many weak models into one strong prediction"
+      "A term that adds the sum of the squared weights to the loss, shrinking every one of the weights smoothly toward zero but never fully to zero",
+      "A rule for stopping the training run whenever the validation loss stops improving over a set patience window of epochs",
+      "The average absolute difference between the model's numeric predictions and their corresponding true target values",
+      "A method that combines many separate weak models together into one single much stronger overall prediction"
     ],
     explain: "An L1, or lasso, penalty adds the sum of the absolute values of the weights (times λ) to the loss. Its geometry pushes many weights all the way to exactly zero, effectively dropping those features, so L1 performs automatic feature selection and yields sparse models. This contrasts with L2, which shrinks weights but rarely zeroes them.",
     simple: "It fines the model for the total size of its weights, and this particular fine tends to snap unhelpful weights all the way to zero — quietly deleting useless features.",
@@ -574,10 +574,10 @@
     q: "In scikit-learn, what does an estimator's .fit() method do?",
     choices: [
       "It trains the estimator on the given data, learning parameters from X (and y for supervised models) and storing them on the object",
-      "It produces predictions for new input data using an already-trained model",
-      "It applies a learned transformation to reshape or rescale the input features",
-      "It splits a dataset into separate training and test portions",
-      "It computes a score summarising how well the model performs"
+      "It produces the output predictions for brand-new input data by applying a model that has already been fully trained on data",
+      "It applies a previously learned transformation in order to reshape or rescale the incoming feature values before they reach the model",
+      "It divides one single dataset into separate training and test portions before any of the model fitting takes place",
+      "It computes a single overall score that summarises how well the fitted model performs on the data it is given"
     ],
     explain: "The .fit() method is where learning happens in scikit-learn: you pass it the training data (features X, and target y for supervised estimators) and it estimates the model's parameters, storing them as attributes on the object (conventionally with a trailing underscore). Calling .fit() again starts fresh. Nearly every estimator, from scalers to classifiers, exposes this method.",
     simple: "It is the 'learn from this data' button. You hand it the training examples and it figures out and remembers whatever it needs — coefficients, means, splits — inside the object.",
@@ -602,10 +602,10 @@
     q: "In scikit-learn, what does an estimator's .predict() method do?",
     choices: [
       "It uses an already-fitted model to produce output predictions for new input samples X",
-      "It trains the model by learning parameters from the training data",
-      "It rescales features to have zero mean and unit variance",
-      "It divides the dataset into training and test subsets",
-      "It reports the probability distribution over classes for each sample"
+      "It trains the model from scratch by learning its parameters directly from the training data it is provided",
+      "It rescales the features so that each one of them has zero mean and unit variance across the dataset",
+      "It divides the full dataset into one separate training subset and one separate held-out test subset",
+      "It reports the full probability distribution over all of the classes for each individual input sample"
     ],
     explain: "Once an estimator has been trained with .fit(), its .predict() method takes new feature data X and returns the model's predicted outputs — class labels for classifiers, numeric values for regressors, or cluster assignments for clusterers. It does not change the model; it only applies what was already learned to fresh inputs.",
     simple: "It is the 'now answer these' button. After the model has learned, you give it new examples and it hands back its best guesses.",
@@ -630,10 +630,10 @@
     q: "In scikit-learn, what does .fit_transform() do?",
     choices: [
       "It fits a transformer to the data and then applies the learned transformation in a single call, returning the transformed data",
-      "It trains a classifier and immediately reports its accuracy",
-      "It splits the data into training and test sets and scales both",
-      "It predicts class probabilities for a set of samples",
-      "It combines several models into an ensemble and averages them"
+      "It trains a classifier on the given data and then immediately turns around and reports back its accuracy score on that same data",
+      "It splits the data into separate training and test sets and then rescales both of them the exact same way afterwards",
+      "It predicts the class probabilities for a whole set of input samples and returns them arranged as a matrix",
+      "It combines several distinct trained models together into a single ensemble and then averages all of their predictions"
     ],
     explain: "For transformers like scalers or encoders, .fit_transform() is a convenience that first calls .fit() to learn the transformation's parameters from the data (for a StandardScaler, the mean and standard deviation) and then immediately applies .transform() to return the converted data. It is used on the training set; on new data you call only .transform() so the same learned parameters are reused.",
     simple: "It does two steps at once: learn the transformation from the data, then apply it, handing back the transformed data. You use it on the training set.",
@@ -658,10 +658,10 @@
     q: "In scikit-learn, what is a Pipeline?",
     choices: [
       "An object that chains preprocessing steps and a final estimator so the whole sequence fits and predicts as one unit",
-      "A method that plots the data flowing between transformers",
-      "A grid of hyperparameter values to search over",
-      "A single split of the data into training and test sets",
-      "A table cross-tabulating predicted against actual classes"
+      "A method that draws a diagram of the data flowing between the various transformers in a preprocessing workflow",
+      "A grid of candidate hyperparameter values that a tuning search will then systematically evaluate one by one",
+      "A single one-off division of the available data into one training portion and one separate held-out test portion",
+      "A table that cross-tabulates the predicted class labels against the actual class labels for every single sample"
     ],
     explain: "A Pipeline bundles an ordered list of transformers followed by a final estimator into one object. Calling .fit() runs each step's fit and transform in turn, then fits the final estimator; calling .predict() pushes new data through the same steps. This guarantees identical preprocessing at train and prediction time and, crucially, prevents leakage when used inside cross-validation.",
     simple: "It is an assembly line that glues your data-prep steps and your model together into one thing. Fit it once and every step runs in order, the same way on new data.",

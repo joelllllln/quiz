@@ -798,10 +798,10 @@
     q: "In an SVM, what is a 'soft margin'?",
     choices: [
       "A margin that permits some training points to fall inside it or be misclassified, trading a few violations for a wider, more robust boundary",
-      "A margin that forbids any point from crossing into it under any circumstance",
-      "A margin whose width is fixed in advance and never optimised",
-      "A margin measured in a higher-dimensional space created by a kernel",
-      "A margin that only applies to the support vectors and not other points"
+      "A margin that strictly forbids any point from crossing into it under any circumstance, the hard-margin case that demands perfect separation and collapses when the data is at all noisy",
+      "A margin whose width is fixed in advance by the user and never optimised at all, held at some chosen constant so the training never adjusts the buffer to suit the data it sees",
+      "A margin measured entirely in the higher-dimensional space created by a kernel, a gap defined only after the points have been lifted into the transformed feature coordinates",
+      "A margin that only ever applies to the support vectors themselves and not to any of the other points, leaving the comfortably classified examples deep in their regions unconstrained"
     ],
     explain: "A soft-margin SVM allows some slack: points may sit within the margin or on the wrong side, each incurring a penalty scaled by C. This tolerance is what lets SVMs handle data that is not perfectly separable and noisy. It contrasts with a hard margin, which permits no violations at all.",
     simple: "It is a forgiving margin that lets a few examples sneak inside the gap or onto the wrong side, in exchange for a wider, sturdier boundary. Real, messy data needs this give.",
@@ -826,10 +826,10 @@
     q: "In an SVM, what is 'hinge loss'?",
     choices: [
       "The loss that is zero when a point is correctly classified beyond the margin and grows linearly with how far it falls short of it",
-      "The loss that squares the difference between predicted and true numeric values",
-      "The loss that counts the raw number of misclassified points with no gradient",
-      "The loss that measures the cross-entropy between predicted and true probabilities",
-      "The loss that penalises the total number of support vectors used"
+      "The loss that squares the difference between the predicted and the true numeric values, the squared-error objective used for fitting regressions rather than for placing a margin",
+      "The loss that simply counts the raw number of misclassified points with no gradient at all, a flat zero-one tally that offers the optimiser nothing smooth to descend along",
+      "The loss that measures the cross-entropy between the predicted and the true class probabilities, the log-loss objective that logistic regression minimises when fitting its sigmoid",
+      "The loss that penalises the total number of support vectors the model ends up using, a complexity term pushing the training to lean on as few borderline points as it possibly can"
     ],
     explain: "Hinge loss, max(0, 1 − y·f(x)), is the SVM's training objective term: a point classified correctly and safely past the margin incurs zero loss, while a point on the wrong side or inside the margin incurs a penalty that rises linearly with the violation. Minimising it, plus a margin-maximising regulariser, is what trains a linear SVM.",
     simple: "It gives zero penalty to points that are correctly on the right side with room to spare, and a rising penalty to points that stray toward or past the line. It is what the SVM tries to minimise.",

@@ -217,10 +217,10 @@
     "q": "t-SNE produces a 2-D 'embedding' of the data. What is an embedding?",
     "choices": [
       "Each item turned into coordinates in a low-dimensional space, positioned so similar items land near each other",
-      "A copy of the dataset saved in a compressed file",
-      "A single number summarising each data point",
-      "The list of features ranked by importance",
-      "A model trained to predict the 2-D coordinates"
+      "A complete copy of the entire dataset saved down into one single heavily compressed archive file on disk",
+      "A single summary number that is carefully computed to stand in for each individual data point in the whole set",
+      "The full ordered list of all the original features ranked from the most to the least important",
+      "A predictive model trained from scratch specifically to predict the final 2-D coordinates of every point"
     ],
     "explain": "An embedding represents each item as coordinates — a short vector of numbers — in a low-dimensional space, arranged so that items similar in the original data sit close together. Distance in that space is the whole point: near = alike. t-SNE draws a 2-D embedding you can look at; word2vec learns word embeddings in ~300 dimensions you compute with. Same idea either way: complex thing → point in space, closeness = similarity.",
     "simple": "An embedding turns each item — a data point, a word, an image — into a short list of numbers, which is just a point in space. The trick is that similar things get placed close together, so distance means 'alike'. t-SNE squeezes that down to 2-D so your eye can read the neighbourhoods; other embeddings (like word2vec) use more dimensions you do maths on rather than look at. It's not a zip file, not one single number per point, and not a ranking of features.",
@@ -262,10 +262,10 @@
     "q": "Run t-SNE twice on the same data and the two pictures can look different. Why, and how should you treat that?",
     "choices": [
       "It's stochastic — random starts give different layouts, so confirm any pattern across several runs",
-      "It's a bug — identical inputs must give identical pictures",
-      "The data secretly changed between the two runs",
-      "The second run always overfits more than the first",
-      "It means the data has no real structure at all"
+      "It's simply a bug in the library — identical inputs must always give perfectly identical pictures every time",
+      "The underlying data itself must have secretly changed somehow between the two separate runs",
+      "The second run always ends up overfitting the data noticeably more than the first run did",
+      "It means the data genuinely has no real underlying structure in it whatsoever at all"
     ],
     "explain": "t-SNE starts from random positions and optimises, so different runs (and different perplexities) yield different-looking maps. Clusters that are real reappear across runs; a shape that only shows up once is not to be trusted. Re-run before believing.",
     "simple": "t-SNE begins from a random scatter and rearranges from there, so each run lands somewhere slightly different — that's expected, not a bug. The rule: trust a pattern only if it survives several runs and settings. A blob that appears in one run and vanishes in the next was an accident of the random start, not a finding.",

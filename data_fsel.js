@@ -493,10 +493,10 @@
     q:"As you raise Lasso's penalty, which coefficients hit exactly zero FIRST, and what does that tell you?",
     choices:[
       "The weakest, least useful features zero out first while strong ones survive — so survival order ranks features",
-      "The strongest features zero out first because the penalty targets big coefficients",
-      "All coefficients hit zero at the same penalty value simultaneously",
-      "Only features with missing values are ever set to zero",
-      "The penalty zeros features at random, revealing nothing about their usefulness"
+      "The strongest, most useful features are the ones that zero out first, precisely because the penalty specifically targets big coefficients",
+      "Every last coefficient happens to hit exactly zero at the very same penalty value, all together at once and completely simultaneously",
+      "Only the features that contain some missing values in a few of their rows are ever eventually set all the way to zero by the penalty",
+      "The penalty zeros the features out completely at random, revealing absolutely nothing useful whatsoever about their real usefulness"
     ],
     explain:"Because the L1 penalty costs the same per unit of coefficient regardless of the feature, weak features — whose small coefficients buy little accuracy — are the cheapest to sacrifice, so they zero out at low penalty. Strong features hold on until much higher penalties. The order in which features drop out along the penalty path is itself a useful importance ranking.",
     simple:"Weak features die first as the penalty grows; the important ones cling on. So the order they drop out tells you which columns matter most.",
@@ -519,10 +519,10 @@
     q:"You run feature selection on the WHOLE dataset, then do cross-validation on the selected features. Why is your reported accuracy too optimistic?",
     choices:[
       "The selection already peeked at the test folds, so information leaked and each fold is no longer truly unseen",
-      "Cross-validation always overestimates accuracy regardless of when you select features",
-      "Selecting first makes the model train on fewer rows, which inflates the score",
-      "The problem is only that selection is slow, not that the score is biased",
-      "There is no problem — selecting once up front is the recommended approach"
+      "Cross-validation always overestimates the true accuracy regardless of exactly when or how you happen to select your features",
+      "Selecting the features first makes the model train on far fewer rows overall, and that is precisely what inflates the score here",
+      "The only real problem here is simply that the selection step is quite slow, not that the reported score is actually biased at all",
+      "There is genuinely no problem at all with this — selecting the features just once up front is in fact the officially recommended approach"
     ],
     explain:"When selection uses the entire dataset, it has already seen the rows that later serve as test folds, so those folds are no longer independent — information has leaked from test into training. The cross-validation score then reflects features hand-picked to fit that very test data, inflating it. Correct practice: perform selection INSIDE each training fold, so the test fold stays truly unseen.",
     simple:"If you pick features using all the data first, the test folds already influenced the choice. The score looks great but won't hold up on genuinely new data.",
@@ -545,10 +545,10 @@
     q:"Two features in your data are correlated 0.98 (near-duplicates). What is the sensible move?",
     choices:[
       "Drop one of them — keeping both adds almost no information but doubles cost and can destabilise coefficients",
-      "Always keep both, since a 0.98 correlation means both are extremely important",
-      "Drop both, because any correlation between features means they are useless",
-      "Multiply them together to create one combined feature and keep that plus the originals",
-      "Keep both but delete every row where they disagree"
+      "Always keep both of them, since a strong 0.98 correlation clearly means that both of these features must be extremely important",
+      "Drop both of them entirely, because any correlation at all existing between two features always means that they are both useless",
+      "Multiply the two of them together to create a single combined feature, and then keep that new one plus both of the originals too",
+      "Keep both of the features but then carefully delete every single row in which their two values happen to disagree with each other"
     ],
     explain:"When two features carry nearly the same information, one is redundant: the second adds negligible new signal while inflating dimensionality and, for linear models, causing unstable coefficients (multicollinearity). Dropping one typically leaves accuracy essentially unchanged while making the model leaner and more stable. Keep the one that is cheaper or easier to interpret.",
     simple:"If two columns say almost the same thing, keep one and toss the other. You lose nothing and get a simpler, steadier model.",
@@ -568,10 +568,10 @@
     q:"What is MULTICOLLINEARITY?",
     choices:[
       "When two or more features are so correlated that a linear model can't tell their effects apart, making coefficients unstable",
-      "When a single feature is strongly correlated with the target",
-      "When the target has more than two possible classes",
-      "When features are measured on different numeric scales",
-      "When the dataset has more rows than columns"
+      "When one single feature happens to be extremely strongly correlated with the particular target column that the model is trying hard to predict",
+      "When the target variable that you are attempting to predict turns out to have many more than just two possible distinct output classes",
+      "When several of the features happen to be measured on wildly different numeric scales and in different units from one another",
+      "When the dataset simply contains many more individual rows of data than it actually has feature columns available to work with"
     ],
     explain:"Multicollinearity occurs when predictors are highly correlated with each other. A linear model then cannot separate their individual contributions — it can shift weight between them almost freely — so the coefficients become large, unstable, and flip sign with small data changes. Predictions may still be fine, but the coefficients become unreliable for interpretation, which is a reason to drop redundant features.",
     simple:"Multicollinearity is when columns are so alike the model can't decide which deserves the credit. Their weights swing wildly and stop being trustworthy.",
@@ -593,10 +593,10 @@
     q:"What is PERMUTATION IMPORTANCE?",
     choices:[
       "Shuffle one feature's values and measure how much the model's accuracy drops — a bigger drop means a more important feature",
-      "Count how many times a feature is used to split in a decision tree",
-      "The size of a feature's coefficient in a linear model",
-      "The correlation of a feature with the target before any model is trained",
-      "The number of unique values a feature takes across the rows"
+      "Simply count how many separate times a given feature ends up being used to make a split inside one fitted decision tree",
+      "Take the raw size of a feature's fitted coefficient in an ordinary linear model and just treat that magnitude as its importance",
+      "Measure the plain correlation of each feature with the target column before any model has actually been trained on the data yet",
+      "Simply count up the total number of distinct unique values that a given feature happens to take across every one of the rows"
     ],
     explain:"Permutation importance is measured on a trained model: randomly shuffle one feature's column (breaking its link to the target) and see how much a validation metric falls. A large drop means the model genuinely relied on that feature; near-zero means it did not. It is model-agnostic and uses real predictive impact, but it can be misleading when features are correlated.",
     simple:"Permutation importance scrambles one column and checks how much worse the model gets. If accuracy tanks, that column mattered; if nothing happens, it didn't.",
@@ -616,10 +616,10 @@
     q:"A random ID-like column with thousands of unique values gets a HIGH tree impurity importance. Why is this a known trap?",
     choices:[
       "Impurity importance is biased toward high-cardinality features, which offer many split points to fit noise",
-      "High-cardinality features are always genuinely the most predictive columns",
-      "Impurity importance can only be computed for low-cardinality features",
-      "The tree ran out of memory and defaulted that column to the top",
-      "Random columns are given high importance on purpose as a baseline check"
+      "High-cardinality features that have many unique values are always genuinely the single most predictive columns available",
+      "Impurity-based importance can only ever be computed at all for the low-cardinality features that appear in a dataset",
+      "The decision tree simply ran clean out of working memory and so defaulted that one particular column straight to the top",
+      "Random noise columns are deliberately handed a high importance on purpose in order to serve as a built-in baseline check"
     ],
     explain:"Impurity-based (Gini/entropy) importance rewards features that reduce impurity at splits. A high-cardinality feature offers many possible split points, so even a random one can carve the training data into pure little groups by chance, earning inflated importance that does not generalise. Permutation importance on held-out data or unbiased importance measures avoid this trap.",
     simple:"Columns with tons of unique values give trees many places to split, so even a useless ID column can look important on training data. It's an artifact, not real signal.",
@@ -639,10 +639,10 @@
     q:"You screen 10,000 candidate columns on the full dataset, keep the 20 that best predict the target, then report cross-validated accuracy. Why can this look great yet be worthless?",
     choices:[
       "With enough random columns, some will fit the target by chance; screening on all data bakes that luck into every fold",
-      "Screening 10,000 columns is simply too slow, but the resulting score is valid",
-      "Keeping 20 features is too few, which is the only issue here",
-      "Cross-validation cannot be used after any feature screening at all",
-      "The score is fine as long as the 20 features are scaled first"
+      "Screening all ten thousand candidate columns is simply far too slow to ever be practical, but the resulting accuracy score is still perfectly valid",
+      "Keeping only twenty of the features at the very end is far too few to model anything with, and that is genuinely the only real issue here",
+      "Cross-validation quite simply cannot be used at all after you have already done any amount of feature screening on the data beforehand",
+      "The reported score is completely fine so long as the twenty surviving features happen to be properly scaled first before use"
     ],
     explain:"Among thousands of random columns, pure chance guarantees some will correlate with the target in THIS dataset. If you screen using all the data before cross-validation, that chance correlation is present in every fold, so the model looks accurate while having learned noise. The fix is nested selection: screen features inside each training fold, keeping test folds untouched.",
     simple:"Search 10,000 random columns and a few will match the target by luck. If you pick them using all your data, every test fold is already tainted, so the score is a mirage.",

@@ -203,7 +203,7 @@
 
 {
   q: "Training a kernel SVM on 200,000 rows, your machine runs out of MEMORY before it runs out of patience. What's the structural cause?",
-  choices: ["The kernel matrix — pairwise similarities grow as n², independent of feature count", "Too many input features — the memory required grows with the feature count squared", "Each support vector ends up being stored twice over during the training run", "The class labels are kept as wide floats rather than small integers", "Plain Python interpreter overhead balloons as the row count increases"],
+  choices: ["The kernel matrix — pairwise similarities grow as n², independent of feature count", "Too many input features — the memory required grows with the total feature count squared", "Each support vector ends up being redundantly stored twice over during the training run", "The class labels are kept as wide 64-bit floats rather than small integers", "Plain Python interpreter overhead balloons steadily as the row count increases"],
   explain: "Kernel methods work on the n×n matrix of similarities between all training pairs: 200k² entries ≈ 320 GB in float64. Approximations (Nyström, random features) or linear SVMs are the escape routes.",
   simple: "A kernel machine wants a table of how similar every row is to every other row. Ten rows: 100 entries, cute. Two hundred thousand rows: forty BILLION entries — no laptop survives contact. The n² table, not the maths, is what breaks first.",
   widget: {

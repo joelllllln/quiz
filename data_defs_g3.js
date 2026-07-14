@@ -583,10 +583,10 @@
     q: "What is stacking (stacked generalization)?",
     choices: [
       "An ensemble method where several base models make predictions, and a separate meta-model is trained to learn the best way to combine those predictions into a final output",
-      "An ensemble method that stacks identical trees on top of each other to increase depth",
-      "An ensemble method that averages the base models with fixed equal weights",
-      "A method that trains models in sequence, each on the residuals of the last",
-      "A method that concatenates several datasets into one taller training set"
+      "An ensemble method that stacks identical decision trees directly on top of one another to increase the effective depth, chaining all of their splits into one very deep path",
+      "An ensemble method that averages all of the base models together using fixed, equal weights, giving every model exactly the same say in the final combined output",
+      "A method that trains its models strictly in sequence, each one fit to the leftover residuals of the model before it, then summing all their corrections into the result",
+      "A method that concatenates several separate datasets into one much taller training set and then fits a single ordinary model on that whole stacked pile of rows"
     ],
     explain: "Stacking trains a set of diverse base learners, then uses their predictions as inputs to a second-level 'meta-learner' that learns how to weight and combine them. Unlike simple voting with fixed weights, the meta-model discovers the combination from data. To avoid leakage, base-model predictions for training the meta-learner are generated via cross-validation (out-of-fold predictions).",
     simple: "Stacking trains several different models, then trains one more model on top whose only job is to learn how to best blend their answers.",
@@ -611,10 +611,10 @@
     q: "In a stacking ensemble, what is the meta-learner (blender)?",
     choices: [
       "The second-level model that takes the base models' predictions as its input features and learns to combine them into the final prediction",
-      "The base model that happened to score highest on the validation set",
-      "A rule that always outputs the average of the base predictions",
-      "The preprocessing step that cleans the data before the base models see it",
-      "The component that selects which single base model to trust for each row at random"
+      "The single base model that happened to score the highest on the validation set, promoted to make every final prediction on its own while the rest are discarded",
+      "A fixed rule that always outputs the plain average of the base models' predictions, using no learned weights and never adapting to which model is actually stronger",
+      "The preprocessing step that cleans and normalizes the raw data before any of the base models ever see it, standardizing the columns they will go on to train on",
+      "The component that picks which single base model to trust for each incoming row purely at random, forwarding that one model's guess as the ensemble's answer"
     ],
     explain: "The meta-learner (also called the blender or level-1 model) sits on top of the base learners. Its training data is the base models' out-of-fold predictions, and its target is the true label; it learns how much to trust each base model and how to combine them. It is usually a simple model (e.g. logistic or linear regression) to avoid overfitting the small set of meta-features.",
     simple: "The meta-learner is the model on top. It doesn't look at the raw data — it looks at the base models' guesses and learns how to mix them into one answer.",
@@ -639,10 +639,10 @@
     q: "In a voting ensemble, what is 'hard voting'?",
     choices: [
       "Each model predicts a class label and the ensemble outputs the class that receives the most votes (a plurality of the labels)",
-      "Each model outputs a probability and the ensemble averages those probabilities",
-      "The single most confident model decides the final class by itself",
-      "Votes are weighted by each model's training accuracy before tallying",
-      "Only models that agree unanimously are allowed to contribute a prediction"
+      "Each model outputs a full probability distribution and the ensemble averages those probabilities together before reading off the single most likely class",
+      "The single most confident model on each given row is the one that decides the final class entirely by itself, while all of the other models are ignored",
+      "The votes are weighted by each model's own training accuracy before they are tallied up, so that a stronger model's label ends up counting for more",
+      "Only the models that happen to agree unanimously are allowed to contribute a prediction, and any rows where they disagree are simply dropped"
     ],
     explain: "Hard voting combines classifiers by their final class labels: every model casts one vote, and the majority (plurality) class wins. It uses only the discrete predictions, ignoring how confident each model was. It is simple and works even for models that don't output probabilities, but it discards the confidence information that soft voting exploits.",
     simple: "Hard voting is a plain show of hands: each model names a class, and the class named most often wins. Confidence doesn't count — just the vote.",
@@ -667,10 +667,10 @@
     q: "In a voting ensemble, what is 'soft voting'?",
     choices: [
       "Averaging the predicted class PROBABILITIES from each model and choosing the class with the highest average probability",
-      "Counting the discrete class labels and taking the majority",
-      "Letting the least confident model break ties among the others",
-      "Randomly selecting one model's probability output as the final answer",
-      "Rounding every model's probability to 0 or 1 before combining"
+      "Counting only the discrete class labels each model outputs and taking the plain majority, ignoring entirely how confident any of them happened to be",
+      "Letting the single least confident model break every tie among the others, so that the most uncertain vote in the group ends up deciding close calls",
+      "Randomly selecting just one model's probability output on each individual row and then returning that single value as the final combined answer",
+      "Rounding every model's predicted probability down to a hard 0 or 1 first and then combining all of those binary values together by a simple sum"
     ],
     explain: "Soft voting combines classifiers by averaging their predicted probabilities (optionally weighted) and predicting the class with the highest mean probability. Because it uses confidence rather than just labels, a very sure model can outweigh several barely-sure ones, and it often outperforms hard voting — provided the base models produce well-calibrated probabilities.",
     simple: "Soft voting averages how confident each model is in each class, then picks the class with the highest average. A very sure model carries more weight.",
@@ -695,10 +695,10 @@
     q: "In stacking, what are 'out-of-fold predictions'?",
     choices: [
       "Predictions a base model makes for each training row using a version of itself trained on OTHER folds, so the meta-learner never trains on predictions the base model has already seen the answers to",
-      "Predictions the base models make on the final test set after all training is done",
-      "Predictions that fall outside the valid probability range and must be clipped",
-      "The predictions of whichever fold performed worst during cross-validation",
-      "Predictions averaged across all folds to smooth out fold-to-fold noise"
+      "Predictions the base models make on the final held-out test set only after all of their training has finished, gathered once at the very end to score the whole finished stacked ensemble at once",
+      "Predictions whose numeric values fall outside the valid probability range and therefore must be clipped back into the zero-to-one interval before the meta-learner is allowed to read them",
+      "The predictions coming from whichever single cross-validation fold performed the worst overall, singled out and then fed to the meta-learner as its hardest, most informative training examples",
+      "Predictions that have been averaged across every cross-validation fold at once to smooth out the fold-to-fold noise, blending all of them into one smoothed consensus value for each training row"
     ],
     explain: "To build the meta-learner's training data without leakage, stacking uses cross-validation: the training set is split into folds, and for each fold a base model trained on the OTHER folds predicts the held-out fold. Stitching these held-out predictions together gives an out-of-fold prediction for every training row — honest inputs the base model didn't memorize, so the meta-learner learns a realistic combination.",
     simple: "Out-of-fold predictions are a model's guesses for data it wasn't trained on, gathered fold by fold. That keeps the meta-learner honest instead of learning from cheated answers.",
@@ -723,10 +723,10 @@
     q: "In ensembles, what is 'diversity' among the base models?",
     choices: [
       "The degree to which the models make DIFFERENT, uncorrelated errors — the property that lets combining them cancel mistakes and improve on any single model",
-      "The number of different hyperparameter values tried during tuning",
-      "The variety of data types (numeric, text, image) present in the features",
-      "How evenly the training rows are spread across the classes",
-      "The spread of prediction latencies across the models"
+      "The sheer number of different hyperparameter values tried during tuning, counting how many separate configurations the search swept before settling on a final model",
+      "The variety of raw data types (numeric, text, image) present among the features, measuring how mixed the input columns are before any single model is fit to them",
+      "How evenly the training rows are spread across the target classes, describing whether the label distribution is nicely balanced or badly skewed toward one class",
+      "The spread of prediction latencies across the models, capturing how much their inference times differ when they each score the very same batch of rows"
     ],
     explain: "An ensemble only improves on its members when they err in different ways: if every model made the same mistakes, combining them would change nothing. Diversity — low correlation between the models' errors — is what makes voting, averaging, and stacking effective. It is engineered by using different algorithms, feature subsets, or resamples so the models' weaknesses don't overlap.",
     simple: "Diversity means your models are wrong about different things. If they all fail on the same examples, combining them is pointless; if their mistakes differ, the group can cover for each one.",
@@ -751,10 +751,10 @@
     q: "In ensembles, what is 'model averaging'?",
     choices: [
       "Combining several models by averaging their predicted values (or probabilities) into a single output, which reduces variance without training a meta-model",
-      "Averaging the parameter weights of several models into one merged model",
-      "Averaging each model's accuracy scores to report a single headline number",
-      "Training one model on the average of several datasets",
-      "Replacing each model with the average-performing model in the pool"
+      "Averaging the raw parameter weights of several separately trained models into one merged set of weights, then serving that single fused model at prediction time",
+      "Averaging each individual model's accuracy scores across the runs to report a single headline number, without ever actually combining their real predictions",
+      "Training one single model on a dataset built by averaging several source datasets together row by row into one blended set before any of the fitting begins",
+      "Replacing every model in the pool with the one whose performance is closest to the group average, then relying on that one representative model all by itself"
     ],
     explain: "Model averaging is the simplest combining rule: run several models and take the (possibly weighted) mean of their outputs. For regression it averages the predicted numbers; for classification it averages predicted probabilities (soft voting). It lowers variance and is easy and robust, but unlike stacking it uses a fixed rule rather than a learned combiner.",
     simple: "Model averaging just takes the average of several models' outputs. No extra model to train — the averaging alone smooths out their individual errors.",
@@ -779,10 +779,10 @@
     q: "In a voting ensemble, what is a 'weighted vote'?",
     choices: [
       "A voting scheme where each model's vote (or probability) is multiplied by a weight reflecting its reliability, so stronger models influence the outcome more",
-      "A vote in which only the single heaviest model is allowed to decide",
-      "A vote whose result is scaled by the size of the training set",
-      "A vote where each model gets more weight the longer it took to train",
-      "A vote that counts only the models predicting the minority class"
+      "A voting scheme in which only the single heaviest, largest-capacity model is ever allowed to decide, while every lighter model in the pool is quietly ignored",
+      "A voting scheme whose final tallied result is scaled by the overall size of the training set, so that bigger datasets automatically push the combined votes higher",
+      "A voting scheme where each model earns more weight the longer it happened to take to train, rewarding slow, expensive models with extra say in the outcome",
+      "A voting scheme that counts only the models predicting the minority class and discards all the rest, letting the rare-class votes alone settle every decision"
     ],
     explain: "In a weighted vote, models don't count equally: each is assigned a weight (often from validation performance) and the ensemble tallies weighted votes or weighted-average probabilities. This lets a more accurate model carry more influence than a weaker one. Equal weights are the special case; the weights can be tuned, and stacking generalizes this to learning the weights from data.",
     simple: "A weighted vote lets better models count for more. Instead of one-model-one-vote, each vote is scaled by how much you trust that model.",

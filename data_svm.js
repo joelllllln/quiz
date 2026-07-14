@@ -28,7 +28,7 @@
 
 {
   q: "In a support vector machine, what is the 'decision boundary'?",
-  choices: ["The surface that separates one class from the other", "The empty street between the two nearest points", "The handful of points that pin the model in place", "The penalty charged for each misclassified point", "The similarity function comparing pairs of points"],
+  choices: ["The surface that separates one class from the other", "The empty street between the two closest nearby points", "The handful of points that pin the whole model in place", "The penalty charged for each single misclassified point", "The similarity function comparing every pair of points"],
   explain: "The decision boundary is the surface where the SVM switches its predicted class — a line in 2-D, a plane or hyperplane in higher dimensions. Points on one side get labelled one class, points on the other side the other class, so placing this surface well is the entire training goal.",
   simple: "Picture a fence dividing two neighbours' gardens: step to one side and you are on the cats' turf, step across and you are on the dogs'. The decision boundary is that fence — the exact line where the model flips its answer.",
   widget: {
@@ -147,7 +147,7 @@
 
 {
   q: "One class forms a ring AROUND the other — no straight line can separate them. The kernel idea rescues SVM how?",
-  choices: ["Add a computed feature (like distance from centre) that makes them separable", "Stack many straight boundaries together so they trace the outer ring's curve", "Lower C steadily until the soft margin swallows the whole ring shape", "Swap the SVM out for a small tree that can split the ring apart", "Widen the margin steadily until the inner class fits within it"],
+  choices: ["Add a computed feature (like distance from centre) that makes them separable", "Stack many short straight boundaries together so they trace the outer ring's curve", "Lower C steadily until the soft margin swallows the whole ring shape entirely", "Swap the SVM out for a small shallow tree that can split the ring apart", "Widen the margin steadily until the inner class fits entirely within it"],
   explain: "In the original features, no line works. Add a new axis — say r = distance from the centre — and the ring sits at high r, the core at low r: one straight cut on r separates them perfectly. Kernels do this transformation implicitly.",
   simple: "You can't cut a bullseye in two with one straight slice — in flat 2-D. But describe each point by 'how far from the centre is it?' and suddenly the two groups sit at different distances: one simple cut on THAT number wins. New viewpoint, easy problem.",
   widget: {
@@ -169,7 +169,7 @@
 
 {
   q: "Why does a WIDER margin tend to mean better performance on future data?",
-  choices: ["New points land near old ones — a wide buffer absorbs the scatter", "A wider margin always encloses more of the training points inside", "A wider street makes each prediction run noticeably faster", "A narrow margin risks overflowing the model's memory", "Wider margins guarantee zero errors on future test data"],
+  choices: ["New points land near old ones — a wide buffer absorbs the scatter", "A wider margin always encloses far more of the training points inside", "A wider street makes each prediction run noticeably faster to compute", "A narrow margin risks overflowing the model's limited memory", "Wider margins guarantee exactly zero errors on all future test data"],
   explain: "Tomorrow's points are noisy copies of today's: each lands near where a similar training point stood. A boundary with a wide buffer keeps those jittered arrivals on the correct side; a tight one flips them.",
   simple: "Future customers won't land exactly on today's dots — they'll land NEARBY. If the boundary passes a hair's width from today's dots, tomorrow's near-misses fall on the wrong side. A wide street forgives the wobble.",
   widget: {
@@ -291,7 +291,7 @@
 
 {
   q: "You have 5 million training rows and need probability outputs, retrained nightly. Why might you NOT reach for a kernel SVM?",
-  choices: ["Kernel SVM training scales badly with rows, and probabilities aren't native", "Kernel SVMs are hard-capped at handling only a couple of features per point", "Kernel SVMs simply cannot be regularised to prevent overfitting", "SVMs require a dedicated GPU just to complete any training run", "SVMs only ever work well on image and computer-vision tasks"],
+  choices: ["Kernel SVM training scales badly with rows, and probabilities aren't native", "Kernel SVMs are hard-capped at handling only a couple of features per point", "Kernel SVMs simply cannot ever be regularised at all to prevent overfitting", "SVMs require a dedicated high-end GPU just to complete any training run", "SVMs only ever work well on image and general computer-vision tasks"],
   explain: "Kernel SVM training costs roughly between n² and n³ — brutal at millions of rows — and its outputs are margins, not probabilities (calibration is a bolt-on). Linear models or trees fit this brief better.",
   simple: "Kernel SVMs compare points with points, so the work explodes as rows pile up — 5 million rows means a very long night. And when the business asks 'what's the probability?', the SVM shrugs: it deals in distances, not percentages. Right tool, wrong job.",
   widget: {

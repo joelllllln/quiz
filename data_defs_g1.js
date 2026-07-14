@@ -194,7 +194,7 @@
     q: "In machine learning, what is underfitting?",
     choices: [
       "When a model is too simple to capture the underlying pattern, giving high error on both training and test data",
-      "When an over-complex model memorises random noise in the training data and then fails badly on new data",
+      "When an over-complex model memorises random noise and quirks in the training data and then fails badly on genuinely new data",
       "When the test set is accidentally used during training, leaking answers and inflating the accuracy",
       "When categorical features are turned into several binary indicator columns before the model is fit",
       "When the learning rate is set far too high, so the optimiser overshoots and never converges"
@@ -681,10 +681,10 @@
     q: "In logistic regression, what is the (linear) decision boundary?",
     choices: [
       "The flat surface where the weighted score is zero, separating the two predicted classes",
-      "The S-curve that maps scores to probabilities",
-      "The probability cutoff applied to the model's output",
-      "The average of the training examples in each class",
-      "The set of coefficients learned during training"
+      "The S-shaped sigmoid curve that maps each raw weighted score to a probability between zero and one",
+      "The probability threshold cutoff that is applied to the model's final output",
+      "The averaged centroid of all the training examples belonging to each class",
+      "The full set of coefficient weights and the bias that are learned during training"
     ],
     explain: "Logistic regression predicts the positive class when the linear score w·x + b exceeds zero (probability above 0.5). The set of points where the score is exactly zero forms a flat boundary — a line in 2-D, a hyperplane in general — that separates the two class regions. This linearity is a defining property of the model.",
     simple: "It is the straight dividing line the model draws between the two classes. On one side it predicts yes, on the other no, and the line itself is where it is perfectly undecided.",
@@ -704,10 +704,10 @@
     q: "In logistic regression, what is the intercept (bias) term?",
     choices: [
       "A constant added to the weighted feature sum that shifts the score when all features are zero",
-      "A coefficient that multiplies one of the input features",
-      "The probability output for the positive class",
-      "The threshold used to assign a final class",
-      "The learning rate controlling weight updates"
+      "A learned coefficient weight that multiplies one particular input feature before it enters the weighted sum",
+      "The final probability output that the model produces for the positive class",
+      "The decision threshold cutoff used to assign each case a final class label",
+      "The learning-rate hyperparameter controlling the size of each weight update"
     ],
     explain: "The intercept (bias) b is a learned constant added to the weighted sum of features: score = w·x + b. It sets the model's baseline log-odds when every feature is zero, effectively shifting the sigmoid left or right. Without it, the boundary would be forced through the origin.",
     simple: "It is the model's starting point before any feature speaks up — the baseline tilt toward yes or no. It lets the dividing line sit anywhere, not just through zero.",
@@ -727,10 +727,10 @@
     q: "In logistic regression, what is maximum likelihood estimation?",
     choices: [
       "Choosing the coefficients that make the observed labels as probable as possible under the model",
-      "Choosing the coefficients that minimise the number of misclassified points directly",
-      "Choosing the coefficients that keep all weights as small as possible",
-      "Choosing the threshold that balances precision and recall",
-      "Choosing the features that are most correlated with the label"
+      "Choosing the coefficients that directly minimise the raw number of misclassified training points",
+      "Choosing the coefficients that keep every single weight as small as possible, as in regularisation",
+      "Choosing the decision threshold that best balances precision against recall on the data",
+      "Choosing the input features that are individually most correlated with the target label"
     ],
     explain: "Logistic regression is fit by maximum likelihood: it selects the weights that maximise the probability the model assigns to the actual training labels. Equivalently, this minimises the log loss. There is no closed-form solution, so it is solved by iterative optimisation such as gradient descent.",
     simple: "It picks the dials that make the real answers look as likely as possible. Among all settings, choose the one under which the data you actually saw is least surprising.",

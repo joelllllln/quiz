@@ -93,7 +93,7 @@
     choices: [
       "A function that measures how far a model's predictions are from the true targets, giving one number to minimise",
       "The procedure that repeatedly nudges the model's weights a little downhill until the error finally stops falling",
-      "A configuration setting fixed before training begins that controls how the learning algorithm actually behaves",
+      "A configuration setting that is fixed before training begins and controls how the learning algorithm actually behaves",
       "The fraction of held-out test predictions that a fully trained classifier happens to get exactly correct",
       "A table cross-tabulating a classifier's predicted class labels against the true actual classes cell by cell"
     ],
@@ -149,7 +149,7 @@
     choices: [
       "A function that squashes any real number into a value between 0 and 1, giving an S-shaped curve, via 1/(1+e^-z)",
       "A function that turns a whole vector of scores into a probability distribution that sums to one across many classes",
-      "A penalty term added to the loss that shrinks large weights and thereby helps to curb overfitting on new data",
+      "A penalty term added onto the loss that shrinks large weights and thereby helps to curb overfitting on brand-new data",
       "The perfectly straight boundary that a linear classifier draws to separate two classes within a feature space",
       "The total number of times that a training algorithm passes over the entire dataset from start to finish"
     ],
@@ -232,7 +232,7 @@
     q: "In machine learning, what is an ROC curve?",
     choices: [
       "A plot of the true-positive rate against the false-positive rate as the decision threshold is varied across its range",
-      "A square table simply listing the raw counts of true positives, false positives, false negatives, and true negatives",
+      "A single square table simply listing the raw counts of true positives, false positives, false negatives, and true negatives",
       "A curve showing the training loss steadily falling as the total number of gradient-descent steps increases",
       "The harmonic mean of precision and recall summarised together as one single balanced number lying between zero and one",
       "A plot of overall model error against model complexity showing where underfitting gives way to overfitting"
