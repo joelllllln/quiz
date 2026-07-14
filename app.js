@@ -198,8 +198,9 @@
     var c = loadCards(), id = cardId(q);
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
     r.seen++;
-    if (right) r.box = Math.min(5, r.box + 1);
-    else { r.wrong++; r.box = Math.max(0, r.box - 2); r.lastWrong = dayNum(); }
+    // streak = consecutive correct answers. 1 correct → "know it", 2 → mastered; any miss resets it.
+    if (right) { r.box = Math.min(5, r.box + 1); r.streak = (r.streak || 0) + 1; }
+    else { r.wrong++; r.box = Math.max(0, r.box - 2); r.lastWrong = dayNum(); r.streak = 0; }
     r.last = dayNum();
     c[id] = r; saveCards();
   }
@@ -207,6 +208,13 @@
     var c = loadCards(), id = cardId(q);
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
     r.seen++; r.last = dayNum(); c[id] = r; saveCards();
+  }
+  // A middling written answer (3/5): counts as progress but not a correct — resets the streak to
+  // "learning" without recording a wrong.
+  function recordPartial(q) {
+    var c = loadCards(), id = cardId(q);
+    var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
+    r.seen++; r.streak = 0; r.last = dayNum(); c[id] = r; saveCards();
   }
   // Every study mode feeds the SAME per-card memory. Quizzes act on one question;
   // flashcards and the open-writing test act on a whole CONCEPT — so they update
@@ -225,40 +233,41 @@
     });
     CONCEPTIDX = idx; return idx;
   }
-  // outcome: 'right' (box up), 'wrong' (box down), 'seen' (touched, no box change).
-  // wrote=true records that the learner explained it in their own words (the written test) —
-  // which is REQUIRED to reach 'mastered'. Multiple choice alone can only reach 'ready'.
+  // outcome: 'right' (correct → streak+1), 'wrong' (miss → streak reset), 'partial' (3/5 written →
+  // learning), 'seen' (merely touched). wrote is kept for stats but no longer gates mastery.
   function recordConcept(name, outcome, wrote) {
     var qs = conceptIndex()[normkey(name)];
     if (!qs || !qs.length) return 0;
     var uniq = {}, n = 0;
     qs.forEach(function (q) {
       var id = cardId(q); if (uniq[id]) return; uniq[id] = 1; n++;
-      if (outcome === 'seen') recordSeen(q); else recordCard(q, outcome === 'right');
+      if (outcome === 'seen') recordSeen(q);
+      else if (outcome === 'partial') recordPartial(q);
+      else recordCard(q, outcome === 'right');
       if (wrote) { var r = loadCards()[id]; if (r) r.wrote = 1; }
     });
     if (wrote) saveCards();
     if (n) logActivity();
     return n;
   }
-  // Single, intelligent rule for EVERY written answer, wherever it appears:
-  //   >=4/5 → concept marked 'right' AND 'written' (the only path to mastered) + lifetime total,
-  //   ==3   → 'seen' (touched, no box change),
-  //   <=2   → 'wrong' (box drops), so weak explanations pull the concept back for review.
-  // Effort always logs to your consistency, even when the prompt maps to no scored card.
+  // Written answers, everywhere: >=4/5 counts as a CORRECT (advances toward mastery) + lifetime total;
+  // ==3/5 is 'learning' (partial, resets the streak); <=2/5 is a miss. Effort always logs consistency.
   function recordWritten(name, score) {
-    var n = recordConcept(name, score >= 4 ? 'right' : (score <= 2 ? 'wrong' : 'seen'), score >= 4);
+    var n = recordConcept(name, score >= 4 ? 'right' : (score <= 2 ? 'wrong' : 'partial'), score >= 4);
     if (!n) logActivity();
     if (score >= 4) bumpTotal();
     return n;
   }
+  // Status by consecutive correct answers: 2+ = mastered, 1 = "know it". A miss → struggling;
+  // otherwise (seen / 3-out-of-5 written / skipped) it's learning. Legacy cards derive a streak from box.
   function cardStatus(q) {
     var r = loadCards()[cardId(q)];
     if (!r || !r.seen) return 'new';
-    if (r.box >= 4 && r.wrote) return 'learnt';   // mastered: strong recall AND written in own words
-    if (r.box >= 4) return 'ready';               // solid on multiple choice — write it to master it
-    if (r.wrong > 0 && r.box <= 1) return 'struggling';
-    return 'learning';
+    var streak = (r.streak != null) ? r.streak : (r.box >= 4 ? 2 : (r.box >= 2 ? 1 : 0));
+    if (streak >= 2) return 'learnt';             // mastered: answered correctly twice in a row
+    if (streak === 1) return 'ready';             // "know it": one correct answer
+    if (r.wrong > 0) return 'struggling';         // most recent attempt was a miss
+    return 'learning';                            // touched, or a 3/5 written — on the way
   }
   function masterySummary() {
     var s = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 };
@@ -1201,7 +1210,7 @@
     var cards = loadCards(), ids = Object.keys(cards);
     var total = getTotal();
     var written = 0, anyReady = 0, mastered = 0;
-    ids.forEach(function (id) { var r = cards[id]; if (r.wrote) written++; if (r.box >= 4) anyReady++; if (r.box >= 4 && r.wrote) mastered++; });
+    ids.forEach(function (id) { var r = cards[id]; if (r.wrote) written++; var st = (r.streak != null) ? r.streak : (r.box >= 4 ? 2 : (r.box >= 2 ? 1 : 0)); if (st >= 1) anyReady++; if (st >= 2) mastered++; });
     var act = loadActivity();
     var d = new Date(); d.setHours(0, 0, 0, 0);
     var cur = 0; if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
@@ -1225,8 +1234,8 @@
       b('s3', '🔥', 'Warming up', 'Study 3 days in a row', cur >= 3, p(cur, 3)),
       b('s7', '⚡', 'One full week', 'Study 7 days in a row', cur >= 7, p(cur, 7)),
       b('s30', '🌟', 'The habit', 'Study 30 days in a row', cur >= 30, p(cur, 30)),
-      b('ready10', '🧠', 'Solid ground', '10 concepts at ready or better', anyReady >= 10, p(anyReady, 10)),
-      b('m1', '🎓', 'First mastery', 'Master a concept (strong recall + written)', mastered >= 1, p(mastered, 1)),
+      b('ready10', '🧠', 'Solid ground', 'Get 10 concepts to "know it" or better', anyReady >= 10, p(anyReady, 10)),
+      b('m1', '🎓', 'First mastery', 'Master a concept (answer it correctly twice)', mastered >= 1, p(mastered, 1)),
       b('m25', '📚', 'Scholar', 'Master 25 concepts', mastered >= 25, p(mastered, 25)),
       b('m100', '🧙', 'The professor', 'Master 100 concepts', mastered >= 100, p(mastered, 100)),
       b('w1', '🖋️', 'In your own words', 'Pass your first written test', written >= 1, p(written, 1)),
@@ -1600,7 +1609,7 @@
         '<h2 class="review-title">Smart Review</h2>' +
         '<div class="mast-badges">' +
           '<span class="mb mb-learnt"><b>' + sum.learnt + '</b> mastered</span>' +
-          '<span class="mb mb-ready"><b>' + sum.ready + '</b> ready to write</span>' +
+          '<span class="mb mb-ready"><b>' + sum.ready + '</b> know it</span>' +
           '<span class="mb mb-learning"><b>' + sum.learning + '</b> learning</span>' +
           '<span class="mb mb-strug"><b>' + sum.struggling + '</b> struggling</span>' +
           '<span class="mb mb-new"><b>' + sum.new + '</b> new</span>' +
@@ -1643,8 +1652,8 @@
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · a concept is <b>mastered</b> only once you\'ve explained it in your own words in the written test — multiple choice alone reaches <b>ready</b></p>' +
-        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-ready"></i>ready — write it</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
+        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · answer a concept correctly once to <b>know it</b>, twice to <b>master</b> it — a miss knocks it back, and a 3/5 written answer keeps it in <b>learning</b></p>' +
+        '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-ready"></i>know it</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
       function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
@@ -1733,7 +1742,7 @@
           '<div class="heat-scroll"><div class="heat-months">' + monthRow + '</div><div class="heat-grid">' + cols + '</div></div></div>' +
         '<div class="stat-mm"><div class="stat-mm-head"><span>Overall mastery</span><span>' + sum.learnt + ' / ' + barTotal + ' mastered</span></div>' +
           '<div class="mm-bar stat-mm-bar">' + bar + '</div>' +
-          '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered ' + sum.learnt + '</span><span><i class="mm-dot mm-ready"></i>ready ' + sum.ready + '</span><span><i class="mm-dot mm-learning"></i>learning ' + sum.learning + '</span><span><i class="mm-dot mm-strug"></i>struggling ' + sum.struggling + '</span><span><i class="mm-dot mm-new"></i>new ' + sum.new + '</span></div>' +
+          '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered ' + sum.learnt + '</span><span><i class="mm-dot mm-ready"></i>know it ' + sum.ready + '</span><span><i class="mm-dot mm-learning"></i>learning ' + sum.learning + '</span><span><i class="mm-dot mm-strug"></i>struggling ' + sum.struggling + '</span><span><i class="mm-dot mm-new"></i>new ' + sum.new + '</span></div>' +
         '</div>' +
       '</section>');
       app.appendChild(sec);
@@ -2106,7 +2115,7 @@
     var card = h('<div class="result-card">' +
       '<div class="r-eyebrow">Smart Review · adaptive session</div>' +
       '<div class="score-big">' + c + ' <small>/ ' + n + '</small></div>' +
-      '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · ready to write <b>' + sum.ready + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
+      '<p class="r-msg">History updated. <span class="small">Mastered <b>' + sum.learnt + '</b> · know it <b>' + sum.ready + '</b> · learning <b>' + sum.learning + '</b> · struggling <b>' + sum.struggling + '</b> · new <b>' + sum.new + '</b></span></p>' +
       dotsHTML(S.results) +
       '<div class="next-row" style="justify-content:center"><button class="btn">Another session</button><button class="btn ghost">Contents</button></div></div>');
     card.querySelector('.btn').onclick = startPractice;
