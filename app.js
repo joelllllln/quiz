@@ -648,6 +648,10 @@
   // answer (marked by Claude), or a mix — the learner chooses in the Study picker.
   function getLearnTest() { var v = localStorage.getItem('ds_learn_test'); return (v === 'card' || v === 'mc' || v === 'written') ? v : 'mix'; }
   function setLearnTest(v) { try { localStorage.setItem('ds_learn_test', v); } catch (e) {} }
+  // How many concepts a single read+recall pass covers. 0 = the whole topic in one sitting.
+  var LEARN_OPTS = [10, 25, 50, 0];
+  function learnN() { var n; try { n = +localStorage.getItem('ds_learn_n'); } catch (e) {} return LEARN_OPTS.indexOf(n) >= 0 ? n : 25; }
+  function setLearnN(n) { try { localStorage.setItem('ds_learn_n', String(n)); } catch (e) {} }
   // Match a note to the concept it is actually about, so the test that follows tests THAT concept.
   var LEARN_STOP = ['the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'its', 'you', 'your', 'from', 'into', 'not', 'but', 'how', 'why', 'what', 'when', 'one', 'two', 'per', 'via', 'use', 'used', 'uses', 'each', 'they', 'them', 'has', 'have', 'can', 'all', 'any', 'set', 'get'];
   function learnTokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && LEARN_STOP.indexOf(w) < 0; }); }
@@ -677,48 +681,80 @@
     });
     return best;
   }
-  function learnSequence(topicKey, testType) {
-    var seq = [];
+  // Every distinct concept in a topic that read+recall can cover: a study note where one names the
+  // concept, otherwise the concept's own flashcard used as the thing to read. This is why finishing a
+  // topic really does cover the whole topic — not just the handful of concepts a note happened to name.
+  function learnConcepts(topicKey) {
+    var out = [];
     notesTopics().forEach(function (t) {
       if (topicKey && t.key !== topicKey) return;
       var notes = [];
       (window.NOTES[t.key].groups || []).forEach(function (g) {
         (g.items || []).forEach(function (it) { notes.push({ t: it.t, d: it.d, f: it.f, group: g.h, topic: t.name }); });
       });
-      if (!notes.length) return;
-      notes = shuffle(notes);   // fresh order every time Start is pressed (the ordered read-through lives in the Notes reader)
       var cards = flashDeck().filter(function (c) { return c.key === t.key && c.back && c.back.length > 15 && diffOk(c.level); });
-      // Questions for this topic, grouped by the concept each one teaches (its reveal name).
+      if (!notes.length && !cards.length) return;
       var byConcept = {};
       buildIndex().filter(function (e) { return e.key === t.key && diffOk(e.level); }).forEach(function (e) {
         var wf = widgetFor(e.q), nm = wf && wf.reveal && wf.reveal.name;
         if (nm) { var k = normkey(nm); (byConcept[k] || (byConcept[k] = [])).push(e.q); }
       });
-      notes.forEach(function (n) {
-        seq.push({ type: 'read', note: n });
-        var concept = matchConcept(n, cards);
-        // Never quiz a raw note heading (e.g. "The fix", "Junk features hurt"): if the note maps to no
-        // real concept, it stays read-only. Otherwise the test IS that concept's proper flashcard —
-        // a well-formed name + its own definition — so the prompt and the graded reference always agree.
-        if (!concept) return;
-        var conceptQs = byConcept[normkey(concept.front)] || [];
-        var testCard = { front: concept.front, back: concept.back, formula: concept.formula || '', topic: n.topic, record: concept.front, level: concept.level };
-        var pick = testType;
-        if (pick === 'mix') {
-          var opts = ['card'];
-          if (conceptQs.length) opts.push('mc');
-          if (apiKey()) opts.push('written');
-          pick = opts[Math.floor(Math.random() * opts.length)];
-        }
-        if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: bestQuestionForNote(n, conceptQs), topic: t.name, note: n });
-        else if (pick === 'written') seq.push({ type: 'written', card: testCard });
-        else seq.push({ type: 'card', card: testCard });
+      var items = notes.map(function (n) { return { note: n, concept: matchConcept(n, cards) }; });
+      var noteCovered = {};
+      items.forEach(function (x) { if (x.concept) noteCovered[normkey(x.concept.front)] = 1; });
+      cards.forEach(function (c) {
+        if (noteCovered[normkey(c.front)]) return;
+        items.push({ note: { t: c.front, d: c.back, f: c.formula || '', group: 'Key concept', topic: t.name }, concept: c });
       });
+      items.forEach(function (x) { out.push({ note: x.note, concept: x.concept, topic: t.name, byConcept: byConcept }); });
+    });
+    return out;
+  }
+  // How far along a concept is, for prioritising the least-known first: lower = needs work more.
+  function conceptRank(item) {
+    var qs = item.concept && item.byConcept[normkey(item.concept.front)];
+    var st = (qs && qs.length) ? cardStatus(qs[0]) : 'new';
+    return st === 'learnt' ? 3 : st === 'ready' ? 2 : st === 'learning' ? 1 : 0;   // new / struggling first
+  }
+  function learnSequence(topicKey, testType, cap) {
+    var items = learnConcepts(topicKey);
+    // Split into testable concepts (deduped) and pure read-only notes (headings with no concept).
+    var seenC = {}, concepts = [], readOnly = [];
+    items.forEach(function (x) {
+      if (!x.concept) { readOnly.push(x); return; }
+      var k = normkey(x.concept.front);
+      if (seenC[k]) return; seenC[k] = 1;   // a concept is tested once per pass; prefer its first (note) form
+      concepts.push(x);
+    });
+    // Fresh order each Start, but least-mastered concepts first so short sessions hit what needs work
+    // and repeated passes actually finish the topic instead of re-drilling what's already mastered.
+    concepts = shuffle(concepts);
+    concepts.sort(function (a, b) { return conceptRank(a) - conceptRank(b); });   // stable: keeps the shuffle within a rank
+    var plan;
+    if (cap && cap > 0) { plan = concepts.slice(0, cap); }
+    else { plan = shuffle(concepts.concat(readOnly)); }   // "whole topic": include the read-only notes too
+    var seq = [];
+    plan.forEach(function (x) {
+      var n = x.note, concept = x.concept, byConcept = x.byConcept;
+      seq.push({ type: 'read', note: n });
+      if (!concept) return;
+      var conceptQs = byConcept[normkey(concept.front)] || [];
+      var testCard = { front: concept.front, back: concept.back, formula: concept.formula || '', topic: x.topic, record: concept.front, level: concept.level };
+      var pick = testType;
+      if (pick === 'mix') {
+        var opts = ['card'];
+        if (conceptQs.length) opts.push('mc');
+        if (apiKey()) opts.push('written');
+        pick = opts[Math.floor(Math.random() * opts.length)];
+      }
+      if (pick === 'mc' && conceptQs.length) seq.push({ type: 'mc', q: bestQuestionForNote(n, conceptQs), topic: x.topic, note: n, concept: concept.front });
+      else if (pick === 'written') seq.push({ type: 'written', card: testCard });
+      else seq.push({ type: 'card', card: testCard });
     });
     return seq;
   }
   function startLearn(topicKey) {
-    var seq = learnSequence(topicKey, getLearnTest());
+    var seq = learnSequence(topicKey, getLearnTest(), learnN());
     if (!seq.length) return noContent('Read + recall');
     var i = 0, seen = 0, known = 0;
     function advance() { i++; if (i >= seq.length) return finish(); draw(); }
@@ -767,7 +803,7 @@
     function drawMC(step) {
       begin({ name: 'Read + recall', no: '✎', key: '__learn__' },
         { qk: '__learn__', part: 'Read + recall', name: step.topic },
-        { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall', learnNote: step.note,
+        { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall', learnNote: step.note, learnConcept: step.concept,
           learnNext: function (correct) { seen++; if (correct) known++; advance(); } });
     }
     // Open written test step: explain the concept; Claude Haiku marks it /5 (needs the user's key).
@@ -1571,7 +1607,7 @@
         if (mode === 'mc') return buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); }).length;
         if (mode === 'written') return writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); }).length;
         if (mode === 'defs') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); }).length;
-        if (mode === 'learn') { var c = 0; notesTopics().forEach(function (t) { if (tkey && t.key !== tkey) return; (window.NOTES[t.key].groups || []).forEach(function (g) { c += (g.items || []).length; }); }); return c; }
+        if (mode === 'learn') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
         return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
       }
       var avail = studyCount();
@@ -1585,7 +1621,7 @@
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
       else if (mode === 'type') { desc = 'Read the definition, type the term from memory · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start typing →'; }
       else if (mode === 'match') { desc = 'Pair terms with definitions, then order algorithm steps · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start matching →'; }
-      else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; desc = 'Read a note, then test yourself with ' + ltName + ' — over and over · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
+      else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; var ln = learnN(); var lnLabel = ln ? ln + ' concepts a session (least-known first)' : 'the whole topic in one go'; desc = 'Read a note, then test yourself with ' + ltName + ' — ' + lnLabel + ' · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
       desc += ' <span class="study-avail">' + avail + ' available</span>';
       var sec = h('<section class="study-card">' +
@@ -1600,7 +1636,9 @@
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
             (mode === 'learn' ?
             '<div class="filt-row"><span class="filt-lab">Test with</span>' +
-              chips('ltest', getLearnTest(), [{ v: 'mix', t: 'Mixed' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'card', t: 'Flashcards' }]) + '</div>' : '') +
+              chips('ltest', getLearnTest(), [{ v: 'mix', t: 'Mixed' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'card', t: 'Flashcards' }]) + '</div>' +
+            '<div class="filt-row"><span class="filt-lab">How many</span>' +
+              chips('lnum', learnN(), LEARN_OPTS.map(function (v) { return { v: v, t: v ? '' + v : 'Whole topic' }; })) + '</div>' : '') +
             (mode !== 'mc' && mode !== 'written' ? '' :
             '<div class="filt-row"><span class="filt-lab">How many</span>' +
               chips('num', curN, DAILY_OPTS.map(function (v) { return { v: v, t: '' + v }; })) + '</div>') +
@@ -1616,6 +1654,9 @@
       });
       sec.querySelectorAll('[data-num]').forEach(function (b) {
         b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderStudy(); };
+      });
+      sec.querySelectorAll('[data-lnum]').forEach(function (b) {
+        b.onclick = function () { setLearnN(+b.getAttribute('data-lnum')); renderStudy(); };
       });
       sec.querySelectorAll('[data-diff]').forEach(function (b) {
         b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(); };
@@ -1918,7 +1959,7 @@
       qs: opts.qs || shuffle(QUESTIONS[level.qk] || []),
       origins: opts.origins || null,
       daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites, more: !!opts.more,
-      modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null, learnNote: opts.learnNote || null,
+      modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null, learnNote: opts.learnNote || null, learnConcept: opts.learnConcept || null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
@@ -1988,6 +2029,7 @@
 
   function skip() {
     S.results.push(null); // neutral: not recorded as right or wrong
+    if (S.learnConcept) recordConcept(S.learnConcept, 'seen');   // a skipped read+recall concept still counts as seen
     S.i++;
     if (S.daily) saveDaily(S.i >= S.qs.length);
     if (S.i >= S.qs.length) { if (S.learnNext) return S.learnNext(); return done(); }
@@ -2016,7 +2058,9 @@
     var right = chosen === 0;
     var sr = card.querySelector('.skip-row'); if (sr) sr.remove();
     markAll(btns, btn, right);
-    if (!isRetry) { S.results.push(right); recordCard(q, right); logActivity(); }
+    // In read+recall the MC tests a whole concept, so record every question that teaches it (matching the
+    // flashcard/written steps) — otherwise sibling questions stay "new" and the topic reads as half-seen.
+    if (!isRetry) { S.results.push(right); if (S.learnConcept) recordConcept(S.learnConcept, right ? 'right' : 'wrong'); else { recordCard(q, right); logActivity(); } }
 
     if (right) {
       if (!isRetry) { S.correct++; bumpTotal(); }
