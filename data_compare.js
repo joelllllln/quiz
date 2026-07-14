@@ -242,6 +242,23 @@
       ],
       confusion: "Beginners call everything 'parameters'; the tell is who sets the value — the training algorithm learns parameters from data, while you pick hyperparameters before training begins.",
       rule: "Ask 'did the model learn this or did I choose it?' — learned means parameter, chosen means hyperparameter (and tune it on validation data)."
+    },
+    {
+      key: "euclid-manhattan",
+      title: "Euclidean vs Manhattan distance",
+      tagline: "Straight-line ruler vs city-block steps — how k-NN measures 'similar'",
+      a: { name: "Euclidean (L2)", oneLiner: "Straight-line 'as the crow flies' distance: square each axis gap, sum, take the root." },
+      b: { name: "Manhattan (L1)", oneLiner: "City-block distance: add the absolute gaps along each axis, no squaring." },
+      rows: [
+        { dim: "Formula", a: "d = √Σ(aᵢ − bᵢ)²", b: "d = Σ |aᵢ − bᵢ|" },
+        { dim: "Picture", a: "Diagonal line between two points.", b: "Right-angle steps along a grid." },
+        { dim: "Big single gap", a: "Squared, so one large gap dominates — outlier-sensitive.", b: "Added once, so a big gap doesn't swamp the rest." },
+        { dim: "High dimensions", a: "Distances concentrate faster; neighbours blur together.", b: "Holds up better — keeps neighbours more distinguishable." },
+        { dim: "Best for", a: "Low-dim, continuous, comparably-scaled features (the default).", b: "Many features, outliers, or grid-like / ordinal features." },
+        { dim: "Needs scaling", a: "Yes — always scale first.", b: "Yes — always scale first." }
+      ],
+      confusion: "They use the same features and both need scaling; the only difference is whether axis gaps are squared (Euclidean) or just added (Manhattan) — which changes how much a big gap or extra dimensions hurt.",
+      rule: "Default to Euclidean for a few comparable continuous features; switch to Manhattan in high dimensions or when big single-axis gaps/outliers shouldn't dominate. It's a hyperparameter — validate both."
     }
   ];
 })();

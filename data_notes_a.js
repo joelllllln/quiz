@@ -64,9 +64,11 @@
         { t: "Regression variant", d: "For a numeric target, average the neighbours' values instead of voting on a class." }
       ] },
       { h: "Measuring distance", items: [
-        { t: "Euclidean distance", d: "Straight-line distance: square the gap on each axis, sum, take the root.", f: "d = √Σ(aᵢ − bᵢ)²" },
-        { t: "Manhattan distance", d: "Add the absolute gaps along each axis instead of the straight-line root — city-block steps.", f: "d = Σ |aᵢ − bᵢ|" },
-        { t: "Choosing a metric", d: "Picking Euclidean vs Manhattan is choosing how you define 'similar'. Both run on the same features." },
+        { t: "Euclidean distance", d: "Straight-line 'as the crow flies' distance: square the gap on each axis, sum them, take the root. It's Pythagoras on the features.", f: "d = √Σ(aᵢ − bᵢ)²" },
+        { t: "Manhattan distance", d: "Add the absolute gaps along each axis instead of the straight-line root — city-block steps along a grid.", f: "d = Σ |aᵢ − bᵢ|" },
+        { t: "Choosing a metric", d: "Picking Euclidean vs Manhattan is choosing how you define 'similar'. Both run on the same (scaled) features; it's a hyperparameter — try both and validate." },
+        { t: "When to pick Euclidean", d: "The default: low-dimensional, continuous features on a comparable scale, where straight-line closeness means similar." },
+        { t: "When to pick Manhattan", d: "Prefer it in high dimensions (distances concentrate less than Euclidean) and when one axis has big gaps/outliers — L1 adds the gap, L2 squares it." },
         { t: "Weighted voting", d: "Let closer neighbours count more, e.g. weight each vote by 1/distance, so a very near point outweighs a distant one." }
       ] },
       { h: "The knob: k", items: [
