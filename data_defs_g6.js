@@ -290,10 +290,10 @@
     q: "In PCA, what is whitening (sphering)?",
     choices: [
       "An optional post-step that rescales the components so each has unit variance, making the transformed features uncorrelated and equally scaled",
-      "Deleting all components whose eigenvalue is below a chosen cut-off",
-      "Adding random noise to the data before the decomposition",
-      "Rotating the components back onto the original feature axes",
-      "Converting the covariance matrix into a correlation matrix"
+      "An optional step that deletes every principal component whose eigenvalue falls below a chosen cut-off, throwing away the low-variance ones for good",
+      "A preprocessing step that adds a little random jitter noise to every data value before the covariance decomposition is ever computed",
+      "A final rotation that spins the principal components back so they line up again with the original feature axes they started from",
+      "A conversion step that turns the raw covariance matrix into a correlation matrix by rescaling each entry to lie exactly between minus one and one"
     ],
     explain: "After projecting onto the principal components, whitening divides each component's scores by the square root of its eigenvalue (its standard deviation), so every transformed feature ends up with variance one. The result is a set of uncorrelated features on a common scale — a spherical, or 'white', cloud with no preferred direction. This is useful when a downstream algorithm expects features of comparable magnitude and no correlation.",
     simple: "Whitening stretches or squeezes each component so they all have the same spread of one, turning the data into an even, ball-shaped cloud. It hands the next algorithm features that are uncorrelated and all on the same scale.",
@@ -320,10 +320,10 @@
     q: "What is t-SNE (t-distributed Stochastic Neighbor Embedding)?",
     choices: [
       "A nonlinear method that places high-dimensional points on a 2-D or 3-D map so that near neighbours stay close, mainly for visualisation",
-      "A linear method that keeps the directions of greatest variance in the data",
-      "A supervised classifier that separates labelled points with a curved boundary",
-      "A clustering rule that grows groups outward from dense seed points",
-      "A search that tunes model settings to maximise a validation score"
+      "A strictly linear method that keeps only the directions of greatest variance in the data and drops the rest to shrink the dimensions down",
+      "A supervised classifier that learns a curved decision boundary to separate labelled points of one class from those of another",
+      "A density-based clustering rule that grows each group outward from a handful of dense seed points until the crowded region runs out entirely",
+      "A hyper-parameter search that repeatedly tunes a model's settings to maximise whatever score it reaches on the validation set"
     ],
     explain: "t-SNE is a nonlinear dimensionality-reduction technique designed for visualisation: it converts pairwise similarities among high-dimensional points into probabilities and lays the points out in low dimensions so that those neighbour relationships are preserved. It excels at revealing local structure and clusters but distorts global distances, so between-cluster gaps and sizes on a t-SNE map should not be read literally. It is unsupervised and uses no labels.",
     simple: "t-SNE draws a map of complicated, many-column data on a flat page so that things which were close together stay close together. It is great for spotting clusters by eye, though the distances between far-apart blobs do not mean much.",
@@ -348,10 +348,10 @@
     q: "In t-SNE, what is perplexity?",
     choices: [
       "A setting that fixes roughly how many nearby neighbours each point tries to keep, balancing attention to local versus broader structure",
-      "The learning rate that controls how big each optimisation step is",
-      "The number of output dimensions the map is drawn in",
-      "The random seed that determines the starting layout",
-      "The number of iterations the optimisation is allowed to run"
+      "The learning-rate setting that alone controls how big each individual optimisation step is as the map's points are gradually moved around",
+      "The fixed number of output dimensions that the final t-SNE map is actually drawn in, usually just two or occasionally three",
+      "The random seed value that alone determines the particular starting layout the points are scattered into before optimisation begins each run",
+      "The total number of optimisation iterations that the algorithm is allowed to run through before the final map is returned"
     ],
     explain: "Perplexity sets the effective number of neighbours each point considers when its similarities are computed — loosely, the size of the local neighbourhood the algorithm respects. Small perplexity emphasises very local structure and can fragment the data; large perplexity blends in more distant points and smooths clusters together. Typical values run from about 5 to 50, and the resulting map can change noticeably with the choice.",
     simple: "Perplexity is a dial for how many close neighbours each point pays attention to. Turn it low and t-SNE looks at tiny local groups; turn it high and it considers a wider circle around each point.",
@@ -376,10 +376,10 @@
     q: "What is nonlinear dimensionality reduction, the family t-SNE belongs to?",
     choices: [
       "Reducing many features to a few using curved, flexible mappings that can unfold structure a straight projection would flatten or tear",
-      "Reducing features only by deleting the columns with the smallest values",
-      "Reducing features strictly through weighted sums, so every new axis is a straight line through the data",
-      "Increasing the number of features by adding polynomial combinations",
-      "Splitting the data into clusters and keeping only the cluster labels"
+      "Reducing the number of features only by deleting the individual columns that happen to contain the smallest raw numeric values",
+      "Reducing features strictly through weighted sums of the columns, so that every single new axis is forced to be a straight line through the data",
+      "Increasing the number of features instead by adding extra polynomial combinations of the existing columns rather than removing any of them",
+      "Splitting the data into a set of clusters and then keeping only the cluster labels while throwing all the original features away"
     ],
     explain: "Nonlinear dimensionality reduction maps high-dimensional data to a low-dimensional representation using mappings that are not restricted to linear combinations of the features. This lets it capture curved structure — data lying on a bent surface (a manifold) — that a linear method like PCA would either flatten or split. t-SNE, UMAP, and Isomap are examples; the flexibility comes at the cost of harder-to-interpret, non-unique embeddings.",
     simple: "It is squeezing lots of columns down to a few using bendy, flexible mappings instead of straight ones. That flexibility lets it unroll data curled up on a curved surface, which a straight-line method would just squash.",
@@ -404,10 +404,10 @@
     q: "In t-SNE, what is neighbourhood preservation?",
     choices: [
       "The goal that points close together in the original high-dimensional space end up close together on the low-dimensional map",
-      "The goal that the total distance between all pairs of points is kept exactly the same",
-      "The goal that every cluster ends up the same physical size on the map",
-      "The goal that the map's axes line up with the original features",
-      "The goal that the number of points is reduced along with the dimensions"
+      "The goal that the total straight-line distance between every possible pair of points is kept exactly the same before and after",
+      "The goal that every separate cluster ends up drawn at exactly the same physical size on the finished map, none bigger than another",
+      "The goal that the map's two drawn axes line up neatly with the original input features rather than pointing in some new direction",
+      "The goal that the sheer number of data points is cut down at the same time as the number of dimensions is reduced"
     ],
     explain: "Neighbourhood preservation is the criterion t-SNE optimises: it tries to keep each point's set of nearby neighbours from the high-dimensional space nearby in the embedding. It deliberately sacrifices faithful global distances to do this, which is why local clusters look trustworthy but the gaps and sizes between clusters do not. Metrics like trustworthiness quantify how well neighbourhoods are retained.",
     simple: "It means the things that were close together in the original data stay close together on the map. t-SNE cares about getting the neighbours right, even if it means the big-picture distances get distorted.",
@@ -432,10 +432,10 @@
     q: "In t-SNE, what does the KL-divergence objective measure?",
     choices: [
       "The mismatch between the neighbour-similarity probabilities in the original space and those on the map, which t-SNE minimises",
-      "The total variance retained by the low-dimensional map",
-      "The distance from each point to the centre of its cluster",
-      "The number of neighbours each point is allowed to keep",
-      "The classification error of a model trained on the embedding"
+      "The total amount of variance that ends up retained by the finished low-dimensional map, in exactly the same way that PCA measures it",
+      "The straight-line distance measured from each single point out to the central centre of the cluster it belongs to",
+      "The fixed number of nearby neighbours that each individual point is actually allowed to keep hold of on the map",
+      "The final classification error of a separate model that was trained directly on the low-dimensional embedding coordinates as features"
     ],
     explain: "t-SNE turns pairwise closeness into probability distributions — one over neighbours in the high-dimensional space and one on the map — and uses the Kullback-Leibler (KL) divergence to measure how different those two distributions are. Optimisation moves the map's points to drive this divergence down, so the low-dimensional similarities match the high-dimensional ones as closely as possible. Because KL divergence penalises putting distant map points where near ones belong, it prioritises preserving local neighbourhoods.",
     simple: "t-SNE describes closeness as probabilities and then measures the gap between the original closeness pattern and the one on the map. That gap is the KL divergence, and t-SNE nudges points around to make it as small as possible.",
@@ -460,10 +460,10 @@
     q: "In t-SNE, what is the learning rate?",
     choices: [
       "A setting for how large each optimisation step is — too small and the map barely moves, too large and the points fly apart into a mess",
-      "The number of neighbours each point tries to preserve",
-      "The count of output dimensions for the map",
-      "The threshold below which two points are called neighbours",
-      "The fraction of the data used to build the embedding"
+      "The fixed number of nearby neighbours that each individual point tries its best to preserve as the whole layout is optimised",
+      "The chosen count of output dimensions that the final embedding map ends up being drawn in, most often just two and sometimes three at most",
+      "The distance threshold below which any two separate points are formally treated as being close neighbours of one another",
+      "The fraction of the whole dataset that is actually sampled and then used to build the low-dimensional embedding at the very end of the run"
     ],
     explain: "The learning rate scales how far the points are moved on each gradient-descent step while t-SNE minimises its objective. If it is too low, optimisation crawls or gets stuck with points clumped in a dense ball; if it is too high, the points overshoot and the layout diverges into a scattered blob. A well-chosen value (often scaled to the dataset size) lets clusters form cleanly, which is why it is a key tuning knob.",
     simple: "The learning rate is the size of the steps t-SNE takes while arranging the map. Tiny steps and it hardly moves; huge steps and the points scatter chaotically — you want something in between.",
@@ -488,10 +488,10 @@
     q: "In t-SNE, what is meant by 'local structure'?",
     choices: [
       "The fine-grained relationships among nearby points — which points are each other's close neighbours — that t-SNE works hard to preserve",
-      "The overall shape and spacing between far-apart clusters across the whole map",
-      "The direction in which the data varies the most",
-      "The total number of clusters present in the data",
-      "The axes chosen to draw the final embedding"
+      "The overall large-scale shape and the wide spacing between far-apart clusters spread right across the whole finished map, not the close-up detail",
+      "The single direction in the original feature space along which the data happens to spread out and vary the very most",
+      "The total number of separate, distinct clusters that happen to be present in the data before any dimensionality reduction is applied to it",
+      "The particular pair of axes that get chosen to draw the final low-dimensional embedding on the page at the very end"
     ],
     explain: "Local structure refers to the close-range relationships in the data — each point's immediate neighbourhood and which points cluster tightly together. t-SNE is built to preserve exactly this, at the deliberate expense of global structure (the arrangement and distances among far-apart groups). That trade-off is why t-SNE maps reveal clusters faithfully but should not be read for how far apart or how large those clusters are.",
     simple: "Local structure is the close-up detail: who your near neighbours are and which points huddle together. t-SNE protects this fine detail, even though it lets the big-picture layout get warped.",
@@ -516,10 +516,10 @@
     q: "In dimensionality reduction, what is the 'crowding problem' that t-SNE addresses?",
     choices: [
       "In high dimensions a point can have many roughly-equidistant neighbours, and there is not enough room in 2-D to place them all at their correct distances",
-      "The optimisation running out of memory when the dataset has too many points",
-      "Two clusters overlapping because the learning rate was set too high",
-      "The map looking different every time because of a random seed",
-      "Features being on wildly different scales before the reduction"
+      "The optimisation quietly running out of available memory whenever the dataset it is handed happens to contain far too many individual points to store in memory at once",
+      "Two neighbouring clusters ending up overlapping and smeared into each other simply because the learning rate was accidentally set far too high",
+      "The finished map ending up looking noticeably different on every single run purely because a different random seed was used to start it",
+      "The original input features sitting on wildly different numeric scales, so one dominates, before any dimensionality reduction has been applied to the data"
     ],
     explain: "The crowding problem arises because a high-dimensional space has room for many points to all sit a moderate distance from a given point, but a 2-D map cannot accommodate all those moderate distances at once — the neighbours get squeezed and pile up. t-SNE eases this by using a heavy-tailed Student-t distribution in the low-dimensional space, which allows moderately-distant points to spread further apart and prevents everything collapsing into a crowded lump.",
     simple: "In lots of dimensions there is space for a point to have many neighbours all about the same distance away, but a flat page just does not have room for them all. That squeeze is the crowding problem, and t-SNE's heavy-tailed curve is its fix.",
@@ -544,10 +544,10 @@
     q: "In t-SNE, what is early exaggeration?",
     choices: [
       "An early-phase trick that temporarily amplifies the attraction between true neighbours, so clusters form tight and well-separated before normal optimisation continues",
-      "Starting the map with the points laid out along the first principal component",
-      "Running extra iterations at the very end to fine-tune the layout",
-      "Increasing the perplexity partway through the run",
-      "Adding random noise to prevent the points from overlapping"
+      "Starting the whole map off with every one of its points already laid out neatly along the very first principal component of the data before any optimisation step begins",
+      "Running a whole extra batch of optimisation iterations right at the very end of the run, purely to fine-tune and gently polish the final settled layout, and nothing more",
+      "Steadily increasing the perplexity setting partway through the optimisation run so that each point gradually watches a wider circle of its neighbours",
+      "Adding a sprinkle of random jitter noise to the points during optimisation purely to stop them from ever landing exactly on top of one another at all"
     ],
     explain: "Early exaggeration multiplies the high-dimensional neighbour probabilities by a factor (commonly around 12) during the first phase of optimisation. This over-emphasises the pull between genuine neighbours, encouraging points to gather into tight clusters with clear gaps between them; the factor is then removed so the layout can settle normally. It helps t-SNE find a good global arrangement of clusters early and avoid getting tangled.",
     simple: "For the first stretch of training, t-SNE cranks up the pull between real neighbours so clusters snap together tightly with clear space around them. Then it turns the exaggeration off and lets the map relax into its final form.",
@@ -572,10 +572,10 @@
     q: "In t-SNE, what does initialising with init='pca' do?",
     choices: [
       "It starts the map from the data's first two PCA components instead of a random layout, giving more stable, reproducible embeddings that better retain global arrangement",
-      "It replaces t-SNE entirely with PCA and skips the neighbour optimisation",
-      "It sets the perplexity automatically from the PCA eigenvalues",
-      "It whitens the data so every feature has equal variance before t-SNE runs",
-      "It fixes the learning rate to match the largest principal component"
+      "It quietly replaces the whole t-SNE algorithm with plain PCA and skips the neighbour-probability optimisation step entirely, returning only the linear projection instead",
+      "It automatically sets the perplexity value for every point straight from the size of the PCA eigenvalues rather than leaving it as a manual setting for the user to tune by hand",
+      "It whitens the incoming data first so that every single feature is rescaled to have equal unit variance before the t-SNE optimisation is ever run",
+      "It fixes the optimisation learning rate so that it is scaled to match the magnitude of the single largest principal component of the whole dataset"
     ],
     explain: "By default t-SNE begins from a small random layout, so different runs can produce differently-oriented maps. Setting init='pca' instead seeds the starting positions with the data projected onto its first two principal components. Because that starting point already reflects the data's main axes of variation, the optimisation is more reproducible and tends to preserve more of the global structure than a random start.",
     simple: "Instead of scattering the points randomly to begin with, t-SNE can start them from a quick PCA layout. That head start makes the final map more repeatable run-to-run and keeps the big-picture arrangement a bit better.",

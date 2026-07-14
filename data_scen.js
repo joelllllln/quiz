@@ -18,10 +18,10 @@
     q: "You must justify every individual loan decision to a regulator who demands a clear reason for each rejection. Which model should you reach for first?",
     choices: [
       "A logistic regression or a shallow decision tree — models whose decisions you can read directly",
-      "A deep neural network, because it will be the most accurate",
-      "A large random forest of 500 unpruned trees",
-      "A gradient-boosted ensemble like XGBoost tuned to the maximum",
-      "k-nearest neighbours with a large k"
+      "A deep neural network, because it will almost always be the single most accurate model available",
+      "A large random forest of 500 unpruned trees, since more trees always means clearer reasons",
+      "A gradient-boosted ensemble like XGBoost tuned to the maximum for the very best possible score",
+      "k-nearest neighbours with a large k, because averaging many neighbours makes each call explainable"
     ],
     explain: "When each decision must be explained, interpretability outranks a small accuracy edge. Logistic regression gives you signed coefficients ('income raised approval odds, missed payments lowered them'), and a shallow tree gives a readable rule path. Ensembles and deep nets are accurate but opaque — reconstructing why one applicant was refused is hard, which is a legal and ethical liability here.",
     simple: "If you have to show your working, pick a model that shows its working. A simple, transparent model beats a slightly-more-accurate black box when the law wants reasons.",
@@ -38,10 +38,10 @@
     q: "Your fraud dataset is 2% fraud, 98% legitimate. Your model reports 98% accuracy. What should you conclude?",
     choices: [
       "Accuracy is misleading here — a model that always predicts 'legitimate' also scores 98%, so you need precision, recall or MCC",
-      "The model is excellent; 98% accuracy means it catches almost all fraud",
-      "You should collect more legitimate transactions to raise accuracy further",
-      "Accuracy is the right metric; you just need to push it above 99%",
-      "The 2% fraud rate means the model is 2% wrong, which is acceptable"
+      "The model is excellent; a 98% accuracy score means it reliably catches almost all of the fraud cases",
+      "You should collect many more legitimate transactions, since that will push overall accuracy even higher",
+      "Accuracy is exactly the right metric here; you simply need to tune the model until it clears 99%",
+      "The 2% fraud rate means the model is only 2% wrong overall, which is a perfectly acceptable error rate"
     ],
     explain: "On heavy imbalance, accuracy is dominated by the majority class. Predicting 'legitimate' for everyone scores 98% while catching zero fraud — useless. You must look at the positive class directly: recall (what fraction of fraud you caught), precision (of your fraud flags, how many were real), and F1 or MCC as balanced single numbers. The confusion matrix tells the real story.",
     simple: "If 98 in 100 cases are the same answer, guessing that answer every time already scores 98%. On rare-event problems, accuracy flatters a model that does nothing useful.",
@@ -58,10 +58,10 @@
     q: "You have only 300 labelled rows and 8 features, and you need a solid baseline classifier quickly. What's a sensible first choice?",
     choices: [
       "A simple, well-regularised model like logistic regression — low variance suits small data",
-      "A deep neural network with several hidden layers",
-      "A gradient-boosted ensemble with 2,000 trees",
-      "A very deep, unpruned decision tree",
-      "k-NN with k = 1"
+      "A deep neural network with several fully-connected hidden layers stacked together",
+      "A gradient-boosted ensemble with 2,000 trees to squeeze every last pattern from the rows",
+      "A very deep, unpruned decision tree grown until each leaf is perfectly pure",
+      "k-NN with k = 1, because the single nearest example is always the most reliable guide"
     ],
     explain: "With few rows, high-capacity models overfit: deep nets, huge boosted ensembles and deep single trees memorise 300 rows rather than learning a general rule. A simple, regularised model like logistic regression (or a shallow tree, or k-NN with a sensible k) has low variance and generalises better on small data. Start simple, add complexity only if honest validation says it helps.",
     simple: "Small data can't feed a hungry model. A simple model learns the shape you can actually support; a complex one just memorises the few examples you have.",
@@ -78,10 +78,10 @@
     q: "Your features are on wildly different scales — income in the tens of thousands, age in years — and you plan to use k-nearest neighbours. What must you do first?",
     choices: [
       "Scale the features (e.g. standardise) so distance isn't dominated by the large-numbered column",
-      "Nothing — k-NN handles raw scales automatically",
-      "Convert every feature to a category with one-hot encoding",
-      "Remove age, since income is the bigger number",
-      "Switch to accuracy as your metric"
+      "Nothing at all — k-NN automatically handles raw feature scales without any preprocessing",
+      "Convert every numeric feature into a category first and apply one-hot encoding to each",
+      "Remove the age feature entirely, since income is the bigger number and must matter more",
+      "Switch your evaluation metric to plain accuracy so the scale problem no longer applies"
     ],
     explain: "k-NN decides by Euclidean distance, and distance is dominated by whichever feature has the largest numeric range. Unscaled, income (tens of thousands) swamps age (tens), so age effectively vanishes. Standardising each feature to mean 0, variance 1 (or min-max scaling) puts them on comparable footing so every feature contributes. Distance-based and gradient-based models need scaling; tree-based models don't.",
     simple: "Distance-based models measure closeness with a ruler. If one column is in miles and another in millimetres, the miles column drowns out the rest until you put them on the same scale.",
@@ -97,10 +97,10 @@
     q: "In a cancer-screening test you care far more about not missing a true case than about occasional false alarms. Which metric should you optimise?",
     choices: [
       "Recall (sensitivity) — the fraction of true cases the model actually catches",
-      "Precision — the fraction of positive predictions that are correct",
-      "Overall accuracy",
-      "Specificity — the fraction of healthy people correctly cleared",
-      "Training loss"
+      "Precision — the fraction of the model's positive predictions that turn out to be correct",
+      "Overall accuracy across every patient the screening test examines",
+      "Specificity — the fraction of genuinely healthy people the test correctly clears",
+      "Training loss measured at the very final epoch of model fitting"
     ],
     explain: "Missing a real case (a false negative) is the costly error in screening, so you optimise recall, which directly measures the share of true positives you catch. You accept more false alarms (lower precision) because a flagged healthy patient just gets a follow-up test, whereas a missed cancer goes untreated. The right metric follows from which mistake hurts more.",
     simple: "A smoke alarm should rather beep at burnt toast than stay silent in a real fire. When missing the positive is the dangerous mistake, tune for recall.",
@@ -117,10 +117,10 @@
     q: "You're predicting a house's sale price (a continuous number). What kind of problem is this, and what metric fits?",
     choices: [
       "A regression problem — evaluate with an error like MAE or RMSE",
-      "A classification problem — evaluate with accuracy",
-      "A clustering problem — evaluate with silhouette score",
-      "A ranking problem — evaluate with ROC-AUC",
-      "A regression problem — evaluate with F1 score"
+      "A classification problem — evaluate it with plain classification accuracy",
+      "A clustering problem — evaluate it with the silhouette score",
+      "A ranking problem — evaluate it with the ROC-AUC curve metric",
+      "A regression problem — but evaluate it with the F1 classification score"
     ],
     explain: "Predicting a continuous quantity is regression, not classification. You measure how far predictions land from the truth: mean absolute error (average pounds off) or root mean squared error (which punishes big misses harder). Accuracy, F1 and ROC-AUC are for discrete classes; silhouette is for clusters. Match the metric family to the target type.",
     simple: "A price is a number on a slider, not a yes/no box. You score it by how close your guess is, not whether it's exactly right.",
@@ -155,10 +155,10 @@
     q: "A colleague reports 100% accuracy on the test set after including a 'customer_closed_account' column to predict churn. What most likely happened?",
     choices: [
       "Data leakage — that column encodes the outcome itself, so it won't be available before churn happens",
-      "The model is genuinely perfect and ready to deploy",
-      "The test set was simply too easy and should be made larger",
-      "Accuracy is the wrong metric; F1 would show the real story",
-      "The model overfit and needs more regularisation"
+      "The model is genuinely perfect and is completely ready to be deployed straight to production",
+      "The test set was simply far too easy and should be rebuilt at a substantially larger size",
+      "Accuracy is the wrong metric to use here; switching to F1 would reveal the real story",
+      "The model overfit the training data and just needs a good deal more regularisation"
     ],
     explain: "Near-perfect test accuracy is almost always leakage: a feature that secretly contains the answer. 'Account closed' is essentially the churn label restated, and it isn't known at prediction time (you're trying to predict churn before it happens). The fix is to remove any feature that wouldn't exist at the moment of prediction, then re-evaluate. Suspiciously perfect scores are a red flag, not a trophy.",
     simple: "If a feature quietly tells the model the answer, it will 'ace' the test and fail in the real world. A column that only exists after the event has already leaked the outcome.",
@@ -174,10 +174,10 @@
     q: "Your data arrives as a time series of daily sales and you want to forecast next month. How should you split train and test?",
     choices: [
       "Split by time — train on earlier dates, test on later ones — never shuffle",
-      "Shuffle all rows randomly, then take 20% as the test set",
-      "Use standard k-fold cross-validation with random folds",
-      "Put the test set at the start and train on the future",
-      "Use every other day for training and the rest for testing"
+      "Shuffle all of the rows completely at random, then hold out 20% of them as the test set",
+      "Use standard k-fold cross-validation with randomly assigned folds across all of the dates",
+      "Put the test set right at the very start and train the model on the later future dates",
+      "Use every other calendar day for training and keep all of the remaining days for testing"
     ],
     explain: "With time-ordered data, random shuffling lets the model peek at the future to predict the past — leakage that inflates scores and collapses in production. You must respect chronology: train on the past, validate on the following period (a time-series split or rolling-origin evaluation). Standard k-fold breaks the time order and is invalid here.",
     simple: "You can't study next week's answers to pass today's test. For forecasting, always train on the past and test on the future, in order.",
@@ -212,10 +212,10 @@
     q: "You have 40 numeric features and want to VISUALISE the data in 2D to eyeball its structure. Which tool fits?",
     choices: [
       "A dimensionality-reduction method like PCA or t-SNE to project to 2D",
-      "A decision tree with maximum depth 2",
-      "Logistic regression with two coefficients",
-      "K-Means with k = 2",
-      "A confusion matrix"
+      "A decision tree with a maximum depth of two, plotted to reveal the hidden structure",
+      "Logistic regression fitted with just two coefficients so it maps onto two axes",
+      "K-Means clustering with k = 2 to lay the points out across two dimensions",
+      "A confusion matrix built from the two most informative features in the data"
     ],
     explain: "To see 40-dimensional data on a flat screen you need dimensionality reduction: PCA finds the directions of greatest variance and is fast and linear; t-SNE and UMAP preserve local neighbourhoods and often reveal clusters more vividly. A tree or logistic model predicts a target rather than laying out the data, and K-Means groups rather than projects. For 'let me look at the shape', reduce dimensions.",
     simple: "You can't look at 40 axes at once. Dimensionality reduction squashes them down to two so you can actually plot and eyeball the data.",
@@ -231,10 +231,10 @@
     q: "Two candidate models score 84.1% and 84.4% on your validation set of 200 rows. What's the wise conclusion?",
     choices: [
       "The gap is within noise for 200 rows — treat them as tied and pick the simpler/faster one",
-      "The 84.4% model is clearly better and should always be chosen",
-      "Retrain both 100 times and always deploy whichever wins each run",
-      "The difference proves the second model generalises better",
-      "You should pick whichever has higher training accuracy instead"
+      "The 84.4% model is clearly the better one and should always be the model that you choose",
+      "Retrain both models 100 times each and always deploy whichever one happens to win that run",
+      "The 0.3-point difference clearly proves the second model genuinely generalises better to new data",
+      "You should ignore validation entirely and pick whichever model has the higher training accuracy"
     ],
     explain: "On only 200 rows, a 0.3-point difference is well inside the margin of sampling error — reshuffle the split and the ranking could flip. Treat near-ties as ties and let a secondary criterion decide: simplicity, speed, interpretability or robustness. Chasing a fraction of a percent on a tiny validation set is fitting to noise, not signal.",
     simple: "With a small test set, tiny score gaps are just luck of the draw. When two models are basically level, pick the one that's simpler to run and explain.",
@@ -252,10 +252,10 @@
     q: "You have 2 million rows of tabular data and want the strongest possible accuracy, with interpretability a low priority. Which model family is the usual first pick?",
     choices: [
       "Gradient-boosted trees (XGBoost / LightGBM) — the workhorse for large tabular problems",
-      "k-nearest neighbours, since more data always helps it most",
-      "A single deep decision tree",
-      "Naive Bayes with strong independence assumptions",
-      "Logistic regression with no interaction terms"
+      "k-nearest neighbours, since more training data always helps this particular model the most",
+      "A single very deep decision tree grown across all two million rows without any pruning",
+      "Naive Bayes relying on its strong feature-independence assumptions to scale up cleanly",
+      "Logistic regression with no interaction terms, since linear models handle big data best"
     ],
     explain: "On large tabular datasets where accuracy is king, gradient-boosted trees are the reliable state of the art: they capture non-linearities and feature interactions, handle mixed feature types, and scale well. k-NN becomes slow and memory-heavy at millions of rows; a single tree overfits or underfits; Naive Bayes and plain logistic regression are strong baselines but usually trail boosting on complex tabular signal.",
     simple: "For big spreadsheets where you just want the best number, boosted trees are the default champion. They squeeze non-linear patterns out of tabular data better than most alternatives.",
@@ -271,10 +271,10 @@
     q: "Your model gets 99% training accuracy but only 72% on the test set. What is happening and what should you try first?",
     choices: [
       "Overfitting — reduce complexity or add regularisation / more data to close the gap",
-      "Underfitting — make the model far more complex",
-      "The test set is broken and should be discarded",
-      "Nothing is wrong; a big train-test gap is normal and healthy",
-      "You should train for many more epochs to raise test accuracy"
+      "Underfitting — you should make the model far more complex and give it much more capacity",
+      "The test set itself is broken and ought to be discarded and then rebuilt from scratch",
+      "Nothing is wrong here at all; a large train-test gap like this is completely normal and healthy",
+      "You should train the model for many more epochs, which will steadily raise the test accuracy"
     ],
     explain: "A large gap between high training and lower test accuracy is the signature of overfitting: the model memorised the training data instead of learning a general rule. First remedies attack variance — simplify the model (shallower trees, fewer features), add regularisation (L1/L2, dropout), or gather more data. Making it more complex or training longer would widen the gap, not close it.",
     simple: "Acing the practice questions but flunking the real exam means you memorised, not learned. Rein the model in until the two scores move closer together.",
@@ -292,10 +292,10 @@
     q: "Predictions must return in under 10 milliseconds at scale, and training-time cost doesn't matter. Which model characteristic matters most?",
     choices: [
       "Fast inference — favour a model that predicts quickly, like a compact linear model or a pruned tree",
-      "A model with the fastest training time regardless of prediction speed",
-      "k-NN, because it has no training phase to slow you down",
-      "The largest ensemble available, since accuracy is all that counts",
-      "Whatever model has the smallest file size on disk"
+      "A model chosen purely for the fastest training time, regardless of how slow its predictions are",
+      "k-NN, because it has no training phase at all and therefore nothing there to slow you down",
+      "The largest ensemble you can possibly build, since raw prediction accuracy is all that counts",
+      "Whatever model happens to have the very smallest saved file size sitting on the disk"
     ],
     explain: "The constraint is prediction latency, so optimise inference speed. A small linear model or a shallow/pruned tree scores in microseconds. k-NN is the trap here: it has 'no training' but its prediction is slow — it must compare each query against the whole dataset. Huge ensembles evaluate hundreds of trees per prediction. Fast training is irrelevant when the bottleneck is serving.",
     simple: "If answers must come back instantly, pick a model that's quick to ask, not quick to build. k-NN is lazy at training but slow every single time you query it.",
@@ -310,11 +310,11 @@
   q("scen2", {
     q: "Your dataset has 30% of values missing in one important column. Which approach is generally soundest?",
     choices: [
-      "Impute the missing values (and optionally add a 'was-missing' flag), fitting the imputer on training data only",
-      "Delete every row that has any missing value, even if it discards most of the data",
-      "Fill all missing values with 0 without thinking about the column's meaning",
-      "Impute using statistics computed over the whole dataset before splitting",
-      "Drop the column entirely regardless of how predictive it is"
+      "Impute the missing values (and add a 'was-missing' flag), fitting the imputer on training data only",
+      "Delete every single row that contains any missing value at all, even if it discards most of the data",
+      "Fill all of the missing values with a plain 0 without ever thinking about what the column means",
+      "Impute using summary statistics computed over the whole dataset before you split it into train and test",
+      "Drop the entire column outright, regardless of how genuinely predictive it might otherwise turn out to be"
     ],
     explain: "Dropping 30%-missing rows can throw away most of your data, and blanket zero-fill distorts a column whose real values aren't near zero. Sensible imputation (median/mean, or model-based) keeps the rows, and a 'was-missing' indicator lets the model use missingness itself as signal. Crucially, fit the imputer on the training split only — computing fill statistics over all data leaks test information.",
     simple: "Don't bin a third of your data over blanks, and don't paper over them with a careless 0. Fill them in thoughtfully — using only the training set to decide the fill.",
@@ -330,10 +330,10 @@
     q: "You must choose k for k-NN. Training accuracy is highest at k = 1 but you care about new data. How should you choose k?",
     choices: [
       "By cross-validation, picking the k with the best validation performance — not the best training score",
-      "Always k = 1, because it gives the highest training accuracy",
-      "The largest k possible, so more neighbours always vote",
-      "Set k equal to the number of features",
-      "Set k equal to the number of classes"
+      "Always pick k = 1, because that setting gives you the highest possible training accuracy every time",
+      "Choose the largest k that is possible, since letting more neighbours vote always improves the result",
+      "Set k equal to the total number of features in your dataset so dimensions and votes line up",
+      "Set k equal to the number of classes, so that every class gets exactly one neighbouring vote"
     ],
     explain: "k = 1 memorises the training set (each point is its own nearest neighbour) and overfits, which is why its training accuracy is perfect and misleading. The honest way to pick k is cross-validation: try a range and choose the k that performs best on held-out folds. Too small overfits noise; too large oversmooths and underfits. Validation, not training score, reveals the sweet spot.",
     simple: "k = 1 just parrots the nearest example, so it looks flawless on data it has already seen. Let held-out validation, not the training score, tell you the right number of neighbours.",
@@ -351,10 +351,10 @@
     q: "A marketing team can only follow up on the top 100 leads your model ranks as most likely to convert. Which metric best reflects success?",
     choices: [
       "Precision@100 (top-k precision) — how many of your top 100 actually convert",
-      "Overall accuracy across all leads",
-      "Recall across the entire lead database",
-      "Mean squared error of the probability scores",
-      "The raw number of leads in the dataset"
+      "Overall classification accuracy computed across every single lead in the whole database",
+      "Recall measured across the entire lead database, whether or not you ever actually call them",
+      "Mean squared error of the predicted probability scores taken over all of the leads",
+      "The raw total number of leads sitting in the dataset before any ranking is applied"
     ],
     explain: "When only the top 100 ranked leads get acted on, what matters is how many of those 100 convert — precision@k (here k = 100). Overall accuracy and full-database recall ignore the fact that you only ever touch the top of the ranked list. This is a ranking/top-k problem, so evaluate at the operating point you actually use.",
     simple: "If you can only call the top 100 names, you care about how many of those 100 say yes — not how the model did on everyone else. Score it where you actually act.",
@@ -370,10 +370,10 @@
     q: "One feature is a 10,000-category user ID, and one-hot encoding it would explode your feature count. What's a better approach?",
     choices: [
       "Use a high-cardinality technique like target encoding (fit out-of-fold) or feature hashing",
-      "One-hot encode it anyway into 10,000 columns",
-      "Assign each category an arbitrary integer 1–10,000 and treat it as numeric magnitude",
-      "Drop every categorical feature in the dataset",
-      "Convert it to a date and extract the month"
+      "One-hot encode it anyway, expanding the single column into all 10,000 separate sparse columns",
+      "Assign each category an arbitrary integer 1–10,000 and treat it as a numeric magnitude",
+      "Simply drop every categorical feature in the whole dataset so that only numeric columns remain",
+      "Convert the user ID into a date value and then extract just the calendar month from it"
     ],
     explain: "One-hot on 10,000 categories creates a huge, sparse matrix. Target encoding replaces each category with the (out-of-fold) mean target for it — compact and informative, if you guard against leakage by encoding on held-out folds. Feature hashing maps categories into a fixed number of buckets. Labelling categories 1–10,000 as a magnitude is wrong: it invents a false ordering the model will misread.",
     simple: "Ten thousand yes/no columns is unwieldy, and numbering the categories pretends ID 900 is 'bigger' than ID 3. Target encoding or hashing keeps it compact without inventing fake order.",
@@ -389,10 +389,10 @@
     q: "You standardised your features using the mean and standard deviation of the ENTIRE dataset, then split into train and test. What's the problem?",
     choices: [
       "Preprocessing leaked test information — fit the scaler on the training set only, then apply it to the test set",
-      "Nothing — using all the data to scale is the correct, most accurate approach",
-      "You should have standardised each row instead of each column",
-      "Standardisation should always be done after training the model",
-      "The problem is only that standardisation is unnecessary for any model"
+      "Nothing at all — using every row of the data to compute the scaling is the correct, most accurate approach",
+      "You should have standardised each individual row instead of standardising each feature column",
+      "Standardisation should always be carried out after the model has already been fully trained",
+      "The only real problem is that standardisation is completely unnecessary for any kind of model"
     ],
     explain: "Computing the mean and standard deviation over all data before splitting lets the test set's statistics seep into training — a subtle leak that makes validation scores optimistic. The correct order is: split first, fit the scaler on the training split, then transform both train and test with those fitted values. A Pipeline enforces this automatically inside cross-validation.",
     simple: "If the scaler has already seen the test set's numbers, your evaluation is a little bit rigged. Split first, learn the scaling from training only, then apply it to the test data.",
@@ -408,10 +408,10 @@
     q: "Your classes are 90/10 imbalanced and the model ignores the minority class. Which set of remedies is appropriate?",
     choices: [
       "Adjust class weights, resample (e.g. SMOTE / undersample), and tune the decision threshold — judged by PR-AUC or F1",
-      "Just raise the overall accuracy target and retrain",
-      "Delete the minority class so the data is balanced",
-      "Switch to a larger random test split and nothing else",
-      "Report accuracy only and ignore the minority class"
+      "Just raise the overall accuracy target you are aiming for and then retrain the whole model from scratch again",
+      "Delete the entire minority class from the dataset so that the two remaining classes come out perfectly balanced",
+      "Switch to a much larger randomly-drawn test split and deliberately change absolutely nothing else in the pipeline",
+      "Report only the single overall accuracy figure and simply ignore the minority class entirely when evaluating"
     ],
     explain: "Imbalance makes the model favour the majority. Real fixes rebalance the learning signal: class weights penalise minority errors more, resampling (oversample the minority with SMOTE, or undersample the majority) evens the training set, and lowering the decision threshold trades precision for recall. Evaluate with PR-AUC or F1, not accuracy. Deleting the minority destroys the very thing you're trying to predict.",
     simple: "When a model shrugs off the rare class, make that class matter more — reweight it, resample it, or move the cutoff — and grade with a metric that watches it.",
@@ -427,10 +427,10 @@
     q: "You want a single number that summarises a classifier's ranking quality across ALL thresholds on a fairly balanced problem. Which metric?",
     choices: [
       "ROC-AUC — the probability a random positive is ranked above a random negative",
-      "Accuracy at the default 0.5 threshold",
-      "The training loss at the final epoch",
-      "Precision at a single fixed threshold",
-      "The number of true negatives"
+      "Plain classification accuracy measured only at the default 0.5 decision threshold",
+      "The value of the training loss recorded at the very final training epoch",
+      "Precision computed at just one single arbitrarily fixed decision threshold",
+      "The raw count of true negatives that the classifier produces overall"
     ],
     explain: "ROC-AUC integrates performance over every threshold and equals the chance that a random positive outranks a random negative — a clean, threshold-free summary of ranking quality, ideal on balanced data. Accuracy and precision fix one threshold and hide the rest of the trade-off curve. (On heavily imbalanced problems, PR-AUC is often more informative, but the question specifies balanced.)",
     simple: "ROC-AUC scores how well the model sorts positives above negatives, regardless of where you set the cutoff. It's the one-number summary of ranking skill.",
@@ -446,10 +446,10 @@
     q: "A single decision tree keeps giving very different structures when you resample the data (high variance). What's a natural fix?",
     choices: [
       "Bag it — train many trees on bootstrap samples and average/vote (a random forest)",
-      "Make the single tree deeper so it fits the data more exactly",
-      "Remove regularisation so the tree can grow freely",
-      "Switch to a single linear model and accept high bias",
-      "Train the same tree repeatedly on the identical data"
+      "Make the single tree considerably deeper so that it fits the training data even more exactly",
+      "Remove all of the regularisation so the single tree is free to grow as large as it wants",
+      "Switch to just one single linear model instead and simply accept the resulting high bias",
+      "Train the very same tree over and over again on the identical, unchanged training data"
     ],
     explain: "Deep single trees are low-bias but high-variance — small data changes reshuffle their splits. Bagging averages many trees fit on bootstrap resamples, cancelling much of that variance; random forests add per-split feature sampling to decorrelate the trees further. Deepening one tree or removing limits increases variance. Retraining on identical data changes nothing. The cure for variance is averaging independent learners.",
     simple: "One jittery tree overreacts to the exact rows it sees. Grow a whole forest on shuffled samples and let them vote — the wobble averages out.",
@@ -465,10 +465,10 @@
     q: "You have plenty of unlabelled data but labelling is expensive, and you want the model to improve fastest per label. Which idea directly targets this?",
     choices: [
       "Active learning — let the model pick the most informative points for you to label next",
-      "Train on random labels to save money",
-      "One-hot encode the unlabelled data and stop",
-      "Increase the learning rate until it converges",
-      "Use a larger test set and label that instead"
+      "Train on randomly assigned labels instead, since doing that will save you a lot of money",
+      "One-hot encode all of the unlabelled data and then simply stop there without labelling any",
+      "Increase the model's learning rate steadily until the training process finally converges",
+      "Use a much larger test set and spend your entire labelling budget on that portion instead"
     ],
     explain: "When labels are the scarce, costly resource, active learning maximises value per label: the model flags the examples it's most uncertain about (or that would most reduce error), and you label those first, so each label teaches the most. Random labelling wastes budget on easy, redundant points. Encoding tricks and learning-rate tweaks don't address the labelling bottleneck at all.",
     simple: "If every label costs money, don't label at random — label the cases the model is most confused about. Those teach it the most for each pound spent.",
@@ -486,10 +486,10 @@
     q: "You ran feature selection on the FULL dataset, then split into train/test and cross-validated. Your CV score looks great but production is worse. What went wrong?",
     choices: [
       "Selection leakage — features were chosen using the test rows; selection must happen INSIDE each CV fold on training data only",
-      "The model simply needs more trees",
-      "Cross-validation is unreliable and should be replaced by a single split",
-      "The production data is from a different planet; nothing was wrong methodologically",
-      "You used too few features and should keep them all"
+      "The model simply needs a great many more trees added to the ensemble before it will close the gap",
+      "Cross-validation is fundamentally unreliable as a technique and really should be replaced by a single train/test split",
+      "The production data is essentially from a completely different planet, so nothing at all was actually wrong with the methodology",
+      "You used far too few features and should instead keep every single available feature in the model"
     ],
     explain: "Choosing features while looking at the whole dataset lets the test rows influence which features survive — the selection has already peeked at the answers, so CV overstates performance. Correct practice nests feature selection inside the cross-validation: within each fold, select on that fold's training portion only, then evaluate on its held-out portion. Otherwise the 'held-out' data wasn't truly held out.",
     simple: "If you picked the features while looking at the test rows, your test was never blind. Selection has to happen fresh inside each fold, seeing only that fold's training data.",
@@ -505,10 +505,10 @@
     q: "You tuned hyperparameters on your test set until accuracy peaked, and reported that peak. Why is the reported number untrustworthy?",
     choices: [
       "You overfit the test set by repeatedly optimising against it — you need a separate validation set (or nested CV) and a truly untouched test set",
-      "Test sets are meant to be tuned on; the number is fine",
-      "The problem is only that the test set was too small",
-      "Accuracy can never be trusted as a metric under any circumstances",
-      "You should have tuned on the training set's accuracy instead"
+      "Test sets are genuinely meant to be tuned on again and again, so the single peak number you reported is perfectly fine to keep and publish",
+      "The only real problem here is that your test set was simply far too small to give a trustworthy number",
+      "Accuracy simply can never be trusted as a metric under absolutely any circumstances whatsoever, so the reported score is meaningless",
+      "You should instead have tuned all of your hyperparameters on the training set's own accuracy figure"
     ],
     explain: "Every time you tweak hyperparameters to raise the test score, you leak information from the test set into your choices; after many rounds you've fitted to that specific set and the reported peak is optimistic. The discipline: tune on a validation set (or inner CV loop) and touch the test set exactly once, at the very end. Nested CV formalises this separation of model-selection from final evaluation.",
     simple: "If you keep adjusting until the test score is highest, you've secretly trained on the test. Keep one set locked away and look at it only once, at the finish.",
@@ -525,10 +525,10 @@
     q: "Two features in your model are almost perfectly correlated. A permutation-importance report says BOTH are unimportant. Why might that be misleading?",
     choices: [
       "With a correlated twin present, shuffling one barely hurts because the other still carries the signal — importance is split/masked, not absent",
-      "Permutation importance is always exactly correct, so both truly are useless",
-      "Correlated features can never affect a model's predictions",
-      "The model must be broken and should be retrained from scratch",
-      "It proves you should always keep both correlated features"
+      "Permutation importance is always exactly correct in every possible case, so both of these two features genuinely are entirely useless",
+      "Two correlated features can never have any effect at all on a model's predictions, so the report must simply be right",
+      "The whole model must be fundamentally broken and therefore ought to be thrown away and retrained again from scratch",
+      "It proves beyond any doubt that you should always keep both of the correlated features together in the final model"
     ],
     explain: "Permutation importance measures the accuracy drop when a feature is shuffled. If two features are near-duplicates, scrambling one leaves the model leaning on the other, so neither shows a big drop — their shared importance is masked, not zero. The tell: drop one and the other's importance jumps. Correlated predictors routinely fool single-feature importance measures; interpret them with the correlation structure in mind.",
     simple: "If two features are near-copies, hiding one changes little because its twin covers for it — so both look unimportant even when the signal is real. Importance got split between them.",
@@ -544,10 +544,10 @@
     q: "Impurity-based feature importances from a random forest rank a high-cardinality ID-like column at the very top. Should you trust it?",
     choices: [
       "Be sceptical — impurity importance is biased toward high-cardinality features; check with permutation importance on held-out data",
-      "Yes, absolutely — impurity importance is unbiased and definitive",
-      "Yes, high-cardinality columns are always the most predictive",
-      "No, and you should therefore delete every categorical feature",
-      "It means the forest is broken and must be discarded"
+      "Yes, absolutely trust it — impurity-based importance is entirely unbiased and produces a definitive, final ranking you can rely on",
+      "Yes, because high-cardinality columns with many distinct values are always the single most predictive features available",
+      "No, and because of this you should therefore go ahead and delete every categorical feature from the dataset entirely",
+      "It simply means the entire random forest is broken and the whole model must therefore be discarded and rebuilt"
     ],
     explain: "Mean-decrease-in-impurity importance is inflated for features with many distinct values: they offer more split points and can reduce impurity on the training set by chance, even carrying little real signal. A near-unique ID column is the classic false top-ranker. Cross-check with permutation importance measured on held-out data, which is far less prone to this bias, before trusting the ranking.",
     simple: "A column with tons of unique values gives the trees endless ways to carve up the training data, so it looks important even when it isn't. Verify with permutation importance on unseen data.",
@@ -563,10 +563,10 @@
     q: "Your churn model was trained on last year's data and accuracy has quietly decayed in production over six months. What is the most likely cause?",
     choices: [
       "Data / concept drift — the input distribution or its relationship to churn has shifted, so the model needs monitoring and retraining",
-      "The model spontaneously forgot its parameters",
-      "Test accuracy is simply always wrong after deployment",
-      "The training set was too balanced",
-      "Nothing is wrong; models naturally get better over time"
+      "The model has somehow spontaneously forgotten all of its own carefully learned parameters over the past six months in production",
+      "Test accuracy figures are simply always completely wrong the moment a model has actually been deployed out into live production",
+      "The original training set was far too perfectly balanced, which is exactly what caused the slow decay over time",
+      "Nothing at all is wrong here; machine-learning models naturally just keep on getting better and better over time"
     ],
     explain: "A model is a snapshot of the world when it was trained. When customer behaviour, pricing, or the market shifts, the input distribution (data drift) or the input-to-target relationship (concept drift) changes, and a static model degrades. The remedy is monitoring live performance and input statistics, with periodic retraining on fresh data. Nothing about the model 'broke' — the world moved.",
     simple: "The world keeps changing after you train; last year's patterns slowly stop matching this year's customers. That silent decay is drift, and the fix is watch-and-retrain.",
@@ -582,10 +582,10 @@
     q: "Patients from the same hospital appear in both your train and test sets (multiple rows each). Your CV score is excellent but generalises poorly to new hospitals. What's the fix?",
     choices: [
       "Group-aware splitting (e.g. GroupKFold by hospital) so no group appears in both train and test",
-      "Ordinary random k-fold, which already handles this correctly",
-      "Add more rows per hospital to raise the score",
-      "Shuffle harder before splitting",
-      "Report training accuracy instead of CV accuracy"
+      "Ordinary random k-fold cross-validation, which already handles this grouping situation perfectly correctly on its own",
+      "Simply add many more rows per hospital to the dataset in order to raise the cross-validation score",
+      "Shuffle the rows much harder and far more thoroughly before performing the usual random split",
+      "Report the training accuracy figure instead of the cross-validation accuracy when presenting results"
     ],
     explain: "When rows cluster into groups (patients, hospitals, users) and the same group straddles train and test, the model can exploit group-specific quirks that won't transfer — an optimistic score that collapses on genuinely new groups. GroupKFold (or GroupShuffleSplit) keeps every group entirely on one side of the split, so evaluation reflects performance on unseen groups. Plain random k-fold leaks group identity.",
     simple: "If the same hospital is in both piles, the model memorises that hospital's habits and looks great — until a new hospital arrives. Split by group so the test hospitals are truly new.",
@@ -601,10 +601,10 @@
     q: "You're comparing many models and pick the one with the single best cross-validation score. Why might that model disappoint on new data?",
     choices: [
       "Selecting the max over many noisy scores biases you toward a lucky winner — consider the one-standard-error rule and nested CV",
-      "Cross-validation scores contain no noise, so the winner is guaranteed best",
-      "More models compared always means a more reliable winner",
-      "You should instead pick the model with the worst CV score",
-      "The winner disappoints only if it is a linear model"
+      "Cross-validation scores contain absolutely no noise whatsoever, so the model with the top score is mathematically guaranteed to be best",
+      "Comparing a larger and larger number of candidate models always leads to a more reliable and more trustworthy overall winner",
+      "You should instead go ahead and deliberately pick the particular model that scored the very worst on cross-validation",
+      "The chosen winner only ever disappoints on new data when it happens to be a plain linear model"
     ],
     explain: "Each CV score is an estimate with noise. Take the maximum across many models and you preferentially select whichever got a lucky-high estimate — 'winner's curse' — so the champion's true performance is usually a touch below its CV peak. Guards: the one-standard-error rule (prefer the simplest model within 1 SE of the best) and nested CV to get an unbiased estimate of the selection procedure itself.",
     simple: "Pick the top score out of dozens and you've partly picked luck. The flashiest CV winner tends to regress a little on fresh data; favour the simplest model that's statistically tied for best.",
@@ -621,10 +621,10 @@
     q: "You calibrated your classifier's probabilities and ROC-AUC stayed identical, but accuracy at the 0.5 cutoff changed. Is that a contradiction?",
     choices: [
       "No — monotonic calibration preserves ranking (so AUC is unchanged) but moves the scores, so the 0.5-threshold decisions can change",
-      "Yes, AUC and accuracy must always move together",
-      "Yes, calibration is broken if accuracy moves at all",
-      "No, because calibration always raises accuracy",
-      "Yes, because calibration reorders the predictions"
+      "Yes, it is a genuine contradiction, because ROC-AUC and accuracy must always move together in exactly the same direction",
+      "Yes, and it clearly means the calibration itself is broken, since a properly working calibration would never let accuracy move at all",
+      "No, and the reason is that probability calibration always raises the overall accuracy of the classifier no matter what",
+      "Yes, because calibration completely reorders all of the individual predictions relative to one another"
     ],
     explain: "Calibration (e.g. Platt/isotonic) is a monotonic remap of scores: it preserves the ordering of predictions, so ROC-AUC — a pure ranking metric — is unchanged. But it shifts the actual probability values, so the score that lands at the 0.5 cutoff moves, and threshold-dependent metrics like accuracy can change. No contradiction: ranking and thresholded decisions are different things.",
     simple: "Calibrating reshapes the probability numbers without reshuffling their order. Order-based scores (AUC) stay put; anything that depends on a fixed 0.5 line can shift.",
@@ -641,10 +641,10 @@
     q: "A model trained on historical hiring decisions strongly favours one demographic. What is the most accurate diagnosis?",
     choices: [
       "The model learned bias present in the historical labels — accurate to the data, but the data itself encodes an unfair pattern",
-      "The algorithm invented a brand-new bias unrelated to the data",
-      "High accuracy proves the model must be fair",
-      "Bias is impossible in supervised learning",
-      "The only issue is that the training set was too small"
+      "The learning algorithm somehow invented a brand-new bias entirely of its own, completely unrelated to anything in the training data",
+      "The model's high overall accuracy on held-out data conclusively proves that it must be completely fair and unbiased",
+      "Bias of any kind is fundamentally impossible in supervised learning, so the observed skew simply cannot really be happening",
+      "The only real issue here is that the training set was simply far too small to represent every demographic properly"
     ],
     explain: "Supervised models reproduce the patterns in their labels. If past hiring was skewed, the 'ground truth' itself is biased, and a faithful model will replicate — even amplify — that skew while scoring well on held-out historical data. High accuracy measures agreement with a biased past, not fairness. Remedies involve auditing labels and features, fairness constraints or reweighting, and human oversight — not just more data.",
     simple: "The model didn't dream up prejudice; it faithfully copied the bias baked into past decisions. Matching an unfair history accurately is still unfair.",
@@ -660,10 +660,10 @@
     q: "Adding an interaction feature helped your linear model a lot on training but hurt cross-validation. What's the disciplined interpretation?",
     choices: [
       "The extra feature raised variance and overfit — trust the CV signal and drop or regularise it",
-      "Training improvement always means you should keep the feature",
-      "CV must be wrong because training accuracy went up",
-      "You should add many more interaction terms to fix it",
-      "Interaction features can never help any model"
+      "A training-accuracy improvement always means, without any exception, that you should definitely keep the new feature",
+      "The cross-validation result must simply be wrong here, because the training accuracy clearly went up after adding it",
+      "You should respond by adding many, many more interaction terms until the cross-validation score recovers again",
+      "Interaction features like this one can never genuinely help any kind of model under any circumstances at all"
     ],
     explain: "Training score almost always rises when you add features — the model has more freedom to fit noise. The honest verdict comes from held-out validation: if CV dropped, the new feature added variance without generalisable signal, so drop it or shrink it with regularisation. Letting training gains override CV is exactly how overfitting sneaks in during feature engineering.",
     simple: "More features can only help the model hug the training data tighter — that's not the same as learning. When validation disagrees with training, believe validation.",
@@ -680,10 +680,10 @@
     q: "You benchmark a fancy deep model at 91% accuracy but never checked the naive baseline. Why is that a problem?",
     choices: [
       "Without a baseline (e.g. majority-class or a simple model) you can't tell whether 91% is impressive or trivial for this problem",
-      "Baselines are a waste of time once you have a deep model",
-      "91% is always excellent regardless of the problem",
-      "The baseline would only matter if the data were balanced",
-      "Deep models never need comparison because they are state of the art"
+      "Establishing baselines is a complete waste of everyone's time once you already have a powerful deep model in hand",
+      "A score of 91% is always genuinely excellent no matter what the underlying problem or dataset happens to be",
+      "The naive baseline would only ever actually matter in the special case where the data happened to be perfectly balanced",
+      "Deep models never require any comparison at all, simply because they are already the state of the art by definition"
     ],
     explain: "A score means nothing without a reference point. If 89% of cases are the majority class, 91% barely beats always-guessing; if a plain logistic regression already hits 90%, the deep model's extra cost buys almost nothing. Always establish a naive baseline (majority-class, simple linear model) first — it tells you how hard the problem is and whether your complex model actually earns its keep.",
     simple: "91% sounds great until you learn a coin-weighted guess scores 89%. Always measure the dumb baseline first, so you know whether your clever model is actually adding anything.",
@@ -699,10 +699,10 @@
     q: "You report a single accuracy number from one train/test split as your model's definitive performance. What's the weakness?",
     choices: [
       "One split is a single noisy draw — cross-validation gives a mean and spread, a far more reliable estimate",
-      "One split is always sufficient and cross-validation adds nothing",
-      "The weakness is only that accuracy should be a percentage",
-      "You should instead report the training accuracy from that split",
-      "A single split overestimates only for regression problems"
+      "A single train/test split is always perfectly sufficient, and running full cross-validation genuinely adds nothing useful at all",
+      "The only real weakness here is that the accuracy figure ought instead to be reported as a percentage",
+      "You should instead simply report the training accuracy taken from that very same single split you already made",
+      "A single train/test split only ever overestimates performance in the specific case of regression problems"
     ],
     explain: "A lone train/test split hands you one sample from a distribution of possible scores; depending on which rows landed in the test set, that number can swing several points. Cross-validation averages over multiple splits, yielding both a mean and a standard deviation — you learn the expected performance and how stable it is. Reporting one split's number without its uncertainty overstates how precisely you know the model's quality.",
     simple: "Judging a model on one split is like rating a film from a single frame. Cross-validation watches several splits and reports the average and how much it wobbles.",

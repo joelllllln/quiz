@@ -117,9 +117,9 @@
   q: "What do 'Gini' and 'entropy' measure in a decision tree?",
   choices: [
     "How mixed a group's labels are, so splits can reduce it",
-    "How deep the tree is allowed to grow before it stops",
+    "How deep the tree is permitted to grow before splitting stops",
     "How many training cases finally landed inside each leaf",
-    "How far apart two cases sit in the feature space",
+    "How far apart two cases sit when spread across the feature space",
     "How confident the final leaf vote is on brand-new cases"
   ],
   explain: "Gini and entropy are two near-identical formulas for impurity: how mixed a group's labels are, from 0 (all one class) up to a maximum at a 50/50 split. Training scores each candidate split by how much it lowers this number and keeps the split that reduces it most.",
@@ -180,7 +180,7 @@
   choices: [
     "How much total impurity each feature reduced across the tree",
     "The exact direction each feature pushes the final prediction",
-    "Which single feature the root always chooses to split on",
+    "Which single feature the root node itself always chooses to split on",
     "How strongly two features correlate with each other in data",
     "The order in which features were fed into the training call"
   ],
@@ -249,7 +249,7 @@
 
 {
   q: "A trained tree routes a new customer down its branches to a leaf. What does the leaf actually contain?",
-  choices: ["The majority class of the training points that landed there", "A weighted formula that scores the incoming customer", "The single closest training point, KNN-style, to it", "A back-pointer routing the customer to the root again", "A newly computed split chosen for each new arrival on the fly"],
+  choices: ["The majority class of the training points that landed there", "A weighted scoring formula that grades each incoming customer", "The single closest stored training point, KNN-style, to it", "A back-pointer that routes the customer up to the root again", "A newly computed split chosen for each new arrival on the fly"],
   explain: "Each leaf remembers which training points fell into it during training; its prediction is simply their majority class (or their class proportions, if you want probabilities).",
   simple: "Every leaf is a little room, and during training some examples ended up in each room. The room's verdict is whatever most of its occupants were. New arrivals routed to that room inherit the verdict.",
   widget: {
@@ -293,7 +293,7 @@
 
 {
   q: "You sweep the tree's maximum depth and score each version on training AND validation data. What do you expect to see?",
-  choices: ["Training climbs to 100%; validation peaks early then falls", "Both curves climb together and never level off", "Both curves fall steadily as the depth increases", "Validation keeps climbing steadily while training falls away", "Two flat lines that never respond to added depth"],
+  choices: ["Training climbs to 100%; validation peaks early then falls", "Both curves climb together and simply never level off", "Both curves fall steadily and in parallel as depth increases", "Validation keeps climbing steadily while training falls away", "Two perfectly flat lines that never respond to added depth"],
   explain: "More depth always fits the training data better. Validation improves only while the extra questions capture real structure — then falls as the tree starts memorising noise.",
   simple: "It's the same U-shaped story as KNN's k, mirrored: deeper = more flexible. The training curve loves flexibility endlessly; the honest curve loves it up to a point and then quietly starts paying for it.",
   widget: {
@@ -318,7 +318,7 @@
 
 {
   q: "You forgot to standardise the features before training your tree — incomes in pounds, ages in years. How bad is it?",
-  choices: ["Harmless — splits like 'income < 40,000?' don't care about scale", "Fatal - mismatched units stop the tree comparing features", "The feature with the biggest units dominates every split it makes", "It trains far more slowly but still predicts correctly", "Only the very first root split is thrown off by the scale"],
+  choices: ["Harmless — splits like 'income < 40,000?' don't care about scale", "Fatal - mismatched units stop the tree from comparing features", "The feature with the biggest units dominates every split it makes", "It trains far more slowly than usual but still predicts correctly", "Only the very first root split is thrown off by the raw scale"],
   explain: "A tree never mixes features into one distance — it asks about one feature at a time, and 'income < 40000' works identically whether income is in pounds or thousands. Scaling is a non-event for trees.",
   simple: "KNN adds features together into a distance, so units matter enormously. A tree only ever asks one-feature questions — 'is income under 40 grand?' — and that question means the same thing in any units. Trees simply don't care.",
   widget: {
@@ -362,7 +362,7 @@
 
 {
   q: "A regulator asks WHY the model rejected application #4172. What can a decision tree offer that most models can't?",
-  choices: ["The exact path of questions that led to the verdict", "A confidence interval on each of the learned weights", "The gradient of the loss at that data point", "The single nearest training example to it", "A pixel saliency heat-map over the inputs"],
+  choices: ["The exact path of questions that led to the verdict", "A confidence interval on each of the learned weights", "The gradient of the loss surface at that one data point", "The single nearest training example, KNN-style, to it", "A pixel-by-pixel saliency heat-map over the inputs"],
   explain: "Follow the application down the tree: 'income < 30k? yes → missed payments ≥ 2? yes → REJECT'. The path IS the explanation, readable by a non-technical audience verbatim.",
   simple: "A tree's answer comes with its reasoning attached: the exact questions asked and the answers given. You can read the rejection out loud as a sentence, which is why banks and hospitals like trees.",
   widget: {
@@ -384,7 +384,7 @@
 
 {
   q: "You retrain a tree after removing just three rows of training data — and get a visibly different tree. What is this property called?",
-  choices: ["High variance — trees are unstable to small data changes", "High bias - the tree is far too rigid to fit the data well", "A failure of the model's regularisation settings", "Label leakage from the removed training rows", "Feature drift between the two training runs"],
+  choices: ["High variance — trees are unstable to small data changes", "High bias - the tree is far too rigid to fit the data well", "A plain failure of the model's regularisation settings", "Label leakage carried in from the removed training rows", "Feature drift that crept in between the two training runs"],
   explain: "Greedy splitting means one early borderline decision cascades: change a few rows, the best root split flips, and everything below rebuilds differently. Individual trees are high-variance models.",
   simple: "The first question a tree asks determines every later question. Nudge the data slightly and a DIFFERENT first question wins — and the whole flowchart reshuffles. Same forest of facts, wildly different tree.",
   widget: {
@@ -412,7 +412,7 @@
 
 {
   q: "Random forests train many trees on random resamples and average their votes. What problem of single trees does this directly attack?",
-  choices: ["Their instability — averaging many jumpy trees cancels the wobble", "Their fundamental inability to fit the training data closely enough", "Their strict need for carefully scaled input features", "Their slow speed when making a single prediction", "Their reliance on axis-aligned rectangular splits"],
+  choices: ["Their instability — averaging many jumpy trees cancels the wobble", "Their fundamental inability to fit the training data closely enough", "Their strict need for carefully scaled and centred input features", "Their painfully slow speed when making a single prediction", "Their heavy reliance on axis-aligned rectangular splits"],
   explain: "Each tree overfits differently; their errors are partly independent, so voting averages the noise away while keeping the signal. Variance drops, accuracy stabilises.",
   simple: "One jumpy expert is unreliable; a hundred jumpy experts who err in DIFFERENT ways make a steady committee. The forest keeps each tree wild on purpose and lets the averaging do the calming.",
   widget: {

@@ -136,10 +136,10 @@
     "q": "The simplest way to combine models is VOTING. What does a voting ensemble actually do?",
     "choices": [
       "Runs several models and picks the answer most of them agree on",
-      "Runs several models and keeps only the most accurate one",
-      "Trains one model on the outputs of the others",
-      "Averages the training data before fitting a model",
-      "Chains models so each corrects the previous one"
+      "Runs several models and simply keeps only the single most accurate one",
+      "Trains one extra model directly on the outputs of all the others",
+      "Averages all the training data together before fitting a single model",
+      "Chains the models so that each one corrects the previous one's errors"
     ],
     "explain": "A voting ensemble asks several trained models the same question and combines their verdicts — majority label for 'hard' voting, or averaged probabilities for 'soft' voting. It's the most basic ensemble: no extra model, just a tally.",
     "simple": "It's a show of hands. Several finished models each cast a vote, and the crowd's answer wins. No new model is trained, nobody is chained to anyone — you just count. That plainness is the point: voting is the entry-level ensemble, and stacking is the smarter upgrade on top of it.",
@@ -182,10 +182,10 @@
     "q": "Voting comes in 'hard' and 'soft' flavours. What's the difference?",
     "choices": [
       "Hard counts predicted labels; soft averages the predicted probabilities",
-      "Hard uses trees; soft uses linear models",
-      "Hard trains faster; soft is just its slower version",
-      "Hard needs labels; soft works without any",
-      "Hard is for two classes; soft is for many"
+      "Hard voting always uses decision trees, while soft voting always uses linear models",
+      "Hard voting simply trains faster, and soft voting is merely its slower version overall",
+      "Hard needs class labels, while soft works without any labels at all",
+      "Hard voting is for two classes, while soft voting is for many"
     ],
     "explain": "Hard voting tallies each model's final label and takes the majority. Soft voting averages the models' probability outputs and picks the highest — so a very confident model can outweigh two lukewarm ones. Soft usually wins when the probabilities are trustworthy.",
     "simple": "Hard voting is a raw show of hands: each model says one word — 'spam' or 'not' — and the majority wins. Soft voting listens to HOW SURE each model is and averages that confidence. Two mild 'probably not's can lose to one emphatic 'definitely yes'. Soft is smarter when the models' confidence is well-calibrated.",
@@ -228,10 +228,10 @@
     "q": "Stacking trains a 'meta-model' on the base models' predictions. What job does the meta-model do?",
     "choices": [
       "Learns how much to trust each base model and combines them accordingly",
-      "Retrains the weakest base model until it improves",
-      "Averages the base models with equal fixed weights",
-      "Picks the single base model with the best accuracy",
-      "Splits the data so each base model sees a third"
+      "Repeatedly retrains only the weakest base model until it finally improves",
+      "Averages all the base models together using equal, fixed weights",
+      "Simply picks the single base model with the very best validation accuracy",
+      "Splits the training data so that each base model only sees a third"
     ],
     "explain": "Instead of a fixed tally, stacking adds a small second-level model that takes the base models' outputs as its inputs and learns the best way to combine them — effectively learning which model to trust, and when.",
     "simple": "The meta-model is a learned chairperson. Voting weights every member equally forever; the chairperson studies the members' track records and learns 'trust the forest here, the linear model there'. It doesn't retrain members or just pick the best one — it learns the smartest blend of all their opinions.",
@@ -269,10 +269,10 @@
     "q": "Stacking has a trap: how you generate the base predictions the meta-model trains on. What's the golden rule?",
     "choices": [
       "Use out-of-fold predictions — each base model predicts rows it never trained on",
-      "Let each base model predict its own training rows for speed",
-      "Train the meta-model on the raw features instead",
-      "Average the base predictions before the meta-model sees them",
-      "Give the meta-model the true labels as an extra input"
+      "Simply let each base model predict on its own training rows to save time",
+      "Train the meta-model directly on the raw input features instead of any predictions at all",
+      "Average all of the base predictions together before the meta-model ever gets to see them",
+      "Give the meta-model the true target labels as one extra input column"
     ],
     "explain": "If the meta-model learns from predictions a base model made on its OWN training rows, those predictions are unrealistically good and the meta-model learns to over-trust that model. Out-of-fold predictions (via cross-validation) give each row a prediction from a model that didn't see it — an honest picture.",
     "simple": "The meta-model must judge the base models on a fair exam, not on questions they memorised. If a base model 'predicts' rows it trained on, it looks like a genius, and the chairperson over-trusts it. Out-of-fold prediction rotates the data so every row is scored by a model that never saw it — the same honesty as a proper test set.",
@@ -308,10 +308,10 @@
     "q": "An ensemble of five copies of the same model barely beats one copy. What single ingredient makes ensembles pay off?",
     "choices": [
       "Diversity — the members must make DIFFERENT mistakes for combining to help",
-      "Depth — the members must each be as deep as possible",
-      "Size — you simply need enough members, however alike",
-      "Speed — the members must train quickly to be worth adding",
-      "Accuracy — every member must already be near-perfect alone"
+      "Depth — every one of the members must each be grown as deep as it possibly can",
+      "Size — you simply need a large enough number of members, however alike they are",
+      "Speed — the members must each train quickly enough to be worth adding at all",
+      "Accuracy — every single member must already be near-perfect entirely on its own"
     ],
     "explain": "Combining only helps when members err in different places, so their mistakes cancel. Five identical models make identical mistakes — averaging changes nothing. Diversity (different algorithms, data samples, or features) is the fuel that makes voting and stacking work.",
     "simple": "Ask the same expert five times and you get the same answer, mistakes included. Ask five DIFFERENT experts and where one is blind another sees — now combining helps. That's the whole secret: an ensemble is only as good as its members' disagreements. Not depth, not sheer count, not speed — different mistakes.",
@@ -446,7 +446,7 @@
     "choices": [
       "Different model families — a tree, a linear model and a kNN err in structurally different ways; reseeding one model barely helps",
       "Different random seeds of one model — each seed explores a fresh region and decorrelates the errors enough to matter the most",
-      "Training one strong model far longer — a lower-bias member is what contributes the most useful diversity to the committee vote",
+      "Training one single strong model for far longer — a lower-bias member is what contributes the most useful diversity to the committee vote",
       "Feeding every member the identical rows and features, so their disagreements isolate pure differences in modelling assumptions",
       "Adding many copies of the single best model — sheer member count drives the ensemble gain far more than any disagreement does"
     ],

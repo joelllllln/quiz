@@ -704,7 +704,7 @@
       "The split THRESHOLDS — cut points are drawn at random instead of optimised, making trees faster to grow and even less correlated",
       "The FEATURE MENUS — each tree gets one fixed random pool of columns for its whole life instead of resampling per split",
       "The BOOTSTRAP FRACTION — each tree resamples a randomly chosen share of the rows rather than the usual full-size draw",
-      "The STOPPING DEPTH — each tree halts at a randomly chosen depth, blending shallow stumps with fully grown trees together",
+      "The STOPPING DEPTH — each tree halts at a randomly chosen depth, blending shallow stumps and fully grown trees together in one forest",
       "The VOTE WEIGHTS — every tree's ballot is scaled by a random coefficient so that no single tree dominates the average"
     ],
     "explain": "A random forest still searches for the best threshold on each candidate feature. ExtraTrees skips that search: it draws a random cut point per feature and keeps the best of those few random cuts (and by default grows each tree on the full dataset, no bootstrap). Result: much cheaper splits, higher randomness, often comparable accuracy — sometimes better on noisy data.",
@@ -751,7 +751,7 @@
       "A much smoother curve — but still flat beyond the training range, because every tree still predicts leaf averages",
       "A perfectly smooth line that now extrapolates cleanly above the largest house ever seen in training",
       "The identical staircase a single tree gives, since averaging aligned steps can never smooth them out",
-      "A wildly oscillating curve outside the training range, because the disagreeing trees amplify each other",
+      "A wildly oscillating curve well outside the training range, because the disagreeing trees keep amplifying each other",
       "A straight sloped line fitted through the points, gaining the extrapolation that trees alone lack"
     ],
     "explain": "Each tree's step edges land in different places (different bootstraps, different features), so their average blurs into a near-smooth curve — one of bagging's quiet gifts. But every tree's output is still an average of training targets, so outside the seen range all 300 staircases go flat at once. Smoothing is fixed by averaging; extrapolation is not.",
@@ -804,7 +804,7 @@
     "q": "Same tabular dataset, two strong candidates: random forest or gradient boosting. What's the honest one-line decision guide between them?",
     "choices": [
       "RF = robust with almost no tuning and parallel training; boosting = higher ceiling but needs careful tuning and overfits more easily",
-      "RF trains its trees in sequence and rarely overfits; boosting trains them in parallel, tunes itself, but caps at a lower ceiling",
+      "RF trains its trees one after another in sequence and rarely overfits; boosting trains them in parallel, tunes itself, but caps at a lower ceiling",
       "RF lowers bias by correcting mistakes in sequence; boosting lowers variance by averaging fully independent trees in parallel",
       "RF demands heavy tuning to be usable at all; boosting runs well untuned and never overfits however long you keep training it",
       "RF only suits small datasets while boosting only suits large ones, and neither can spread its tree training across many cores"

@@ -118,10 +118,10 @@
     "q": "Boosting builds a 'weak learner' at each step. What does WEAK actually mean here?",
     "choices": [
       "A deliberately small model, like a shallow tree, only a bit better than guessing",
-      "The most accurate model available, trained briefly",
-      "A model trained on only the weakest features",
-      "A model with its predictions scaled down by half",
-      "A deep tree that is later pruned back hard"
+      "The single most accurate high-capacity model available, trained only briefly each round",
+      "A model trained on only the very weakest, least informative features",
+      "A model that simply has all of its predictions scaled down by half",
+      "A deep, fully grown tree that is later pruned back very hard"
     ],
     "explain": "A weak learner is intentionally low-capacity — typically a tree of depth 3–6 — just strong enough to capture a little signal. Boosting's power comes from adding many such small corrections in sequence, not from any single member being good.",
     "simple": "Weak means small on purpose. Each member is a stumpy little tree that alone barely beats a coin flip. The magic isn't in one member — it's in stacking hundreds of tiny corrections, each cleaning up what the last got wrong. Give boosting a strong deep tree instead and it overfits almost instantly.",
@@ -164,10 +164,10 @@
     "q": "Gradient boosting trains its trees on the RESIDUALS. What is a residual, in plain terms?",
     "choices": [
       "The leftover error: how far the current prediction is from the truth",
-      "The average prediction across all trees so far",
-      "The slice of data held back for validation",
-      "The confidence the model assigns to each guess",
-      "The importance score of the most-used feature"
+      "The running average of the predictions made across all the trees built so far",
+      "The random slice of data that is held back purely for validation",
+      "The confidence score the model attaches to each individual guess",
+      "The overall importance score of the single most-used feature"
     ],
     "explain": "A residual is actual minus predicted — what the ensemble still gets wrong at this point. Each new tree is fitted to those leftovers, so it targets exactly the mistakes remaining, and adding it shrinks the error a little more.",
     "simple": "It's the gap between the right answer and the model's current guess. Boosting reads that gap and trains the next tree to close it. Round after round, the tree keeps aiming at whatever's still wrong — like an editor who only marks the remaining typos each pass. The residual is the to-do list.",
@@ -210,10 +210,10 @@
     "q": "Bagging (forests) and boosting both combine trees. What is the ONE structural difference between them?",
     "choices": [
       "Boosting builds trees in sequence, each fixing the last; bagging builds them independently, in parallel",
-      "Boosting uses deeper trees than bagging always does",
-      "Boosting averages votes while bagging takes a majority",
-      "Boosting needs labels while bagging does not",
-      "Boosting works only for regression, bagging for classification"
+      "Boosting always uses much deeper individual trees than bagging ever does",
+      "Boosting averages the individual trees' votes while bagging instead takes a strict majority",
+      "Boosting always needs labelled data to train while bagging needs none at all",
+      "Boosting can only ever be used for regression tasks, whereas bagging can only be used for classification problems"
     ],
     "explain": "Bagging trains many trees independently on random samples and averages them (attacking variance). Boosting trains trees one after another, each fitted to the previous ensemble's errors (attacking bias). Parallel-and-average vs sequential-and-correct is the core split.",
     "simple": "Bagging is a committee that all vote at once, never talking to each other — then you average. Boosting is a relay: each runner starts where the last stumbled, fixing the handed-over mistakes. Independent-and-averaged versus sequential-and-corrective. That single difference explains why forests are sturdy and boosting is sharp.",
@@ -254,10 +254,10 @@
     "q": "The learning rate in gradient boosting is set to 0.1. What does that small number do?",
     "choices": [
       "Shrinks each tree's correction so the ensemble improves in small, careful steps",
-      "Drops 10% of the training rows from each tree",
-      "Keeps only the 10% most important features",
-      "Stops training once accuracy reaches 10% error",
-      "Scales the final prediction down to a tenth"
+      "Randomly drops ten percent of the training rows from every single tree that is built",
+      "Keeps only the ten percent most important features at each split",
+      "Stops the training run entirely once accuracy reaches a 10% error rate",
+      "Scales the final combined prediction down to just one tenth of its value"
     ],
     "explain": "The learning rate multiplies each new tree's contribution before adding it. Small steps (0.1) mean no single tree can dominate, so the ensemble corrects gradually and generalises better — at the cost of needing more rounds to get there.",
     "simple": "It's how big a bite of each correction you actually swallow. At 0.1 you take only a tenth of what each tree suggests, so you edge toward the answer carefully instead of lurching. Careful steps generalise better but need more of them — the classic trade of learning rate against number of trees.",
@@ -300,10 +300,10 @@
     "q": "Unlike adding trees to a forest, adding boosting rounds CAN overfit. How do you pick when to stop?",
     "choices": [
       "Watch a validation score each round and stop when it stops improving — early stopping",
-      "Always stop at exactly 100 rounds",
-      "Stop when training accuracy reaches 100%",
-      "Add rounds until the learning rate reaches zero",
-      "Stop when every tree has the same depth"
+      "Always stop the boosting run at exactly one hundred rounds, no matter what",
+      "Stop as soon as the training-set accuracy finally reaches a perfect 100%",
+      "Keep adding more boosting rounds until the learning rate has decayed all the way down to zero",
+      "Stop once every tree in the ensemble has grown to exactly the same depth"
     ],
     "explain": "Because each round chases the current residuals, late rounds start fitting noise — validation error falls, bottoms out, then rises. Early stopping monitors a held-out score every round and halts at the bottom, choosing the number of trees automatically and honestly.",
     "simple": "Boosting keeps sharpening, and past a point it sharpens into the noise. So you watch its score on held-back data round by round: while that keeps improving, keep going; when it stalls and starts slipping, stop. That 'stop at the bottom' rule — early stopping — picks the tree count for you, using evidence instead of a guess.",

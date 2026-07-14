@@ -162,10 +162,10 @@
     q: "Two classifiers: model A has ROC-AUC 0.92, model B has ROC-AUC 0.90. But your positive class is only 3% of data and you care about performance among the positive predictions. Which comparison should decide the winner?",
     choices: [
       "Compare their precision-recall AUC (PR-AUC), which focuses on the rare positive class and is more informative under heavy imbalance",
-      "Pick model A purely on its higher ROC-AUC, since AUC is the gold standard",
-      "Compare overall accuracy at the 0.5 threshold",
-      "Choose whichever has the higher specificity",
-      "Average their ROC-AUC and PR-AUC into one score and pick the max"
+      "Pick model A purely on the strength of its higher ROC-AUC, since ROC-AUC is universally regarded as the gold-standard metric",
+      "Compare the two models on their overall classification accuracy measured at the default 0.5 decision threshold instead",
+      "Choose whichever of the two models happens to have the higher specificity on the held-out validation data",
+      "Average each model's ROC-AUC and PR-AUC together into a single combined score and then simply pick the larger one"
     ],
     explain: "ROC-AUC uses the false-positive rate, whose denominator is the huge negative class, so on 3% positives a large absolute number of false positives barely moves it — ROC-AUC can look strong while precision is poor. PR-AUC plots precision against recall, both anchored on the rare positives, so it reveals the practical trade-off you actually care about. A tiny ROC-AUC edge can reverse under PR-AUC, so compare there.",
     simple: "On rare-event problems, ROC-AUC is graded on a curve that the giant 'negative' pile flatters. The precision-recall curve grades on the rare class you actually care about.",
@@ -183,10 +183,10 @@
     q: "Downstream software will treat your classifier's output as a real probability of default (e.g. to price interest rates). A boosted-tree model ranks well (high AUC) but its predicted probabilities are pushed toward 0 and 1. What should you do?",
     choices: [
       "Calibrate the model (e.g. Platt scaling or isotonic via CalibratedClassifierCV) so predicted probabilities match observed frequencies",
-      "Do nothing — a high AUC guarantees the probabilities are already trustworthy",
-      "Round every probability to 0 or 1 to make outputs cleaner",
-      "Switch to accuracy as the metric and ignore the probabilities",
-      "Lower the decision threshold so fewer extreme probabilities appear"
+      "Do nothing at all, because a high AUC on its own already guarantees that the model's predicted probabilities are perfectly trustworthy",
+      "Round every predicted probability all the way to either 0 or 1 in order to make the model's raw outputs look cleaner and more decisive",
+      "Switch your evaluation metric over to plain accuracy and simply ignore the predicted probabilities that the model produces altogether",
+      "Lower the model's decision threshold so that far fewer of the extreme probabilities near 0 and 1 actually end up appearing at all"
     ],
     explain: "AUC measures ranking, not whether a predicted 0.8 really corresponds to an 80% event rate — many models, boosted trees especially, produce well-ranked but poorly-calibrated probabilities. If the numbers are used as probabilities, you need calibration: fit a mapping (sigmoid/Platt or isotonic) on held-out data so that among cases predicted at p, roughly a fraction p are positive. A reliability (calibration) curve verifies the fix; AUC alone cannot detect the miscalibration.",
     simple: "The model orders risks correctly but its 'percent chances' are off. Calibration re-labels the confidence numbers so an 80% really means 80%.",
@@ -204,10 +204,10 @@
     q: "Your training set is 90% class A, 10% class B, and the model ignores class B. You are weighing class_weight='balanced' against random oversampling of B. Both aim to help minority recall. What is a fair statement of the trade-off?",
     choices: [
       "class_weight reweights the loss without duplicating rows, while oversampling grows the data and can overfit duplicated minority points — both raise minority recall but can lower precision",
-      "class_weight and oversampling are identical in every effect, so the choice is arbitrary",
-      "Oversampling always beats class_weight because more rows are always better",
-      "class_weight guarantees higher overall accuracy than doing nothing",
-      "Neither affects the minority class; only changing the threshold can help"
+      "class_weight and random oversampling are completely identical in every single effect they have, so the choice between the two is entirely arbitrary",
+      "Random oversampling always beats class_weight in every single case, simply because adding more rows to the training data is always strictly better",
+      "Using class_weight='balanced' mathematically guarantees a strictly higher overall accuracy than doing nothing at all about the class imbalance",
+      "Neither of the two techniques has any real effect on the minority class at all; only changing the decision threshold afterwards can actually help"
     ],
     explain: "class_weight='balanced' multiplies each class's loss by a factor inversely proportional to its frequency, so minority errors count more — no rows are added. Random oversampling instead duplicates minority rows, enlarging the dataset and risking overfitting to those exact points. Both increase attention to class B and typically raise its recall, but by trading away precision on B and possibly some overall accuracy. They are related but not identical, and each has distinct risks.",
     simple: "You can either tell the model 'minority mistakes hurt more' (class_weight) or photocopy the minority rows (oversample). Both push it to notice the rare class, with different side effects.",
@@ -225,10 +225,10 @@
     q: "A k-nearest-neighbours model is very accurate but must answer 5,000 requests per second with tight latency, and prediction is slow because it scans all training points. You are weighing options. What is the soundest trade-off?",
     choices: [
       "Trade a little accuracy for speed: use an approximate-neighbour index (e.g. KD-tree/Ball-tree or ANN), reduce dimensionality, or distil to a faster model",
-      "Keep exact brute-force kNN and simply buy the accuracy — latency does not matter",
-      "Increase k to a very large value, which makes prediction faster",
-      "Retrain the kNN more often, which reduces per-query latency",
-      "Switch the metric from accuracy to recall to make it run faster"
+      "Keep the exact brute-force kNN exactly as it is and simply pay for the accuracy, since in this system the prediction latency does not really matter",
+      "Increase the neighbour count k to a very large value, because scanning for a larger set of neighbours actually makes each prediction run faster",
+      "Retrain the kNN model far more frequently than you currently do, since more frequent retraining is what actually reduces the per-query latency",
+      "Switch the evaluation metric from accuracy over to recall instead, which will make the kNN model run noticeably faster at prediction time"
     ],
     explain: "kNN does almost no training work but pays at prediction time, scanning many points per query — a poor fit for high-throughput, low-latency serving. The realistic levers are structural: spatial indices (KD-tree, Ball-tree) or approximate nearest-neighbour search cut the per-query cost, dimensionality reduction shrinks distance computations, and distilling into a parametric model makes inference O(1)-ish. Each buys latency for a small, measurable accuracy cost. Raising k or retraining does not reduce per-query scan cost, and changing the metric does not change runtime.",
     simple: "kNN is lazy to train but slow to answer because it compares against everyone. To serve fast, give it a smart index or a lighter stand-in model, accepting a touch less accuracy.",
@@ -246,10 +246,10 @@
     q: "You are tuning L2 regularisation strength for logistic regression on a noisy dataset. Too little regularisation overfits; too much underfits. How should you choose the value, and what does the validation curve tell you?",
     choices: [
       "Sweep the regularisation strength and pick the value where validation score peaks — the balance point between bias and variance",
-      "Always pick the smallest regularisation, since it fits the training data best",
-      "Always pick the largest regularisation, since simpler is always safer",
-      "Pick the value that maximises training accuracy",
-      "Regularisation strength does not affect generalisation, so pick any value"
+      "Always pick the very smallest regularisation strength available, since that setting fits the training data the most closely of all",
+      "Always pick the very largest regularisation strength available, on the principle that a simpler model is always the safer choice to make",
+      "Pick whichever regularisation value ends up maximising the model's accuracy on the very training data it was fitted on",
+      "Regularisation strength has no real effect on how well the model generalises, so you can safely pick just about any value at all"
     ],
     explain: "Regularisation trades variance for bias: weak regularisation lets coefficients grow and overfit (high variance), strong regularisation shrinks them and underfits (high bias). A validation curve — score vs regularisation strength — is U-shaped-ish, peaking where the two errors balance; that peak is your choice. Training accuracy always favours the least regularisation, so tuning on it just picks the overfit extreme. The generalisation gap is precisely what regularisation controls.",
     simple: "Regularisation is a strictness dial. Too loose and the model memorises noise; too strict and it ignores real signal. Turn it to where the validation score is highest.",
@@ -268,10 +268,10 @@
     q: "You standardise all features and impute missing values on the FULL dataset, then split into train/test and report 95% test accuracy. In production the model does far worse. What is the flaw?",
     choices: [
       "Preprocessing leakage — fitting the scaler and imputer on all data let test statistics influence training, inflating the reported score",
-      "The test set was simply too small to be reliable",
-      "The model is underfitting and needs more capacity",
-      "Random noise; re-running with a new seed would fix it",
-      "The features were correlated, which always causes a production drop"
+      "The held-out test set you used was simply far too small for its reported 95% accuracy to be considered reliable in any way",
+      "The model is fundamentally underfitting the data and just needs considerably more capacity added to it before being deployed",
+      "This is just random noise in the particular split, and re-running the whole thing with a different random seed would fix the drop",
+      "The input features were correlated with one another, and feature correlation like that always causes a drop in production accuracy"
     ],
     explain: "Fitting the scaler's mean/variance and the imputer's fill values on the entire dataset before splitting means those statistics were computed using the test rows too — the model implicitly saw information about its own test set, so the 95% is optimistic. In production, no such peek exists, hence the drop. The fix is to fit all preprocessing inside a Pipeline on training folds only, so the test/validation rows are transformed but never used for fitting.",
     simple: "You let the model study the answer key while computing averages, then acted surprised it aced the practice test. Fit the prep on training data only.",
@@ -287,10 +287,10 @@
     q: "You used GridSearchCV to pick hyperparameters, then reported the best cross-validation score from that search as your estimate of future performance. Why is this optimistic, and what fixes it?",
     choices: [
       "The CV score was maximised over many configs, so it is biased upward; use nested cross-validation (or a held-out test set) to estimate real performance",
-      "Nothing is wrong — the best CV score is an unbiased estimate of future performance",
-      "The grid was too small; a bigger grid would make the reported score unbiased",
-      "You should report training accuracy instead, which is always unbiased",
-      "The problem is the random seed; averaging seeds removes all optimism"
+      "Nothing is wrong here at all, because the best cross-validation score from a search is a completely unbiased estimate of future performance",
+      "The hyperparameter grid you searched over was simply too small, and using a substantially bigger grid would make the reported score unbiased",
+      "You should just report the training-set accuracy instead of the CV score, since training accuracy is always a perfectly unbiased estimate",
+      "The whole problem is caused by the random seed, and averaging the results across many different random seeds removes all of the optimism"
     ],
     explain: "When you select the configuration that maximises the CV score, that winning score benefits from favourable noise across the many candidates — it is an optimistically biased estimate of generalisation. To report an honest number you need an outer evaluation the search never touched: nested cross-validation (an inner loop tunes, an outer loop evaluates) or a final held-out test set scored once. Enlarging the grid or reporting training accuracy makes the bias worse, not better.",
     simple: "If you try 100 lottery tickets and report your luckiest one, that number flatters you. Test the chosen model on data the search never saw.",
@@ -308,10 +308,10 @@
     q: "Your dataset has 20 nearly-duplicate rows per patient (repeated visits). You do a random 80/20 split, and the same patients appear in both train and test. Test accuracy is 96%. Why might this mislead, and what is the correct split?",
     choices: [
       "Group leakage — rows from one patient span train and test, so the model recognises patients rather than generalising; use GroupKFold split by patient",
-      "The split ratio is wrong; a 90/10 split would remove the problem",
-      "96% is simply correct and needs no scrutiny",
-      "The issue is too few features; adding more would lower the score honestly",
-      "Random splitting is always safe as long as it is truly random"
+      "The split ratio you used is simply wrong, and moving to a 90/10 train-test split instead of 80/20 would completely remove the whole problem",
+      "The 96% test accuracy is simply correct as reported and needs no further scrutiny whatsoever before the model is put into production",
+      "The real issue is that the model has too few features, and adding many more of them would honestly bring the inflated score back down",
+      "Random splitting of the rows is always a perfectly safe thing to do here, just so long as the shuffling itself is genuinely and truly random"
     ],
     explain: "When multiple rows belong to the same patient and land on both sides of a random split, the model can memorise patient-specific quirks seen in training and reap them at test time — it is effectively tested on people it already saw. That inflates accuracy and will not hold for genuinely new patients. The correct approach keeps all of a patient's rows together on one side, e.g. GroupKFold or GroupShuffleSplit with the patient ID as the group.",
     simple: "If the same person's visits appear in both the study set and the exam, the model passes by recognising them, not by learning medicine. Keep each person wholly in one split.",
@@ -327,10 +327,10 @@
     q: "To handle imbalance you applied SMOTE oversampling to the whole dataset, THEN split into train and test. Cross-validation looks superb but production is disappointing. What went wrong?",
     choices: [
       "Resampling before the split leaked synthetic points derived from test rows into training; oversample inside the Pipeline on the training fold only (e.g. imblearn Pipeline)",
-      "SMOTE is simply a bad technique and should never be used",
-      "The test set became too balanced, which always lowers real accuracy",
-      "The model overfit because SMOTE created too few new points",
-      "The problem is the metric; switching to accuracy would reveal the truth"
+      "SMOTE is simply a fundamentally bad resampling technique and it should really never be used on any imbalanced dataset under any circumstances",
+      "The test set itself became far too balanced after the resampling, and an artificially balanced test set like that always lowers the real accuracy",
+      "The model badly overfit purely because SMOTE ended up creating far too few brand-new synthetic minority points during the resampling step",
+      "The whole problem is the choice of evaluation metric, and simply switching over to plain accuracy instead would immediately reveal the truth"
     ],
     explain: "SMOTE synthesises minority points by interpolating between neighbours. If you run it on the full dataset before splitting, synthetic rows can be built from — or land near — test observations, and near-identical points then appear in both train and test, leaking information and inflating CV. Production sees no such synthetic echoes. The fix is to resample only within each training fold, e.g. by placing SMOTE inside an imblearn Pipeline so it never touches validation/test rows.",
     simple: "SMOTE invents new rows by blending real ones. Do it before splitting and the invented rows can be cousins of your test data — the model has effectively seen the test set.",
@@ -346,10 +346,10 @@
     q: "You want honest out-of-fold predicted probabilities for every training row to plot a calibration curve. You fit the model on all data, then predict on the same data and plot. The curve looks perfectly calibrated. Why is this untrustworthy?",
     choices: [
       "In-sample predictions are optimistic; use cross_val_predict to get out-of-fold predictions where each row is scored by a model that never saw it",
-      "The calibration curve is meaningless for probabilities and should not be plotted",
-      "Perfect calibration on training data proves the model is production-ready",
-      "The bins were too wide; narrower bins would reveal true miscalibration on training data",
-      "You should have used accuracy instead of a calibration curve"
+      "The calibration curve is a fundamentally meaningless plot for predicted probabilities and it should never really be plotted for a model at all",
+      "Achieving perfect calibration on the training data itself conclusively proves that the model is fully ready to be deployed into production",
+      "The histogram bins you used were simply too wide, and switching to much narrower bins would reveal the true miscalibration on training data",
+      "You should have plotted a plain accuracy score instead of a calibration curve, since accuracy would have told you everything you needed"
     ],
     explain: "Scoring rows with a model that was trained on those same rows yields optimistic, in-sample probabilities — the model has partly memorised them, so the reliability curve flatters itself. cross_val_predict returns, for each row, a prediction from a fold in which that row was held out, giving genuine out-of-fold estimates. Plotting the calibration curve on those out-of-fold probabilities reveals the true reliability the model would show on unseen data.",
     simple: "Grading the model on the exact examples it studied makes its confidence look perfect. Score each row using a model that never saw it — that is what cross_val_predict does.",
@@ -367,10 +367,10 @@
     q: "In a ColumnTransformer you one-hot encode a categorical column, fitting the OneHotEncoder on the full dataset. At serving time a new category appears that was never in training. What is the real risk and the correct setup?",
     choices: [
       "Fitting the encoder on all data leaked category vocabulary and it will error or misbehave on unseen categories; fit inside the Pipeline on training data and set handle_unknown='ignore'",
-      "New categories are impossible if the data was shuffled well, so there is no risk",
-      "The ColumnTransformer automatically handles any new category with no configuration",
-      "One-hot encoding should be replaced by label encoding, which never fails on new categories",
-      "The risk is only cosmetic; unseen categories do not affect predictions"
+      "Genuinely new categories are impossible to encounter at all if the data was simply shuffled well enough beforehand, so there is really no risk here",
+      "The ColumnTransformer automatically detects and handles any brand-new category that appears at serving time entirely on its own with no configuration",
+      "One-hot encoding should just be replaced wholesale with label encoding, which conveniently never fails or errors out on unseen categories at serving time",
+      "The risk here is purely cosmetic in nature, since an unseen category appearing at serving time does not actually affect the model's predictions at all"
     ],
     explain: "Two problems compound here. Fitting the OneHotEncoder on the full dataset (including validation/test rows) leaks the category vocabulary, inflating scores. And a default encoder fitted only on training categories will raise an error when a genuinely new category arrives at serving time. The correct setup fits the ColumnTransformer inside a Pipeline on training data only, and sets handle_unknown='ignore' so unseen categories map to an all-zeros vector instead of crashing.",
     simple: "If the encoder learned its vocabulary from the whole dataset, it both cheated and stayed brittle. Fit it on training data and tell it to shrug at words it has never seen.",

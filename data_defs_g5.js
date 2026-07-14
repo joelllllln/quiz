@@ -10,10 +10,10 @@
     q: "What is k-means clustering?",
     choices: [
       "An unsupervised algorithm that partitions data into a preset number k of clusters, each represented by its mean point, by repeatedly assigning points to the nearest mean and recomputing the means",
-      "A supervised algorithm that learns a boundary between two labelled classes by maximising the margin between them",
-      "A method that builds a tree of nested clusters by repeatedly merging the two closest groups until one remains",
-      "A density algorithm that grows clusters from dense regions and leaves sparse points unassigned as noise",
-      "A technique that projects data onto a few directions of maximum variance to reduce its dimensionality"
+      "A supervised algorithm that learns a decision boundary between two labelled classes by maximising the margin between the closest training examples sitting on either side of the separating gap itself",
+      "A method that builds a whole tree of nested clusters by repeatedly merging the two closest groups together, one pair at a time, until a single all-encompassing cluster is left alone at the very top",
+      "A density-based algorithm that grows clusters outward from crowded regions and leaves the sparse points sitting alone out in the empty gaps unassigned, labelling every one of them as noise instead",
+      "A dimensionality-reduction technique that projects the whole dataset down onto a few orthogonal directions of maximum variance to shrink the feature count while retaining most of the original spread"
     ],
     explain: "K-means splits a dataset into k groups so that each point belongs to the cluster whose mean (centroid) is nearest. It alternates two moves — assign every point to its closest centroid, then move each centroid to the average of its members — until the assignments stop changing. It is unsupervised: no labels are used, only the geometry of the points.",
     simple: "K-means sorts your points into k piles, where each pile has a centre. It keeps nudging the centres and re-sorting the points until everything settles. Nobody tells it the right answer; it just groups by closeness.",
@@ -38,10 +38,10 @@
     q: "In k-means, what is 'inertia' (the within-cluster sum of squares)?",
     choices: [
       "The total of the squared distances from every point to its own cluster's centroid — a single number measuring how tight the clusters are",
-      "The number of iterations the algorithm takes before the assignments stop changing",
-      "The average distance between the centroids of different clusters",
-      "The count of points that end up assigned to the wrong cluster",
-      "The share of the data's total variance captured by the clustering"
+      "The number of iterations the algorithm takes before the point assignments finally stop changing and the whole loop settles into convergence",
+      "The average straight-line distance measured between the centroids of every possible pair of different clusters once the fitting has finished",
+      "The count of the data points that end up assigned to the wrong cluster when compared with their true underlying group labels afterward",
+      "The share of the data's total variance that ends up captured by the clustering once the centroids have fully settled into their places"
     ],
     explain: "Inertia (also called WCSS) sums the squared distance from each point to the centroid of the cluster it belongs to. Lower inertia means points sit closer to their centroids, so the clusters are tighter. K-means works by driving this quantity down; it is the objective the algorithm minimises.",
     simple: "Inertia adds up how far every point sits from its own group's centre, squared. A small number means each group is tight and compact. K-means tries to make this number as small as it can.",
@@ -66,10 +66,10 @@
     q: "What is the 'elbow method' for choosing k in k-means?",
     choices: [
       "A heuristic that plots inertia against k and picks the k where the curve bends sharply, because adding more clusters past that point barely reduces inertia",
-      "A rule that always sets k to the square root of the number of data points",
-      "A method that runs k-means with several random seeds and keeps the run with the lowest inertia",
-      "A test that measures how far apart the final centroids end up from one another",
-      "A procedure that removes outliers before clustering so the centroids are not dragged around"
+      "A rule that always fixes the number of clusters k at the square root of the total count of the data points contained in the whole dataset being clustered",
+      "A method that runs k-means over and over again from several different random seeds and simply keeps whichever finished run happens to report the lowest inertia",
+      "A test that measures how far apart the final centroids end up sitting from one another out in space once all of the point assignments have finally converged",
+      "A cleaning procedure that strips the outliers out of the data before clustering begins so the centroids are never dragged off toward stray far-away points"
     ],
     explain: "As you increase k, inertia always drops, but the gains shrink once you pass the natural number of groups. Plotting inertia versus k typically shows a sharp bend — the 'elbow' — where extra clusters stop helping much. The elbow method picks the k at that bend as a reasonable trade-off between tight clusters and too many of them.",
     simple: "Try k = 1, 2, 3, ... and draw how much tighter the clusters get each time. The line drops fast then flattens, making an elbow shape. The bend is a good place to stop adding clusters.",
@@ -94,10 +94,10 @@
     q: "What is the 'silhouette score' in clustering?",
     choices: [
       "A measure, from −1 to 1, of how well each point fits its own cluster versus the nearest other cluster, averaged over all points",
-      "The total squared distance from every point to its assigned centroid",
-      "The number of clusters that contain at least one point after the algorithm finishes",
-      "The fraction of points that changed cluster on the final iteration",
-      "The straight-line distance between the two closest centroids"
+      "The total squared distance summed up from every single data point to the particular centroid it has been assigned to in its cluster",
+      "The number of clusters that still happen to contain at least one assigned point once the whole algorithm has completely finished running",
+      "The fraction of all the data points that switched over to a different cluster on the very final iteration just before convergence",
+      "The straight-line distance measured between the two particular centroids that end up sitting closest together after the run settles"
     ],
     explain: "For each point the silhouette compares its average distance to points in its own cluster with its average distance to points in the nearest neighbouring cluster. Values near 1 mean the point is snugly in its cluster and far from others; near 0 means it sits on a boundary; negative means it is probably in the wrong cluster. The mean over all points scores the whole clustering, and it often peaks at the best k.",
     simple: "For every point it asks: am I closer to my own group or to the next group over? A score near 1 means it clearly belongs where it is. Averaging this across all points tells you how good the clustering is.",
