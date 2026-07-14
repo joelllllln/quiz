@@ -241,6 +241,17 @@
     if (n) logActivity();
     return n;
   }
+  // Single, intelligent rule for EVERY written answer, wherever it appears:
+  //   >=4/5 → concept marked 'right' AND 'written' (the only path to mastered) + lifetime total,
+  //   ==3   → 'seen' (touched, no box change),
+  //   <=2   → 'wrong' (box drops), so weak explanations pull the concept back for review.
+  // Effort always logs to your consistency, even when the prompt maps to no scored card.
+  function recordWritten(name, score) {
+    var n = recordConcept(name, score >= 4 ? 'right' : (score <= 2 ? 'wrong' : 'seen'), score >= 4);
+    if (!n) logActivity();
+    if (score >= 4) bumpTotal();
+    return n;
+  }
   function cardStatus(q) {
     var r = loadCards()[cardId(q)];
     if (!r || !r.seen) return 'new';
@@ -731,8 +742,7 @@
           result.querySelector('.wr-modeltext').textContent = reference;
           result.querySelector('.wr-next').onclick = advance;
           result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
-          recordConcept(c.record || c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
-          if (res.score >= 4) bumpTotal();
+          recordWritten(c.record || c.front, res.score);
         });
       }
       mark.onclick = runMark;
@@ -992,8 +1002,7 @@
           result.querySelector('.wr-redo').onclick = function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); };
           // Feed the shared learning map. A strong written explanation (>=4/5) both
           // strengthens the concept AND unlocks 'mastered' — the ONLY way to master it.
-          recordConcept(c.front, res.score >= 4 ? 'right' : (res.score <= 2 ? 'wrong' : 'seen'), res.score >= 4);
-          if (res.score >= 4) bumpTotal();
+          recordWritten(c.front, res.score);
         });
       }
       mark.onclick = runMark;
