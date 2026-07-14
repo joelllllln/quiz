@@ -10,7 +10,7 @@
     q: "In classification, what is accuracy?",
     choices: [
       "The fraction of all predictions the classifier gets correct — correct predictions divided by the total number of predictions",
-      "The fraction of the cases the model flagged as positive that genuinely turn out to be positive once the labels are checked",
+      "The fraction of the cases the model flagged as positive that genuinely turn out to be positive once every flagged label is checked against the ground truth",
       "The fraction of the genuinely positive cases in the data that the classifier manages to correctly flag with a raised alert",
       "The average of the squared differences between each predicted number and its true numeric value taken across the dataset",
       "The area under the curve traced by the true-positive rate against the false-positive rate as the decision threshold varies"
@@ -516,7 +516,7 @@
     q: "In machine learning, what is an L2 (ridge) penalty?",
     choices: [
       "A regularization term that adds the sum of the squared weights to the loss, shrinking all weights smoothly toward zero",
-      "A term that adds the sum of the absolute values of the weights to the loss, driving some of them exactly to zero",
+      "A term that adds the sum of the absolute values of the weights to the loss, driving some of them exactly to zero and dropping those features from the model entirely",
       "A rule that halts the training run just as soon as validation performance plateaus across several successive epochs",
       "The average squared difference between the model's predictions and the corresponding true numeric target values",
       "A method that averages together the predictions coming from many separately and independently trained models"
@@ -661,7 +661,7 @@
       "A method that draws a diagram of the data flowing between the various transformers in a preprocessing workflow",
       "A grid of candidate hyperparameter values that a tuning search will then systematically evaluate one by one",
       "A single one-off division of the available data into one training portion and one separate held-out test portion",
-      "A table that cross-tabulates the predicted class labels against the actual class labels for every single sample"
+      "A table that cross-tabulates the predicted class labels against the actual class labels for every single sample, with correct calls landing along its main diagonal"
     ],
     explain: "A Pipeline bundles an ordered list of transformers followed by a final estimator into one object. Calling .fit() runs each step's fit and transform in turn, then fits the final estimator; calling .predict() pushes new data through the same steps. This guarantees identical preprocessing at train and prediction time and, crucially, prevents leakage when used inside cross-validation.",
     simple: "It is an assembly line that glues your data-prep steps and your model together into one thing. Fit it once and every step runs in order, the same way on new data.",
@@ -689,7 +689,7 @@
       "An estimator that predicts a single continuous numeric target value directly from the given raw input features",
       "A method that divides the available data into one separate training portion and one separate test portion",
       "A tool that combines several separate trained classifiers together into a single majority-vote ensemble model",
-      "A systematic search across a predefined grid of candidate hyperparameter values for the best-scoring setting"
+      "A systematic search across a predefined grid of candidate hyperparameter values, refitting and scoring the model once for every combination to find the best setting"
     ],
     explain: "StandardScaler standardises features: during .fit() it learns each column's mean and standard deviation, and during .transform() it subtracts the mean and divides by the standard deviation so every feature ends up centred at zero with unit variance. This puts features on a comparable scale, which helps distance- and gradient-based methods that are sensitive to differing ranges.",
     simple: "It puts every feature on the same footing by centring it at zero and giving it a standard spread of one. That stops a big-numbered column from drowning out small-numbered ones.",

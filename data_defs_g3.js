@@ -10,7 +10,7 @@
     q: "What is a random forest?",
     choices: [
       "An ensemble of many decision trees, each grown on a bootstrap sample using a random subset of features, whose predictions are combined by majority vote (classification) or averaging (regression)",
-      "A single very deep decision tree that is pruned repeatedly on a validation set until its error stops improving, then bagged with copies of itself to smooth out its remaining prediction variance",
+      "A single very deep decision tree that is pruned repeatedly on a validation set until its error stops improving, then bagged with many copies of itself to smooth out whatever prediction variance it still has left over",
       "A sequence of trees where each new tree is trained to correct the errors of the tree before it, reweighting the misclassified rows more heavily every round until the summed predictions converge",
       "A method that grows exactly one decision tree per class label and, at prediction time, picks whichever tree reports the single highest confidence score for the row being classified",
       "A hierarchical clustering method that groups the training rows into a branching tree of nested clusters and reads off the leaf a new point falls into as its predicted label"

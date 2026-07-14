@@ -404,10 +404,10 @@
     q: "What is 'average linkage' in hierarchical clustering?",
     choices: [
       "A linkage rule that defines the distance between two clusters as the average distance over all pairs of points, one from each cluster",
-      "A linkage rule that uses only the single closest pair of points between the clusters",
-      "A linkage rule that uses only the single farthest pair of points between the clusters",
-      "A linkage rule that merges to minimise the increase in within-cluster variance",
-      "A linkage rule that measures the distance between the clusters' mean points"
+      "A linkage rule that instead uses only the single closest pair of points that can be found anywhere between the two clusters being compared",
+      "A linkage rule that instead uses only the single farthest pair of points that can be found anywhere between the two clusters being compared",
+      "A linkage rule that merges clusters so as to minimise the resulting increase in the total within-cluster variance across the groups",
+      "A linkage rule that measures the cluster distance using only the mean points, that is the centroids, of the two clusters being merged"
     ],
     explain: "Average linkage (UPGMA) takes every pair of points with one member in each cluster, computes their distances, and averages them to score how close the clusters are. By using all pairs it sits between the extremes of single (nearest pair) and complete (farthest pair) linkage, giving a balanced compromise that is less prone to chaining yet not as aggressive at splitting as complete linkage.",
     simple: "Average linkage looks at the distance between every point in one group and every point in the other, then takes the average. It is the middle path between the nearest-pair and farthest-pair rules. That balance makes it a popular default.",
@@ -432,10 +432,10 @@
     q: "What is 'Ward linkage' (Ward's method) in hierarchical clustering?",
     choices: [
       "A linkage rule that merges the pair of clusters whose union increases the total within-cluster variance the least",
-      "A linkage rule that merges the pair of clusters with the closest single pair of points",
-      "A linkage rule that merges the pair of clusters with the farthest single pair of points",
-      "A linkage rule that merges the pair whose centroids are exactly a fixed distance apart",
-      "A linkage rule that merges clusters purely in the order the data was supplied"
+      "A linkage rule that instead merges the pair of clusters that happen to hold the single closest pair of points between them",
+      "A linkage rule that instead merges the pair of clusters that happen to hold the single farthest pair of points between them",
+      "A linkage rule that merges the pair of clusters whose two centroids happen to be exactly a fixed distance apart",
+      "A linkage rule that merges the clusters purely in the order that the original data points were first supplied to it"
     ],
     explain: "Ward's method chooses, at each step, the merge that adds the least to the total within-cluster sum of squares (variance). In effect it prefers joining clusters that keep the resulting groups tight, analogous to k-means' objective but applied hierarchically. It tends to produce compact, similarly sized, roughly spherical clusters and is one of the most widely used linkages.",
     simple: "Ward linkage merges the two groups that, once combined, keep the total spread smallest. It always makes the tightest possible join at each step. This tends to give neat, evenly sized clusters.",
@@ -460,10 +460,10 @@
     q: "What is 'divisive' hierarchical clustering?",
     choices: [
       "A top-down approach that starts with all points in one cluster and repeatedly splits clusters into smaller ones",
-      "A bottom-up approach that starts with each point alone and repeatedly merges the closest clusters",
-      "An approach that fixes the number of clusters k in advance and refines centroids",
-      "An approach that grows clusters from dense seed regions and discards sparse noise",
-      "An approach that clusters points by projecting them onto their principal components first"
+      "A bottom-up approach that starts with every point alone and then repeatedly merges the two closest clusters together",
+      "An approach that fixes the number of clusters k in advance and then iteratively refines its moving centroids",
+      "An approach that grows its clusters out from dense seed regions and discards the sparse leftover points as noise",
+      "An approach that clusters the points by first projecting them all down onto their principal components of variance"
     ],
     explain: "Divisive clustering works in the opposite direction to the common agglomerative method. It begins with every point in a single all-encompassing cluster and, step by step, divides clusters into smaller groups, moving down the hierarchy. Both directions build the same kind of tree, but divisive splits from the top while agglomerative merges from the bottom.",
     simple: "Divisive clustering starts with everything in one big group and keeps splitting it into smaller groups. It builds the tree from the top down. That is the reverse of the more common merge-from-the-bottom approach.",
@@ -488,10 +488,10 @@
     q: "In a dendrogram, what is the 'merge height'?",
     choices: [
       "The vertical level at which two clusters are joined, equal to the distance (dissimilarity) between them when they merged",
-      "The number of points contained in the cluster formed by a merge",
-      "The horizontal position of a leaf along the bottom axis of the tree",
-      "The total number of merges performed to build the whole tree",
-      "The height at which the analyst decides to cut the tree into clusters"
+      "The total number of individual data points that end up contained inside the single cluster that is formed by a particular merge step",
+      "The horizontal position of a single leaf as it is measured along the bottom axis of the whole dendrogram tree diagram",
+      "The total count of separate merges that had to be performed in order to build the entire tree up from its leaves",
+      "The particular height at which the analyst finally decides to cut the whole tree straight across into flat clusters of its own"
     ],
     explain: "In a dendrogram the vertical axis records dissimilarity, and the height at which two branches join is the linkage distance between those clusters at the moment they merged. Low merges join very similar groups; high merges join dissimilar ones. Big vertical gaps between successive merges suggest natural, well-separated clusters.",
     simple: "In the tree diagram, the higher up two branches join, the less alike those groups were. That joining level is the merge height. Tall jumps mean you are combining things that are quite different.",
@@ -517,9 +517,9 @@
     choices: [
       "The merge height in the dendrogram at which the two points first end up in the same cluster",
       "The straight-line distance between the two points in the original feature space",
-      "The number of merge steps that separate the two points in the tree",
-      "The difference between the two points' distances to the nearest centroid",
-      "The average distance from each point to all other points in its cluster"
+      "The number of separate merge steps that lie between the two points inside the whole tree diagram",
+      "The gap between the two points' respective distances to their own single nearest centroid",
+      "The average distance from each of the points to all of the others in its own assigned cluster"
     ],
     explain: "The cophenetic distance between two points is the height in the dendrogram at which they are first joined into a common cluster — essentially how far up the tree you must go before they meet. Comparing these cophenetic distances with the original pairwise distances (the cophenetic correlation) measures how faithfully the tree preserves the real structure of the data.",
     simple: "Trace two points up the tree until their branches first meet; the height of that meeting point is the cophenetic distance. Points that join low are treated as close by the tree. It is the tree's own idea of how far apart two points are.",
@@ -544,10 +544,10 @@
     q: "What does 'cutting the dendrogram' mean?",
     choices: [
       "Drawing a horizontal line across the tree at a chosen height and taking the branches below it as the final flat clusters",
-      "Removing the points that merge highest up the tree because they are outliers",
-      "Deleting the longest branches so the diagram fits on the page",
-      "Choosing the linkage rule that will be used to build the tree",
-      "Merging the last two clusters into a single root at the top"
+      "Removing the points that end up merging highest up the whole tree on the grounds that they must simply be outliers",
+      "Deleting the very longest branches of the diagram so that the whole thing will fit neatly onto the printed page when drawn",
+      "Choosing which particular linkage rule is going to be used to build up the tree before it has been grown at all yet",
+      "Merging the final two remaining clusters together into one single root node right at the top of the whole tree diagram itself"
     ],
     explain: "A dendrogram encodes clusterings at every level, so to get one flat set of clusters you cut it horizontally at some height. Every branch the cut crosses becomes one cluster, gathering all the leaves beneath it. Cutting low yields many small clusters; cutting high yields few large ones — so the cut height sets the number of clusters after the tree is built.",
     simple: "The tree contains every possible number of groups at once. To pick one answer, you slice straight across at some height and each branch you cut becomes a cluster. Slice low for many groups, high for few.",
@@ -574,10 +574,10 @@
     q: "What is DBSCAN?",
     choices: [
       "A density-based clustering algorithm that groups points packed closely together and labels points in low-density regions as noise, without needing the number of clusters in advance",
-      "A clustering algorithm that fixes the number of clusters k and iteratively moves centroids to minimise distance",
-      "A clustering algorithm that builds a full nested tree of clusters by merging the closest groups",
-      "A supervised algorithm that classifies points by a majority vote of their nearest labelled neighbours",
-      "A method that reduces the number of features by projecting data onto directions of maximum variance"
+      "A clustering algorithm that fixes the number of clusters k in advance and then iteratively moves its centroids around to minimise the total within-cluster squared distance overall",
+      "A clustering algorithm that builds up a full nested tree of clusters by repeatedly merging the two closest groups until one single big cluster is left alone at the very top of it",
+      "A supervised algorithm that classifies each new incoming point by taking a simple majority vote among its k nearest already-labelled neighbours drawn from the training set of examples",
+      "A dimensionality-reduction method that shrinks the number of features by projecting the whole dataset down onto the orthogonal directions that happen to carry the most variance in it"
     ],
     explain: "DBSCAN (Density-Based Spatial Clustering of Applications with Noise) forms clusters from regions where points are densely packed, connecting nearby dense points and treating isolated points as noise. It needs two parameters, eps and min_samples, but not the number of clusters, and it can find clusters of arbitrary shape. Points that are not reachable from any dense region are simply left unclustered.",
     simple: "DBSCAN finds groups by looking for crowded regions of points and joining them up. You do not tell it how many groups to find. Points sitting off on their own in empty space are labelled as noise rather than forced into a cluster.",
@@ -602,10 +602,10 @@
     q: "In DBSCAN, what is 'min_samples' (minPts)?",
     choices: [
       "The minimum number of points that must lie within a point's eps-neighbourhood for it to count as a core point",
-      "The total number of clusters DBSCAN is allowed to create",
-      "The smallest cluster size that DBSCAN will report as a valid cluster",
-      "The number of points DBSCAN samples from the data before it starts",
-      "The maximum distance two points may be apart to be neighbours"
+      "The total number of separate clusters that DBSCAN is actually permitted to create out of the whole dataset it is given",
+      "The smallest cluster size, counted in points, that DBSCAN will still report back to you as being a valid cluster",
+      "The number of points that DBSCAN randomly samples out from the full dataset before it actually starts running",
+      "The maximum distance that two points may be apart from one another and still count as being each other's neighbours"
     ],
     explain: "min_samples (called minPts in the original paper) is the density threshold: a point qualifies as a core point only if at least this many points, including itself, fall within its eps-neighbourhood. Larger values demand denser regions to form clusters and push more points into the noise category, while smaller values make clustering more permissive. It is chosen together with eps.",
     simple: "min_samples is how many neighbours a point needs nearby to be considered in a 'crowded' spot. Set it high and only very dense areas form clusters. Set it low and looser groups qualify too.",
@@ -686,10 +686,10 @@
     q: "In DBSCAN, what does it mean for a point to be 'density-reachable' from a core point?",
     choices: [
       "The point can be reached through a chain of directly density-reachable steps that passes only through core points",
-      "The point lies within eps of exactly one core point and no others",
-      "The point is within eps of any point at all, core or not",
-      "The point shares a cluster with a core point but may be arbitrarily far from it",
-      "The point is a noise point that happens to sit near a cluster"
+      "The point lies within eps of exactly one single core point in the whole data and of no other core points at all",
+      "The point lies within eps of just any other point at all, whether that other point is itself a core point or not at all",
+      "The point shares a cluster together with a core point and yet may sit an arbitrarily long distance away from it",
+      "The point is really just a noise point that merely happens to sit somewhere near an already-existing cluster nearby"
     ],
     explain: "Density-reachability extends the one-hop 'directly density-reachable' relation into a chain: q is density-reachable from p if there is a sequence of points, each directly density-reachable from the previous, linking p to q — and every intermediate point must be a core point. This transitive chaining is how a cluster spreads across a dense region even when its two ends are far apart.",
     simple: "Density-reachable is like stepping stones: you hop from core point to core point, each hop staying inside an eps circle, until you reach the target point. It lets one cluster stretch across a whole dense area. Every stepping stone in the middle has to be a core point.",
@@ -714,10 +714,10 @@
     q: "In DBSCAN, what does it mean for two points to be 'density-connected'?",
     choices: [
       "There exists a core point from which both points are density-reachable",
-      "The two points lie within eps of each other directly",
-      "Both points are core points with the same number of neighbours",
-      "The two points are the two farthest members of the same cluster",
-      "One of the points is noise and the other is a border point"
+      "The two points simply lie within eps of one another directly",
+      "Both of the points are core points sharing the same neighbour count",
+      "The two points are the farthest-apart members of one single cluster overall",
+      "One of the two points is noise while the other one is a border point instead"
     ],
     explain: "Two points are density-connected if some core point can reach both of them via density-reachability, even if neither can reach the other directly. Unlike density-reachability, this relation is symmetric, and it is the exact criterion DBSCAN uses to define a cluster: a cluster is a maximal set of mutually density-connected points. This is what lets border points on opposite sides of a blob belong to the same cluster.",
     simple: "Two points are density-connected if there is a crowded core point that can reach both of them through chains of neighbours. They need not touch each other directly — a shared hub links them. This is exactly what DBSCAN uses to decide two points are in the same cluster.",
@@ -742,10 +742,10 @@
     q: "In DBSCAN, what is a 'cluster'?",
     choices: [
       "A maximal set of density-connected points — every pair connected through core points, and nothing more can be added",
-      "The set of all points that happen to fall within a fixed radius of a chosen centre",
-      "A group of exactly min_samples points chosen as the cluster's seed",
-      "The collection of points assigned the same label −1 by the algorithm",
-      "Any group of points that share the same nearest centroid"
+      "The set of all the points that happen to fall within some fixed chosen radius of one single arbitrarily picked central point",
+      "A group of exactly min_samples points that have been specially picked out to serve as the seed of the cluster still to come",
+      "The whole collection of points that end up being assigned the very same label of minus one by the algorithm as it runs",
+      "Any group of points that all happen to share the very same single nearest centroid out of all of the available centroids"
     ],
     explain: "In DBSCAN a cluster is defined as a maximal set of density-connected points: it contains every point density-reachable from its core points and cannot be extended further. Such a cluster consists of its core points plus the border points attached to them, and it can take on any shape a dense region has. Points that belong to no such set are noise.",
     simple: "A DBSCAN cluster is a whole crowd of points all linked together through dense core points, grown until nothing more can join. It has no fixed shape — it just follows wherever the density goes. Anything left over is noise.",
@@ -770,10 +770,10 @@
     q: "What is the 'k-distance graph' used to choose eps in DBSCAN?",
     choices: [
       "A plot of each point's distance to its k-th nearest neighbour, sorted ascending, whose 'knee' suggests a good eps value",
-      "A plot of inertia against the number of clusters k to find the elbow",
-      "A histogram of how many points fall in each cluster after DBSCAN runs",
-      "A chart of the silhouette score against different values of min_samples",
-      "A map showing the straight-line distances between every pair of clusters"
+      "A plot of the total inertia against the number of clusters k that is instead used to find the elbow point for k-means",
+      "A histogram showing just how many of the points end up falling into each separate cluster after DBSCAN has finished running",
+      "A chart of the mean silhouette score plotted against several different candidate values chosen for the min_samples setting",
+      "A map that simply shows the straight-line distances measured between every possible pair of the final output clusters"
     ],
     explain: "To pick eps, a common heuristic computes, for every point, the distance to its k-th nearest neighbour (with k typically set to min_samples), then plots these values sorted from smallest to largest. Most points inside clusters have small k-distances, so the curve stays low and then bends sharply upward where noise points begin — the 'knee'. Reading eps off that knee separates dense regions from sparse ones.",
     simple: "For each point you measure how far away its k-th closest neighbour is, then line those numbers up from small to large. The curve stays flat then suddenly shoots up; that bend is a good eps. Below it are the crowded points, above it the loners.",
@@ -798,10 +798,10 @@
     q: "What is 'HDBSCAN'?",
     choices: [
       "A hierarchical extension of DBSCAN that varies the density threshold and extracts the most stable clusters, removing the need to pick a single eps",
-      "A faster version of DBSCAN that only samples half the data before clustering",
-      "A supervised classifier trained on the clusters that DBSCAN discovers",
-      "A rule for setting min_samples equal to the number of features in the data",
-      "A method that forces every point, including noise, into exactly one cluster"
+      "A faster approximate variant of DBSCAN that only samples about half of the data points at random before it actually runs the clustering step",
+      "A supervised classifier that is trained afterwards on top of the labelled clusters that ordinary plain DBSCAN first goes and discovers all on its own",
+      "A rule that automatically sets the min_samples value to be equal to the total number of features that are present in the input dataset given each time",
+      "A method that forces every single point, including even the far-off sparse noise points, into exactly one cluster apiece with none left over"
     ],
     explain: "HDBSCAN (Hierarchical DBSCAN) builds on DBSCAN by considering a whole range of density levels instead of one fixed eps. It constructs a hierarchy of clusters across densities and then selects the clusters that persist most stably over that range. This lets it find clusters of differing densities and spares the user from choosing eps, while still labelling sparse points as noise.",
     simple: "HDBSCAN is DBSCAN's smarter cousin: instead of making you pick one eps, it tries many density levels and keeps the groups that stay solid across them. That means it can handle clusters that are not all equally dense. It still calls the leftover sparse points noise.",

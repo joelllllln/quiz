@@ -4,7 +4,7 @@
     "q": "Before hierarchical clustering can merge anything, it needs the distance between two individual data points. For ordinary numeric features, how is that distance most commonly measured?",
     "choices": [
       "The straight-line (Euclidean) distance between them",
-      "The number of features on which they disagree most",
+      "The number of individual features on which the two points happen to disagree most strongly",
       "The count of other points sitting between the two",
       "The difference between their two feature averages",
       "The height at which the two points end up merging"
@@ -104,7 +104,7 @@
     "q": "In hierarchical clustering, what does 'Ward linkage' do when deciding which two clusters to merge?",
     "choices": [
       "Merges the pair whose union least increases within-cluster spread",
-      "Merges the pair whose closest two points are nearest together",
+      "Merges the pair whose two single closest member points happen to sit nearest together out of every candidate pair",
       "Merges the pair whose farthest two points are closest together",
       "Merges the pair with the largest average pairwise distance",
       "Merges the two clusters that currently hold the fewest points"
@@ -137,7 +137,7 @@
     "q": "On a dendrogram, what does the 'merge height' of a join tell you?",
     "choices": [
       "How far apart the two clusters were when they merged",
-      "How many points sit inside the newly formed cluster",
+      "How many individual data points now sit inside the newly formed combined cluster after the join",
       "How many merges happened before this one occurred",
       "How much variance the new cluster removes overall",
       "How close the merged cluster sits to the tree root"
@@ -203,7 +203,7 @@
     "q": "What does adding a 'connectivity constraint' do to agglomerative clustering?",
     "choices": [
       "Lets clusters merge only if they actually touch on a neighbour graph",
-      "Forces every resulting cluster to contain the same number of points",
+      "Forces every resulting cluster to end up containing exactly the same fixed number of member points",
       "Requires the number of clusters to be fixed before merging starts",
       "Limits each cluster to points that share an identical class label",
       "Speeds up merging by ignoring the farthest pairs of points"

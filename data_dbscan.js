@@ -38,7 +38,7 @@
     "q": "DBSCAN is a 'density-based' clustering method. What does 'density' mean here?",
     "choices": [
       "How crowded a region is — how many points sit close together in a small area",
-      "How far apart the two nearest clusters sit from each other in space",
+      "How far apart the two nearest clusters sit from each other in space, measured centre to centre across the empty gap that divides them",
       "How many clusters the algorithm decides to output across the whole run",
       "How evenly the points are spread across the entire feature space overall",
       "How close a point lies to the mean centre of the cluster it joins"
@@ -72,7 +72,7 @@
     "q": "DBSCAN labels some points 'border' points. What is a border point?",
     "choices": [
       "A point within a core point's neighbourhood but not crowded enough to be core itself",
-      "A point sitting exactly on the line that divides two neighbouring clusters apart",
+      "A point sitting exactly on the dividing line where two neighbouring clusters meet, claimed by neither side and shared between both",
       "A point that belongs to no cluster at all and is left labelled as noise instead",
       "The outermost core point lying along the very edge of a dense cluster region",
       "A point that is equally distant from two different cluster centres at the same time"
@@ -459,7 +459,7 @@
     "q": "Unlike k-means, DBSCAN discovers HOW MANY clusters exist. When is that autonomy most valuable?",
     "choices": [
       "When you genuinely don't know the group count — and it may change over time",
-      "When you can already supply k and simply want to confirm it independently",
+      "When you can already supply the exact value of k in advance and simply want a second independent method to confirm that number for you",
       "When the clusters must all contain the same number of points",
       "When the data arrives already sorted by its true group labels",
       "When you want the fewest possible clusters the data will allow"
@@ -650,7 +650,7 @@
     "choices": [
       "Distances are ~all income — eps effectively defines income bands, and age plays no part in who counts as neighbours",
       "Nothing lasting — DBSCAN rescales each axis internally, so neighbourhoods still weigh age and income equally",
-      "Distances split evenly, so eps must be raised roughly a thousand-fold before anyone counts as a neighbour",
+      "Distances split evenly between the two features, so eps must be raised roughly a thousand-fold before any customer accumulates enough close neighbours to count as one",
       "Income's wide range makes every customer a noise point, since no eps leaves anyone with minPts neighbours",
       "Age dominates because its 18-70 span cycles faster, so eps ends up defining age brackets and income is ignored"
     ],

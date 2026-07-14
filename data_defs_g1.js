@@ -149,7 +149,7 @@
     choices: [
       "Held-out data, never used in training, used to estimate performance on unseen examples",
       "The portion of data the model fits its parameters to during the learning phase",
-      "A separate validation sample used to choose hyperparameters during model development",
+      "A separate validation sample used to choose hyperparameters and compare candidate models throughout the development phase before any final judgement",
       "The complete list of input variables and feature columns describing each example",
       "The learning rate that controls how fast the model adjusts its weights each step"
     ],
@@ -171,7 +171,7 @@
     q: "In machine learning, what is overfitting?",
     choices: [
       "When a model learns the training data's noise and detail so closely that it generalises poorly to new data",
-      "When a model is far too simple to capture the underlying pattern, underfitting both train and test data",
+      "When a model is far too simple to capture the underlying pattern, underfitting both the training and the held-out test data and leaving high error everywhere",
       "When the training set is much larger than the test set, leaving too little data to evaluate on fairly",
       "When features are measured on very different numeric scales and distort distance-based calculations",
       "When many class labels are simply wrong in the training data, corrupting what the model learns"
@@ -495,7 +495,7 @@
     q: "In KNN, what does it mean that the algorithm is non-parametric?",
     choices: [
       "It makes no fixed assumption about the data's form and its complexity grows with the data itself",
-      "It has no hyperparameters at all that ever need to be chosen or tuned by the user",
+      "It has no hyperparameters at all that ever need to be chosen or tuned by the user, so it runs straight out of the box with no configuration whatsoever",
       "It fits a single fixed number of weights regardless of how large the dataset becomes",
       "It cannot ever be used for regression tasks and only works for discrete classification problems",
       "It strictly requires all of the input data to follow a normal Gaussian bell-shaped distribution"

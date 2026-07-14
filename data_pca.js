@@ -38,7 +38,7 @@
     "q": "Your data has 40 features, far too many to plot. How does PCA let you SEE the cloud on a 2-D scatter plot?",
     "choices": [
       "Project every point onto the top 2 components and plot those",
-      "Drop every feature except the 2 with the widest range",
+      "Drop every feature except the two whose raw numeric range across the whole dataset is widest",
       "Average the 40 features down into 2 summary columns",
       "Plot the 2 features that correlate most with the rest",
       "Cluster the points first, then plot the 2 largest groups"

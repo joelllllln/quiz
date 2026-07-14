@@ -327,7 +327,7 @@
     q: "To handle imbalance you applied SMOTE oversampling to the whole dataset, THEN split into train and test. Cross-validation looks superb but production is disappointing. What went wrong?",
     choices: [
       "Resampling before the split leaked synthetic points derived from test rows into training; oversample inside the Pipeline on the training fold only (e.g. imblearn Pipeline)",
-      "SMOTE is simply a fundamentally bad resampling technique and it should really never be used on any imbalanced dataset no matter how severe the imbalance happens to be",
+      "SMOTE is simply a fundamentally bad resampling technique and it should really never be used on any imbalanced dataset no matter how severe the imbalance in the data happens to be in practice",
       "The test set itself became far too balanced after the resampling, and an artificially balanced test set like that always lowers the real accuracy",
       "The model badly overfit purely because SMOTE ended up creating far too few brand-new synthetic minority points during the resampling step",
       "The whole problem is the choice of evaluation metric, and simply switching over to plain accuracy instead would immediately reveal the real truth of the matter here"

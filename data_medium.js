@@ -348,7 +348,7 @@
     "q": "An online checkout needs its fraud answer within 50 milliseconds. Why is plain KNN a bad choice for this job?",
     "choices": [
       "It pays its whole cost per query",
-      "It needs days of training first",
+      "It needs many days of slow batch training before it can answer even once",
       "Its scan cannot be parallelised",
       "It needs a GPU per request",
       "Its accuracy decays under load"
@@ -404,7 +404,7 @@
     "q": "k-d trees and ball trees make exact neighbour search much faster in low dimensions. How?",
     "choices": [
       "Skip regions that provably can't win",
-      "Delete redundant training points",
+      "Delete the redundant training points that sit closest to each other first",
       "Cache answers for popular queries",
       "Lower k automatically for big data",
       "Sort the points once by size"
@@ -600,7 +600,7 @@
     "q": "Instead of one train/validation split, you rotate the held-out slice five times and average the five scores. What do you gain?",
     "choices": [
       "A score that doesn't depend on luck",
-      "Five times more training data",
+      "Five whole times more labelled training data to learn from",
       "Bias-free tuning on the test data",
       "A guaranteed accuracy boost",
       "Stratified classes for free"
@@ -916,7 +916,7 @@
     "q": "You delete five features and accuracy goes UP. What were those five features, most likely?",
     "choices": [
       "Noise distorting the distances",
-      "Redundant but harmless copies",
+      "Redundant but otherwise completely harmless duplicate copies of others",
       "Secretly leaking the label",
       "Merely slow to compute",
       "The most predictive ones"
@@ -944,7 +944,7 @@
     "q": "You're screening for a rare disease, and the minority class keeps getting outvoted. Which pair of fixes protects it most directly?",
     "choices": [
       "Distance weights + resampling",
-      "Bigger k + raw features",
+      "A much bigger k combined with entirely raw, unscaled input features",
       "Manhattan distance + odd k",
       "Fewer features + bigger k",
       "Deduplication + a smaller n"
@@ -1128,7 +1128,7 @@
     "q": "Your KNN scores 90% accuracy on data that is 90% 'normal'. Before celebrating, what should you compare that score against?",
     "choices": [
       "The always-'normal' baseline",
-      "A fair coin flip (50%)",
+      "A fair fifty-fifty coin flip that simply guesses at random",
       "A human expert's accuracy",
       "Its own training accuracy",
       "Last year's model"

@@ -324,9 +324,9 @@
     choices: [
       "The curse of dimensionality — in very high dimensions distances concentrate, so 'nearest' and 'farthest' points look almost equally distant and neighbourhoods lose meaning",
       "Adding more features always helps clustering and nearest-neighbour results, so the real cause of the drop here must be a coding bug somewhere",
-      "Working in very high dimensions makes it mathematically impossible to actually compute the Euclidean distance between any two points at all",
+      "Working in very high dimensions makes it mathematically impossible to actually compute the Euclidean distance between any two points at all in a reasonable time",
       "The hundreds of extra features you added effectively increased the sample size of the data, and a larger sample size hurts the clustering here",
-      "Both clustering and k-nearest-neighbours are completely unaffected by the number of features in the data, so this result most likely points to a bug in the code somewhere"
+      "Both clustering and k-nearest-neighbours are completely unaffected by the number of features in the data, so this result most likely points to a bug somewhere in your own analysis pipeline"
     ],
     explain: "As dimensionality grows, data becomes sparse and the contrast between the nearest and farthest neighbour distances shrinks toward zero — distances 'concentrate'. Since K-Means, DBSCAN and kNN all rely on distances being meaningful, their notion of a neighbourhood degrades, and irrelevant added features inject noise that dilutes any real signal. This is the curse of dimensionality. The fix is fewer, more relevant features: feature selection or dimensionality reduction such as PCA before clustering.",
     simple: "Pile on enough dimensions and everything ends up roughly the same distance from everything else, so 'nearest neighbour' stops meaning anything. More columns can bury the signal instead of adding it.",
