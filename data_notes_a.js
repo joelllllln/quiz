@@ -76,7 +76,8 @@
         { t: "Small k", d: "A tiny neighbourhood hugs the data: low bias but HIGH VARIANCE, so it OVERFITS — one mislabelled point flips the answer (k=1 is 100% on training, worse on test)." },
         { t: "Large k", d: "A big neighbourhood smooths hard: low variance but HIGH BIAS, so it UNDERFITS — fine detail is blurred, and at k=n it just echoes the majority class." },
         { t: "k is the bias–variance dial", d: "Small k = high variance (overfit); large k = high bias (underfit). The best k sits in between — the sweet spot on the U-shaped test-error curve.", f: "small k ↔ overfit · large k ↔ underfit" },
-        { t: "Tuning k", d: "Sweep k on validation data and keep the value that generalises best; odd k avoids ties in two-class votes." }
+        { t: "Finding k: cross-validation", d: "Don't read k off training accuracy (it always picks k=1). Try a range of k with k-fold cross-validation and keep the one with the best average held-out score.", f: "best avg validation score → k" },
+        { t: "Tuning k", d: "Sweep k on validation data and keep the value that generalises best; a rule like k≈√n is only a starting point, and odd k avoids ties in two-class votes." }
       ] },
       { h: "Feature scaling (do not skip)", items: [
         { t: "Why it matters", d: "Distance sums every feature's gap, so the feature with the biggest units silently decides the outcome." },

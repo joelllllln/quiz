@@ -66,4 +66,33 @@
       reveal: { name: "Large k → high bias (underfitting)", formula: "high bias · low variance", text: "Large k gives low variance but high bias — it oversmooths and underfits (k=n = majority class). Lower k to add back detail." }
     }
   });
+
+  // How to actually FIND the right k: cross-validation, not training accuracy.
+  push('medium', {
+    q: "What is the right way to choose the value of k in k-NN?",
+    choices: [
+      "Cross-validate: try a range of k, score each on held-out folds, and keep the k with the best average validation score",
+      "Pick the k with the highest training accuracy (which is always k = 1)",
+      "Always use k = 1 so the model fits the training data exactly",
+      "Set k equal to the number of features",
+      "Choose k once at random — it doesn't really affect accuracy"
+    ],
+    explain: "k is a hyperparameter, so you tune it on data the model hasn't fitted. k-fold cross-validation: split the training data into folds; for each candidate k, train on some folds and score on the held-out fold, then average across folds and pick the k with the best average. Training accuracy is useless here — it always favours k = 1, which overfits. Rules of thumb like k ≈ √n are only starting points to validate, and an odd k avoids ties in two-class votes.",
+    simple: "Never judge k on data the model already saw. Try several k values, test each on fresh held-out slices, and keep whichever generalises best on average.",
+    widget: {
+      type: "curveStatic", title: "Cross-validation finds the sweet-spot k",
+      world: "Average the held-out (validation) accuracy across folds for each candidate k and pick the peak.",
+      xlab: "candidate k →", xs: [0, 1, 2, 3, 4],
+      labels: ["1", "5", "11", "25", "75"], dec: 0, yunit: "%",
+      series: [{ name: "cross-validated accuracy", ys: [74, 84, 88, 83, 74] }],
+      knob: { label: "k tried", min: 0, max: 4, step: 1, init: 0 },
+      insights: [
+        { max: 0, text: "k = 1 overfits: strong on training, weaker on held-out folds.", tone: "warn" },
+        { max: 2, text: "🤯 The cross-validated curve peaks at a moderate k — that's your pick.", tone: "wow" },
+        { max: 4, text: "Too-large k underfits: validation accuracy falls again.", tone: "info" }
+      ],
+      extreme: { at: "max" },
+      reveal: { name: "Finding k: cross-validation", formula: "pick the k with the best k-fold validation score", text: "Choose k by cross-validation — sweep candidate k values, average the held-out accuracy across folds, and keep the peak. Never tune k on training accuracy." }
+    }
+  });
 })();
