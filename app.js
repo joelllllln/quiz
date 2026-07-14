@@ -1356,6 +1356,34 @@
     themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
     app.appendChild(mast);
+    renderApiKey();
+
+    // Connect Claude once, at the top of the home page. The key is saved in this browser
+    // (localStorage ds_api_key) and reused everywhere — writing marks, Explain-like-I'm-5, etc.
+    function renderApiKey() {
+      var sec = h('<section class="apikey-card"></section>');
+      function draw() {
+        var has = !!apiKey();
+        if (has) {
+          sec.className = 'apikey-card ak-on';
+          sec.innerHTML = '<div class="ak-row"><span class="ak-state">✓ Claude connected</span>' +
+            '<span class="ak-note">Your key is saved in this browser and used for AI marking &amp; “Explain like I’m 5”.</span>' +
+            '<div class="ak-btns"><button class="btn ghost ak-change">Change</button><button class="btn ghost ak-remove">Remove</button></div></div>';
+          sec.querySelector('.ak-change').onclick = function () { setApiKey(''); draw(); };
+          sec.querySelector('.ak-remove').onclick = function () { setApiKey(''); draw(); };
+        } else {
+          sec.className = 'apikey-card';
+          sec.innerHTML = '<div class="ak-row"><div class="ak-lead"><b>Connect Claude</b>' +
+            '<span class="ak-note">Paste your Anthropic API key to unlock AI marking &amp; “Explain like I’m 5”. It is stored only in this browser and sent only to Anthropic.</span></div>' +
+            '<form class="ak-form"><input class="ak-in" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" aria-label="Anthropic API key">' +
+            '<button class="btn ak-save" type="submit">Save key</button></form></div>';
+          var form = sec.querySelector('.ak-form'), input = sec.querySelector('.ak-in');
+          form.onsubmit = function (ev) { ev.preventDefault(); var v = input.value.trim(); if (!v) return; setApiKey(v); draw(); };
+        }
+      }
+      draw();
+      app.appendChild(sec);
+    }
 
     // ---- Daily challenge (filterable) + lifetime total ----
     renderSearch();
