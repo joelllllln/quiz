@@ -73,8 +73,9 @@
       ] },
       { h: "The knob: k", items: [
         { t: "k is a hyperparameter", d: "You choose k before running; kNN never learns it. k=1 asks only the single closest point, k=15 polls a committee." },
-        { t: "Small k", d: "A tiny neighbourhood follows the data closely but is jumpy: one mislabeled point acts like a loud, wrong voter." },
-        { t: "Large k", d: "A big neighbourhood smooths the prediction but blurs fine detail, eventually just echoing the majority class." },
+        { t: "Small k", d: "A tiny neighbourhood hugs the data: low bias but HIGH VARIANCE, so it OVERFITS — one mislabelled point flips the answer (k=1 is 100% on training, worse on test)." },
+        { t: "Large k", d: "A big neighbourhood smooths hard: low variance but HIGH BIAS, so it UNDERFITS — fine detail is blurred, and at k=n it just echoes the majority class." },
+        { t: "k is the bias–variance dial", d: "Small k = high variance (overfit); large k = high bias (underfit). The best k sits in between — the sweet spot on the U-shaped test-error curve.", f: "small k ↔ overfit · large k ↔ underfit" },
         { t: "Tuning k", d: "Sweep k on validation data and keep the value that generalises best; odd k avoids ties in two-class votes." }
       ] },
       { h: "Feature scaling (do not skip)", items: [
