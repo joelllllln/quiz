@@ -194,13 +194,15 @@
   var CARDS = null;
   function loadCards() { if (CARDS) return CARDS; try { CARDS = JSON.parse(localStorage.getItem('ds_cards') || '{}') || {}; } catch (e) { CARDS = {}; } return CARDS; }
   function saveCards() { try { localStorage.setItem('ds_cards', JSON.stringify(CARDS)); } catch (e) {} }
+  // A NON-writing attempt (multiple choice, flashcard self-rate, type-it, matching).
+  // A correct one keeps the card in 'learning' — it does NOT advance toward know-it/mastery,
+  // which come only from written answers. A miss resets the written streak → struggling.
   function recordCard(q, right) {
     var c = loadCards(), id = cardId(q);
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
     r.seen++;
-    // streak = consecutive correct answers. 1 correct → "know it", 2 → mastered; any miss resets it.
-    if (right) { r.box = Math.min(5, r.box + 1); r.streak = (r.streak || 0) + 1; }
-    else { r.wrong++; r.box = Math.max(0, r.box - 2); r.lastWrong = dayNum(); r.streak = 0; }
+    if (right) { r.box = Math.min(5, r.box + 1); r.lastRight = 1; }
+    else { r.wrong++; r.box = Math.max(0, r.box - 2); r.lastWrong = dayNum(); r.lastRight = 0; r.wstreak = 0; }
     r.last = dayNum();
     c[id] = r; saveCards();
   }
@@ -209,12 +211,18 @@
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
     r.seen++; r.last = dayNum(); c[id] = r; saveCards();
   }
-  // A middling written answer (3/5): counts as progress but not a correct — resets the streak to
-  // "learning" without recording a wrong.
+  // A strong WRITTEN answer (>=4/5) — the ONLY thing that advances mastery. One → know it, two → mastered.
+  function recordWrittenCorrect(q) {
+    var c = loadCards(), id = cardId(q);
+    var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
+    r.seen++; r.box = Math.min(5, r.box + 1); r.wstreak = (r.wstreak || 0) + 1; r.lastRight = 1; r.last = dayNum();
+    c[id] = r; saveCards();
+  }
+  // A middling written answer (3/5): learning — not a miss, but it doesn't advance the written streak.
   function recordPartial(q) {
     var c = loadCards(), id = cardId(q);
     var r = c[id] || { box: 0, seen: 0, wrong: 0, last: 0 };
-    r.seen++; r.streak = 0; r.last = dayNum(); c[id] = r; saveCards();
+    r.seen++; r.wstreak = 0; r.lastRight = 1; r.last = dayNum(); c[id] = r; saveCards();
   }
   // Every study mode feeds the SAME per-card memory. Quizzes act on one question;
   // flashcards and the open-writing test act on a whole CONCEPT — so they update
@@ -233,8 +241,8 @@
     });
     CONCEPTIDX = idx; return idx;
   }
-  // outcome: 'right' (correct → streak+1), 'wrong' (miss → streak reset), 'partial' (3/5 written →
-  // learning), 'seen' (merely touched). wrote is kept for stats but no longer gates mastery.
+  // outcome: 'right' (correct), 'wrong' (miss), 'partial' (3/5 written), 'seen' (touched).
+  // wrote=true means it came from the marked WRITTEN test — the only correct that advances mastery.
   function recordConcept(name, outcome, wrote) {
     var qs = conceptIndex()[normkey(name)];
     if (!qs || !qs.length) return 0;
@@ -243,31 +251,33 @@
       var id = cardId(q); if (uniq[id]) return; uniq[id] = 1; n++;
       if (outcome === 'seen') recordSeen(q);
       else if (outcome === 'partial') recordPartial(q);
-      else recordCard(q, outcome === 'right');
+      else if (outcome === 'right' && wrote) recordWrittenCorrect(q);   // written correct → advances
+      else recordCard(q, outcome === 'right');                          // non-writing correct, or a miss
       if (wrote) { var r = loadCards()[id]; if (r) r.wrote = 1; }
     });
     if (wrote) saveCards();
     if (n) logActivity();
     return n;
   }
-  // Written answers, everywhere: >=4/5 counts as a CORRECT (advances toward mastery) + lifetime total;
-  // ==3/5 is 'learning' (partial, resets the streak); <=2/5 is a miss. Effort always logs consistency.
+  // Written answers, everywhere: >=4/5 is the ONLY correct that advances toward mastery (+ lifetime total);
+  // ==3/5 is 'learning' (partial); <=2/5 is a miss. Effort always logs consistency.
   function recordWritten(name, score) {
     var n = recordConcept(name, score >= 4 ? 'right' : (score <= 2 ? 'wrong' : 'partial'), score >= 4);
     if (!n) logActivity();
     if (score >= 4) bumpTotal();
     return n;
   }
-  // Status by consecutive correct answers: 2+ = mastered, 1 = "know it". A miss → struggling;
-  // otherwise (seen / 3-out-of-5 written / skipped) it's learning. Legacy cards derive a streak from box.
+  // Status: mastery comes only from written answers. 2 good written answers = mastered, 1 = "know it".
+  // A miss (any mode) = struggling. Everything else — MC/flashcard/type/match corrects, a 3/5 written,
+  // or just seen — is 'learning'. (Legacy cards that were written before start at "know it".)
   function cardStatus(q) {
     var r = loadCards()[cardId(q)];
     if (!r || !r.seen) return 'new';
-    var streak = (r.streak != null) ? r.streak : (r.box >= 4 ? 2 : (r.box >= 2 ? 1 : 0));
-    if (streak >= 2) return 'learnt';             // mastered: answered correctly twice in a row
-    if (streak === 1) return 'ready';             // "know it": one correct answer
-    if (r.wrong > 0) return 'struggling';         // most recent attempt was a miss
-    return 'learning';                            // touched, or a 3/5 written — on the way
+    var w = (r.wstreak != null) ? r.wstreak : (r.wrote ? 1 : 0);
+    if (w >= 2) return 'learnt';                  // mastered: two strong written answers
+    if (w === 1) return 'ready';                  // "know it": one strong written answer
+    if (r.lastRight === 0) return 'struggling';   // most recent attempt was a miss
+    return 'learning';                            // MC/flashcard/type/match correct, 3/5 written, or seen
   }
   function masterySummary() {
     var s = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 };
@@ -1210,7 +1220,7 @@
     var cards = loadCards(), ids = Object.keys(cards);
     var total = getTotal();
     var written = 0, anyReady = 0, mastered = 0;
-    ids.forEach(function (id) { var r = cards[id]; if (r.wrote) written++; var st = (r.streak != null) ? r.streak : (r.box >= 4 ? 2 : (r.box >= 2 ? 1 : 0)); if (st >= 1) anyReady++; if (st >= 2) mastered++; });
+    ids.forEach(function (id) { var r = cards[id]; if (r.wrote) written++; var w = (r.wstreak != null) ? r.wstreak : (r.wrote ? 1 : 0); if (w >= 1) anyReady++; if (w >= 2) mastered++; });
     var act = loadActivity();
     var d = new Date(); d.setHours(0, 0, 0, 0);
     var cur = 0; if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
@@ -1652,7 +1662,7 @@
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · answer a concept correctly once to <b>know it</b>, twice to <b>master</b> it — a miss knocks it back, and a 3/5 written answer keeps it in <b>learning</b></p>' +
+        '<p class="mm-sub"><b>' + mastered + '</b> of ' + total + ' concepts mastered · only the written test advances you: score 4+/5 once to <b>know it</b>, twice to <b>master</b> it. Multiple choice and every other mode count as <b>learning</b>; a 3/5 stays learning; a miss is <b>struggling</b></p>' +
         '<div class="mm-legend"><span><i class="mm-dot mm-learnt"></i>mastered</span><span><i class="mm-dot mm-ready"></i>know it</span><span><i class="mm-dot mm-learning"></i>learning</span><span><i class="mm-dot mm-strug"></i>struggling</span><span><i class="mm-dot mm-new"></i>new</span></div>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
