@@ -1554,20 +1554,23 @@
       var cur = 0; while (act[fmtDay(d)]) { cur++; d.setDate(d.getDate() - 1); }
       var days = Object.keys(act).sort(), best = 0, run = 0, prev = null;
       days.forEach(function (ds) { if (prev && (Date.parse(ds) - Date.parse(prev)) === 86400000) run++; else run = 1; if (run > best) best = run; prev = ds; });
-      function kpi(num, lab, cls) { return '<div class="kpi ' + (cls || '') + '"><span class="kpi-n">' + num + '</span><span class="kpi-l">' + lab + '</span></div>'; }
+      function kh(num, lab, cls) { return '<div class="kh ' + (cls || '') + '"><span class="kh-n">' + num + '</span><span class="kh-l">' + lab + '</span></div>'; }
+      function ks(num, lab) { return '<div class="ks"><span class="ks-n">' + num + '</span><span class="ks-l">' + lab + '</span></div>'; }
+      function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
       app.appendChild(h('<section class="dash-kpis">' +
-        kpi('🔥 ' + cur, 'day streak', 'kpi-streak') +
-        kpi(pct + '%', 'progress', 'kpi-accent') +
-        kpi(getTotal(), 'lifetime correct') +
-        kpi(acc + '%', 'accuracy') +
-        kpi(best, 'best streak') +
-        kpi(days.length, 'days studied') +
-        kpi(written, 'written /5') +
-        kpi(total, 'concepts') +
-        kpi(sum.learnt, 'mastered', 'kpi-learnt') +
-        kpi(sum.ready, 'know it', 'kpi-ready') +
-        kpi(sum.learning, 'learning', 'kpi-learning') +
-        kpi(sum.struggling, 'struggling', 'kpi-strug') +
+        '<div class="kpi-hero">' +
+          kh('🔥&nbsp;' + cur, 'day streak', 'kh-streak') +
+          kh(pct + '%', 'overall progress', 'kh-accent') +
+          kh(getTotal(), 'lifetime correct') +
+        '</div>' +
+        '<div class="kpi-sub">' +
+          ks(acc + '%', 'accuracy') + ks(best, 'best streak') + ks(days.length, 'days studied') +
+          ks(written, 'written /5') + ks(total, 'concepts') +
+        '</div>' +
+        '<div class="kpi-bar mm-bar">' +
+          seg('mm-learnt', sum.learnt) + seg('mm-ready', sum.ready) + seg('mm-learning', sum.learning) +
+          seg('mm-strug', sum.struggling) + seg('mm-new', sum.new) +
+        '</div>' +
       '</section>'));
       renderMastery();
       renderStats();
