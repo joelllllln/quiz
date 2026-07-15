@@ -666,6 +666,14 @@
   // Scope of a read+recall pass: every concept, or just the tagged definitions.
   function getLearnScope() { return localStorage.getItem('ds_learn_scope') === 'defs' ? 'defs' : 'all'; }
   function setLearnScope(v) { try { localStorage.setItem('ds_learn_scope', v); } catch (e) {} }
+  // Home layout: which "door" (Learn / Practice / Reference) is open, plus the collapsible progress
+  // and connect-Claude panels. Keeps the home page to one focused area at a time instead of a long scroll.
+  function getHomeDoor() { var v = localStorage.getItem('ds_home_door'); return (v === 'practice' || v === 'reference') ? v : 'learn'; }
+  function setHomeDoor(v) { try { localStorage.setItem('ds_home_door', v); } catch (e) {} }
+  function getProgressOpen() { return localStorage.getItem('ds_home_prog') === '1'; }
+  function setProgressOpen(v) { try { localStorage.setItem('ds_home_prog', v ? '1' : '0'); } catch (e) {} }
+  function getApiOpen() { return localStorage.getItem('ds_home_api') === '1'; }
+  function setApiOpen(v) { try { localStorage.setItem('ds_home_api', v ? '1' : '0'); } catch (e) {} }
   // Tokenise a title/definition for the read↔concept matching below (drops short/stop words).
   var LEARN_STOP = ['the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'its', 'you', 'your', 'from', 'into', 'not', 'but', 'how', 'why', 'what', 'when', 'one', 'two', 'per', 'via', 'use', 'used', 'uses', 'each', 'they', 'them', 'has', 'have', 'can', 'all', 'any', 'set', 'get'];
   function learnTokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && LEARN_STOP.indexOf(w) < 0; }); }
@@ -1482,20 +1490,80 @@
       '<header class="masthead">' +
         '<div class="mast-rules"></div>' +
         '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span class="mast-tools">' +
+          '<button class="mt-btn mt-key" type="button" title="Connect Claude"></button>' +
           '<button class="mt-btn mt-theme" type="button" title="Theme"></button>' +
           '<button class="mt-btn mt-font" type="button" title="Text size"></button></span></div>' +
         '<h1>DataSense</h1>' +
         '<p class="mast-sub"><b>Machine learning</b>, learned by doing: ' + totalExercises() + ' exercises across supervised classification, clustering and dimensionality reduction. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
         '<div class="mast-foot">Multiple choice · questions & answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>');
-    var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font');
+    var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font'), keyBtn = mast.querySelector('.mt-key');
     function themeLabel() { var t = getTheme(); themeBtn.textContent = t === 'auto' ? '◐ auto' : (t === 'light' ? '☀ light' : '☾ dark'); }
     function fontLabel() { fontBtn.textContent = ['A', 'A+', 'A++'][getFont()]; }
-    themeLabel(); fontLabel();
+    function keyLabel() { keyBtn.textContent = apiKey() ? '✓ Claude' : '🔑 Claude'; keyBtn.classList.toggle('mt-on', !!apiKey()); }
+    themeLabel(); fontLabel(); keyLabel();
     themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
+    keyBtn.onclick = function () { setApiOpen(!getApiOpen()); home(); };
     app.appendChild(mast);
-    renderApiKey();
+    if (getApiOpen()) renderApiKey();
+
+    // Compact, glanceable progress; expands to the full mastery map + stats + badges + backup.
+    renderProgressStrip();
+    if (getProgressOpen()) { renderMastery(); renderStats(); renderBadges(); renderBackup(); }
+
+    // Three doors keep the home page to one focused area at a time.
+    var door = getHomeDoor();
+    renderDoors(door);
+    if (door === 'learn') {
+      renderStudy(['learn']);
+    } else if (door === 'practice') {
+      renderStudy(['mc', 'written', 'defs', 'type', 'match']);
+      renderPractice();
+      renderFavourites();
+    } else {
+      renderSearch();
+      renderNotes();
+      renderCompares();
+      renderContents();
+    }
+
+    function renderDoors(active) {
+      var defs = [
+        { v: 'learn', t: 'Learn', s: 'Read a note, then recall it' },
+        { v: 'practice', t: 'Practice', s: 'MC · written · type · match' },
+        { v: 'reference', t: 'Reference', s: 'Notes · compare · search' }
+      ];
+      var nav = h('<nav class="home-doors" role="tablist"></nav>');
+      defs.forEach(function (d) {
+        var b = h('<button class="door' + (d.v === active ? ' door-on' : '') + '" type="button" role="tab"><span class="door-t"></span><span class="door-s"></span></button>');
+        b.querySelector('.door-t').textContent = d.t;
+        b.querySelector('.door-s').textContent = d.s;
+        b.onclick = function () { setHomeDoor(d.v); home(); };
+        nav.appendChild(b);
+      });
+      app.appendChild(nav);
+    }
+
+    function renderProgressStrip() {
+      var sum = masterySummary();
+      var act = loadActivity(), end = new Date(); end.setHours(0, 0, 0, 0);
+      var d = new Date(end); if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
+      var streak = 0; while (act[fmtDay(d)]) { streak++; d.setDate(d.getDate() - 1); }
+      var open = getProgressOpen();
+      function pill(cls, n, lab) { return '<span class="ps-pill ' + cls + '"><b>' + n + '</b> ' + lab + '</span>'; }
+      var sec = h('<section class="progress-strip">' +
+        '<button class="ps-toggle" type="button" aria-expanded="' + open + '">' +
+          '<span class="ps-chips">' +
+            (streak ? '<span class="ps-streak">🔥 ' + streak + '</span>' : '') +
+            pill('mmc-learnt', sum.learnt, 'mastered') + pill('mmc-ready', sum.ready, 'know it') +
+            pill('mmc-learning', sum.learning, 'learning') + pill('mmc-strug', sum.struggling, 'struggling') +
+          '</span>' +
+          '<span class="ps-more">' + (open ? 'Hide ▴' : 'Progress & stats ▾') + '</span>' +
+        '</button></section>');
+      sec.querySelector('.ps-toggle').onclick = function () { setProgressOpen(!open); home(); };
+      app.appendChild(sec);
+    }
 
     // Connect Claude once, at the top of the home page. The key is saved in this browser
     // (localStorage ds_api_key) and reused everywhere — writing marks, Explain-like-I'm-5, etc.
@@ -1524,14 +1592,6 @@
       app.appendChild(sec);
     }
 
-    // ---- Daily challenge (filterable) + lifetime total ----
-    renderSearch();
-    renderMastery();
-    renderStudy();
-    renderPractice();
-    renderFavourites();
-    renderNotes();
-    renderCompares();
 
     // Bite-sized revision notes covering every topic, in order (data_notes_*.js).
     function renderNotes() {
@@ -1627,9 +1687,12 @@
 
     // One picker: choose the study format (Multiple choice / Written / Definitions),
     // the topic scope, and how many. Smart Review stays a separate card below.
-    function renderStudy() {
+    function renderStudy(allowed) {
+      var ALLOWED = allowed || ['learn', 'mc', 'written', 'defs', 'type', 'match'];
       var old = app.querySelector('.study-card');
       var mode = getStudyMode();
+      if (ALLOWED.indexOf(mode) < 0) mode = ALLOWED[0];
+      var learnOnly = ALLOWED.length === 1 && ALLOWED[0] === 'learn';
       var tkey = getStudyTopic();
       var diff = getStudyDiff();
       var curN = dailyN();
@@ -1660,13 +1723,17 @@
       else if (mode === 'learn') { var lt = getLearnTest(); var ltName = lt === 'mc' ? 'multiple choice' : lt === 'written' ? 'a written answer' : lt === 'card' ? 'a flashcard' : 'mixed tests'; var ln = learnN(); var lnLabel = ln ? ln + ' concepts a session (least-known first)' : 'the whole topic in one go'; var scopeWord = getLearnScope() === 'defs' ? 'definitions only' : 'every concept'; desc = 'Read a note, then test yourself with ' + ltName + ' — ' + lnLabel + ' · ' + scopeWord + ' · ' + esc(scopeLabel) + ' · ' + diffLabel + (lt === 'written' && !apiKey() ? ' · needs your API key' : ''); startLabel = 'Start learning →'; }
       else { desc = 'Flip definition cards & self-rate · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Study cards →'; }
       desc += ' <span class="study-avail">' + avail + ' available</span>';
+      var MODE_DEFS = [{ v: 'learn', t: 'Read + recall' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }];
+      var modeChips = MODE_DEFS.filter(function (m) { return ALLOWED.indexOf(m.v) >= 0; });
+      var studyTitle = learnOnly ? 'Read + recall' : 'Practice';
       var sec = h('<section class="study-card">' +
         '<div class="daily-main">' +
-          '<div class="daily-eyebrow">Study · ' + esc(todayLabel()) + '</div>' +
-          '<h2 class="daily-title">Study</h2>' +
+          '<div class="daily-eyebrow">' + esc(studyTitle) + ' · ' + esc(todayLabel()) + '</div>' +
+          '<h2 class="daily-title">' + esc(studyTitle) + '</h2>' +
           '<div class="daily-filters">' +
+            (modeChips.length > 1 ?
             '<div class="filt-row"><span class="filt-lab">Mode</span>' +
-              chips('mode', mode, [{ v: 'learn', t: 'Read + recall' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }]) + '</div>' +
+              chips('mode', mode, modeChips) + '</div>' : '') +
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
             '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
@@ -1688,24 +1755,24 @@
           '<div class="daily-btns"><button class="btn daily-go study-go"' + (avail ? '' : ' disabled') + '>' + startLabel + '</button></div>' +
         '</div></section>');
       sec.querySelectorAll('[data-mode]').forEach(function (b) {
-        b.onclick = function () { setStudyMode(b.getAttribute('data-mode')); renderStudy(); };
+        b.onclick = function () { setStudyMode(b.getAttribute('data-mode')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-num]').forEach(function (b) {
-        b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderStudy(); };
+        b.onclick = function () { setDailyN(+b.getAttribute('data-num')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-lnum]').forEach(function (b) {
-        b.onclick = function () { setLearnN(+b.getAttribute('data-lnum')); renderStudy(); };
+        b.onclick = function () { setLearnN(+b.getAttribute('data-lnum')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-lscope]').forEach(function (b) {
-        b.onclick = function () { setLearnScope(b.getAttribute('data-lscope')); renderStudy(); };
+        b.onclick = function () { setLearnScope(b.getAttribute('data-lscope')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-diff]').forEach(function (b) {
-        b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(); };
+        b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-ltest]').forEach(function (b) {
-        b.onclick = function () { setLearnTest(b.getAttribute('data-ltest')); renderStudy(); };
+        b.onclick = function () { setLearnTest(b.getAttribute('data-ltest')); renderStudy(ALLOWED); };
       });
-      sec.querySelector('.study-topic').onchange = function () { setStudyTopic(this.value); renderStudy(); };
+      sec.querySelector('.study-topic').onchange = function () { setStudyTopic(this.value); renderStudy(ALLOWED); };
       sec.querySelector('.study-go').onclick = function () {
         if (mode === 'mc') startQuiz(tkey, curN);
         else if (mode === 'written') startWriting(tkey);
@@ -1904,45 +1971,43 @@
       app.appendChild(sec);
     }
 
-    GROUPS.forEach(function (g) {
-      app.appendChild(h('<div class="sec-label">' + g.label + '</div>'));
-      g.keys.forEach(function (tk) {
-        var T = null; TOPICS.forEach(function (t) { if (t.key === tk) T = t; });
-        var total = 0; T.levels.forEach(function (L) { total += (QUESTIONS[L.qk] || []).length; });
-        var topic = h('<section class="topic">' +
-          '<div class="topic-head"><h3>' + T.name + '</h3><span class="t-index">Topic ' + T.no + ' · ' + total + ' exercises</span></div>' +
-          '<p class="t-desc">' + T.desc + '</p><div class="toc"></div></section>');
-        var toc = topic.querySelector('.toc');
-        T.levels.forEach(function (L) {
-          var qs = QUESTIONS[L.qk] || [];
-          var best = localStorage.getItem(bestKey(L.qk));
-          var meta = qs.length ? (best != null ? 'best ' + best + '/' + qs.length : qs.length + ' exercises') : 'in preparation';
-          var row = h('<button class="toc-row" data-qk="' + L.qk + '">' +
-            '<span class="toc-part">' + L.part + '</span>' +
-            '<span class="toc-name">' + L.name + '</span>' +
-            '<span class="toc-dots"></span>' +
-            '<span class="toc-meta">' + meta + '</span>' +
-            '<span class="toc-go" aria-hidden="true">→</span></button>');
-          if (!qs.length) row.disabled = true;
-          else row.onclick = function () { start(T, L); };
-          toc.appendChild(row);
+    // Browse every topic and jump to a specific level (lives in the Reference door).
+    function renderContents() {
+      app.appendChild(h('<div class="sec-label">Browse all topics</div>'));
+      GROUPS.forEach(function (g) {
+        app.appendChild(h('<div class="sec-label sec-sub">' + g.label + '</div>'));
+        g.keys.forEach(function (tk) {
+          var T = null; TOPICS.forEach(function (t) { if (t.key === tk) T = t; });
+          var total = 0; T.levels.forEach(function (L) { total += (QUESTIONS[L.qk] || []).length; });
+          var topic = h('<section class="topic">' +
+            '<div class="topic-head"><h3>' + T.name + '</h3><span class="t-index">Topic ' + T.no + ' · ' + total + ' exercises</span></div>' +
+            '<p class="t-desc">' + T.desc + '</p><div class="toc"></div></section>');
+          var toc = topic.querySelector('.toc');
+          T.levels.forEach(function (L) {
+            var qs = QUESTIONS[L.qk] || [];
+            var best = localStorage.getItem(bestKey(L.qk));
+            var meta = qs.length ? (best != null ? 'best ' + best + '/' + qs.length : qs.length + ' exercises') : 'in preparation';
+            var row = h('<button class="toc-row" data-qk="' + L.qk + '">' +
+              '<span class="toc-part">' + L.part + '</span>' +
+              '<span class="toc-name">' + L.name + '</span>' +
+              '<span class="toc-dots"></span>' +
+              '<span class="toc-meta">' + meta + '</span>' +
+              '<span class="toc-go" aria-hidden="true">→</span></button>');
+            if (!qs.length) row.disabled = true;
+            else row.onclick = function () { start(T, L); };
+            toc.appendChild(row);
+          });
+          app.appendChild(topic);
         });
-        app.appendChild(topic);
       });
-    });
-
-    app.appendChild(h('<div class="sec-label">Forthcoming volumes</div>'));
-    var grid = h('<div class="locked-grid"></div>');
-    UPCOMING.forEach(function (t) {
-      grid.appendChild(h('<div class="topic locked"><h3>' + t.name + '</h3>' +
-        '<p class="t-desc">' + t.desc + '</p><span class="stamp">In preparation</span></div>'));
-    });
-    app.appendChild(grid);
-
-    app.appendChild(h('<div class="sec-label">Your analytics</div>'));
-    renderStats();
-    renderBadges();
-    renderBackup();
+      app.appendChild(h('<div class="sec-label">Forthcoming volumes</div>'));
+      var grid = h('<div class="locked-grid"></div>');
+      UPCOMING.forEach(function (t) {
+        grid.appendChild(h('<div class="topic locked"><h3>' + t.name + '</h3>' +
+          '<p class="t-desc">' + t.desc + '</p><span class="stamp">In preparation</span></div>'));
+      });
+      app.appendChild(grid);
+    }
 
     function renderBadges() {
       var badges = computeBadges();

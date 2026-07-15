@@ -370,6 +370,26 @@ input[type=range]{accent-color:var(--cobalt)}
 .mmc{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:.66rem;letter-spacing:.02em;color:var(--ink-2)}
 .mm-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--grid)}
 .mm-seg{display:block;height:100%}.mm-seg.mm-learnt{background:var(--green)}.mm-seg.mm-ready{background:#C7A400}.mm-seg.mm-learning{background:var(--cobalt)}.mm-seg.mm-strug{background:var(--red)}.mm-seg.mm-new{background:var(--rule)}
+/* home: connect-Claude chip, three doors, progress strip */
+.mt-btn.mt-on{border-color:var(--green);color:var(--green)}
+.home-doors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 20px}
+.door{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:12px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--sheet);cursor:pointer;transition:border-color .12s,background .12s}
+.door:hover{border-color:var(--ink-3)}
+.door-on{border-color:var(--ink);background:var(--cobalt-soft)}
+.door-t{font-family:var(--serif);font-weight:700;font-size:1.02rem;color:var(--ink)}
+.door-s{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);line-height:1.3}
+.door-on .door-s{color:var(--cobalt)}
+@media(max-width:520px){.home-doors{grid-template-columns:1fr;gap:6px}.door{flex-direction:row;align-items:baseline;gap:10px;padding:11px 14px}.door-s{font-size:.58rem}}
+.progress-strip{margin:14px 0 2px}
+.ps-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);cursor:pointer;text-align:left}
+.ps-chips{display:inline-flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.ps-streak{font-family:var(--mono);font-size:.74rem;font-weight:700;color:var(--ink)}
+.ps-pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
+.ps-pill b{font-size:.82rem;color:var(--ink)}
+.ps-pill::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--rule)}
+.ps-pill.mmc-learnt::before{background:var(--green)}.ps-pill.mmc-ready::before{background:#C7A400}.ps-pill.mmc-learning::before{background:var(--cobalt)}.ps-pill.mmc-strug::before{background:var(--red)}
+.ps-more{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--cobalt);white-space:nowrap}
+.sec-label.sec-sub{margin:16px 0 8px;color:var(--ink-3)}
 /* personal analytics + consistency */
 .stats-card{background:var(--sheet);border:1.5px solid var(--ink);border-radius:2px;box-shadow:var(--shadow);padding:20px 24px;margin:4px 0}
 .stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:12px 0 6px}
