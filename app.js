@@ -1885,19 +1885,31 @@
           count('mmc-learning', 'learning', tot.learning) + count('mmc-strug', 'struggling', tot.struggling) +
           count('mmc-new', 'not started', tot.new) +
         '</div>' +
-        '<p class="mm-sub">Only the written test advances you: score 4+/5 once to <b>know it</b>, twice to <b>master</b> it. Multiple choice and every other mode count as <b>learning</b>; a 3/5 stays learning; a miss is <b>struggling</b>.</p>' +
+        '<p class="mm-sub">Written answers advance you: <b>4+/5</b> once = know it, twice = mastered. Everything else counts as <b>learning</b>; a miss is <b>struggling</b>.</p>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
       function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
-      rows.forEach(function (r, idx) {
-        var pct = progressPct(r);
+      var byKey = {}; TOPICS.forEach(function (t) { byKey[t.key] = t; });
+      // Started topics first (highest progress on top); untouched ones sink to a condensed list below.
+      rows.forEach(function (r) { r.pct = progressPct(r); r.started = (r.learnt + r.ready + r.learning + r.struggling) > 0; });
+      rows.sort(function (a, b) { if (a.started !== b.started) return a.started ? -1 : 1; return b.pct - a.pct; });
+      var shownEmptyHeader = false;
+      rows.forEach(function (r) {
+        var T = byKey[r.key];
+        if (!r.started) {
+          if (!shownEmptyHeader) { list.appendChild(h('<div class="mm-empty-head">Not started yet</div>')); shownEmptyHeader = true; }
+          var er = h('<button class="mm-row mm-row-empty"><span class="mm-name">' + esc(r.topic) + '</span><span class="mm-empty-go">Start →</span></button>');
+          er.onclick = function () { start(T, T.levels[0]); };
+          list.appendChild(er);
+          return;
+        }
         var counts = count('mmc-learnt', 'mastered', r.learnt) + count('mmc-ready', 'know it', r.ready) +
           count('mmc-learning', 'learning', r.learning) + count('mmc-strug', 'struggling', r.struggling) + count('mmc-new', 'new', r.new);
         var row = h('<button class="mm-row">' +
-          '<div class="mm-rowhead"><span class="mm-name">' + esc(r.topic) + '</span><span class="mm-pct" title="overall progress">' + pct + '%</span></div>' +
+          '<div class="mm-rowhead"><span class="mm-name">' + esc(r.topic) + '</span><span class="mm-pct" title="overall progress">' + r.pct + '%</span></div>' +
           '<span class="mm-bar">' + seg('mm-learnt', r.learnt) + seg('mm-ready', r.ready) + seg('mm-learning', r.learning) + seg('mm-strug', r.struggling) + seg('mm-new', r.new) + '</span>' +
           '<div class="mm-counts">' + counts + '</div></button>');
-        row.onclick = function () { start(TOPICS[idx], TOPICS[idx].levels[0]); };
+        row.onclick = function () { start(T, T.levels[0]); };
         list.appendChild(row);
       });
       app.appendChild(sec);
