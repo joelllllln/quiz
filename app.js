@@ -1540,19 +1540,34 @@
       app.appendChild(nav);
     }
 
-    // Dashboard tab: every metric in one place — headline tallies + streak, the mastery map,
-    // the consistency heatmap and stat tiles, and the badges.
+    // Dashboard tab: a compact strip of headline numbers up top (small space, lots of metrics),
+    // then the bigger visuals — mastery map, consistency heatmap, and badges.
     function renderDashboard() {
-      var sum = masterySummary();
+      var cards = loadCards(), ids = Object.keys(cards), sum = masterySummary();
+      var total = sum.learnt + sum.ready + sum.learning + sum.struggling + sum.new;
+      var attempts = 0, wrong = 0, written = 0;
+      ids.forEach(function (id) { var r = cards[id]; attempts += (r.seen || 0); wrong += (r.wrong || 0); if (r.wrote) written++; });
+      var acc = attempts ? Math.round(100 * (attempts - wrong) / attempts) : 0;
+      var pct = total ? Math.round(100 * (sum.learnt + sum.ready * 0.7 + sum.learning * 0.35 + sum.struggling * 0.15) / total) : 0;
       var act = loadActivity(), end = new Date(); end.setHours(0, 0, 0, 0);
       var d = new Date(end); if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
-      var streak = 0; while (act[fmtDay(d)]) { streak++; d.setDate(d.getDate() - 1); }
-      function pill(cls, n, lab) { return '<span class="ps-pill ' + cls + '"><b>' + n + '</b> ' + lab + '</span>'; }
-      app.appendChild(h('<section class="dash-head">' +
-        (streak ? '<span class="ps-streak">🔥 ' + streak + ' day' + (streak === 1 ? '' : 's') + '</span>' : '') +
-        pill('mmc-learnt', sum.learnt, 'mastered') + pill('mmc-ready', sum.ready, 'know it') +
-        pill('mmc-learning', sum.learning, 'learning') + pill('mmc-strug', sum.struggling, 'struggling') +
-        pill('mmc-new', sum.new, 'not started') +
+      var cur = 0; while (act[fmtDay(d)]) { cur++; d.setDate(d.getDate() - 1); }
+      var days = Object.keys(act).sort(), best = 0, run = 0, prev = null;
+      days.forEach(function (ds) { if (prev && (Date.parse(ds) - Date.parse(prev)) === 86400000) run++; else run = 1; if (run > best) best = run; prev = ds; });
+      function kpi(num, lab, cls) { return '<div class="kpi ' + (cls || '') + '"><span class="kpi-n">' + num + '</span><span class="kpi-l">' + lab + '</span></div>'; }
+      app.appendChild(h('<section class="dash-kpis">' +
+        kpi('🔥 ' + cur, 'day streak', 'kpi-streak') +
+        kpi(pct + '%', 'progress', 'kpi-accent') +
+        kpi(getTotal(), 'lifetime correct') +
+        kpi(acc + '%', 'accuracy') +
+        kpi(best, 'best streak') +
+        kpi(days.length, 'days studied') +
+        kpi(written, 'written /5') +
+        kpi(total, 'concepts') +
+        kpi(sum.learnt, 'mastered', 'kpi-learnt') +
+        kpi(sum.ready, 'know it', 'kpi-ready') +
+        kpi(sum.learning, 'learning', 'kpi-learning') +
+        kpi(sum.struggling, 'struggling', 'kpi-strug') +
       '</section>'));
       renderMastery();
       renderStats();
@@ -1951,9 +1966,8 @@
 
       var sec = h('<section class="stats-card">' +
         '<div class="review-eyebrow">Your analytics</div>' +
-        '<h2 class="review-title">Progress &amp; consistency</h2>' +
-        '<div class="stat-tiles">' + tiles + '</div>' +
-        '<div class="heat-block"><div class="heat-head"><span>Consistency · last ' + WEEKS + ' weeks</span>' +
+        '<h2 class="review-title">Consistency</h2>' +
+        '<div class="heat-block"><div class="heat-head"><span>Last ' + WEEKS + ' weeks</span>' +
           '<span class="heat-legend">less <i class="hc hl0"></i><i class="hc hl1"></i><i class="hc hl2"></i><i class="hc hl3"></i><i class="hc hl4"></i> more</span></div>' +
           '<div class="heat-scroll"><div class="heat-months">' + monthRow + '</div><div class="heat-grid">' + cols + '</div></div></div>' +
         '<div class="stat-mm"><div class="stat-mm-head"><span>Overall mastery</span><span>' + sum.learnt + ' / ' + barTotal + ' mastered</span></div>' +
