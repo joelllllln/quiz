@@ -36,6 +36,28 @@
         { t: "GaussianNB", d: "For continuous features. It learns a mean and variance per class and scores a value by its position on each class's bell curve." },
         { t: "Mixed feature types", d: "No single variant fits counts, flags and continuous values at once. Fit the right NB per feature block, then combine their log-odds." }
       ] },
+      { h: "GaussianNB, step by step", items: [
+        { t: "When to use GaussianNB", d: "The Naive Bayes flavour for CONTINUOUS features — heights, temperatures, sensor readings, lab values. It assumes each feature is roughly bell-shaped (normal) within each class." },
+        { t: "What it learns", d: "For every feature, within every class, it stores just two numbers: the mean and the variance of that feature among that class's training rows.", f: "params per class = (μ, σ²) for each feature" },
+        { t: "Why only two numbers", d: "A normal distribution is fully described by its mean and variance, so those two numbers ARE the fitted model for that feature. That's why GaussianNB trains almost instantly and needs very little data." },
+        { t: "The likelihood: bell-curve height", d: "To score a feature value x for a class, read the height of that class's bell curve at x. Close to the class mean → tall curve → high likelihood; far out in the tail → low.", f: "P(x | class) = bell(x; μ, σ²)" },
+        { t: "Combining features", d: "The 'naive' step: multiply each feature's bell-curve likelihood together (they're assumed independent), giving one likelihood for the whole row per class." },
+        { t: "Adding the prior, then argmax", d: "Multiply by the class prior (how common the class is), do it for every class, and predict the class with the highest result. In practice it's summed in log-space to avoid underflow.", f: "class = argmax  log P(class) + Σ log P(xᵢ | class)" },
+        { t: "Worked example: body temperature", d: "Healthy temps average 98.2°F, flu temps 100.3°F. A reading of 99.5°F sits higher on the flu bell than the healthy bell, so — priors aside — GaussianNB leans 'flu'. Move the reading and the taller curve flips." },
+        { t: "Linear or curved boundary", d: "Equal variances across classes → a straight (linear) boundary, same as LDA. Unequal variances → a curved (quadratic) boundary, so GaussianNB can wrap a tight class inside a diffuse one — for free, from two numbers per bell." },
+        { t: "var_smoothing", d: "A feature with near-zero variance in a class makes its bell razor-thin and the model brittle. sklearn adds a small floor to every variance (var_smoothing) to keep the curves stable." },
+        { t: "Scaling not required", d: "Unlike distance-based models, GaussianNB fits each feature its own curve, so features on different scales don't need standardising — each is judged against its own class mean and spread." }
+      ] },
+      { h: "BernoulliNB, step by step", items: [
+        { t: "When to use BernoulliNB", d: "The flavour for BINARY features — each feature is a yes/no flag: is this word present? is this box ticked? It models presence and absence, not how many times something occurred." },
+        { t: "Binarising the input", d: "It treats every feature as 0/1. If you hand it counts, it quietly thresholds them to 'present' (>0) or 'absent' — the count magnitude is thrown away.", f: "feature → 1 if present, else 0" },
+        { t: "What it learns", d: "For each feature, within each class, the probability that the feature is PRESENT in that class's rows — e.g. P('free' appears | spam) = 0.8.", f: "P(featureₖ = 1 | class) per feature, per class" },
+        { t: "The absence term (the key trick)", d: "Its defining move: it also scores the features that are ABSENT. A word that's usually in spam but is MISSING here counts as evidence against spam. Multinomial ignores absent words; Bernoulli explicitly uses them.", f: "present → P(1|c) · absent → (1 − P(1|c))" },
+        { t: "Scoring a case", d: "For each class, multiply P(present|class) for every feature that's a 1 and (1 − P(present|class)) for every feature that's a 0, times the prior; take the biggest (again summed in log-space)." },
+        { t: "Bernoulli vs Multinomial", d: "Multinomial uses word COUNTS and ignores absences; Bernoulli uses presence/ABSENCE and ignores counts. On short texts (tweets, titles) where a word appears 0 or 1 times anyway, Bernoulli's absence signal often wins." },
+        { t: "Smoothing", d: "Like all NB flavours it adds Laplace smoothing (alpha) so a feature never seen present (or never absent) in a class doesn't force a probability of exactly 0 and veto the class." },
+        { t: "When to reach for it", d: "Short documents, presence/absence features, or any yes/no flag matrix. If how OFTEN a token appears matters, prefer MultinomialNB instead." }
+      ] },
       { h: "Strengths", items: [
         { t: "Tiny-data friendly", d: "It estimates simple per-feature counts, so it learns useful patterns from very few labelled examples where richer models overfit." },
         { t: "Scales to many features", d: "Thousands of word-features are no problem; it just adds more multipliers. Fast to train and to predict." },
