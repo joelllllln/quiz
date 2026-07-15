@@ -1514,13 +1514,13 @@
       renderSearch();
       renderNotes();
       renderCompares();
-      renderContents();
     } else if (door === 'dashboard') {
       renderDashboard();
     } else {
       renderStudy();
       renderPractice();
       renderFavourites();
+      renderContents();
     }
 
     function renderDoors(active) {
@@ -2009,7 +2009,7 @@
       (host || app).appendChild(sec);
     }
 
-    // Browse every topic and jump to a specific level (lives in the Reference door).
+    // Browse every topic and jump straight into a specific level's questions (lives in the Study tab).
     function renderContents() {
       app.appendChild(h('<div class="sec-label">Browse all topics</div>'));
       GROUPS.forEach(function (g) {
