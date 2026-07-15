@@ -1554,24 +1554,36 @@
       var cur = 0; while (act[fmtDay(d)]) { cur++; d.setDate(d.getDate() - 1); }
       var days = Object.keys(act).sort(), best = 0, run = 0, prev = null;
       days.forEach(function (ds) { if (prev && (Date.parse(ds) - Date.parse(prev)) === 86400000) run++; else run = 1; if (run > best) best = run; prev = ds; });
-      function kh(num, lab, cls) { return '<div class="kh ' + (cls || '') + '"><span class="kh-n">' + num + '</span><span class="kh-l">' + lab + '</span></div>'; }
+      // Progress ring: a donut of the mastery composition with overall progress % in the centre.
+      var R = 56, CIRC = 2 * Math.PI * R, arcAcc = 0, arcs = '';
+      [{ c: sum.learnt, k: 'a-learnt' }, { c: sum.ready, k: 'a-ready' }, { c: sum.learning, k: 'a-learning' }, { c: sum.strug || sum.struggling, k: 'a-strug' }, { c: sum.new, k: 'a-new' }].forEach(function (s) {
+        if (!s.c) return;
+        var frac = s.c / (total || 1), len = frac * CIRC, gap = len > 8 ? 2.5 : 0, shown = Math.max(0.4, len - gap);
+        arcs += '<circle class="ring-arc ' + s.k + '" r="' + R + '" cx="75" cy="75" fill="none" stroke-width="15" transform="rotate(-90 75 75)" ' +
+          'stroke-dasharray="' + shown + ' ' + (CIRC - shown) + '" stroke-dashoffset="' + (-arcAcc * CIRC) + '"></circle>';
+        arcAcc += frac;
+      });
+      var ring = '<svg class="ring-svg" viewBox="0 0 150 150" aria-hidden="true">' +
+        '<circle class="ring-track" r="' + R + '" cx="75" cy="75" fill="none" stroke-width="15"></circle>' + arcs + '</svg>';
+      function stat(num, lab, cls) { return '<div class="dh-stat ' + (cls || '') + '"><b>' + num + '</b><span>' + lab + '</span></div>'; }
+      function leg(k, n, lab) { return '<span class="dh-leg"><i class="mm-dot ' + k + '"></i><b>' + n + '</b> ' + lab + '</span>'; }
       function ks(num, lab) { return '<div class="ks"><span class="ks-n">' + num + '</span><span class="ks-l">' + lab + '</span></div>'; }
-      function seg(cls, n) { return n ? '<span class="mm-seg ' + cls + '" style="flex:' + n + '"></span>' : ''; }
-      app.appendChild(h('<section class="dash-kpis">' +
-        '<div class="kpi-hero">' +
-          kh('🔥&nbsp;' + cur, 'day streak', 'kh-streak') +
-          kh(pct + '%', 'overall progress', 'kh-accent') +
-          kh(getTotal(), 'lifetime correct') +
-        '</div>' +
-        '<div class="kpi-sub">' +
-          ks(acc + '%', 'accuracy') + ks(best, 'best streak') + ks(days.length, 'days studied') +
-          ks(written, 'written /5') + ks(total, 'concepts') +
-        '</div>' +
-        '<div class="kpi-bar mm-bar">' +
-          seg('mm-learnt', sum.learnt) + seg('mm-ready', sum.ready) + seg('mm-learning', sum.learning) +
-          seg('mm-strug', sum.struggling) + seg('mm-new', sum.new) +
+      app.appendChild(h('<section class="dash-hero">' +
+        '<div class="dh-ringwrap">' + ring + '<div class="dh-center"><span class="dh-pct">' + pct + '%</span><span class="dh-pctl">progress</span></div></div>' +
+        '<div class="dh-side">' +
+          stat('🔥 ' + cur, cur === 1 ? 'day streak' : 'day streak', 'dh-streak') +
+          stat(getTotal(), 'lifetime correct') +
+          stat(acc + '%', 'accuracy') +
         '</div>' +
       '</section>'));
+      app.appendChild(h('<div class="dh-legend">' +
+        leg('mm-learnt', sum.learnt, 'mastered') + leg('mm-ready', sum.ready, 'know it') +
+        leg('mm-learning', sum.learning, 'learning') + leg('mm-strug', sum.struggling, 'struggling') +
+        leg('mm-new', sum.new, 'not started') +
+      '</div>'));
+      app.appendChild(h('<div class="dash-sub2">' +
+        ks(best, 'best streak') + ks(days.length, 'days studied') + ks(written, 'written /5') + ks(total, 'concepts') +
+      '</div>'));
       renderMastery();
       renderStats();
       renderBadges();
@@ -1883,11 +1895,6 @@
       var sec = h('<section class="mastery-card">' +
         '<div class="review-eyebrow">Your progress</div>' +
         '<h2 class="review-title">Mastery map</h2>' +
-        '<div class="mm-tally">' +
-          count('mmc-learnt', 'mastered', tot.learnt) + count('mmc-ready', 'know it', tot.ready) +
-          count('mmc-learning', 'learning', tot.learning) + count('mmc-strug', 'struggling', tot.struggling) +
-          count('mmc-new', 'not started', tot.new) +
-        '</div>' +
         '<p class="mm-sub">Written answers advance you: <b>4+/5</b> once = know it, twice = mastered. Everything else counts as <b>learning</b>; a miss is <b>struggling</b>.</p>' +
         '<div class="mm-list"></div></section>');
       var list = sec.querySelector('.mm-list');
