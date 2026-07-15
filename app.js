@@ -668,7 +668,7 @@
   function setLearnScope(v) { try { localStorage.setItem('ds_learn_scope', v); } catch (e) {} }
   // Home layout: which "door" (Learn / Practice / Reference) is open, plus the collapsible progress
   // and connect-Claude panels. Keeps the home page to one focused area at a time instead of a long scroll.
-  function getHomeDoor() { var v = localStorage.getItem('ds_home_door'); return (v === 'practice' || v === 'reference') ? v : 'learn'; }
+  function getHomeDoor() { var v = localStorage.getItem('ds_home_door'); return (v === 'reference' || v === 'dashboard') ? v : 'study'; }
   function setHomeDoor(v) { try { localStorage.setItem('ds_home_door', v); } catch (e) {} }
   function getProgressOpen() { return localStorage.getItem('ds_home_prog') === '1'; }
   function setProgressOpen(v) { try { localStorage.setItem('ds_home_prog', v ? '1' : '0'); } catch (e) {} }
@@ -1500,44 +1500,34 @@
     var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font'), keyBtn = mast.querySelector('.mt-key');
     function themeLabel() { var t = getTheme(); themeBtn.textContent = t === 'auto' ? '◐ auto' : (t === 'light' ? '☀ light' : '☾ dark'); }
     function fontLabel() { fontBtn.textContent = ['A', 'A+', 'A++'][getFont()]; }
-    function keyLabel() { keyBtn.textContent = '⚙ Settings'; keyBtn.classList.toggle('mt-on', getApiOpen()); }
+    function keyLabel() { keyBtn.textContent = '⚙ Settings'; keyBtn.classList.toggle('mt-on', !!apiKey()); }
     themeLabel(); fontLabel(); keyLabel();
     themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
-    keyBtn.onclick = function () { setApiOpen(!getApiOpen()); home(); };
+    keyBtn.onclick = openSettings;
     app.appendChild(mast);
-    // Settings panel (masthead ⚙): connect Claude + back up / restore your progress.
-    if (getApiOpen()) {
-      app.appendChild(h('<div class="sec-label">Settings</div>'));
-      renderApiKey();
-      renderBackup();
-    }
 
-    // Compact, glanceable progress; expands to the full mastery map + stats + badges.
-    renderProgressStrip();
-    if (getProgressOpen()) { renderMastery(); renderStats(); renderBadges(); }
-
-    // Three doors keep the home page to one focused area at a time.
+    // Three tabs: Study (learn + practice, one picker), Reference (look things up), Dashboard (all metrics).
     var door = getHomeDoor();
     renderDoors(door);
-    if (door === 'learn') {
-      renderStudy(['learn']);
-    } else if (door === 'practice') {
-      renderStudy(['mc', 'written', 'defs', 'type', 'match']);
-      renderPractice();
-      renderFavourites();
-    } else {
+    if (door === 'reference') {
       renderSearch();
       renderNotes();
       renderCompares();
       renderContents();
+    } else if (door === 'dashboard') {
+      renderDashboard();
+    } else {
+      renderStudy();
+      renderPractice();
+      renderFavourites();
     }
 
     function renderDoors(active) {
       var defs = [
-        { v: 'learn', t: 'Learn', s: 'Read a note, then recall it' },
-        { v: 'practice', t: 'Practice', s: 'MC · written · type · match' },
-        { v: 'reference', t: 'Reference', s: 'Notes · compare · search' }
+        { v: 'study', t: 'Study', s: 'Learn & practice, every mode' },
+        { v: 'reference', t: 'Reference', s: 'Notes · compare · search' },
+        { v: 'dashboard', t: 'Dashboard', s: 'Progress & metrics' }
       ];
       var nav = h('<nav class="home-doors" role="tablist"></nav>');
       defs.forEach(function (d) {
@@ -1550,29 +1540,46 @@
       app.appendChild(nav);
     }
 
-    function renderProgressStrip() {
+    // Dashboard tab: every metric in one place — headline tallies + streak, the mastery map,
+    // the consistency heatmap and stat tiles, and the badges.
+    function renderDashboard() {
       var sum = masterySummary();
       var act = loadActivity(), end = new Date(); end.setHours(0, 0, 0, 0);
       var d = new Date(end); if (!act[fmtDay(d)]) d.setDate(d.getDate() - 1);
       var streak = 0; while (act[fmtDay(d)]) { streak++; d.setDate(d.getDate() - 1); }
-      var open = getProgressOpen();
       function pill(cls, n, lab) { return '<span class="ps-pill ' + cls + '"><b>' + n + '</b> ' + lab + '</span>'; }
-      var sec = h('<section class="progress-strip">' +
-        '<button class="ps-toggle" type="button" aria-expanded="' + open + '">' +
-          '<span class="ps-chips">' +
-            (streak ? '<span class="ps-streak">🔥 ' + streak + '</span>' : '') +
-            pill('mmc-learnt', sum.learnt, 'mastered') + pill('mmc-ready', sum.ready, 'know it') +
-            pill('mmc-learning', sum.learning, 'learning') + pill('mmc-strug', sum.struggling, 'struggling') +
-          '</span>' +
-          '<span class="ps-more">' + (open ? 'Hide ▴' : 'Progress & stats ▾') + '</span>' +
-        '</button></section>');
-      sec.querySelector('.ps-toggle').onclick = function () { setProgressOpen(!open); home(); };
-      app.appendChild(sec);
+      app.appendChild(h('<section class="dash-head">' +
+        (streak ? '<span class="ps-streak">🔥 ' + streak + ' day' + (streak === 1 ? '' : 's') + '</span>' : '') +
+        pill('mmc-learnt', sum.learnt, 'mastered') + pill('mmc-ready', sum.ready, 'know it') +
+        pill('mmc-learning', sum.learning, 'learning') + pill('mmc-strug', sum.struggling, 'struggling') +
+        pill('mmc-new', sum.new, 'not started') +
+      '</section>'));
+      renderMastery();
+      renderStats();
+      renderBadges();
+    }
+
+    // Settings popup (masthead ⚙): connect Claude + back up / restore your progress.
+    function openSettings() {
+      var back = h('<div class="modal-back"></div>');
+      var modal = h('<div class="modal" role="dialog" aria-modal="true" aria-label="Settings">' +
+        '<div class="modal-head"><h2 class="modal-title">Settings</h2><button class="modal-x" type="button" aria-label="Close">✕</button></div>' +
+        '<div class="modal-body"></div></div>');
+      var body = modal.querySelector('.modal-body');
+      renderApiKey(body);
+      renderBackup(body);
+      function close() { back.remove(); document.removeEventListener('keydown', onKey); }
+      function onKey(e) { if (e.key === 'Escape') close(); }
+      modal.querySelector('.modal-x').onclick = close;
+      back.onclick = function (e) { if (e.target === back) close(); };
+      document.addEventListener('keydown', onKey);
+      back.appendChild(modal);
+      document.body.appendChild(back);
     }
 
     // Connect Claude once, at the top of the home page. The key is saved in this browser
     // (localStorage ds_api_key) and reused everywhere — writing marks, Explain-like-I'm-5, etc.
-    function renderApiKey() {
+    function renderApiKey(host) {
       var sec = h('<section class="apikey-card"></section>');
       function draw() {
         var has = !!apiKey();
@@ -1590,11 +1597,11 @@
             '<form class="ak-form"><input class="ak-in" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" aria-label="Anthropic API key">' +
             '<button class="btn ak-save" type="submit">Save key</button></form></div>';
           var form = sec.querySelector('.ak-form'), input = sec.querySelector('.ak-in');
-          form.onsubmit = function (ev) { ev.preventDefault(); var v = input.value.trim(); if (!v) return; setApiKey(v); draw(); };
+          form.onsubmit = function (ev) { ev.preventDefault(); var v = input.value.trim(); if (!v) return; setApiKey(v); draw(); keyLabel(); };
         }
       }
       draw();
-      app.appendChild(sec);
+      (host || app).appendChild(sec);
     }
 
 
@@ -1730,7 +1737,7 @@
       desc += ' <span class="study-avail">' + avail + ' available</span>';
       var MODE_DEFS = [{ v: 'learn', t: 'Read + recall' }, { v: 'mc', t: 'Multiple choice' }, { v: 'written', t: 'Written' }, { v: 'defs', t: 'Definitions' }, { v: 'type', t: 'Type it' }, { v: 'match', t: 'Match & order' }];
       var modeChips = MODE_DEFS.filter(function (m) { return ALLOWED.indexOf(m.v) >= 0; });
-      var studyTitle = learnOnly ? 'Read + recall' : 'Practice';
+      var studyTitle = learnOnly ? 'Read + recall' : 'Study';
       var sec = h('<section class="study-card">' +
         '<div class="daily-main">' +
           '<div class="daily-eyebrow">' + esc(studyTitle) + ' · ' + esc(todayLabel()) + '</div>' +
@@ -1957,7 +1964,7 @@
       app.appendChild(sec);
     }
 
-    function renderBackup() {
+    function renderBackup(host) {
       var sec = h('<section class="data-card">' +
         '<div class="dc-text"><b>Back up your progress</b><span>Your streaks, mastery and favourites live only in this browser. Export a file to keep them safe or move to another device.</span></div>' +
         '<div class="dc-btns"><button class="dc-btn dc-export">⬇ Backup (JSON)</button><button class="dc-btn dc-csv">⬇ Stats (CSV)</button><button class="dc-btn dc-import">⬆ Restore</button>' +
@@ -1973,7 +1980,7 @@
           else alert('Could not read that file — is it a DataSense backup?');
         });
       };
-      app.appendChild(sec);
+      (host || app).appendChild(sec);
     }
 
     // Browse every topic and jump to a specific level (lives in the Reference door).
