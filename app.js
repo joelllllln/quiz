@@ -395,6 +395,14 @@
   function getStudyDiff() { var d = +(localStorage.getItem('ds_study_diff')); return (d === 1 || d === 2 || d === 3) ? d : 0; }
   function setStudyDiff(d) { try { localStorage.setItem('ds_study_diff', d || 0); } catch (e) {} }
   function diffOk(lvl) { var d = getStudyDiff(); return !d || lvl === d; }
+  // "Unseen only" filter: limit any study mode to concepts/questions you haven't touched yet.
+  function getStudyNew() { return localStorage.getItem('ds_study_new') === 'new' ? 'new' : 'all'; }
+  function setStudyNew(v) { try { localStorage.setItem('ds_study_new', v); } catch (e) {} }
+  function qSeen(q, cards) { var r = cards[cardId(q)]; return !!(r && r.seen); }
+  function conceptSeen(front, cards, cidx) { var qs = cidx[normkey(front)]; if (!qs) return false; for (var i = 0; i < qs.length; i++) { if (qSeen(qs[i], cards)) return true; } return false; }
+  // pool filters honouring the "Unseen only" toggle — one for question entries (MC), one for concept cards.
+  function newFilterQ(pool) { if (getStudyNew() !== 'new') return pool; var c = loadCards(); return pool.filter(function (e) { return !qSeen(e.q, c); }); }
+  function newFilterC(deck) { if (getStudyNew() !== 'new') return deck; var c = loadCards(), idx = conceptIndex(); return deck.filter(function (card) { return !conceptSeen(card.front, c, idx); }); }
   function diffTag(lvl) { return '<span class="lvl-pip lvl-' + lvl + '" title="Difficulty ' + lvl + ' of 3">L' + lvl + '</span>'; }
   // Friendly stop when a topic+difficulty combination has nothing to study.
   function noContent(label) {
@@ -409,7 +417,7 @@
     window.scrollTo(0, 0);
   }
   function startFlashcards(topicKey, defsOnly) {
-    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def) && diffOk(c.level); }));
+    var deck = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def) && diffOk(c.level); })));
     if (!deck.length) return noContent('Flashcards');
     var i = 0, flipped = false;
     function draw() {
@@ -480,7 +488,7 @@
     return false;
   }
   function startTypeIt(topicKey) {
-    var deck = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); })).slice(0, 10);
+    var deck = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }))).slice(0, 10);
     if (!deck.length) return noContent('Type-the-term cards');
     var i = 0, score = 0;
     function draw() {
@@ -544,8 +552,8 @@
 
   /* ---------------- matching: pair terms with definitions, then order algorithm steps ---------------- */
   function startMatching(topicKey) {
-    var pool = shuffle(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }));
-    var orders = shuffle((window.ORDERS || []).filter(function (o) { return (!topicKey || o.key === topicKey) && diffOk(o.level || 1); })).slice(0, 2);
+    var pool = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); })));
+    var orders = getStudyNew() === 'new' ? [] : shuffle((window.ORDERS || []).filter(function (o) { return (!topicKey || o.key === topicKey) && diffOk(o.level || 1); })).slice(0, 2);
     var PAIRS = 5, ROUNDS = Math.min(3, Math.floor(pool.length / PAIRS));
     if (!ROUNDS && !orders.length) return noContent('Match & order sets');
     var round = 0, orderIdx = 0, totalRight = 0, totalPairs = 0;
@@ -770,6 +778,11 @@
       if (seenC[k]) return; seenC[k] = 1;   // a concept is tested once per pass; prefer its first (note) form
       concepts.push(x);
     });
+    if (getStudyNew() === 'new') {   // "Unseen only": keep concepts you haven't touched yet
+      var _c = loadCards(), _i = conceptIndex();
+      concepts = concepts.filter(function (x) { return !conceptSeen(x.concept.front, _c, _i); });
+      readOnly = [];
+    }
     // Fresh order each Start, but least-mastered concepts first so short sessions hit what needs work
     // and repeated passes actually finish the topic instead of re-drilling what's already mastered.
     concepts = shuffle(concepts);
@@ -939,7 +952,7 @@
   function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
   // Multiple-choice study: N questions from the chosen topic scope (or all), fresh each time.
   function startQuiz(topicKey, n) {
-    var pool = buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level); });
+    var pool = newFilterQ(buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level); }));
     if (!pool.length) return noContent('Questions');
     pool = shuffle(pool).slice(0, Math.min(n, pool.length));
     begin({ name: 'Study', no: '✎', key: '__study__' },
@@ -1085,7 +1098,7 @@
     if (clr) clr.onclick = function () { setApiKey(''); container.innerHTML = '<div class="wr-ok">Key removed.</div>'; };
   }
   function startWriting(topicKey) {
-    var deck = shuffle(writingDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && diffOk(c.level); }));
+    var deck = shuffle(newFilterC(writingDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && diffOk(c.level); })));
     if (!deck.length) return noContent('Writing prompts');
     var i = 0;
     function draw() {
@@ -1745,18 +1758,18 @@
       }
       // How many items the current mode + topic + difficulty actually yields.
       function studyCount() {
-        if (mode === 'mc') return buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); }).length;
-        if (mode === 'written') return writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); }).length;
-        if (mode === 'defs') return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); }).length;
-        if (mode === 'learn') { var seenC = {}, n = 0; learnConcepts(tkey, getLearnScope()).forEach(function (x) { if (x.concept) { var k = normkey(x.concept.front); if (!seenC[k]) { seenC[k] = 1; n++; } } }); return n; }
-        return flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); }).length;
+        if (mode === 'mc') return newFilterQ(buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); })).length;
+        if (mode === 'written') return newFilterC(writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); })).length;
+        if (mode === 'defs') return newFilterC(flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); })).length;
+        if (mode === 'learn') { var seenC = {}, n = 0, nc = loadCards(), ci = conceptIndex(), only = getStudyNew() === 'new'; learnConcepts(tkey, getLearnScope()).forEach(function (x) { if (x.concept) { var k = normkey(x.concept.front); if (!seenC[k]) { seenC[k] = 1; if (!only || !conceptSeen(x.concept.front, nc, ci)) n++; } } }); return n; }
+        return newFilterC(flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); })).length;
       }
       var avail = studyCount();
       var topicOpts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
         return '<option value="' + t.key + '"' + (t.key === tkey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
       }).join('');
       var scopeLabel = tkey ? (function () { var nm = tkey; TOPICS.forEach(function (t) { if (t.key === tkey) nm = t.name; }); return nm; })() : 'all topics';
-      var diffLabel = diff ? 'level ' + diff : 'all levels';
+      var diffLabel = (diff ? 'level ' + diff : 'all levels') + (getStudyNew() === 'new' ? ' · unseen only' : '');
       var desc, startLabel;
       if (mode === 'mc') { desc = curN + ' multiple-choice questions · ' + esc(scopeLabel) + ' · ' + diffLabel; startLabel = 'Start ' + curN + ' →'; }
       else if (mode === 'written') { desc = 'Explain concepts in your own words · Claude marks each /5 · ' + esc(scopeLabel) + ' · ' + diffLabel + (apiKey() ? '' : ' · needs your API key'); startLabel = 'Start writing →'; }
@@ -1779,6 +1792,8 @@
             '<div class="filt-row"><span class="filt-lab">Topic</span><select class="study-topic">' + topicOpts + '</select></div>' +
             '<div class="filt-row"><span class="filt-lab">Difficulty</span>' +
               chips('diff', diff, [{ v: 0, t: 'All levels' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }]) + '</div>' +
+            '<div class="filt-row"><span class="filt-lab">Show</span>' +
+              chips('snew', getStudyNew(), [{ v: 'all', t: 'All' }, { v: 'new', t: 'Unseen only' }]) + '</div>' +
             (mode === 'learn' ?
             '<div class="filt-row"><span class="filt-lab">Cover</span>' +
               chips('lscope', getLearnScope(), [{ v: 'all', t: 'Every concept' }, { v: 'defs', t: 'Definitions only' }]) + '</div>' +
@@ -1810,6 +1825,9 @@
       });
       sec.querySelectorAll('[data-diff]').forEach(function (b) {
         b.onclick = function () { setStudyDiff(+b.getAttribute('data-diff')); renderStudy(ALLOWED); };
+      });
+      sec.querySelectorAll('[data-snew]').forEach(function (b) {
+        b.onclick = function () { setStudyNew(b.getAttribute('data-snew')); renderStudy(ALLOWED); };
       });
       sec.querySelectorAll('[data-ltest]').forEach(function (b) {
         b.onclick = function () { setLearnTest(b.getAttribute('data-ltest')); renderStudy(ALLOWED); };
