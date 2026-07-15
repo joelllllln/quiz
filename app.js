@@ -1500,17 +1500,22 @@
     var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font'), keyBtn = mast.querySelector('.mt-key');
     function themeLabel() { var t = getTheme(); themeBtn.textContent = t === 'auto' ? '◐ auto' : (t === 'light' ? '☀ light' : '☾ dark'); }
     function fontLabel() { fontBtn.textContent = ['A', 'A+', 'A++'][getFont()]; }
-    function keyLabel() { keyBtn.textContent = apiKey() ? '✓ Claude' : '🔑 Claude'; keyBtn.classList.toggle('mt-on', !!apiKey()); }
+    function keyLabel() { keyBtn.textContent = '⚙ Settings'; keyBtn.classList.toggle('mt-on', getApiOpen()); }
     themeLabel(); fontLabel(); keyLabel();
     themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
     keyBtn.onclick = function () { setApiOpen(!getApiOpen()); home(); };
     app.appendChild(mast);
-    if (getApiOpen()) renderApiKey();
+    // Settings panel (masthead ⚙): connect Claude + back up / restore your progress.
+    if (getApiOpen()) {
+      app.appendChild(h('<div class="sec-label">Settings</div>'));
+      renderApiKey();
+      renderBackup();
+    }
 
-    // Compact, glanceable progress; expands to the full mastery map + stats + badges + backup.
+    // Compact, glanceable progress; expands to the full mastery map + stats + badges.
     renderProgressStrip();
-    if (getProgressOpen()) { renderMastery(); renderStats(); renderBadges(); renderBackup(); }
+    if (getProgressOpen()) { renderMastery(); renderStats(); renderBadges(); }
 
     // Three doors keep the home page to one focused area at a time.
     var door = getHomeDoor();
