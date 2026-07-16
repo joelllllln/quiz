@@ -1,9 +1,9 @@
 DataSense — Every Definition
 ============================
-Total definitions: 770
+Total definitions: 809
 
 
-## Core Definitions  (20)
+## Core Definitions  (44)
 ------------------
 
 Algorithm vs model
@@ -70,6 +70,102 @@ Learning rate
 
 One-hot encoding
   One-hot encoding represents a category as binary indicator columns with a single 1.
+
+Inductive bias
+  The assumptions a learner builds in so it can generalise beyond the examples it has
+  seen; without some bias, no generalisation is possible.
+
+Bootstrap sampling
+  Repeated sampling with replacement from a dataset to form new datasets of equal size; it
+  underpins bagging and bootstrap confidence intervals.
+
+Validation set
+  Held-out data used to compare models and tune hyperparameters, kept distinct from the
+  test set that gives the final performance estimate.
+
+Transfer learning
+  Taking knowledge a model learned on one (often large) task and reusing it to jump-start
+  learning on a related task that has less data.
+
+Fine-tuning
+  Taking a pretrained model and training it further on a smaller task-specific dataset so
+  its weights specialise to the new task.
+
+Semi-supervised learning
+  A middle ground between supervised and unsupervised learning: a small labelled set and a
+  large unlabelled set are used together.
+
+Self-supervised learning
+  Learning that manufactures its own supervision from unlabelled data, for example by
+  hiding part of the input and predicting it.
+
+Online learning
+  Learning that updates the model one example (or small batch) at a time as data streams
+  in, rather than retraining on everything at once.
+
+Batch learning
+  Training the model on the entire dataset in one offline pass; to learn from new data,
+  the model is retrained from scratch.
+
+Concept drift
+  When the statistical relationship between inputs and target changes after deployment, so
+  a once-accurate model steadily loses accuracy.
+
+Model monitoring
+  Continuously observing a deployed model's inputs, outputs and accuracy so that drift or
+  failures are detected before they cause harm.
+
+Covariance
+  A measure of how two variables vary together: positive when they rise together, negative
+  when one rises as the other falls; its magnitude depends on their units.
+
+Correlation coefficient
+  A standardised measure of association: covariance divided by the product of the two
+  standard deviations, always between -1 and +1.
+
+Pearson correlation
+  The standard correlation coefficient r, measuring how closely two continuous variables
+  follow a straight-line relationship.
+
+Spearman correlation
+  A rank-based correlation: Pearson's coefficient computed on the ranked data, so it
+  detects any monotonic (not only linear) relationship.
+
+P-value
+  The probability, assuming the null hypothesis holds, of observing a result at least as
+  extreme as the one obtained; small p-values cast doubt on the null.
+
+Confidence interval
+  An interval estimate whose construction, repeated over many samples, would contain the
+  true parameter a stated percentage (e.g. 95%) of the time.
+
+Type I error
+  Rejecting a true null hypothesis, i.e. a false positive; its probability is the
+  significance level alpha.
+
+Type II error
+  Failing to reject a false null hypothesis, i.e. a false negative; its probability is
+  beta, and 1 minus beta is the test's power.
+
+Null hypothesis
+  The baseline hypothesis of no effect or no difference; a test looks for evidence to
+  reject it in favour of the alternative.
+
+Statistical significance
+  A result is statistically significant when its p-value falls below a preset threshold,
+  so it is unlikely to arise under the null hypothesis alone.
+
+Normal distribution
+  The Gaussian 'bell curve': a symmetric continuous distribution fully described by its
+  mean (centre) and standard deviation (spread).
+
+Central limit theorem
+  The distribution of the sample mean approaches a normal distribution as sample size
+  increases, whatever the population's shape (given finite variance).
+
+A/B testing
+  An online controlled experiment: users are randomly assigned to variant A or B and an
+  outcome is compared to estimate the causal effect of the change.
 
 
 ## k-Nearest Neighbours  (54)
@@ -288,7 +384,7 @@ User-based collaborative filtering = KNN
   ANN at scale. You now know the algorithm behind the "For You" tab.
 
 
-## Logistic Regression  (34)
+## Logistic Regression  (38)
 ---------------------
 
 Weighted score
@@ -393,6 +489,22 @@ Likelihood-ratio test
   Compares nested models by twice the log-likelihood difference, referred to a chi-square
   distribution to test added terms.
 
+Cost function
+  The single scalar objective a learning algorithm tries to minimise over the training
+  data, typically the average loss plus any regularisation.
+
+Stochastic gradient descent
+  Gradient descent that updates the weights using the gradient from a single example (or a
+  few) at a time, giving noisy but fast, frequent updates.
+
+Mini-batch gradient descent
+  Gradient descent that updates weights from small batches (e.g. 32 to 256 examples): the
+  practical middle ground between full-batch and single-example SGD.
+
+Batch gradient descent
+  Gradient descent that computes the gradient over the entire training set and makes one
+  update per full pass: stable but slow on large data.
+
 Softmax (multinomial logistic regression)
   sklearn's LogisticRegression does this automatically for 3+ classes. Everything you know
   about the binary case carries over, slice by slice.
@@ -419,7 +531,7 @@ Elastic net
   correlated.
 
 
-## Naive Bayes  (34)
+## Naive Bayes  (35)
 -------------
 
 Conditional probability
@@ -540,6 +652,11 @@ Empirical Bayes
 Bayesian network
   A directed acyclic graph whose edges encode conditional dependencies; Naive Bayes is its
   simplest star-shaped special case.
+
+Expectation-maximisation
+  An iterative algorithm for fitting models with hidden variables: an E-step estimates the
+  latent values, an M-step re-estimates parameters to maximise the expected likelihood,
+  repeating to convergence.
 
 The zero-frequency problem
   Any word absent from one class's training data becomes an absolute veto. The fix —
@@ -2239,7 +2356,7 @@ Metric distortion
   a meaningful original distance.
 
 
-## Feature Engineering  (32)
+## Feature Engineering  (39)
 ---------------------
 
 Feature engineering
@@ -2330,6 +2447,34 @@ Outlier clipping (winsorising)
   Winsorising limits the influence of outliers by capping values below the lower and above
   the upper percentile at those thresholds, keeping the rows while reducing the pull of
   extreme values on the model.
+
+Label encoding
+  Label encoding assigns each distinct category an integer (red to 0, green to 1, blue to
+  2), producing a single numeric column.
+
+Outlier
+  An outlier is a data point far from the majority; it can distort means, variances, and
+  models sensitive to extreme values.
+
+Tokenisation
+  Tokenisation breaks raw text into units (words or subword pieces) - the first step that
+  turns a string into features.
+
+N-gram
+  An n-gram is a run of n consecutive tokens (bigrams are pairs); used as features, they
+  capture short-range word order.
+
+Stemming
+  Stemming strips affixes to reach a rough root (studies to studi); it's fast but the stem
+  may not be a real word.
+
+Lemmatisation
+  Lemmatisation maps a word to its base dictionary form (its lemma) using vocabulary and
+  morphology: 'better' to 'good', 'ran' to 'run'.
+
+Word embedding
+  A word embedding is a dense, learned vector where semantically similar words sit close
+  together in the vector space.
 
 Binning
   Discretizes a number into ranges; exposes stage effects and curbs outliers, losing fine
@@ -2710,7 +2855,7 @@ Second-order boosting
   Newton-style steps give sharper splits and faster convergence.
 
 
-## Interpretability & Explainability  (19)
+## Interpretability & Explainability  (21)
 -----------------------------------
 
 SHAP values
@@ -2793,8 +2938,16 @@ Integrated gradients
   the model's gradients along a straight path from a reference baseline to the actual
   input.
 
+Shapley value
+  From cooperative game theory, a Shapley value splits a prediction among features as each
+  feature's average marginal contribution over all orderings.
 
-## Class Imbalance  (20)
+Model interpretability
+  Interpretability is the degree to which a human can understand the cause of a model's
+  decisions.
+
+
+## Class Imbalance  (21)
 -----------------
 
 Class imbalance
@@ -2878,6 +3031,10 @@ Edited Nearest Neighbours (ENN)
 NearMiss undersampling
   A family of heuristic undersampling methods that select majority examples based on their
   distance to minority examples, keeping those nearest the minority class.
+
+Anomaly detection
+  Anomaly (outlier) detection treats the rare class as deviations from a learned 'normal',
+  useful when positives are scarce or ill-defined.
 
 
 ## Extra Evaluation Metrics  (20)
