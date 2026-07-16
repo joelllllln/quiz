@@ -1503,6 +1503,7 @@
       '<header class="masthead">' +
         '<div class="mast-rules"></div>' +
         '<div class="mast-eyebrow"><span>A field manual for practical machine learning</span><span class="mast-tools">' +
+          '<button class="mt-btn mt-fav" type="button" title="Your saved favourites"></button>' +
           '<button class="mt-btn mt-key" type="button" title="Connect Claude"></button>' +
           '<button class="mt-btn mt-theme" type="button" title="Theme"></button>' +
           '<button class="mt-btn mt-font" type="button" title="Text size"></button></span></div>' +
@@ -1510,14 +1511,20 @@
         '<p class="mast-sub"><b>Machine learning</b>, learned by doing: ' + totalExercises() + ' exercises across supervised classification, clustering and dimensionality reduction. Miss one and you get the answer in plain English, a lab bench, a quick check, and a second attempt.</p>' +
         '<div class="mast-foot">Multiple choice · questions & answers shuffle on every sitting · progress kept in this browser</div>' +
       '</header>');
-    var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font'), keyBtn = mast.querySelector('.mt-key');
+    var themeBtn = mast.querySelector('.mt-theme'), fontBtn = mast.querySelector('.mt-font'), keyBtn = mast.querySelector('.mt-key'), favBtnM = mast.querySelector('.mt-fav');
     function themeLabel() { var t = getTheme(); themeBtn.textContent = t === 'auto' ? '◐ auto' : (t === 'light' ? '☀ light' : '☾ dark'); }
     function fontLabel() { fontBtn.textContent = ['A', 'A+', 'A++'][getFont()]; }
     function keyLabel() { keyBtn.textContent = '⚙ Settings'; keyBtn.classList.toggle('mt-on', !!apiKey()); }
-    themeLabel(); fontLabel(); keyLabel();
+    function favLabelM() { var n = favCount(); favBtnM.textContent = n ? '★ Favourites · ' + n : '☆ Favourites'; favBtnM.classList.toggle('mt-on', n > 0); }
+    themeLabel(); fontLabel(); keyLabel(); favLabelM();
     themeBtn.onclick = function () { setTheme(getTheme() === 'auto' ? 'light' : getTheme() === 'light' ? 'dark' : 'auto'); themeLabel(); };
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
     keyBtn.onclick = openSettings;
+    favBtnM.onclick = function () {
+      if (favCount()) { startFavourites(); return; }
+      favBtnM.textContent = 'Tap ☆ on any question first';
+      setTimeout(favLabelM, 1700);
+    };
     app.appendChild(mast);
 
     // Three tabs: Study (learn + practice, one picker), Reference (look things up), Dashboard (all metrics).
@@ -1893,13 +1900,12 @@
 
     function renderFavourites() {
       var n = favCount();
-      if (!n) return;
       var fav = h('<section class="fav-card">' +
-        '<div class="fav-info"><span class="fav-star">★</span>' +
+        '<div class="fav-info"><span class="fav-star">' + (n ? '★' : '☆') + '</span>' +
         '<div><div class="fav-title">Favourites</div>' +
-        '<div class="fav-sub">' + n + ' saved question' + (n === 1 ? '' : 's') + '</div></div></div>' +
-        '<button class="btn ghost fav-go">Review →</button></section>');
-      fav.querySelector('.fav-go').onclick = startFavourites;
+        '<div class="fav-sub">' + (n ? n + ' saved question' + (n === 1 ? '' : 's') : 'Tap the ☆ on any question to save it here') + '</div></div></div>' +
+        '<button class="btn ghost fav-go"' + (n ? '' : ' disabled') + '>Review →</button></section>');
+      if (n) fav.querySelector('.fav-go').onclick = startFavourites;
       app.appendChild(fav);
     }
 
