@@ -482,6 +482,12 @@
     if (!g) return false;
     if (g === t) return true;
     if (t.length >= 6 && editDist(g, t) <= (t.length >= 10 ? 2 : 1)) return true;
+    // a parenthetical is a qualifier, not part of the term: accept "recall" for "Recall (sensitivity)"
+    var main = normkey(target.replace(/\(.*?\)/g, ' '));
+    if (main && main !== t) {
+      if (g === main) return true;
+      if (main.length >= 6 && editDist(g, main) <= (main.length >= 10 ? 2 : 1)) return true;
+    }
     // accept "k nearest neighbours" for "k-Nearest Neighbours (k-NN)" style targets
     var words = target.toLowerCase().replace(/\(.*?\)/g, '').split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2; });
     if (words.length >= 2 && words.every(function (w) { return g.indexOf(normkey(w)) >= 0; })) return true;

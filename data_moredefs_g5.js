@@ -243,7 +243,7 @@
 
   def("hier1",
     "How does agglomerative clustering begin?",
-    "With every point as its own singleton cluster.",
+    "With every point placed in its own singleton cluster, so the first step merges the two closest points into a pair.",
     ["With all of the points already placed together inside one single all-encompassing cluster that is then split apart repeatedly.",
      "With k randomly chosen points serving as the initial cluster centres, exactly as the k-means algorithm does at its start.",
      "With the two closest points already merged, so the first proper step joins a third point onto that initial pair of points.",
@@ -281,7 +281,7 @@
 
   def("dbscan1",
     "What is a region query (neighbourhood query) in DBSCAN?",
-    "Finding all points within eps of a given point.",
+    "Finding all of the points that lie within distance eps of a given point — the neighbourhood lookup DBSCAN runs for every point.",
     ["Finding the single nearest neighbour of a point so that its distance can be plotted on the sorted k-distance graph.",
      "Counting how many clusters currently contain at least one point lying within the eps radius of the query point given.",
      "Retrieving the points that are density-reachable from a point through an unbroken chain of core points in the cluster.",

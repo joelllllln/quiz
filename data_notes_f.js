@@ -158,7 +158,7 @@
       { h: "Selection vs extraction", items: [
         { t: "Feature selection", d: "Keep a subset of the original columns. Interpretable, since surviving features keep their real-world meaning." },
         { t: "Feature extraction", d: "PCA builds new combined axes from all features. More compact, but the new axes are blends, harder to name." },
-        { t: "The trade-off", d: "Extraction usually captures more variance in fewer dimensions; selection preserves interpretability." }
+        { t: "Selection vs extraction trade-off", d: "Extraction usually captures more variance in fewer dimensions; selection preserves interpretability." }
       ] },
       { h: "Anomaly detection & scaling up", items: [
         { t: "Reconstruction error", d: "Compress with few components, rebuild, and measure the damage. Normal points survive; anomalies don't.", f: "error = ‖original − reconstruction‖" },

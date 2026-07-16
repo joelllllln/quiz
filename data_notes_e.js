@@ -31,7 +31,7 @@
       { h: "F1 score", items: [
         { t: "What it is", d: "The harmonic mean of precision and recall — one number that stays low unless BOTH are decent.", f: "F1 = 2·P·R / (P + R)" },
         { t: "Why harmonic", d: "The harmonic mean is dragged down by the smaller value, so it punishes lopsided scores the arithmetic mean would hide.", f: "2ab/(a+b) ≤ (a+b)/2" },
-        { t: "The trade-off", d: "Precision and recall pull against each other at a fixed threshold; F1 rewards a balance, but only you know if balance is what the task wants." }
+        { t: "The precision–recall trade-off", d: "Precision and recall pull against each other at a fixed threshold; F1 rewards a balance, but only you know if balance is what the task wants." }
       ] },
       { h: "Ranking metrics: ROC-AUC & PR-AUC", items: [
         { t: "The ROC curve", d: "Plots catch-rate against false-alarm-rate at every threshold, tracing the whole family of operating points.", f: "y = TP/(TP+FN), x = FP/(FP+TN)" },
@@ -65,7 +65,7 @@
       ] },
       { h: "Measuring honestly", items: [
         { t: "Holdout set", d: "Data hidden from training, used to compare settings fairly. It stands in for the fresh data the model will meet in production." },
-        { t: "Cross-validation", d: "Rotate which fold is held out (5 or 10 folds), score each, average. Removes the luck of a single split." },
+        { t: "Cross-validation (fold rotation)", d: "Rotate which fold is held out (5 or 10 folds), score each, average. Removes the luck of a single split." },
         { t: "Keep a final test set", d: "Tuning on one validation set slowly overfits it. A third, untouched test set gives the one number no decision ever influenced." },
         { t: "Data leakage", d: "Test or future information sneaking into training — e.g. scaling before splitting. Scores look glorious, then evaporate in production." }
       ] },
