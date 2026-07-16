@@ -1,0 +1,562 @@
+/* More definitions: evaluation metrics, model performance / overfitting, extra evaluation
+   metrics, and validation. Standard glossary terms, each DEFS-tagged with a reveal so it
+   flows into the Definitions filter, flashcards and read+recall. Loads before app.js. */
+(function () {
+  var Q = (window.QUESTIONS = window.QUESTIONS || {});
+  var D = (window.DEFS = window.DEFS || {});
+  function def(qk, q, correct, distractors, name, text, explain, simple) {
+    (Q[qk] = Q[qk] || []).push({ q: q, choices: [correct].concat(distractors), explain: explain, simple: simple, widget: { reveal: { name: name, text: text } } });
+    D[q] = 1;
+  }
+
+  /* ---------- metrics: evaluation metrics (8) ---------- */
+
+  def("metrics1",
+    "What is the false-negative rate, or miss rate?",
+    "The fraction of actual positives the model misses",
+    ["The fraction of predicted positives that turn out to be actually negative cases",
+     "The fraction of actual negatives that the model incorrectly flags as positive",
+     "The fraction of correct positive predictions",
+     "How often the model changes its answer"],
+    "False-negative rate (miss rate)",
+    "FN / (TP + FN) — the proportion of true positives the classifier fails to detect. Equals 1 - recall.",
+    "The miss rate counts actual positives that were labelled negative, divided by all actual positives. It is the complement of recall (sensitivity), so a recall of 0.9 means a false-negative rate of 0.1.",
+    "Of the things that really were positive, how many did the model let slip through.");
+
+  def("metrics1",
+    "What is negative predictive value (NPV)?",
+    "Among negative predictions, the fraction that are truly negative",
+    ["Among all the actual negative cases, the fraction the model successfully labels negative",
+     "Among positive predictions, the fraction that turn out to be actually positive after review",
+     "The fraction of negatives out of the whole dataset",
+     "The rate at which negatives appear"],
+    "Negative predictive value (NPV)",
+    "TN / (TN + FN) — of everything predicted negative, the share that really is negative. The mirror image of precision.",
+    "NPV conditions on the model's negative predictions and asks how trustworthy a negative call is. It is precision for the negative class, and like precision it shifts as prevalence changes.",
+    "When the model says 'no', how often is it right.");
+
+  def("metrics1",
+    "What is the false discovery rate (FDR)?",
+    "Among positive predictions, the fraction that are wrong",
+    ["Among all the truly positive examples, the fraction the model failed to recover at all",
+     "The proportion of the negative predictions that were actually positive cases all along",
+     "The fraction of the data that is positive",
+     "One minus the model accuracy score"],
+    "False discovery rate (FDR)",
+    "FP / (TP + FP) = 1 - precision — of the cases flagged positive, the share that are false alarms.",
+    "FDR is the complement of precision, focusing on how many of your positive calls are mistakes. It is widely used in multiple-testing settings to control the expected proportion of false positives among discoveries.",
+    "Of the alarms the model raised, how many were false.");
+
+  def("metrics1",
+    "What is the F-beta score?",
+    "A weighted harmonic mean of precision and recall",
+    ["The arithmetic average of precision and recall taken over every class in the dataset",
+     "A curve tracing precision against recall as the decision threshold is swept along",
+     "Precision and recall simply multiplied together",
+     "The geometric mean of two error rates"],
+    "F-beta score (Fbeta)",
+    "Fbeta = (1+beta^2)*P*R / (beta^2*P + R). beta>1 weights recall more, beta<1 weights precision more; beta=1 gives F1.",
+    "The F-beta score generalises F1 by letting beta set how much more recall matters than precision. F2 favours recall, F0.5 favours precision, and F1 treats them equally.",
+    "Like F1, but you get to dial whether recall or precision counts for more.");
+
+  def("metrics1",
+    "What does prevalence mean in classification?",
+    "The proportion of positives in the population",
+    ["The proportion of cases the classifier predicts to be positive at a given threshold",
+     "The proportion of positive predictions that turn out to be correct after checking them",
+     "The number of true positives the model finds",
+     "How often the model changes its mind"],
+    "Prevalence (base rate)",
+    "(TP + FN) / N — the fraction of the sample that is actually positive, independent of any model.",
+    "Prevalence is a property of the data, not the classifier: it is the base rate of the positive class. Because precision and NPV depend on it, the same model shows different precision as prevalence shifts.",
+    "How common the positive class actually is in your data.");
+
+  def("metrics1",
+    "What is Youden's J statistic?",
+    "Sensitivity plus specificity minus one",
+    ["The threshold that maximises the harmonic mean of precision and recall together",
+     "The area enclosed between the ROC curve and the diagonal no-skill line across thresholds",
+     "The product of precision and recall values",
+     "The average of the true and false positive rates"],
+    "Youden's J statistic (informedness)",
+    "J = sensitivity + specificity - 1, ranging 0 to 1. Its maximum over thresholds picks a balanced operating point on the ROC curve.",
+    "Youden's J measures how far a classifier's ROC point sits above the chance diagonal. Choosing the threshold that maximises J gives a cut-off that balances catching positives against avoiding false alarms.",
+    "A single number for how much better than guessing a threshold is; pick the threshold that makes it biggest.");
+
+  def("metrics1",
+    "What is the diagnostic odds ratio?",
+    "The ratio of the odds of a positive result in cases to controls",
+    ["The difference between the true-positive rate and the false-positive rate at a threshold",
+     "The proportion of correctly classified cases among all of the tested individuals overall",
+     "The product of sensitivity and specificity",
+     "The ratio of precision to recall"],
+    "Diagnostic odds ratio (DOR)",
+    "(TP*TN) / (FP*FN) — how much higher the odds of testing positive are among true cases than among non-cases. Higher is better; 1 means useless.",
+    "The DOR combines sensitivity and specificity into one number that is independent of prevalence. A value of 1 means the test cannot distinguish the classes, while large values indicate strong discrimination.",
+    "One number for how well a test separates the sick from the healthy, regardless of how common the disease is.");
+
+  def("metrics1",
+    "What is the Jaccard score in classification?",
+    "The intersection over union of predicted and true positives",
+    ["The harmonic mean of precision and recall computed on the positive class of interest",
+     "The fraction of all labels, positive and negative, that were predicted correctly overall",
+     "The overlap of two clusters divided by their sum",
+     "The count of shared members between two sets"],
+    "Jaccard score (IoU)",
+    "|A intersect B| / |A union B| = TP / (TP + FP + FN) — the overlap between predicted-positive and actual-positive sets. Also called the critical success index.",
+    "The Jaccard index measures how much the predicted positive set and the true positive set coincide, penalising both false positives and false negatives in the union. It is stricter than F1, which uses a harmonic mean instead of a strict overlap ratio.",
+    "How much the model's 'yes' set overlaps with the real 'yes' set.");
+
+  /* ---------- perf: model performance / overfitting (10) ---------- */
+
+  def("perf1",
+    "What is bias in the bias-variance decomposition?",
+    "Error from a model too simple to capture the pattern",
+    ["Error from a model so sensitive that it changes a lot with every training sample drawn",
+     "The irreducible noise that no model can ever remove from the target being predicted",
+     "The gap between training and test accuracy scores",
+     "Error caused by a few mislabelled training rows"],
+    "Bias (in bias-variance)",
+    "The systematic error from wrong or overly simple assumptions; high bias underfits, missing real structure in the data.",
+    "Bias is the part of expected error that comes from a model's inability to represent the true relationship, no matter how much data it sees. High-bias models underfit, doing poorly on both training and test sets.",
+    "Error because the model is too simple to see what's really going on.");
+
+  def("perf1",
+    "What is variance in the bias-variance decomposition?",
+    "Error from a model too sensitive to the training data",
+    ["Error from assumptions so rigid the model cannot fit the underlying signal at all well",
+     "The portion of error attributable to random noise present in the measured labels themselves",
+     "The difference between predicted and average label values",
+     "How far the predictions sit from zero"],
+    "Variance (in bias-variance)",
+    "How much a model's fit swings with different training samples; high variance overfits, memorising noise. Reduced by more data or regularisation.",
+    "Variance captures how sensitive the learned model is to the particular training set drawn. High-variance models fit training data well but generalise poorly, because they adapt to noise that differs between samples.",
+    "Error because the model reacts too much to the exact data it was trained on.");
+
+  def("perf1",
+    "What is model capacity?",
+    "A model's ability to fit a wide range of functions",
+    ["The number of training examples a model must see before it finally stops improving",
+     "The amount of memory a trained model occupies when it is saved to disk for serving",
+     "The speed at which a model produces a single prediction",
+     "The count of output classes a model supports"],
+    "Model capacity",
+    "How rich or flexible the set of functions a model can represent is. Too little capacity underfits; too much invites overfitting.",
+    "Capacity describes the range of relationships a model family can express, roughly its flexibility. Low-capacity models underfit; high-capacity models fit training data closely but risk overfitting unless controlled.",
+    "How complicated a pattern the model is even capable of learning.");
+
+  def("perf1",
+    "What is a validation curve?",
+    "A plot of score versus one hyperparameter value",
+    ["A plot of training and validation score against the number of training examples used",
+     "A curve showing how precision trades off against recall as the threshold is varied",
+     "A plot of loss against the training iteration",
+     "A graph of accuracy versus raw model size"],
+    "Validation curve",
+    "Train and validation score plotted as a single hyperparameter is varied, revealing under- vs over-fitting regions and the sweet spot.",
+    "A validation curve sweeps one hyperparameter (like tree depth or regularisation strength) and plots training and validation scores against it. The gap and shape show where the model underfits, overfits, or generalises best.",
+    "A graph that shows how one setting changes performance, so you can pick the best value.");
+
+  def("perf1",
+    "What is irreducible error?",
+    "Error no model can remove, caused by noise in the data",
+    ["Error from a model that is too simple to capture the real relationship in the data",
+     "Error from a model that reacts too strongly to its own particular training sample set",
+     "The gap between training and validation performance",
+     "Error that shrinks steadily as you add more data"],
+    "Irreducible error (noise floor)",
+    "The Bayes-error component of expected loss caused by inherent randomness or unmeasured factors; it bounds how good any model can be.",
+    "Total expected error decomposes into bias, variance and irreducible error. The last comes from noise and missing information in the data itself, so it sets a floor that no amount of modelling or data can beat.",
+    "The unavoidable error baked into noisy data that no model can ever fix.");
+
+  def("perf1",
+    "What is double descent?",
+    "Test error that falls, rises, then falls again with size",
+    ["Test error that keeps rising steadily as a model is made larger and more flexible over time",
+     "Training error that plateaus while the validation error grows without any bound at all",
+     "A learning rate that decreases in two separate stages",
+     "Two dips in the loss during a single epoch"],
+    "Double descent",
+    "The phenomenon where test error first drops, worsens near the interpolation threshold, then improves again as capacity grows past it - defying the classic U-shape.",
+    "Classic theory predicts a U-shaped test-error curve versus capacity. Double descent shows a second descent: past the point where the model exactly fits the training data, adding capacity can lower test error again, seen in large modern models.",
+    "Making a model bigger can hurt, then unexpectedly help again past a certain point.");
+
+  def("perf1",
+    "What does a high-variance (overfitting) signature look like?",
+    "A large gap between a high train and a low test score",
+    ["Both the training and the validation scores are low and sit close together near each other",
+     "The validation score keeps climbing steadily as more and more training data is added in",
+     "Training and test scores are both very high",
+     "The loss oscillates every few steps"],
+    "High-variance signature (overfitting)",
+    "Near-perfect training score but much lower validation score - a big generalisation gap. Cure: more data, a simpler model, or regularisation.",
+    "When a model overfits, it fits training data far better than held-out data, producing a wide gap between the two scores. Recognising this pattern points to remedies like regularisation, more data, or reduced capacity.",
+    "The model aces training but flops on new data - the classic overfitting look.");
+
+  def("perf1",
+    "What does a high-bias (underfitting) signature look like?",
+    "Both train and test scores are low, sitting together",
+    ["The training score is very high while the validation score lags far behind it every time",
+     "Adding more training examples steadily widens the gap between the two reported scores",
+     "The model scores perfectly on every training row",
+     "Predictions vary wildly between runs"],
+    "High-bias signature (underfitting)",
+    "Low training AND low validation scores that sit close together - the model is too simple. Cure: more capacity or better features, not more data.",
+    "An underfitting model performs poorly even on the training set, so training and validation scores are both low and near each other. More data won't help; you need a richer model or more informative features.",
+    "The model does badly everywhere, even on data it has seen - it's too simple.");
+
+  def("perf1",
+    "What is the VC dimension?",
+    "The largest point set a model can always shatter",
+    ["The number of parameters that a model stores after it has finished training fully on data",
+     "The count of training points needed before the validation error stops falling further",
+     "A measure of how fast a model makes predictions",
+     "The depth of the deepest tree in a forest"],
+    "VC dimension",
+    "The Vapnik-Chervonenkis dimension: the size of the largest point set a classifier family can label in every possible way (shatter). A formal capacity measure.",
+    "VC dimension quantifies a model class's capacity as the maximum number of points it can classify in all possible label arrangements. Higher VC dimension means more flexibility and, without enough data, a greater overfitting risk.",
+    "A formal number for how flexible a model family is.");
+
+  def("perf1",
+    "What is data augmentation?",
+    "Expanding training data with modified copies",
+    ["Removing noisy or mislabelled rows from the training set before fitting a model on it",
+     "Adding extra hand-crafted columns derived from the existing input features of the data",
+     "Collecting a completely new labelled dataset",
+     "Splitting the data into more folds"],
+    "Data augmentation",
+    "Creating additional training examples by applying label-preserving transformations (flips, crops, noise, synonyms) to existing data, reducing overfitting.",
+    "Data augmentation enlarges the effective training set with realistic, label-preserving variations of existing examples. This exposes the model to more diversity, acting as a regulariser that improves generalisation for images and text.",
+    "Make more training data by tweaking the examples you already have.");
+
+  /* ---------- evalx: extra evaluation metrics (14) ---------- */
+
+  def("evalx",
+    "What is the Gini coefficient in classification?",
+    "Twice the ROC-AUC minus one",
+    ["The area under the precision-recall curve computed for the positive class of interest",
+     "The fraction of all comparable pairs the model happens to order correctly by score",
+     "The overlap between predicted and actual positive sets",
+     "The slope of the calibration line"],
+    "Gini coefficient (from AUC)",
+    "Gini = 2*AUC - 1, rescaling ROC-AUC so 0 is no-skill and 1 is perfect. Common in credit scoring.",
+    "The Gini coefficient is a linear rescaling of ROC-AUC widely used in finance. Because AUC ranges from 0.5 (chance) to 1 (perfect), Gini stretches this to 0-1, making no-skill models score zero.",
+    "A rescaled AUC used in credit scoring; 0 is useless, 1 is perfect.");
+
+  def("evalx",
+    "What is the concordance index (c-index)?",
+    "The fraction of comparable pairs ranked in the correct order",
+    ["The area enclosed between the precision-recall curve and the horizontal baseline line",
+     "The correlation between predicted probabilities and the observed binary outcomes overall",
+     "The overlap of the predicted and true positive sets",
+     "The product of sensitivity and specificity"],
+    "Concordance index (c-index)",
+    "The probability that, for a random pair with different outcomes, the model scores the true positive higher. For binary labels it equals ROC-AUC.",
+    "The c-index measures ranking quality: over all comparable pairs, how often the model orders them correctly by score. It generalises AUC to survival analysis, where it handles censored times.",
+    "How often the model correctly says which of two cases is riskier.");
+
+  def("evalx",
+    "What is the G-mean metric?",
+    "The geometric mean of sensitivity and specificity",
+    ["The harmonic mean of precision and recall computed on the positive class only each time",
+     "The arithmetic average of the true-positive and the true-negative prediction counts",
+     "The product of the precision and recall values",
+     "The square of the balanced accuracy score"],
+    "G-mean (geometric mean)",
+    "sqrt(sensitivity * specificity) - high only when BOTH classes are handled well. Popular for imbalanced problems.",
+    "The G-mean multiplies the true-positive and true-negative rates and takes the square root, so it collapses toward zero if either class is neglected. This makes it a strong single metric for imbalanced classification.",
+    "One score that stays high only if the model does well on both classes.");
+
+  def("evalx",
+    "What is top-k accuracy?",
+    "A prediction counts as right if the true class is in the top k",
+    ["The fraction of the k highest-scored predictions that turn out to be truly correct ones",
+     "Accuracy computed only over the k classes that appear most frequently in the dataset",
+     "Accuracy measured after keeping the k best features",
+     "The mean accuracy taken across k folds"],
+    "Top-k accuracy",
+    "Counts a prediction correct if the true label is among the model's k highest-probability guesses. Top-1 is ordinary accuracy.",
+    "Top-k accuracy relaxes the correctness rule so a hit is scored when any of the k most probable predicted classes is the true label. It is standard for many-class problems like ImageNet, where top-5 is common.",
+    "The model is right if the correct answer is in its top few guesses.");
+
+  def("evalx",
+    "What does lift measure in a scored model?",
+    "How many times better than random a segment is",
+    ["The cumulative fraction of all positives captured within the top-scoring portion of data",
+     "The increase in accuracy obtained by adding one more feature to the model's input columns",
+     "The rise in recall when the threshold is lowered",
+     "The ratio of precision to prevalence"],
+    "Lift",
+    "The ratio of the positive rate within a selected (usually top-scored) group to the overall positive rate. Lift of 3 means that group is 3x richer in positives.",
+    "Lift measures how much better than random selection a model's chosen segment is at concentrating positives. Marketers use lift charts to decide how deep to target a scored list before returns fade to baseline.",
+    "How much more likely the targeted group is to be positive than picking at random.");
+
+  def("evalx",
+    "What is a cumulative gain curve?",
+    "Positives captured versus the fraction of ranked cases",
+    ["Precision plotted against recall as the classification threshold is gradually lowered along",
+     "True-positive rate plotted against false-positive rate across every possible threshold value",
+     "Accuracy plotted against the number of features",
+     "Loss plotted against the training epoch count"],
+    "Cumulative gain curve",
+    "Plots the share of all positives captured against the fraction of the population contacted, when cases are ranked by score. A diagonal is random.",
+    "The cumulative gains chart shows, as you work down a score-ranked list, what fraction of all positives you have captured by each depth. The further it bows above the diagonal, the better the model concentrates positives early.",
+    "If you go after the highest-scored cases first, how fast do you scoop up all the positives.");
+
+  def("evalx",
+    "What is the Kolmogorov-Smirnov (KS) statistic?",
+    "The largest gap between two cumulative rate curves",
+    ["The area lying between the receiver operating characteristic curve and the diagonal line",
+     "The maximum vertical distance between the precision and the recall curves over thresholds",
+     "The difference between sensitivity and specificity",
+     "The correlation of scores with the labels"],
+    "Kolmogorov-Smirnov (KS) statistic",
+    "The maximum separation between the cumulative distributions of scores for positives and negatives. Larger KS means better class separation.",
+    "The KS statistic finds the threshold where the true-positive and false-positive cumulative curves are farthest apart, summarising how well scores separate the two classes. It is widely used in credit risk scoring.",
+    "How far apart the score distributions of the two classes get - bigger is better separation.");
+
+  def("evalx",
+    "What is precision at k (P@k)?",
+    "The fraction of the top k items that are relevant",
+    ["The fraction of all relevant items that appear somewhere within the top k results returned",
+     "Accuracy measured only over the k most confident predictions that the model makes overall",
+     "Precision averaged across k cross-validation folds",
+     "The number of relevant items in position k"],
+    "Precision at k (P@k)",
+    "Of the top k ranked results, the proportion that are actually relevant. A core ranking and recommendation metric.",
+    "Precision at k evaluates only the head of a ranked list, reporting what share of the first k items are relevant. It matches settings like search or recommendation where users see just the top few results.",
+    "Out of the first k things the model shows, how many are actually good.");
+
+  def("evalx",
+    "What is mean reciprocal rank (MRR)?",
+    "The average of one over the rank of the first correct hit",
+    ["The average fraction of relevant items found within the top-scoring k returned results",
+     "The mean position at which the first relevant result appears across all of the queries",
+     "The average precision over every query in the set",
+     "The reciprocal of the mean rank value"],
+    "Mean reciprocal rank (MRR)",
+    "Average of 1/rank of the first relevant result across queries. Rewards putting a correct answer near the top.",
+    "For each query, MRR takes the reciprocal of the rank of the first relevant item (1 if it is first, 1/2 if second, and so on) and averages over queries. It suits tasks where only the first correct hit matters.",
+    "How high up the first right answer usually appears, averaged over queries.");
+
+  def("evalx",
+    "What is normalized discounted cumulative gain (NDCG)?",
+    "Ranking quality that rewards relevant items placed high",
+    ["The fraction of all relevant documents that are retrieved within the top k positions listed",
+     "The average of the reciprocal ranks of the first relevant item across all of the queries",
+     "The overlap between the retrieved and relevant sets",
+     "Precision measured at every rank position"],
+    "Normalized discounted cumulative gain (NDCG)",
+    "Sums graded relevance discounted by position, then normalises by the ideal ordering (0-1). Handles multi-level relevance and rank order.",
+    "NDCG discounts each item's graded relevance by a logarithm of its rank, so relevant items ranked higher contribute more, then divides by the best possible arrangement's score. It is the standard metric for graded-relevance ranking.",
+    "A ranking score that gives more credit for putting the most relevant results at the very top.");
+
+  def("evalx",
+    "What is mean average precision (mAP)?",
+    "The mean of the per-query average precision scores",
+    ["The area under the receiver operating characteristic curve averaged over all of the classes",
+     "The precision computed at the single rank position k for one particular query only each time",
+     "The average precision across cross-validation folds",
+     "Precision minus recall, then averaged out"],
+    "Mean average precision (mAP)",
+    "Average precision (area under the precision-recall curve) computed per query or class, then averaged. Standard in retrieval and object detection.",
+    "For each query, average precision summarises the precision-recall curve into one number; mAP averages these over all queries or classes. It rewards both retrieving relevant items and ranking them highly.",
+    "Average how well each query's results are ranked, then average those across all queries.");
+
+  def("evalx",
+    "What is Hamming loss in multi-label classification?",
+    "The fraction of individual labels predicted wrong",
+    ["The fraction of examples whose complete set of labels is predicted exactly correctly overall",
+     "The number of bit positions at which two equal-length binary strings actually differ from each other",
+     "The overlap between the predicted and true label sets",
+     "One minus the subset accuracy score"],
+    "Hamming loss (multi-label)",
+    "In multi-label classification, the average fraction of label slots that are wrong across all examples and labels. Lower is better.",
+    "Hamming loss counts every individual label prediction, averaging the rate of incorrect labels over all examples and all labels. Unlike subset accuracy it gives partial credit when only some of an example's labels are wrong.",
+    "In multi-label tasks, what share of the individual yes/no labels the model gets wrong.");
+
+  def("evalx",
+    "What is zero-one loss?",
+    "Loss of 1 for a wrong prediction and 0 for a right one",
+    ["A loss that grows with the squared distance between the prediction and the true value",
+     "A loss penalising confident wrong probabilities using the logarithm of the predicted score",
+     "The fraction of labels predicted correctly overall",
+     "A loss rescaled to lie between zero and one"],
+    "Zero-one loss",
+    "Assigns 1 to each misclassified example and 0 to each correct one; its average is the error rate (1 - accuracy).",
+    "Zero-one loss is the most basic classification loss, ignoring confidence and treating every mistake equally. Its expectation is the misclassification rate, but its non-smoothness makes it hard to optimise, so surrogates like log loss are used for training.",
+    "You lose a point for each wrong answer and nothing for a right one.");
+
+  def("evalx",
+    "What is the equal error rate (EER)?",
+    "The point where false accepts equal false rejects",
+    ["The threshold at which the precision and the recall become exactly equal to one another",
+     "The rate at which two independent classifiers happen to make the same mistake together",
+     "The average of the two per-class error rates",
+     "The error measured at the default 0.5 threshold"],
+    "Equal error rate (EER)",
+    "The operating point on a detection curve where the false-positive rate equals the false-negative rate. A single-number summary common in biometrics.",
+    "The EER is found by sweeping the threshold until the false acceptance and false rejection rates coincide. Lower EER means a better verification system, and it lets two biometric systems be compared with one number.",
+    "The setting where the two kinds of mistakes happen equally often; lower is better.");
+
+  /* ---------- valid: validation (16) ---------- */
+
+  /* k-fold, stratified k-fold and nested CV already live in the model-selection topic,
+     so they are intentionally not repeated here to keep each question text unique. */
+
+  def("valid",
+    "What is the holdout method?",
+    "Set aside one fixed slice of data for evaluation",
+    ["Rotate every one of the folds through the validation role and average the resulting scores",
+     "Repeatedly resample the data with replacement to estimate the model's overall performance",
+     "Leave one single example out on each pass",
+     "Evaluate the model on the training rows again"],
+    "Holdout method",
+    "A single train/test (or train/validation) split evaluated once. Fast but higher-variance than cross-validation, especially on small data.",
+    "The holdout approach reserves one portion of the data for evaluation and trains on the rest. It is quick and simple but its estimate depends heavily on which rows landed in the test slice, unlike averaged cross-validation.",
+    "Just split off one chunk of data to test on - quick but a bit noisy.");
+
+  def("valid",
+    "What is repeated k-fold cross-validation?",
+    "Run k-fold several times with new random shuffles",
+    ["Run a single k-fold pass once and simply report the average of the fold scores obtained",
+     "Nest one cross-validation loop inside another one for unbiased model selection each time",
+     "Repeat training on the very same fold many times",
+     "Increase k until the scores finally stabilise"],
+    "Repeated k-fold cross-validation",
+    "Perform k-fold CV multiple times with different random partitions, averaging across all runs to shrink the variance of the estimate.",
+    "Repeated k-fold reshuffles and re-splits the data before each round of k-fold, then averages every fold from every repeat. The extra runs reduce the influence of any one lucky or unlucky partition.",
+    "Do k-fold several times with fresh splits and average, for a steadier estimate.");
+
+  def("valid",
+    "What is shuffle-split (Monte Carlo) cross-validation?",
+    "Randomly resample a train/test split many times over",
+    ["Divide the data into k disjoint folds that each serve as the validation set exactly once",
+     "Preserve the time order while expanding the training window at every step going forward",
+     "Leave a single group of rows out on each pass",
+     "Split once and then never reshuffle it again"],
+    "Shuffle-split (Monte Carlo CV)",
+    "Repeatedly draw random train/test splits (folds may overlap across runs) and average. The test size and number of splits are set independently.",
+    "Shuffle-split, or Monte Carlo cross-validation, generates many independent random train/test partitions rather than disjoint folds. This decouples the number of iterations from the test-set size, unlike k-fold where they are linked.",
+    "Make many random train/test splits and average - the number of splits isn't tied to their size.");
+
+  def("valid",
+    "What are out-of-fold (OOF) predictions?",
+    "Predictions made only on each fold's held-out rows",
+    ["Predictions a model makes on the very rows that it was trained on during that same fold",
+     "Predictions averaged across every fold for the final untouched held-out test dataset only",
+     "Predictions made after retraining on all of the data",
+     "Predictions from just the single best fold"],
+    "Out-of-fold (OOF) predictions",
+    "For each CV fold, the prediction for its validation rows comes from a model that never saw them. Stitched together, they cover all data leak-free.",
+    "Out-of-fold predictions are the validation-fold outputs collected across all CV folds, so every example gets a prediction from a model trained without it. They power leak-free stacking and honest error analysis on the full dataset.",
+    "Each row gets predicted by a model that didn't train on it - safe for later stages.");
+
+  def("valid",
+    "What is data snooping?",
+    "Letting test-set information influence modelling choices",
+    ["Repeatedly resampling the training rows with replacement in order to estimate model error",
+     "Preserving the time order of observations when constructing the validation folds each time",
+     "Reserving one slice of data for a final test only",
+     "Shuffling the rows before splitting the data"],
+    "Data snooping (data dredging)",
+    "Using the test set - directly or indirectly through repeated peeking - to make modelling decisions, producing optimistic, non-reproducible results.",
+    "Data snooping happens when knowledge of the test data leaks into choices like feature selection, preprocessing, or repeated evaluation. Each peek biases the final estimate upward, so the reported performance won't hold on new data.",
+    "Peeking at the test data to make choices, which flatters your results dishonestly.");
+
+  def("valid",
+    "What does scikit-learn's cross_val_score do?",
+    "Runs cross-validation and returns the per-fold scores",
+    ["Splits the data one single time into a training half and a testing half for evaluation",
+     "Searches a whole grid of hyperparameter combinations using cross-validation internally",
+     "Trains one model on absolutely all of the rows",
+     "Shuffles a dataset in place before returning it"],
+    "cross_val_score",
+    "The scikit-learn convenience function that clones an estimator, runs k-fold CV, and returns the array of per-fold scores in one call.",
+    "cross_val_score takes an estimator, data, and a fold strategy, then trains and scores across folds automatically, returning one score per fold. Wrapping a Pipeline in it keeps preprocessing inside each fold, preventing leakage.",
+    "One scikit-learn call that does cross-validation for you and hands back the fold scores.");
+
+  def("valid",
+    "What is the purpose of a validation set?",
+    "To tune choices while keeping the test set untouched",
+    ["To provide the single final unbiased estimate of the model's true generalisation performance",
+     "To supply the rows on which the model's parameters are directly fitted during training itself",
+     "To collect fresh data gathered after deployment",
+     "To be used only for scaling the input features"],
+    "Validation set (purpose)",
+    "A held-out slice used during development to compare models and tune hyperparameters, so the test set stays untouched for one honest final score.",
+    "The validation set guides model and hyperparameter choices without contaminating the test set. Because you optimise against it, validation scores are slightly optimistic, which is why a separate untouched test set gives the final estimate.",
+    "The data you use to pick settings, kept separate from the test data you judge with once.");
+
+  def("valid",
+    "What makes a pipeline leakage-safe in cross-validation?",
+    "Fitting all preprocessing inside each training fold",
+    ["Fitting the scaler on the whole dataset before splitting it into folds for the validation",
+     "Selecting the features using the full data first and then running cross-validation afterwards",
+     "Training the model directly on the test set rows",
+     "Scaling the target column instead of the features"],
+    "Leakage-safe pipeline",
+    "Bundling preprocessing and model into one Pipeline so every transform is fit only on the training portion of each fold - no test statistics leak in.",
+    "Wrapping steps like scaling, imputation, and feature selection in a Pipeline ensures they are re-fit within each CV fold's training data only. This stops information from validation rows leaking into preprocessing and inflating scores.",
+    "Put preprocessing and model together so each fold only learns from its own training rows.");
+
+  def("valid",
+    "What is purged cross-validation?",
+    "CV that drops train rows overlapping the test window",
+    ["CV that keeps the class proportions of each fold equal to the full dataset's class balance",
+     "CV that rotates every one of the folds through the validation role and averages the scores",
+     "CV that removes the outliers before splitting data",
+     "CV simply run twice with two different seeds"],
+    "Purged cross-validation",
+    "For time-dependent data, removes (purges) training samples whose information window overlaps the validation set, and adds an embargo gap to prevent leakage.",
+    "Purged CV, common in finance, deletes training examples that overlap in time with the test fold and embargoes a buffer after it. This stops look-ahead leakage when labels or features span overlapping time windows.",
+    "Time-aware cross-validation that throws out training rows too close in time to the test rows.");
+
+  def("valid",
+    "What is blocked cross-validation?",
+    "CV using contiguous blocks instead of random shuffling",
+    ["CV that assigns the rows to folds completely at random regardless of their original ordering",
+     "CV that leaves out exactly one single observation on each successive iteration in turn",
+     "CV that just repeats the very same fold twice",
+     "CV that uses only one block for everything"],
+    "Blocked cross-validation",
+    "Splits ordered data into contiguous blocks so folds respect temporal or spatial structure, avoiding the leakage that random shuffling would cause.",
+    "Blocked CV keeps neighbouring, correlated observations together in the same fold rather than scattering them randomly. This matters for time series or spatial data, where shuffling would let near-duplicate points leak across folds.",
+    "Cut ordered data into solid chunks for folds so nearby, similar rows don't leak.");
+
+  def("valid",
+    "What is leave-p-out cross-validation?",
+    "Test on every possible group of p examples in turn",
+    ["Test on a single example while training on all of the remaining examples each and every time",
+     "Test on p randomly chosen folds selected out of the k folds that are available in total",
+     "Test on just the last p examples in time order",
+     "Test on p percent of the rows one single time"],
+    "Leave-p-out cross-validation",
+    "Exhaustively uses every subset of p examples as the test set. Extremely thorough but combinatorially expensive; p=1 gives LOOCV.",
+    "Leave-p-out CV trains on all but p examples and repeats over every possible choice of those p, covering all combinations. It is exhaustive and unbiased but grows explosively with dataset size, so it is rarely used beyond p=1.",
+    "Try every possible little group of p rows as the test set - thorough but very slow.");
+
+  def("valid",
+    "What is bootstrap (.632) validation?",
+    "Resample rows with replacement, test on the left-out rows",
+    ["Divide the data into k equal folds and rotate each one of them through validation in turn",
+     "Hold out one fixed final slice and evaluate the fitted model only on that slice just once",
+     "Leave a single example out on each round of it",
+     "Split the whole dataset in half one time"],
+    "Bootstrap (.632) validation",
+    "Draw many bootstrap samples (rows with replacement) to train; evaluate on the roughly 37% left out each time. The .632 estimator blends these with training error.",
+    "Bootstrap validation trains on resampled datasets and tests on the out-of-bag rows omitted from each draw. Because about 63.2% of unique rows appear in each sample, the .632 estimator corrects the optimism by mixing in-sample and out-of-bag error.",
+    "Sample rows with replacement to train, then test on the ones left out each time.");
+
+  def("valid",
+    "What is walk-forward validation?",
+    "Train on the past, test on the next period, roll forward",
+    ["Randomly shuffle all of the observations into folds before evaluating the model on each one",
+     "Keep each fold's class proportions matched to the overall dataset's class balance every time",
+     "Leave one whole group of rows out on each pass",
+     "Test on data taken from before the training window"],
+    "Walk-forward validation",
+    "For time series, repeatedly train on data up to time t and validate on the following window, then advance t - mimicking real forecasting with no look-ahead.",
+    "Walk-forward validation always tests on data chronologically after the training window, then slides or expands that window forward. This respects temporal order and gives a realistic estimate of forecasting performance, unlike random CV.",
+    "Always train on the past and test on what comes next, then step forward in time.");
+})();

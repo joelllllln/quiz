@@ -1,25 +1,25 @@
 DataSense — Every Definition
 ============================
-Total definitions: 488
+Total definitions: 770
 
 
 ## Core Definitions  (20)
-------------------------
+------------------
 
 Algorithm vs model
-  One algorithm can produce endless models. You choose the algorithm, but what you deploy is 
-  the model.
+  One algorithm can produce endless models. You choose the algorithm, but what you deploy
+  is the model.
 
 Example (row)
-  Rows are what you count when you ask 'how much data do I have?'. More independent examples 
-  almost always means better generalisation.
+  Rows are what you count when you ask 'how much data do I have?'. More independent
+  examples almost always means better generalisation.
 
 Model
-  Training chooses the function's internal numbers; the model is the finished input-output 
+  Training chooses the function's internal numbers; the model is the finished input-output
   recipe. In sklearn it's the fitted estimator object.
 
 Supervised learning
-  When every training row carries the right answer, the model can learn to reproduce it on 
+  When every training row carries the right answer, the model can learn to reproduce it on
   new rows.
 
 Unsupervised learning
@@ -35,7 +35,8 @@ Gradient descent
   Follow the loss's slope downhill, step after step, to fit the model.
 
 Reinforcement learning
-  An agent learns which actions to take by maximising rewards received from its environment.
+  An agent learns which actions to take by maximising rewards received from its
+  environment.
 
 Classification
   Classification predicts which discrete category an input belongs to.
@@ -70,60 +71,61 @@ Learning rate
 One-hot encoding
   One-hot encoding represents a category as binary indicator columns with a single 1.
 
-## k-Nearest Neighbours  (46)
-----------------------------
+
+## k-Nearest Neighbours  (54)
+----------------------
 
 Feature space
-  KNN plots every example as a point in this space and reasons purely about who is near 
+  KNN plots every example as a point in this space and reasons purely about who is near
   whom.
 
 k-Nearest Neighbours (KNN)
-  What you were doing IS the algorithm: measure distance to every labelled point, keep the k 
-  closest, let them vote. The slider you dragged is the famous "k".
+  What you were doing IS the algorithm: measure distance to every labelled point, keep the
+  k closest, let them vote. The slider you dragged is the famous "k".
 
 1-Nearest Neighbour (1-NN)
-  1-NN just photocopies the nearest example's label. You felt both its charm (simple, sharp) 
-  and its danger (one point rules everything).
+  1-NN just photocopies the nearest example's label. You felt both its charm (simple,
+  sharp) and its danger (one point rules everything).
 
 Euclidean distance
-  The straight-line ("as the crow flies") measure you ended on is Euclidean distance — KNN's 
-  default. The street-grid one you started on has a name too: Manhattan distance.
+  The straight-line ("as the crow flies") measure you ended on is Euclidean distance —
+  KNN's default. The street-grid one you started on has a name too: Manhattan distance.
 
 Manhattan (city-block) distance
-  Add the gaps along each axis — done. Named after Manhattan's street grid. KNN lets you 
+  Add the gaps along each axis — done. Named after Manhattan's street grid. KNN lets you
   pick whichever distance matches your world.
 
 Feature scaling (normalisation)
-  Before KNN, rescale every feature to a comparable range so each one gets a fair voice in 
+  Before KNN, rescale every feature to a comparable range so each one gets a fair voice in
   the distance. Whichever feature has the biggest raw numbers otherwise wins by default.
 
 KNN regression
-  Same neighbour-finding, different combiner: vote for classes, average for numbers. Estate 
-  agents call it "comparables" — you've used KNN regression all along.
+  Same neighbour-finding, different combiner: vote for classes, average for numbers.
+  Estate agents call it "comparables" — you've used KNN regression all along.
 
 Supervised learning
-  KNN learns from examples that come with answers attached. Algorithms that find structure 
-  in unlabelled data exist too — that's unsupervised learning (like clustering), a different 
-  game.
+  KNN learns from examples that come with answers attached. Algorithms that find structure
+  in unlabelled data exist too — that's unsupervised learning (like clustering), a
+  different game.
 
 Train/test split
-  Splitting your labelled data (e.g. 80/20) buys you an honest preview of the future. Every 
-  serious evaluation you'll ever run starts with this move.
+  Splitting your labelled data (e.g. 80/20) buys you an honest preview of the future.
+  Every serious evaluation you'll ever run starts with this move.
 
 Feature vectors (numeric encoding)
-  Turning things into lists of numbers is called feature engineering; categories get encoded 
-  (e.g. one-hot). KNN — like most ML — lives entirely in that numeric space.
+  Turning things into lists of numbers is called feature engineering; categories get
+  encoded (e.g. one-hot). KNN — like most ML — lives entirely in that numeric space.
 
 Distance-weighted KNN
-  Instead of one-point-one-vote, each neighbour's vote is scaled by closeness. It softens 
+  Instead of one-point-one-vote, each neighbour's vote is scaled by closeness. It softens
   the choice of k and respects that not all neighbours are equally relevant.
 
 Min-max normalisation
-  Rescaling both features to [0,1] gives each an equal microphone. Standardisation 
+  Rescaling both features to [0,1] gives each an equal microphone. Standardisation
   (z-scores) is the other classic option. For KNN, one of them is almost always step one.
 
 The smoothness (locality) assumption
-  Every ML method bets on some assumption. KNN's bet is locality. Feature engineering is 
+  Every ML method bets on some assumption. KNN's bet is locality. Feature engineering is
   largely the art of building a space where that bet pays off.
 
 K-nearest neighbours
@@ -156,137 +158,171 @@ Weighted KNN
 Non-parametric model
   A non-parametric model like KNN keeps the data instead of fitting fixed parameters.
 
+Minkowski distance
+  A general distance metric with an order parameter p: p=1 is Manhattan, p=2 is Euclidean,
+  and p→∞ approaches Chebyshev.
+
+Chebyshev distance
+  The L∞ distance: the maximum absolute coordinate difference. It is the Minkowski
+  distance as p→∞.
+
+Jaccard distance
+  1 − (|A∩B| / |A∪B|): a dissimilarity for sets or binary vectors based on shared vs total
+  members.
+
+Brute-force nearest-neighbour search
+  The exact O(n·d) strategy of scoring the query against all n training points to find the
+  k closest.
+
+Local Outlier Factor (LOF)
+  A neighbour-based anomaly score: points in regions far sparser than their neighbours'
+  regions score as outliers.
+
+Nearest-neighbour graph
+  A graph whose vertices are data points, each joined to its k nearest neighbours;
+  underlies manifold and spectral methods.
+
+Haversine (great-circle) distance
+  Distance along the surface of a sphere between two lat/long points; the right metric for
+  geographic KNN.
+
+Dynamic time warping (DTW)
+  A sequence distance that finds the best non-linear time alignment between two series
+  before scoring their difference.
+
 The bias–variance trade-off
-  Every ML model has this dial somewhere. In KNN it's k itself: you just watched variance 
+  Every ML model has this dial somewhere. In KNN it's k itself: you just watched variance
   (twitchiness) turn into bias (bluntness) as you dragged.
 
 Hyperparameter tuning (validation curve)
-  k isn't learned from training data — it's chosen by you, using held-out data as the judge. 
-  Settings chosen this way are called hyperparameters.
+  k isn't learned from training data — it's chosen by you, using held-out data as the
+  judge. Settings chosen this way are called hyperparameters.
 
 Standardisation (z-scores)
-  Dividing by the standard deviation is the principled version of what your knob was doing 
+  Dividing by the standard deviation is the principled version of what your knob was doing
   by hand. After it, "1 unit" means "1 typical variation" in every feature.
 
 The curse of dimensionality
-  High-dimensional space is unintuitively empty and uniform. Distance-based methods like KNN 
-  need dimensionality kept low: select features or project down (e.g. PCA) first.
+  High-dimensional space is unintuitively empty and uniform. Distance-based methods like
+  KNN need dimensionality kept low: select features or project down (e.g. PCA) first.
 
 Spatial indexes (k-d tree, ball tree)
-  Pre-organising space rescues KNN's query cost. One caveat for later: in high dimensions 
+  Pre-organising space rescues KNN's query cost. One caveat for later: in high dimensions
   these indexes lose their edge — the curse of dimensionality strikes again.
 
 K-fold cross-validation
-  Rotate which slice is hidden, score each rotation, average. Costlier than one split, but 
+  Rotate which slice is hidden, score each rotation, average. Costlier than one split, but
   the number you report stops depending on luck.
 
 One-hot encoding
-  Categories have no order, so give each its own axis. Any two different categories are then 
-  equidistant — the geometry finally matches the meaning.
+  Categories have no order, so give each its own axis. Any two different categories are
+  then equidistant — the geometry finally matches the meaning.
 
 Feature selection
-  For KNN, deleting bad features is often the single highest-impact tuning step — ahead of 
+  For KNN, deleting bad features is often the single highest-impact tuning step — ahead of
   adjusting k. Signal-to-noise beats quantity.
 
 Distance concentration
-  The precise form of the curse: it's not that distances get big, it's that they all become 
-  the SAME size. Contrast — not closeness — is what KNN eats.
+  The precise form of the curse: it's not that distances get big, it's that they all
+  become the SAME size. Contrast — not closeness — is what KNN eats.
 
 Bayes error (irreducible error)
-  Every problem has a floor set by genuine ambiguity. Knowing it exists changes your goal 
+  Every problem has a floor set by genuine ambiguity. Knowing it exists changes your goal
   from "get 100%" to "get close to the floor without fitting noise".
 
 Prototype selection (CNN / ENN editing)
-  Condensed NN keeps points that change votes; Edited NN also deletes noisy ones (bonus: 
+  Condensed NN keeps points that change votes; Edited NN also deletes noisy ones (bonus:
   that trims overfitting too). Same idea powers modern vector-database compaction.
 
 Approximate Nearest Neighbours (ANN)
-  HNSW graphs, LSH buckets, IVF cells: different tricks, same trade. Every "similar items" 
+  HNSW graphs, LSH buckets, IVF cells: different tricks, same trade. Every "similar items"
   feature you've used ran KNN's idea through an ANN engine.
 
 Cosine similarity
-  For text, embeddings and any "profile-shaped" data, cosine (or normalising vectors to 
+  For text, embeddings and any "profile-shaped" data, cosine (or normalising vectors to
   length 1, which makes Euclidean rank the same way) is the standard KNN metric.
 
 KNN imputation
-  One algorithm, three jobs so far: classify (vote), regress (average), impute (average into 
-  the gaps). Distance-based reasoning is a Swiss army knife.
+  One algorithm, three jobs so far: classify (vote), regress (average), impute (average
+  into the gaps). Distance-based reasoning is a Swiss army knife.
 
 Radius neighbours (fixed-radius NN)
-  k fixes the voter count and lets distance float; r fixes the distance and lets the count 
-  float. Density-adaptive but can come back empty — which doubles as a built-in "out of 
+  k fixes the voter count and lets distance float; r fixes the distance and lets the count
+  float. Density-adaptive but can come back empty — which doubles as a built-in "out of
   distribution" alarm.
 
 Robust scaling
-  Min-max hands your scale to the most extreme point in the data. When outliers exist (they 
-  do), scale with medians and quartiles, or clip/winsorise before scaling.
+  Min-max hands your scale to the most extreme point in the data. When outliers exist
+  (they do), scale with medians and quartiles, or clip/winsorise before scaling.
 
 Temporal leakage & walk-forward validation
-  A deployed model only ever knows the past. Any evaluation that lets neighbours arrive from 
-  the future measures a fantasy. This bites KNN especially hard: neighbours are literal 
-  rows, so future rows = open cheating.
+  A deployed model only ever knows the past. Any evaluation that lets neighbours arrive
+  from the future measures a fantasy. This bites KNN especially hard: neighbours are
+  literal rows, so future rows = open cheating.
 
 Plurality voting (multi-class KNN)
-  More classes = thinner margins = more near-ties (odd k no longer saves you). Distance 
+  More classes = thinner margins = more near-ties (odd k no longer saves you). Distance
   weighting and vote-fraction confidence go from nice-to-have to essential.
 
 Hamming distance
-  Metrics carry meaning, not just numbers. Binary/one-hot data → Hamming (= L1). Counts → 
+  Metrics carry meaning, not just numbers. Binary/one-hot data → Hamming (= L1). Counts →
   often L1. Continuous, scaled → L2. Profiles/text → cosine. Choose by data type first.
 
 Voronoi tessellation
-  The 1-NN decision boundary is piecewise-linear: a union of Voronoi cell edges. Voronoi 
-  diagrams appear everywhere from cell-tower coverage to soap bubbles — 1-NN is their 
+  The 1-NN decision boundary is piecewise-linear: a union of Voronoi cell edges. Voronoi
+  diagrams appear everywhere from cell-tower coverage to soap bubbles — 1-NN is their
   machine-learning incarnation.
 
 kNN-distance anomaly detection
-  Big kth-neighbour distance = far from every crowd = suspicious. This underpins classic 
-  outlier detectors (kNN-outlier, LOF) — and doubles as the "too far to trust the vote" 
+  Big kth-neighbour distance = far from every crowd = suspicious. This underpins classic
+  outlier detectors (kNN-outlier, LOF) — and doubles as the "too far to trust the vote"
   alarm from earlier levels.
 
 Metric learning (Mahalanobis, LMNN, NCA)
-  The endpoint of everything this course said about scaling, weighting and metric choice: 
-  make the DATA pick the geometry. Modern face recognition is exactly this — deep embeddings 
-  + cosine KNN.
+  The endpoint of everything this course said about scaling, weighting and metric choice:
+  make the DATA pick the geometry. Modern face recognition is exactly this — deep
+  embeddings + cosine KNN.
 
 User-based collaborative filtering = KNN
-  KNN concepts run the modern web: taste-distance, neighbourhood size, popularity bias, ANN 
-  at scale. You now know the algorithm behind the "For You" tab.
+  KNN concepts run the modern web: taste-distance, neighbourhood size, popularity bias,
+  ANN at scale. You now know the algorithm behind the "For You" tab.
 
-## Logistic Regression  (24)
----------------------------
+
+## Logistic Regression  (34)
+---------------------
 
 Weighted score
-  One number summing every feature's weighted push plus the baseline, ready for the sigmoid.
+  One number summing every feature's weighted push plus the baseline, ready for the
+  sigmoid.
 
 Odds
   The belief rewritten as a yes-to-no ratio, running from 0 to infinity instead of 0 to 1.
 
 Log-odds (logit)
-  The straight-line scale the model thinks in; the sigmoid is just its inverse back to 
+  The straight-line scale the model thinks in; the sigmoid is just its inverse back to
   probability.
 
 The sigmoid (logistic) function
-  Logistic regression = a weighted score + this squashing curve. Everything it says is a 
+  Logistic regression = a weighted score + this squashing curve. Everything it says is a
   probability; the curve's steepness comes from the learned weights.
 
 The decision threshold
-  Probability is the model's job; the threshold is yours. Cheap false alarms → lower it. 
+  Probability is the model's job; the threshold is yours. Cheap false alarms → lower it.
   Expensive false alarms → raise it.
 
 L2 regularisation (the C parameter)
-  The classic cure for logistic overfitting. Sweep the strength on validation data, exactly 
-  as you swept k in KNN — same U-shape, same logic.
+  The classic cure for logistic overfitting. Sweep the strength on validation data,
+  exactly as you swept k in KNN — same U-shape, same logic.
 
 Odds ratios (interpretability)
-  Logistic regression's weights, exponentiated, become plain-English statements. When you 
+  Logistic regression's weights, exponentiated, become plain-English statements. When you
   must explain WHY someone was declined, this beats a black box.
 
 Sigmoid function
   Turns any real score into a probability between 0 and 1.
 
 Logistic regression
-  Logistic regression maps a weighted feature sum through the sigmoid to a class 
+  Logistic regression maps a weighted feature sum through the sigmoid to a class
   probability.
 
 Sigmoid (logistic) function
@@ -296,7 +332,7 @@ Decision threshold
   The threshold is the probability cutoff that turns a predicted chance into a class.
 
 Coefficient (weight)
-  A coefficient is the learned multiplier setting how strongly a feature affects the 
+  A coefficient is the learned multiplier setting how strongly a feature affects the
   prediction.
 
 Odds ratio
@@ -317,39 +353,81 @@ Intercept (bias)
 Maximum likelihood estimation
   MLE chooses the coefficients that make the observed labels most probable.
 
+IRLS (iteratively reweighted least squares)
+  A Newton-based optimiser that fits logistic regression by solving a sequence of weighted
+  least-squares updates.
+
+Deviance
+  −2 × log-likelihood of the fitted model; lower is better and differences follow a
+  chi-square distribution.
+
+Coefficient significance (Wald test)
+  A test using a coefficient divided by its standard error (a z-statistic) to judge if it
+  differs from zero.
+
+McFadden's pseudo-R²
+  1 − (logL_model / logL_null): a likelihood-based analogue of R² for logistic regression,
+  not a variance-explained figure.
+
+Average marginal effect
+  The mean over the sample of how much a one-unit change in a feature shifts the predicted
+  probability.
+
+Probit regression
+  A binary-outcome model that uses the standard-normal CDF as its link function in place
+  of logistic regression's sigmoid.
+
+Reference (baseline) category
+  In dummy coding, the dropped level whose effect is folded into the intercept; other
+  levels' coefficients are contrasts to it.
+
+Sigmoid saturation
+  When the linear score is very large in magnitude, the sigmoid flattens toward 0 or 1 and
+  its gradient nearly vanishes.
+
+Feature scaling for convergence
+  Standardising inputs conditions the optimisation so gradient solvers converge faster and
+  regularisation penalises features fairly.
+
+Likelihood-ratio test
+  Compares nested models by twice the log-likelihood difference, referred to a chi-square
+  distribution to test added terms.
+
 Softmax (multinomial logistic regression)
-  sklearn's LogisticRegression does this automatically for 3+ classes. Everything you know 
+  sklearn's LogisticRegression does this automatically for 3+ classes. Everything you know
   about the binary case carries over, slice by slice.
 
 L1 (lasso) regularisation
-  Use L1 when you suspect most features are irrelevant or need a compact, explainable model; 
-  L2 as the smooth default; elastic net blends both.
+  Use L1 when you suspect most features are irrelevant or need a compact, explainable
+  model; L2 as the smooth default; elastic net blends both.
 
 Standardised coefficients
-  The interpretability superpower has a precondition: common scale. Skip it and coefficient 
-  tables mislead confidently.
+  The interpretability superpower has a precondition: common scale. Skip it and
+  coefficient tables mislead confidently.
 
 Multicollinearity
-  Check with correlation matrices/VIF. For interpretation: drop/combine duplicates or use L2 
-  and report grouped effects. Predictions were never in danger.
+  Check with correlation matrices/VIF. For interpretation: drop/combine duplicates or use
+  L2 and report grouped effects. Predictions were never in danger.
 
 Interaction terms
-  sklearn: PolynomialFeatures(interaction_only=True) inside a pipeline, then regularise — 
+  sklearn: PolynomialFeatures(interaction_only=True) inside a pipeline, then regularise —
   interactions multiply feature counts fast. Domain knowledge picks the few that matter.
 
 Elastic net
-  sklearn: LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=…). Default 
-  choice when you want selection AND your features (like all real features) are correlated.
+  sklearn: LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=…). Default
+  choice when you want selection AND your features (like all real features) are
+  correlated.
 
-## Naive Bayes  (24)
--------------------
+
+## Naive Bayes  (34)
+-------------
 
 Conditional probability
-  Conditioning on B narrows the world to where B is true, then measures how often A occurs 
+  Conditioning on B narrows the world to where B is true, then measures how often A occurs
   there.
 
 Bayes' theorem (flipping the conditional)
-  Bayes' theorem flips the conditional you can measure into the one you want, using the 
+  Bayes' theorem flips the conditional you can measure into the one you want, using the
   prior.
 
 Evidence
@@ -365,55 +443,57 @@ Posterior
   The posterior is the prior updated by every clue, Bayes' rule's finished answer.
 
 Generative model
-  It learns each class's data profile, then asks which class most likely generated the case.
+  It learns each class's data profile, then asks which class most likely generated the
+  case.
 
 Naive Bayes (Bayes' rule + evidence)
-  Prior belief, times one multiplier per piece of evidence, gives the posterior. Fast, tiny, 
-  and shockingly effective on text.
+  Prior belief, times one multiplier per piece of evidence, gives the posterior. Fast,
+  tiny, and shockingly effective on text.
 
 The independence assumption
-  Usually false, naively assumed, surprisingly harmless for picking the winning class — but 
-  treat NB's probability VALUES with suspicion.
+  Usually false, naively assumed, surprisingly harmless for picking the winning class —
+  but treat NB's probability VALUES with suspicion.
 
 Laplace smoothing
-  Add one imaginary sighting of every word to every class. 'Never seen' becomes 'rare' 
+  Add one imaginary sighting of every word to every class. 'Never seen' becomes 'rare'
   instead of 'impossible', and the veto disappears.
 
 Gaussian Naive Bayes
-  Same Bayes machinery — the frequency table is replaced by a fitted bell curve per feature 
-  per class. Counts for words, bells for numbers.
+  Same Bayes machinery — the frequency table is replaced by a fitted bell curve per
+  feature per class. Counts for words, bells for numbers.
 
 BernoulliNB: binary features
-  BernoulliNB works on binary presence/absence features (0/1). Hand it counts and it 
+  BernoulliNB works on binary presence/absence features (0/1). Hand it counts and it
   thresholds them to present or absent, discarding the magnitude.
 
 Bayes' theorem
-  It turns a prior belief into a posterior one by scaling with how well the evidence fits 
+  It turns a prior belief into a posterior one by scaling with how well the evidence fits
   the hypothesis.
 
 Prior probability
-  It is the belief in a class before seeing any features, read straight off how common the 
+  It is the belief in a class before seeing any features, read straight off how common the
   class is.
 
 Naive independence assumption
   Given the class, features are treated as independent so their likelihoods just multiply.
 
 Class-conditional probability
-  The likelihood of a feature value within one specific class, learned from that class's 
+  The likelihood of a feature value within one specific class, learned from that class's
   training counts.
 
 Laplace (additive) smoothing
   A pseudo-count added to every tally so no feature value ever gets probability zero.
 
 MultinomialNB
-  The count-based Naive Bayes variant, the default choice for bag-of-words text 
+  The count-based Naive Bayes variant, the default choice for bag-of-words text
   classification.
 
 GaussianNB
   The Naive Bayes variant that models continuous features as class-specific bell curves.
 
 Evidence (marginal likelihood)
-  The total probability of the features over all classes, used to normalise the posteriors.
+  The total probability of the features over all classes, used to normalise the
+  posteriors.
 
 MAP estimate
   The class with the highest posterior probability — Naive Bayes's final prediction rule.
@@ -421,22 +501,63 @@ MAP estimate
 Bag-of-words
   A text is reduced to how often each word appears, ignoring sequence and grammar.
 
+CategoricalNB
+  The Naive Bayes variant for categorical features, learning a separate per-class
+  probability for each category of each feature.
+
+Lidstone smoothing
+  Additive smoothing with pseudocount α (0<α<1 typical); Laplace smoothing is the special
+  case α=1.
+
+Setting priors (fit_prior / class_prior)
+  fit_prior toggles learning priors from class frequencies; class_prior lets you hard-set
+  them (e.g. to match deployment).
+
+Feature log-probabilities (feature_log_prob_)
+  The fitted per-class log P(feature | class) table that MultinomialNB/BernoulliNB add up
+  (with the log prior) at predict time.
+
+Tree-augmented Naive Bayes (TAN)
+  A semi-naive model that adds a tree of dependencies among features, so each feature may
+  condition on one parent besides the class.
+
+Posterior odds
+  P(class A | x) / P(class B | x). By Bayes, posterior odds = prior odds × likelihood
+  ratio.
+
+Conjugate prior
+  A prior whose form is preserved by the likelihood, so the posterior stays in the same
+  family (e.g. Beta–Binomial).
+
+Dirichlet prior (smoothing as pseudocounts)
+  A Dirichlet prior on a multinomial's probabilities contributes pseudocounts; its α is
+  the additive/Laplace smoothing constant.
+
+Empirical Bayes
+  An approach that estimates the prior's parameters from the observed data, then proceeds
+  with ordinary Bayesian updating.
+
+Bayesian network
+  A directed acyclic graph whose edges encode conditional dependencies; Naive Bayes is its
+  simplest star-shaped special case.
+
 The zero-frequency problem
-  Any word absent from one class's training data becomes an absolute veto. The fix — 
+  Any word absent from one class's training data becomes an absolute veto. The fix —
   smoothing — adds fake counts so no probability is ever exactly zero.
 
 ComplementNB
-  sklearn.naive_bayes.ComplementNB — designed for imbalanced text. The complement of a 
+  sklearn.naive_bayes.ComplementNB — designed for imbalanced text. The complement of a
   starved class is data-rich, so its estimates are stable.
 
-## Decision Trees  (24)
-----------------------
+
+## Decision Trees  (34)
+----------------
 
 Greedy top-down splitting
   Trees grow one locally-best split at a time, then recurse into every group they create.
 
 Node / split
-  Every internal node asks about exactly one feature; stacking them builds the whole 
+  Every internal node asks about exactly one feature; stacking them builds the whole
   flowchart.
 
 Root
@@ -452,25 +573,26 @@ Feature importance
   A useful hint about what the tree relied on, but it shifts between retrains.
 
 The decision tree
-  Everything a tree does reduces to sliding questions like this one until each group is as 
+  Everything a tree does reduces to sliding questions like this one until each group is as
   pure as possible — then asking more questions inside each group.
 
 Impurity (Gini / entropy)
-  'Best question' has a number: the split that leaves children purest. Greedy, simple, and 
+  'Best question' has a number: the split that leaves children purest. Greedy, simple, and
   repeated recursively — that's CART.
 
 Tree instability (high variance)
-  A single tree is interpretable but jumpy. Tame the variance with depth limits — or by 
+  A single tree is interpretable but jumpy. Tame the variance with depth limits — or by
   averaging many trees, which is where forests come in.
 
 Decision tree
-  A branching set of yes/no questions that routes each example to a leaf holding the answer.
+  A branching set of yes/no questions that routes each example to a leaf holding the
+  answer.
 
 Leaf node
   The end of a branch where the tree stops and outputs its answer for arriving examples.
 
 Split
-  The rule at a node that partitions arriving examples into branches, chosen to purify the 
+  The rule at a node that partitions arriving examples into branches, chosen to purify the
   children.
 
 Node impurity
@@ -486,74 +608,123 @@ Information gain
   The drop in impurity a split produces; trees greedily pick the split with the most.
 
 max_depth
-  A limit on tree depth that trades underfitting (too shallow) against overfitting (too 
+  A limit on tree depth that trades underfitting (too shallow) against overfitting (too
   deep).
 
 Greedy splitting
   Trees are built by locally optimal choices at each node, not a global search.
 
 Axis-aligned decision boundary
-  Trees split one feature at a time, so their boundaries are staircases of axis-parallel 
+  Trees split one feature at a time, so their boundaries are staircases of axis-parallel
   segments.
 
+Gain ratio (C4.5)
+  Gain ratio = information gain / split information. Dividing by the split's intrinsic
+  information penalises features with many distinct values, which plain information gain
+  unfairly favours.
+
+Surrogate splits
+  A surrogate split is an alternative rule (on a different feature) that best reproduces
+  the primary split's partition, so a row missing the primary feature can still be sent
+  down the tree.
+
+min_samples_leaf
+  min_samples_leaf sets a floor on how many training samples may end up in any leaf; a
+  split is rejected if it would create a leaf below that size. It is a pre-pruning
+  regulariser.
+
+min_samples_split
+  min_samples_split is the minimum number of samples a node must contain to be eligible
+  for splitting. Nodes with fewer samples automatically become leaves.
+
+max_leaf_nodes
+  max_leaf_nodes limits the tree to a fixed number of leaves. The tree is grown in
+  best-first order, adding the split that most reduces impurity until the leaf budget runs
+  out.
+
+min_impurity_decrease
+  A node is split only if the split lowers the (sample-weighted) impurity by at least
+  min_impurity_decrease. Splits with tiny gains are rejected, acting as pre-pruning.
+
+Reduction in variance (regression splitting)
+  Regression trees split to minimise within-node variance of the target (equivalently, to
+  reduce mean squared error). The best split is the one whose children have the lowest
+  combined weighted variance.
+
+Twoing criterion
+  Twoing is an alternative CART splitting rule that, at each node, forms two superclasses
+  of the target categories and picks the split that best separates them, useful with many
+  classes.
+
+Recursive binary partitioning
+  CART-style trees are built by recursive binary partitioning: each node is divided into
+  two child regions by one feature/threshold, and the same procedure recurses on each
+  child until a stopping rule halts it.
+
+Split threshold
+  For a numeric feature, a decision node stores a threshold t and tests feature <= t;
+  samples satisfying it go to one child and the rest to the other. Candidate thresholds
+  usually sit between sorted feature values.
+
 Pre-pruning (min_samples_leaf / min_samples_split / max_depth)
-  Pre-pruning constrains the tree DURING growth. min_samples_leaf is the most robust single 
-  knob — it directly bounds how little evidence a prediction may stand on.
+  Pre-pruning constrains the tree DURING growth. min_samples_leaf is the most robust
+  single knob — it directly bounds how little evidence a prediction may stand on.
 
 Cost-complexity (post-)pruning
-  sklearn: cost_complexity_pruning_path() lists the candidate alphas; cross-validate over 
-  them. Post-pruning sees the whole tree before cutting — often better than stopping growth 
-  early.
+  sklearn: cost_complexity_pruning_path() lists the candidate alphas; cross-validate over
+  them. Post-pruning sees the whole tree before cutting — often better than stopping
+  growth early.
 
 Regression trees
-  Classification trees vote; regression trees average. Prediction is piecewise-constant — 
+  Classification trees vote; regression trees average. Prediction is piecewise-constant —
   powerful for thresholds and interactions, incapable of smooth slopes.
 
 CART (Classification And Regression Trees)
-  Breiman, Friedman, Olshen & Stone, 1984. The lineage that leads directly to random forests 
-  and gradient boosting — both are built from CART trees.
+  Breiman, Friedman, Olshen & Stone, 1984. The lineage that leads directly to random
+  forests and gradient boosting — both are built from CART trees.
 
 Monotonic constraints
-  XGBoost/LightGBM: monotone_constraints=(1,0,-1,…); sklearn: 
-  HistGradientBoosting(monotonic_cst=…). Use for prices, risk scores, dosages — anywhere 
+  XGBoost/LightGBM: monotone_constraints=(1,0,-1,…); sklearn:
+  HistGradientBoosting(monotonic_cst=…). Use for prices, risk scores, dosages — anywhere
   domain direction is law.
 
-## Support Vector Machines  (24)
--------------------------------
+
+## Support Vector Machines  (34)
+-------------------------
 
 Decision boundary
   Everything the SVM does is in service of positioning this one separating surface.
 
 Kernel trick
-  Only inner products between points are ever needed, so the feature space can be huge or 
+  Only inner products between points are ever needed, so the feature space can be huge or
   infinite while the work stays pairwise.
 
 Maximum-margin classifier
-  A wide street means new, slightly-shifted points still land on the correct side. Margin is 
-  a geometric bet on generalisation — and it pays.
+  A wide street means new, slightly-shifted points still land on the correct side. Margin
+  is a geometric bet on generalisation — and it pays.
 
 Soft margin & the C parameter
-  Small C = wide and forgiving (more bias). Big C = strict and twitchy (more variance). Same 
-  U-shaped tuning story as every complexity dial.
+  Small C = wide and forgiving (more bias). Big C = strict and twitchy (more variance).
+  Same U-shaped tuning story as every complexity dial.
 
 The kernel idea
-  SVM + kernels: keep the maximum-margin machinery, swap the space it works in. The RBF 
+  SVM + kernels: keep the maximum-margin machinery, swap the space it works in. The RBF
   kernel is the everything-bagel version of this move.
 
 Sparsity of SVMs
-  SVM compresses the training set down to its difficult cases. Memory-light deployment is a 
-  real, bankable advantage.
+  SVM compresses the training set down to its difficult cases. Memory-light deployment is
+  a real, bankable advantage.
 
 RBF gamma
-  The RBF kernel's flexibility dial. With C, it spans everything from near-linear to full 
+  The RBF kernel's flexibility dial. With C, it spans everything from near-linear to full
   memorisation — validation curves keep you honest.
 
 Support vector machine
-  A classifier that separates classes with the widest-margin boundary, fixed by the closest 
-  points.
+  A classifier that separates classes with the widest-margin boundary, fixed by the
+  closest points.
 
 Separating hyperplane
-  The flat decision surface of an SVM; each example's class is set by which side it falls 
+  The flat decision surface of an SVM; each example's class is set by which side it falls
   on.
 
 Margin
@@ -563,11 +734,11 @@ Support vectors
   The few borderline examples that alone determine the SVM's boundary.
 
 Kernel
-  A similarity function that lets an SVM act in a high-dimensional space to form non-linear 
-  boundaries.
+  A similarity function that lets an SVM act in a high-dimensional space to form
+  non-linear boundaries.
 
 RBF kernel
-  A distance-based kernel giving high similarity to nearby points, enabling smooth curved 
+  A distance-based kernel giving high similarity to nearby points, enabling smooth curved
   boundaries.
 
 C parameter
@@ -577,85 +748,136 @@ gamma
   The RBF kernel's reach knob, controlling how local each training point's influence is.
 
 Soft margin
-  A margin that tolerates some misclassified or inside-margin points to handle non-separable 
-  data.
+  A margin that tolerates some misclassified or inside-margin points to handle
+  non-separable data.
 
 Hinge loss
-  Zero when a point is correctly beyond the margin, rising linearly as it violates it — the 
-  SVM's loss.
+  Zero when a point is correctly beyond the margin, rising linearly as it violates it —
+  the SVM's loss.
+
+Polynomial kernel
+  The polynomial kernel K(x,z) = (x·z + c)^d implicitly maps inputs into a space of
+  feature products up to degree d, letting a linear SVM fit polynomial decision boundaries
+  without forming those features.
+
+Geometric margin
+  The geometric margin is the true Euclidean distance from the decision hyperplane to the
+  closest sample, obtained by normalising the functional margin by the norm of the weight
+  vector. SVMs maximise it.
+
+Functional margin
+  The functional margin of (x, y) is y(w·x + b): positive when correctly classified and
+  larger when farther on the right side. It is not a true distance because scaling w and b
+  inflates it; dividing by ||w|| gives the geometric margin.
+
+Linear kernel
+  The linear kernel K(x,z) = x·z performs no implicit mapping, so the SVM finds a plain
+  hyperplane in the original feature space. It is fast and effective when data is already
+  high-dimensional or roughly linearly separable.
+
+Sigmoid kernel
+  The sigmoid (hyperbolic-tangent) kernel K(x,z) = tanh(a x·z + c) behaves somewhat like a
+  two-layer perceptron. It is not positive-definite for all parameters, so it is used less
+  often than the RBF or polynomial kernels.
+
+Slack variables
+  Slack variables (one per training point) measure how far a point falls inside or across
+  the margin. The soft-margin objective minimises ||w||^2 plus C times the total slack,
+  trading margin width against violations.
+
+Dual formulation (Lagrangian)
+  Via Lagrangian duality the SVM is rephrased in terms of multipliers (alphas) on the
+  constraints; inputs enter only through dot products x_i·x_j. This is what makes the
+  kernel trick possible, replacing those dot products with a kernel.
+
+One-vs-rest (OvR) multiclass
+  One-vs-rest trains K binary SVMs, each separating one class from all the others, and
+  assigns a new point to the class whose classifier gives the largest decision value. It
+  needs only K models, versus K(K-1)/2 for one-vs-one.
+
+Hard-margin SVM
+  A hard-margin SVM demands that every training point lie on the correct side of the
+  margin with no slack. It only has a solution when the data is linearly separable;
+  otherwise the soft-margin version (with slack) is required.
+
+Mercer's condition (valid kernels)
+  A function is a valid kernel if it satisfies Mercer's condition: its Gram matrix is
+  symmetric positive semi-definite for any inputs. This guarantees the kernel equals an
+  inner product in some (possibly infinite) feature space.
 
 The kernel trick
-  The algorithm only consumes similarities, so swap the similarity function and you swap the 
-  geometry — for free.
+  The algorithm only consumes similarities, so swap the similarity function and you swap
+  the geometry — for free.
 
 Probability calibration (Platt / isotonic)
-  Calibrate on data the SVM didn't train on, or the dictionary inherits training 
+  Calibrate on data the SVM didn't train on, or the dictionary inherits training
   overconfidence — the leakage rule follows you everywhere.
 
 SVR and the ε-insensitive tube
-  The margin idea, rotated 90° into regression. Same machinery, same sparsity, same C — plus 
-  one new knob for how much error you refuse to care about.
+  The margin idea, rotated 90° into regression. Same machinery, same sparsity, same C —
+  plus one new knob for how much error you refuse to care about.
 
 Platt scaling (probability=True)
-  For ranking/ROC, use decision_function (free). For serious probabilities: 
+  For ranking/ROC, use decision_function (free). For serious probabilities:
   CalibratedClassifierCV(svc, method='isotonic') or a natively probabilistic model.
 
 One-vs-one multiclass SVM
-  SVC: OvO (libsvm's choice); LinearSVC: OvR (linear solvers scale linearly). 
+  SVC: OvO (libsvm's choice); LinearSVC: OvR (linear solvers scale linearly).
   decision_function_shape='ovr' only reshapes the output — training stays OvO.
 
 Kernel approximation (RFF / Nystroem)
-  sklearn: Nystroem or RBFSampler → LinearSVC/SGDClassifier in a Pipeline. The standard 
+  sklearn: Nystroem or RBFSampler → LinearSVC/SGDClassifier in a Pipeline. The standard
   kernel-SVM exit ramp beyond ~100k rows.
 
 One-class SVM
-  sklearn: OneClassSVM(kernel='rbf', nu=0.05). Siblings: IsolationForest (faster, big data), 
-  PCA reconstruction error (linear normality). Novelty detection = learning ONE class's 
-  shape.
+  sklearn: OneClassSVM(kernel='rbf', nu=0.05). Siblings: IsolationForest (faster, big
+  data), PCA reconstruction error (linear normality). Novelty detection = learning ONE
+  class's shape.
 
-## Random Forests & Bagging  (27)
---------------------------------
+
+## Random Forests & Bagging  (36)
+--------------------------
 
 Decision tree
-  A decision tree is a chain of yes/no splits ending in a prediction; grown deep it 
+  A decision tree is a chain of yes/no splits ending in a prediction; grown deep it
   overfits, and that instability is what forests average away.
 
 Aggregation (voting and averaging)
-  A forest's final answer is the pooled verdict of all its trees - a majority vote for 
+  A forest's final answer is the pooled verdict of all its trees - a majority vote for
   classes, a plain average for numbers - which cancels their independent errors.
 
 max_features
-  Lower max_features = more diversity and weaker trees; higher = stronger but more 
-  correlated trees. sqrt(d) for classification, about d/3 for regression, are the usual 
+  Lower max_features = more diversity and weaker trees; higher = stronger but more
+  correlated trees. sqrt(d) for classification, about d/3 for regression, are the usual
   starting points.
 
 Ensemble learning
-  Two main recipes: bagging (train members in parallel on random samples, then average) and 
-  boosting (train members in sequence, each fixing the last's mistakes). Forests are 
+  Two main recipes: bagging (train members in parallel on random samples, then average)
+  and boosting (train members in sequence, each fixing the last's mistakes). Forests are
   bagging.
 
 Feature importance (read with care)
-  Good for exploration. For decisions: permutation importance on a validation set, and never 
-  confuse importance with causation.
+  Good for exploration. For decisions: permutation importance on a validation set, and
+  never confuse importance with causation.
 
 Error decorrelation
-  The one law under every method in this topic. Bagging, forests, boosting and stacking are 
-  just four different ways of manufacturing useful disagreement.
+  The one law under every method in this topic. Bagging, forests, boosting and stacking
+  are just four different ways of manufacturing useful disagreement.
 
 Bootstrap sampling
-  The randomness engine of bagging. Cheap, principled variation: every member model gets its 
-  own re-weighted view of the same dataset.
+  The randomness engine of bagging. Cheap, principled variation: every member model gets
+  its own re-weighted view of the same dataset.
 
 Bagging (bootstrap aggregating)
-  Turn one unstable learner into many and let the average do the stabilising. Works best on 
-  high-variance models — which is why trees are the classic ingredient.
+  Turn one unstable learner into many and let the average do the stabilising. Works best
+  on high-variance models — which is why trees are the classic ingredient.
 
 Out-of-bag (OOB) evaluation
-  sklearn: oob_score=True. The bootstrap's 37% leftovers, recycled into an honest validation 
-  estimate — bagging's elegant bonus.
+  sklearn: oob_score=True. The bootstrap's 37% leftovers, recycled into an honest
+  validation estimate — bagging's elegant bonus.
 
 Random forests
-  Breiman's insight: bagging's ceiling is member correlation. Randomising the feature menu 
+  Breiman's insight: bagging's ceiling is member correlation. Randomising the feature menu
   smashes that ceiling — and made forests a default model for a decade.
 
 Random forest
@@ -688,62 +910,110 @@ Majority voting
 Averaging (regression)
   For continuous targets the forest reports the mean of its trees.
 
+Mean decrease in impurity (MDI)
+  MDI (the default sklearn importance) sums, for each feature, the weighted impurity
+  decreases of all splits that use it, averaged over the trees. It is fast but biased
+  toward high-cardinality and continuous features.
+
+Permutation importance (MDA)
+  Permutation importance shuffles a single feature's column (usually on held-out or OOB
+  data) and records how much the score falls. A large fall means the model relied on that
+  feature. It is model-agnostic and less biased than MDI.
+
+Proximity matrix
+  A random forest's proximity between two samples is the fraction of trees in which they
+  fall into the same leaf. The resulting N x N matrix serves as a learned similarity,
+  useful for clustering, outlier detection and missing-value imputation.
+
+max_samples (bootstrap size)
+  max_samples sets the size of each bootstrap draw used to train a tree. Smaller draws
+  make trees more diverse and speed up training on large datasets, at the cost of each
+  tree seeing less data.
+
+The 63.2% rule (bootstrap coverage)
+  Sampling n items with replacement leaves each specific row out with probability (1 -
+  1/n)^n, which tends to 1/e as n grows. So about 36.8% are never drawn and roughly 63.2%
+  distinct rows appear, the rest being the out-of-bag set.
+
+Soft voting (probability averaging)
+  In soft voting the forest averages the class-probability estimates from every tree and
+  picks the class with the largest average. Because it uses graded probabilities rather
+  than one-vote-per-tree, it often edges out hard majority voting.
+
+Embarrassingly parallel training
+  A random forest's trees are fit on independent bootstrap samples with no communication
+  between them, so training distributes trivially across cores or machines (n_jobs in
+  sklearn). This is unlike boosting, which is inherently sequential.
+
+Bagging cuts variance, not bias
+  Averaging many high-variance, low-bias trees over bootstrap samples shrinks variance
+  while the ensemble's bias stays close to that of a single tree. This is why bagging
+  pairs best with deep, unpruned (low-bias) trees.
+
+warm_start (growing the forest)
+  With warm_start=True, increasing n_estimators and refitting appends new trees to the
+  existing ensemble rather than rebuilding it. This makes it cheap to search for how many
+  trees are enough without repeating earlier work.
+
 Feature importance (and its bias)
-  Forest importances are a quick x-ray, not a verdict. Permutation importance — shuffle a 
+  Forest importances are a quick x-ray, not a verdict. Permutation importance — shuffle a
   feature, watch validation drop — is the honest cross-check.
 
 max_features (the decorrelation knob)
-  Defaults: sqrt(n_features) for classification, ~n/3 or 1.0 for regression. If your forest 
-  barely beats one tree, correlation — not tree quality — is usually the culprit.
+  Defaults: sqrt(n_features) for classification, ~n/3 or 1.0 for regression. If your
+  forest barely beats one tree, correlation — not tree quality — is usually the culprit.
 
 ExtraTrees (extremely randomized trees)
-  sklearn: ExtraTreesClassifier/Regressor. Try it whenever you'd try a random forest — 
+  sklearn: ExtraTreesClassifier/Regressor. Try it whenever you'd try a random forest —
   especially with noisy features or a training-time budget.
 
 Cardinality bias in importances
-  sklearn: permutation_importance(model, X_val, y_val). Also drop high-cardinality IDs 
+  sklearn: permutation_importance(model, X_val, y_val). Also drop high-cardinality IDs
   entirely — they're leakage bait as well as importance bait.
 
 Group permutation importance
-  Workflow: cluster features by correlation → pick group representatives or permute clusters 
-  → report at group level. sklearn's docs walk this exact recipe.
+  Workflow: cluster features by correlation → pick group representatives or permute
+  clusters → report at group level. sklearn's docs walk this exact recipe.
 
 Isolation Forest
-  sklearn: IsolationForest(contamination=…). First-reach tool for unlabelled tabular anomaly 
-  detection; contrast one-class SVM (shape-based) and PCA error (linear normality).
+  sklearn: IsolationForest(contamination=…). First-reach tool for unlabelled tabular
+  anomaly detection; contrast one-class SVM (shape-based) and PCA error (linear
+  normality).
 
 Quantile Regression Forests
-  quantile-forest (sklearn-compatible) or GradientBoosting/HistGB with loss='quantile' per 
-  level. Heteroscedastic intervals: wide where the past was wild, narrow where it was calm.
+  quantile-forest (sklearn-compatible) or GradientBoosting/HistGB with loss='quantile' per
+  level. Heteroscedastic intervals: wide where the past was wild, narrow where it was
+  calm.
 
-## Gradient Boosting & XGBoost  (22)
------------------------------------
+
+## Gradient Boosting & XGBoost  (32)
+-----------------------------
 
 Ensemble
   Gradient boosting is a sequential ensemble that adds one small model at a time.
 
 Overfitting
-  A big train-vs-validation gap signals memorization; early stopping keeps rounds before the 
-  gap opens.
+  A big train-vs-validation gap signals memorization; early stopping keeps rounds before
+  the gap opens.
 
 Boosting round
-  Boosting is just this cycle repeated hundreds of times; early stopping decides how many 
+  Boosting is just this cycle repeated hundreds of times; early stopping decides how many
   rounds to keep.
 
 Weak learner
-  In gradient boosting the weak learner is almost always a shallow tree (max_depth 3–6). 
+  In gradient boosting the weak learner is almost always a shallow tree (max_depth 3–6).
   Many small corrections beat one greedy fit.
 
 Residual
-  In gradient boosting the residual is the (negative) gradient of the loss. Fit it, add a 
+  In gradient boosting the residual is the (negative) gradient of the loss. Fit it, add a
   shrunken version, repeat.
 
 Shrinkage (learning rate)
-  The most important knob in gradient boosting. Lower η almost always helps — you just pay 
+  The most important knob in gradient boosting. Lower η almost always helps — you just pay
   for it in trees.
 
 Early stopping in boosting
-  Bagging saturates harmlessly; boosting overshoots. That asymmetry is why every boosting 
+  Bagging saturates harmlessly; boosting overshoots. That asymmetry is why every boosting
   library ships early stopping as a first-class feature.
 
 Gradient boosting
@@ -776,63 +1046,114 @@ Regularization (boosting)
 Subsampling (stochastic GB)
   A dash of randomness per tree regularizes and speeds boosting.
 
+Functional gradient descent
+  Gradient boosting is gradient descent performed in the space of functions: at each round
+  a new base learner is fit to the negative gradient of the loss, then added to the
+  running model.
+
+Forward stage-wise additive modelling
+  Gradient boosting is a forward stage-wise procedure: it adds one base learner at a time
+  to greedily reduce the loss and never re-fits the terms already added.
+
+Negative-gradient fitting
+  Each round computes the negative gradient of the loss at the current predictions (the
+  pseudo-target) and fits the new tree to it; under squared-error loss these negative
+  gradients are exactly the residuals.
+
+Line search (leaf value optimisation)
+  Once a tree defines a direction, a line search sets the step size (or per-leaf output
+  values) that most reduces the loss along that direction; boosting libraries solve this
+  in closed form per leaf.
+
+Deviance loss (GB classification)
+  For classification, gradient boosting minimises deviance, i.e. logistic/cross-entropy
+  log-loss; its smooth gradient yields the pseudo-residuals the trees are fit to and
+  produces probability outputs.
+
+AdaBoost (adaptive boosting)
+  AdaBoost is an early boosting algorithm that increases the weights of misclassified
+  examples each round so subsequent weak learners concentrate on hard cases; it is
+  equivalent to gradient boosting with an exponential loss.
+
+Boosting reduces bias
+  Boosting combines many high-bias weak learners, each fixing the residual errors of the
+  current ensemble; the sequential correction mainly attacks bias, in contrast with
+  bagging, which mainly attacks variance.
+
+Warm start (incremental trees)
+  A warm start reuses an already-trained ensemble as the starting point and simply appends
+  further trees, which makes it cheap to explore how performance changes as the number of
+  estimators grows.
+
+The learning-rate / n_estimators trade-off
+  Shrinkage and the number of trees interact: halving the learning rate roughly doubles
+  the trees needed for the same training fit, so lower rates with more (early-stopped)
+  trees usually generalise better.
+
+Feature subsampling (max_features in GB)
+  Column subsampling makes each tree (or split) look at only a random fraction of the
+  features; the extra randomness reduces correlation between trees and acts as a
+  regulariser, much like it does in random forests.
+
 Histogram-based split finding
-  The trick that makes LightGBM/XGBoost-hist feasible on huge tabular data — plus column 
+  The trick that makes LightGBM/XGBoost-hist feasible on huge tabular data — plus column
   subsampling and native missing-value routing for the full toolkit.
 
 Stochastic gradient boosting
-  Friedman's 1999 addition. In XGBoost/LightGBM: subsample & colsample_bytree, typically 
+  Friedman's 1999 addition. In XGBoost/LightGBM: subsample & colsample_bytree, typically
   0.6–0.9. Regularisation and a speed-up in one knob.
 
 Weak learners (max_depth 3–6)
-  XGBoost defaults to max_depth=6, LightGBM caps leaves instead (num_leaves≈31). Depth also 
-  bounds interaction order: depth d ⇒ at most d features interacting per path.
+  XGBoost defaults to max_depth=6, LightGBM caps leaves instead (num_leaves≈31). Depth
+  also bounds interaction order: depth d ⇒ at most d features interacting per path.
 
 Newton boosting (second-order)
-  Why XGBoost converges in fewer rounds and regularises coherently. Any twice-differentiable 
-  custom loss plugs in by supplying g and h — the whole API asks for exactly those two.
+  Why XGBoost converges in fewer rounds and regularises coherently. Any
+  twice-differentiable custom loss plugs in by supplying g and h — the whole API asks for
+  exactly those two.
 
 SHAP values (TreeSHAP)
-  shap library: TreeExplainer for XGBoost/LightGBM/forests. Waterfalls for single cases, 
+  shap library: TreeExplainer for XGBoost/LightGBM/forests. Waterfalls for single cases,
   beeswarm for global patterns. Explains the model — causal claims need causal methods.
 
-## Stacking & Voting  (22)
--------------------------
+
+## Stacking & Voting  (32)
+-------------------
 
 Ensemble
-  Many diverse models pooled together usually beat the single best model, because their 
+  Many diverse models pooled together usually beat the single best model, because their
   errors cancel.
 
 Averaging (regression ensembles)
-  Regression's version of voting: average the members' numbers so over- and under-shoots 
+  Regression's version of voting: average the members' numbers so over- and under-shoots
   cancel out.
 
 Weighted voting
-  Give more reliable models a bigger say so a strong model is not overruled by weak models 
+  Give more reliable models a bigger say so a strong model is not overruled by weak models
   that happen to agree.
 
 Base models
-  Choose base models from different families so they fail in different places — that 
+  Choose base models from different families so they fail in different places — that
   diversity is the ensemble's fuel.
 
 Blending
-  The quick version of stacking: one fit per base model, but the meta-model learns from only 
-  that slice.
+  The quick version of stacking: one fit per base model, but the meta-model learns from
+  only that slice.
 
 Leakage (here)
-  The cardinal sin of stacking; prevented by out-of-fold predictions so every base score is 
-  honest.
+  The cardinal sin of stacking; prevented by out-of-fold predictions so every base score
+  is honest.
 
 Voting ensemble
-  sklearn: VotingClassifier(voting='hard' or 'soft'). The simplest ensemble; stacking 
+  sklearn: VotingClassifier(voting='hard' or 'soft'). The simplest ensemble; stacking
   replaces the fixed tally with a learned combiner.
 
 Meta-model (stacking)
-  sklearn: StackingClassifier(estimators=[...], final_estimator=...). Keep the meta-model 
+  sklearn: StackingClassifier(estimators=[...], final_estimator=...). Keep the meta-model
   simple (often logistic regression) to avoid overfitting.
 
 Stacking (stacked generalisation)
-  The heavy artillery of ensembling. Costly and complex — reach for it when the last point 
+  The heavy artillery of ensembling. Costly and complex — reach for it when the last point
   of accuracy genuinely pays.
 
 Stacking
@@ -862,46 +1183,97 @@ Weighted vote
 Voting classifier
   A preset combiner, not a learned one — stacking learns the blend instead.
 
+Level-0 vs level-1 learners
+  In stacked generalisation the level-0 models are the base learners; their out-of-fold
+  predictions form the inputs to a level-1 meta-learner that learns how best to combine
+  them.
+
+Meta-features
+  Meta-features are the base learners' predictions (class probabilities or regression
+  outputs) that serve as the training inputs for the second-level meta-learner in a
+  stacked model.
+
+Holdout blending
+  Blending is a simpler cousin of stacking: base models are fit on the training portion,
+  then their predictions on a separate holdout set are used to train the meta-model,
+  avoiding full out-of-fold cross-validation.
+
+In-sample stacking leakage
+  If the meta-learner is trained on base predictions for rows the base models already saw,
+  those predictions are unrealistically accurate; the meta-learner over-trusts the base
+  models and generalises poorly. Out-of-fold predictions fix this.
+
+Choosing the meta-learner
+  The meta-learner sits on a small, low-dimensional table of base predictions, so a simple
+  regularised model (e.g. logistic/linear regression) is a common, robust choice that
+  resists overfitting the blender.
+
+Rank averaging
+  Rank averaging replaces each model's raw predictions with their rank order before
+  averaging; because ranks are scale-free, it blends models whose score distributions
+  differ without needing calibration.
+
+Super Learner
+  The Super Learner is a formalised stacking method that builds an optimal convex or
+  regression-based combination of a library of candidate models using cross-validated
+  (out-of-fold) predictions, with asymptotic optimality guarantees.
+
+Bucket of models
+  A bucket of models keeps a collection of candidate learners and uses a meta-selection
+  procedure (typically cross-validation) to choose the best single model per problem, in
+  contrast with stacking, which combines them all.
+
+Probability meta-features (soft outputs)
+  Feeding the meta-learner class probabilities (soft outputs) rather than hard labels
+  preserves each base model's confidence and the margin of its decision, which typically
+  improves the blended model's accuracy.
+
+Meta-learner overfitting
+  Because the meta-feature table is small and low-dimensional, a flexible meta-learner can
+  overfit it; using out-of-fold predictions and a simple, regularised blender guards
+  against this.
+
 Out-of-fold stacking
-  sklearn's StackingClassifier does this internally — now you know what it's protecting you 
-  from, and why hand-rolled stacking so often 'mysteriously' disappoints.
+  sklearn's StackingClassifier does this internally — now you know what it's protecting
+  you from, and why hand-rolled stacking so often 'mysteriously' disappoints.
 
 Passthrough stacking (context-aware trust)
-  sklearn: StackingClassifier(passthrough=True), regularise the meta-model. Wins when base 
+  sklearn: StackingClassifier(passthrough=True), regularise the meta-model. Wins when base
   models have different home turfs; skip it when one model dominates uniformly.
 
 Knowledge distillation
-  Hinton et al. 2015. Works stack→GBM, BERT→DistilBERT, GPT→phone model. The ensemble's 
+  Hinton et al. 2015. Works stack→GBM, BERT→DistilBERT, GPT→phone model. The ensemble's
   function is portable; its architecture never was.
 
 Greedy ensemble selection
-  Caruana et al. 2004; still the backbone of AutoML enembling (auto-sklearn). Refinements: 
+  Caruana et al. 2004; still the backbone of AutoML enembling (auto-sklearn). Refinements:
   bagged candidate subsets, initialisation with the top-N models.
 
-## Model Evaluation  (28)
-------------------------
+
+## Model Evaluation  (36)
+------------------
 
 Specificity (true-negative rate)
-  Of all truly negative cases, the fraction the model correctly clears — recall's 
+  Of all truly negative cases, the fraction the model correctly clears — recall's
   counterpart for the negative class.
 
 Threshold
   A cutoff you choose after training that converts probability scores into hard decisions.
 
 The confusion matrix
-  The 2×2 grid that underlies all of classification evaluation. Named for showing where the 
-  model gets confused.
+  The 2×2 grid that underlies all of classification evaluation. Named for showing where
+  the model gets confused.
 
 The precision–recall trade-off
-  Precision and recall are two ends of one see-saw. Reporting either alone hides the see-saw 
-  — which is exactly why F1 and curves exist.
+  Precision and recall are two ends of one see-saw. Reporting either alone hides the
+  see-saw — which is exactly why F1 and curves exist.
 
 The ROC curve
-  One curve summarises every threshold at once — which is why ROC comparisons don't depend 
+  One curve summarises every threshold at once — which is why ROC comparisons don't depend
   on choosing a cutoff first.
 
 ROC-AUC
-  The standard threshold-free comparison between models. Caveat for later: under heavy 
+  The standard threshold-free comparison between models. Caveat for later: under heavy
   imbalance, precision-recall curves can be more informative.
 
 Confusion matrix
@@ -949,56 +1321,89 @@ Mean absolute error
 Support
   How many real cases each per-class metric is based on.
 
+False-negative rate (miss rate)
+  FN / (TP + FN) — the proportion of true positives the classifier fails to detect. Equals
+  1 - recall.
+
+Negative predictive value (NPV)
+  TN / (TN + FN) — of everything predicted negative, the share that really is negative.
+  The mirror image of precision.
+
+False discovery rate (FDR)
+  FP / (TP + FP) = 1 - precision — of the cases flagged positive, the share that are false
+  alarms.
+
+F-beta score (Fbeta)
+  Fbeta = (1+beta^2)*P*R / (beta^2*P + R). beta>1 weights recall more, beta<1 weights
+  precision more; beta=1 gives F1.
+
+Prevalence (base rate)
+  (TP + FN) / N — the fraction of the sample that is actually positive, independent of any
+  model.
+
+Youden's J statistic (informedness)
+  J = sensitivity + specificity - 1, ranging 0 to 1. Its maximum over thresholds picks a
+  balanced operating point on the ROC curve.
+
+Diagnostic odds ratio (DOR)
+  (TP*TN) / (FP*FN) — how much higher the odds of testing positive are among true cases
+  than among non-cases. Higher is better; 1 means useless.
+
+Jaccard score (IoU)
+  |A intersect B| / |A union B| = TP / (TP + FP + FN) — the overlap between
+  predicted-positive and actual-positive sets. Also called the critical success index.
+
 Repeated cross-validation
-  CV is a measurement instrument; repeats tell you its resolution. Never claim a difference 
-  smaller than your instrument can see.
+  CV is a measurement instrument; repeats tell you its resolution. Never claim a
+  difference smaller than your instrument can see.
 
 Nested cross-validation
-  Selection is part of the model. Nested CV (or a sealed test set) is how the selection's 
+  Selection is part of the model. Nested CV (or a sealed test set) is how the selection's
   luck gets excluded from the claim.
 
 Micro vs macro vs weighted averaging
-  sklearn: f1_score(average='micro'|'macro'|'weighted') and classification_report for the 
+  sklearn: f1_score(average='micro'|'macro'|'weighted') and classification_report for the
   per-class table. Big micro−macro gap = minority classes failing.
 
 Proper scoring rules
-  sklearn: log_loss, brier_score_loss. Log-loss for training/tails, Brier for bounded 
+  sklearn: log_loss, brier_score_loss. Log-loss for training/tails, Brier for bounded
   reporting. Pair with calibration_curve to locate WHERE probabilities bend.
 
 Matthews correlation coefficient
-  sklearn: matthews_corrcoef. Cohen's kappa is the chance-corrected relative; both resist 
+  sklearn: matthews_corrcoef. Cohen's kappa is the chance-corrected relative; both resist
   base-rate bluffs that accuracy and (one-sided) F1 fall for.
 
 Calibration curves & ECE
-  sklearn: calibration_curve + CalibratedClassifierCV (isotonic needs ~1k+ points; Platt for 
-  less). Averaging models (forests) under-confide; boosting/NB over-confide — know your 
-  model's dialect.
+  sklearn: calibration_curve + CalibratedClassifierCV (isotonic needs ~1k+ points; Platt
+  for less). Averaging models (forests) under-confide; boosting/NB over-confide — know
+  your model's dialect.
 
 Bootstrap confidence intervals
-  Free (no retraining), works for any metric. Compare models by bootstrapping the paired 
+  Free (no retraining), works for any metric. Compare models by bootstrapping the paired
   difference on shared rows. Interval width ∝ 1/√n: budget test sets accordingly.
 
-## Performance Optimisation  (20)
---------------------------------
+
+## Performance Optimisation  (30)
+--------------------------
 
 Overfitting vs underfitting
-  The core diagnostic: read the gap between training and validation scores to tell 
+  The core diagnostic: read the gap between training and validation scores to tell
   memorising apart from genuine learning.
 
 Baseline
-  The cheapest, highest-return habit in ML: establish the do-nothing score on day one, so 
+  The cheapest, highest-return habit in ML: establish the do-nothing score on day one, so
   every later number means something.
 
 Holdout / validation set
-  The honest referee for every tuning decision. Keep a separate test set sealed for the 
+  The honest referee for every tuning decision. Keep a separate test set sealed for the
   final number.
 
 Data leakage
-  The most common silent bug in applied ML. A too-good-to-be-true score usually is — hunt 
+  The most common silent bug in applied ML. A too-good-to-be-true score usually is — hunt
   the leak before celebrating.
 
 Learning curves
-  One plot that prices your options. Teams that skip it routinely spend months collecting 
+  One plot that prices your options. Teams that skip it routinely spend months collecting
   data their model cannot use.
 
 Bias-variance tradeoff
@@ -1034,25 +1439,66 @@ L2 (ridge) penalty
 L1 (lasso) penalty
   Sends weights to exact zero — sparse models and feature selection.
 
+Bias (in bias-variance)
+  The systematic error from wrong or overly simple assumptions; high bias underfits,
+  missing real structure in the data.
+
+Variance (in bias-variance)
+  How much a model's fit swings with different training samples; high variance overfits,
+  memorising noise. Reduced by more data or regularisation.
+
+Model capacity
+  How rich or flexible the set of functions a model can represent is. Too little capacity
+  underfits; too much invites overfitting.
+
+Validation curve
+  Train and validation score plotted as a single hyperparameter is varied, revealing
+  under- vs over-fitting regions and the sweet spot.
+
+Irreducible error (noise floor)
+  The Bayes-error component of expected loss caused by inherent randomness or unmeasured
+  factors; it bounds how good any model can be.
+
+Double descent
+  The phenomenon where test error first drops, worsens near the interpolation threshold,
+  then improves again as capacity grows past it - defying the classic U-shape.
+
+High-variance signature (overfitting)
+  Near-perfect training score but much lower validation score - a big generalisation gap.
+  Cure: more data, a simpler model, or regularisation.
+
+High-bias signature (underfitting)
+  Low training AND low validation scores that sit close together - the model is too
+  simple. Cure: more capacity or better features, not more data.
+
+VC dimension
+  The Vapnik-Chervonenkis dimension: the size of the largest point set a classifier family
+  can label in every possible way (shatter). A formal capacity measure.
+
+Data augmentation
+  Creating additional training examples by applying label-preserving transformations
+  (flips, crops, noise, synonyms) to existing data, reducing overfitting.
+
 Ensembling
-  Random forests bake this into trees; stacking does it across model families. The 
+  Random forests bake this into trees; stacking does it across model families. The
   prerequisite is always the same: members that fail differently.
 
 Nested cross-validation
-  sklearn: cross_val_score(GridSearchCV(...), X, y) — one line nests them. Cost = outer × 
+  sklearn: cross_val_score(GridSearchCV(...), X, y) — one line nests them. Cost = outer ×
   inner × combos fits; halving/successive-halving tames it.
 
 Successive halving & Hyperband
-  sklearn: HalvingGridSearchCV / HalvingRandomSearchCV (resource = n_samples or 
-  n_estimators). Assumes early performance predicts final — hedge with Hyperband when 
+  sklearn: HalvingGridSearchCV / HalvingRandomSearchCV (resource = n_samples or
+  n_estimators). Assumes early performance predicts final — hedge with Hyperband when
   unsure.
 
 Bayesian optimisation
-  Optuna (TPE + pruning) is the practical default. The paradigm — spend cheap model-fits to 
-  steer expensive real-fits — recurs across AutoML, A/B design, and lab science.
+  Optuna (TPE + pruning) is the practical default. The paradigm — spend cheap model-fits
+  to steer expensive real-fits — recurs across AutoML, A/B design, and lab science.
 
-## Advanced Scikit-learn  (22)
------------------------------
+
+## Advanced Scikit-learn  (32)
+-----------------------
 
 random_state / reproducibility
   Seeding the random generator makes splits, shuffles, and fits reproducible.
@@ -1064,33 +1510,33 @@ One-hot encoding categoricals
   Estimators need numeric input, so each category becomes its own indicator column.
 
 Estimator
-  The shared interface lets you swap any estimator for another without touching the code 
+  The shared interface lets you swap any estimator for another without touching the code
   around it.
 
 .fit(X, y)
   Fit is the only step that changes what the model knows; call it on training data only.
 
 Transformer & .transform
-  Fit learns the recipe from training data only; transform applies that same recipe to any 
+  Fit learns the recipe from training data only; transform applies that same recipe to any
   set.
 
 Calibration
-  Calibrate whenever you act on the probability itself - pricing, thresholds, expected 
+  Calibrate whenever you act on the probability itself - pricing, thresholds, expected
   value.
 
 Permutation importance
   Model-agnostic and computed on held-out data - trust it over raw feature_importances_.
 
 ColumnTransformer
-  The standard front door for real-world tabular data. With Pipeline, it forms the skeleton 
-  of virtually every production sklearn model.
+  The standard front door for real-world tabular data. With Pipeline, it forms the
+  skeleton of virtually every production sklearn model.
 
 RandomizedSearchCV
-  For more than 2–3 hyperparameters, random beats grid at any realistic budget. Bergstra & 
+  For more than 2–3 hyperparameters, random beats grid at any realistic budget. Bergstra &
   Bengio proved what practitioners had noticed.
 
 Stratified splitting
-  One keyword between you and evaluation roulette. The rarer your positive class, the less 
+  One keyword between you and evaluation roulette. The rarer your positive class, the less
   optional it is.
 
 .fit()
@@ -1123,39 +1569,80 @@ predict_proba
 random_state
   Seeds the RNG so shuffles, splits, and models repeat exactly.
 
+make_pipeline
+  A convenience constructor that returns a Pipeline, deriving step names from the
+  estimator class names so you don't specify them by hand.
+
+make_column_transformer
+  A helper that builds a ColumnTransformer without explicit names, mapping (transformer,
+  columns) pairs so numeric and categorical features get different preprocessing.
+
+SimpleImputer
+  A transformer that replaces missing entries in a column with a constant or a statistic
+  (mean/median/mode) learned from the training data.
+
+OrdinalEncoder
+  A transformer that converts categorical columns into integer codes (0,1,2,...), suitable
+  when categories have a natural order or for tree models.
+
+MinMaxScaler
+  A transformer that linearly maps each feature so its minimum becomes 0 and its maximum
+  becomes 1 (or another chosen range), using bounds from the training data.
+
+LabelEncoder
+  A utility that converts a 1-D array of class labels into integer codes; it is meant for
+  the target y, not for encoding feature columns.
+
+FunctionTransformer
+  A transformer that turns a stateless function (e.g. np.log1p) into an estimator with
+  fit/transform, so custom operations slot into pipelines.
+
+clone
+  A helper that returns a fresh estimator with identical constructor arguments but no
+  fitted state, used to get independent copies for each fold or trial.
+
+get_params / set_params
+  Methods every scikit-learn estimator exposes so its hyperparameters can be inspected and
+  updated; search tools rely on them to set candidate values.
+
+cross_validate
+  A cross-validation utility that can evaluate several scoring metrics at once and also
+  returns timing (and optionally train scores and fitted estimators).
+
 CalibratedClassifierCV
-  Accuracy checks the verdicts; calibration checks the confidence. Systems that ACT on 
+  Accuracy checks the verdicts; calibration checks the confidence. Systems that ACT on
   probabilities need both audited.
 
-## K-Means  (21)
----------------
+
+## K-Means  (31)
+---------
 
 Hard assignment
   K-means gives every point a single definite cluster label, never a partial membership.
 
 Cluster
-  Clustering is unsupervised: it discovers structure. k-means, hierarchical and DBSCAN just 
-  define 'similar' and 'group' differently.
+  Clustering is unsupervised: it discovers structure. k-means, hierarchical and DBSCAN
+  just define 'similar' and 'group' differently.
 
 Centroid
-  k-means alternates: assign points to the nearest centroid, then move each centroid to its 
-  members' mean. Repeat until stable.
+  k-means alternates: assign points to the nearest centroid, then move each centroid to
+  its members' mean. Repeat until stable.
 
 k (number of clusters)
-  sklearn: KMeans(n_clusters=k). Choosing k is the method's main burden; density methods 
+  sklearn: KMeans(n_clusters=k). Choosing k is the method's main burden; density methods
   like DBSCAN sidestep it.
 
 Clustering (unsupervised learning)
-  The defining move of unsupervised learning: structure out, meaning added by you. Every 
+  The defining move of unsupervised learning: structure out, meaning added by you. Every
   algorithm in this topic is a different definition of 'huddle'.
 
 Lloyd's algorithm (k-means)
-  Two moves, looped. Simple enough to memorise, fast enough for millions of points — which 
+  Two moves, looped. Simple enough to memorise, fast enough for millions of points — which
   is why it's everyone's first clusterer.
 
 The elbow method
-  Choosing k is a judgement call informed by curves, not an answer the data hands you. Elbow 
-  and silhouette are the two standard advisers.
+  Choosing k is a judgement call informed by curves, not an answer the data hands you.
+  Elbow and silhouette are the two standard advisers.
 
 Inertia (k-means)
   Lower means tighter clusters; the elbow in its curve helps pick k.
@@ -1190,38 +1677,89 @@ Lloyd's algorithm
 Feature scaling for k-means
   Distance-based clustering is fair only when features share a scale.
 
+Between-cluster sum of squares (BCSS)
+  BCSS measures separation: how far the clusters' centroids sit from the global mean.
+  Total variance = BCSS + WCSS, so maximising BCSS is the same as minimising
+  within-cluster inertia.
+
+Convergence criterion (centroid stability)
+  Lloyd's iteration alternates assignment and update; it converges when no point changes
+  cluster (equivalently, centroids no longer move), or when inertia's decrease falls below
+  a tolerance. Inertia never increases, so this always terminates.
+
+Empty cluster problem
+  During iteration a centroid can end up being nearest to no points, so its mean is
+  undefined. Implementations handle it by reinitialising that centroid, often to the point
+  furthest from its current cluster.
+
+Distortion (k-means objective)
+  Distortion is another name for the objective k-means minimises: the sum of squared
+  distances from points to their assigned centroids (the inertia / WCSS). Lower distortion
+  means tighter clusters.
+
+NP-hardness of optimal k-means
+  Exactly minimising the objective over all possible assignments is NP-hard, because the
+  space of partitions is astronomically large. Lloyd's algorithm is only a fast heuristic
+  that reaches a local optimum, not the guaranteed global one.
+
+Forgy initialisation
+  The Forgy method seeds k-means by selecting k of the observations at random as the
+  starting centroids. The 'random partition' method instead assigns points to random
+  clusters first; both are weaker than k-means++.
+
+Gap statistic
+  The gap statistic compares the within-cluster dispersion for each k against the
+  dispersion expected from a uniformly random (null) reference distribution. The k with
+  the largest gap over the reference is chosen.
+
+Davies-Bouldin index
+  The Davies-Bouldin index averages, over clusters, the worst-case ratio of within-cluster
+  scatter to between-cluster separation. Lower values indicate tight, well-separated
+  clusters; it needs no ground-truth labels.
+
+Calinski-Harabasz index
+  Also called the variance-ratio criterion, it divides between-cluster dispersion by
+  within-cluster dispersion (with a degrees-of-freedom adjustment for k and n). Higher
+  means denser, better-separated clusters.
+
+k-medoids (PAM)
+  k-medoids (Partitioning Around Medoids) uses real observations as cluster centres and
+  minimises total distance to them. Because medoids are actual points and it can use any
+  distance, it is more robust to outliers than k-means.
+
 MiniBatchKMeans
-  sklearn.cluster.MiniBatchKMeans(batch_size=1024). The same stochastic-approximation idea 
+  sklearn.cluster.MiniBatchKMeans(batch_size=1024). The same stochastic-approximation idea
   that powers SGD in deep learning, applied to Lloyd's algorithm.
 
 Vector quantization
-  k-means as compression: centroids = codebook, assignments = the data. Image palettes, 
+  k-means as compression: centroids = codebook, assignments = the data. Image palettes,
   audio codecs, and product-quantized vector search all run on it.
 
 Adjusted Rand Index
-  sklearn: adjusted_rand_score, plus NMI/AMI. Use for seed-stability audits, algorithm 
+  sklearn: adjusted_rand_score, plus NMI/AMI. Use for seed-stability audits, algorithm
   comparisons, and scoring against known classes. Label integers are costumes.
 
-## Hierarchical Clustering  (19)
--------------------------------
+
+## Hierarchical Clustering  (31)
+-------------------------
 
 Feature scaling
-  Distance-based clustering is dominated by large-range features unless each feature is 
+  Distance-based clustering is dominated by large-range features unless each feature is
   rescaled first.
 
 Connectivity constraint
-  sklearn: AgglomerativeClustering(connectivity=...). Lets clusters grow along manifolds 
+  sklearn: AgglomerativeClustering(connectivity=...). Lets clusters grow along manifolds
   instead of leaping empty space.
 
 Dendrogram
-  It holds all groupings at once. You extract one by cutting the tree at a chosen height — 
+  It holds all groupings at once. You extract one by cutting the tree at a chosen height —
   the next idea.
 
 Agglomerative vs divisive
   sklearn ships agglomerative. Bisecting k-means is the practical divisive method.
 
 Agglomerative clustering
-  The output is a tree of merges (a dendrogram), not one answer. Cutting the tree at a 
+  The output is a tree of merges (a dendrogram), not one answer. Cutting the tree at a
   height is how an answer gets extracted — next exercise.
 
 Hierarchical clustering
@@ -1254,54 +1792,118 @@ Cophenetic distance
 Cutting the dendrogram
   Turns the full hierarchy into a flat clustering; cut height chooses the number.
 
+Centroid linkage
+  Centroid linkage defines the distance between two clusters as the distance between their
+  centroids. Unlike single/complete/average linkage, it can produce non-monotonic
+  dendrograms (inversions) because a merged centroid may sit closer than earlier merges.
+
+Median linkage (WPGMC)
+  Median (weighted centroid) linkage, WPGMC, updates the merged cluster's representative
+  point as the unweighted midpoint of the two previous centroids, so cluster size does not
+  bias the new centre. Like centroid linkage it can show inversions.
+
+Weighted average linkage (WPGMA)
+  WPGMA computes the distance to a newly merged cluster as the simple mean of the
+  distances to its two components, giving each component equal weight even if one held far
+  more points. UPGMA (unweighted) instead weights by cluster size.
+
+Chaining effect
+  Because single linkage merges on the single closest pair, a sequence of points spaced
+  closely together can 'chain' two otherwise-distinct clusters into one long, thin
+  cluster. It is single linkage's main weakness.
+
+Dendrogram inversion
+  An inversion occurs when a cluster forms at a height below one of the merges that
+  created its parts, so merge heights are not monotonically increasing. Centroid and
+  median linkage can produce them; single/complete/average/Ward cannot.
+
+Proximity (distance) matrix
+  Hierarchical clustering starts from an n-by-n matrix of pairwise distances (or
+  similarities). Each merge collapses two rows/columns into one, updated by the linkage
+  rule, until a single cluster remains.
+
+Nearest-neighbour chain algorithm
+  The NN-chain algorithm follows a path of clusters, each the nearest neighbour of the
+  last, until it finds a mutual (reciprocal) nearest pair, which it merges. For linkages
+  satisfying reducibility it gives the same result in O(n^2) time without needing to store
+  the whole priority queue.
+
+Ultrametric property
+  The cophenetic (tree) distances induced by a monotonic dendrogram form an ultrametric:
+  they obey the strong triangle inequality d(x,z) <= max(d(x,y), d(y,z)). This is a
+  stronger condition than the ordinary triangle inequality.
+
+Flat clusters (fcluster)
+  A dendrogram encodes clusterings at every level; extracting one usable partition (e.g.
+  via scipy's fcluster, by a distance threshold or a target count) yields 'flat' clusters,
+  a single non-nested set of labels.
+
+Singleton initialisation
+  Agglomerative (bottom-up) clustering starts with n singleton clusters, one per point,
+  then repeatedly merges the two closest until one cluster remains. This is the opposite
+  of divisive clustering, which starts from one big cluster.
+
+Number of merges (n - 1)
+  Starting from n singletons and ending with one cluster, each merge reduces the cluster
+  count by exactly one, so the full dendrogram takes n - 1 merges regardless of the
+  linkage or data.
+
+Leaf ordering
+  A dendrogram's branches can be flipped at any internal node without changing the
+  clustering, so the leaf order is not unique. Optimal-leaf-ordering algorithms choose
+  flips that place similar leaves adjacent, improving heatmap readability.
+
 Divisive (top-down) clustering
-  Bisecting k-means (repeatedly 2-means-split the worst cluster) is the practical divisive 
-  method — sklearn ships it as BisectingKMeans. Everything else hierarchical is 
+  Bisecting k-means (repeatedly 2-means-split the worst cluster) is the practical divisive
+  method — sklearn ships it as BisectingKMeans. Everything else hierarchical is
   agglomerative in practice.
 
 Lance–Williams recurrence
-  Per-linkage coefficients turn agglomeration into O(1) updates. sklearn ties linkage='ward' 
-  to affinity='euclidean'; other linkages accept metric=. Fast-clustering libraries 
-  (fastcluster) implement exactly this.
+  Per-linkage coefficients turn agglomeration into O(1) updates. sklearn ties
+  linkage='ward' to affinity='euclidean'; other linkages accept metric=. Fast-clustering
+  libraries (fastcluster) implement exactly this.
 
 Cophenetic correlation
-  scipy: cophenet(linkage_matrix, original_distances). Maximise it over linkages to choose 
+  scipy: cophenet(linkage_matrix, original_distances). Maximise it over linkages to choose
   one objectively; a low value means the data may not be hierarchical at all.
 
 BIRCH & the CF-tree
-  sklearn: Birch(threshold=…, n_clusters=…). For massive or streaming data when hierarchical 
-  structure is wanted; MiniBatchKMeans is the flat-clustering counterpart at scale.
+  sklearn: Birch(threshold=…, n_clusters=…). For massive or streaming data when
+  hierarchical structure is wanted; MiniBatchKMeans is the flat-clustering counterpart at
+  scale.
 
-## DBSCAN  (18)
---------------
+
+## DBSCAN  (30)
+--------
 
 Density
   Density, set by eps and min_samples, is DBSCAN's whole definition of what a cluster is.
 
 Border point
-  Border points belong to the cluster's edge — pulled in by a core neighbour, but unable to 
-  grow the cluster themselves.
+  Border points belong to the cluster's edge — pulled in by a core neighbour, but unable
+  to grow the cluster themselves.
 
 k-distance plot
-  The standard recipe for reading a sensible eps straight off the data instead of guessing.
+  The standard recipe for reading a sensible eps straight off the data instead of
+  guessing.
 
 eps (neighbourhood radius)
-  Read a sensible eps off the 'k-distance plot' — sort each point's distance to its k-th 
+  Read a sensible eps off the 'k-distance plot' — sort each point's distance to its k-th
   neighbour and find the elbow.
 
 minPts (density threshold)
-  A common rule of thumb: minPts ≈ 2 × number of features. Raise it to suppress noise, lower 
-  it to keep sparse clusters.
+  A common rule of thumb: minPts ≈ 2 × number of features. Raise it to suppress noise,
+  lower it to keep sparse clusters.
 
 Core point
-  Border points sit in a core point's neighbourhood but aren't dense themselves; noise 
+  Border points sit in a core point's neighbourhood but aren't dense themselves; noise
   points belong to no dense region at all.
 
 Noise label (−1)
   This makes DBSCAN a natural outlier/anomaly detector — the noise set IS the anomalies.
 
 DBSCAN (density-based clustering)
-  Clusters as connected dense regions — any shape, count discovered not chosen, and a 
+  Clusters as connected dense regions — any shape, count discovered not chosen, and a
   built-in notion of 'belongs to nothing'. The three gifts k-means lacks.
 
 DBSCAN
@@ -1331,37 +1933,99 @@ k-distance graph
 HDBSCAN
   Hierarchical DBSCAN; handles varied densities and needs no single eps.
 
+Region query
+  The core operation of DBSCAN is the region (range) query: retrieving every point inside
+  the eps-ball around a given point. If that set has at least min_samples members, the
+  point is a core point. Spatial indexes speed these queries up.
+
+Cluster expansion (seed growth)
+  When DBSCAN finds a core point it starts a cluster and expands it: every point in the
+  core's eps-neighbourhood is added, and if any of those are themselves core points, their
+  neighbours are added too, until no more can be reached.
+
+Core distance (OPTICS)
+  In OPTICS, a point's core distance is the distance to its min_samples-th nearest
+  neighbour, i.e. the smallest eps at which it would qualify as a core point. If it has
+  fewer than min_samples neighbours within eps it is undefined.
+
+Reachability distance (OPTICS)
+  The reachability distance of point q from core point p is max(core-distance(p), dist(p,
+  q)). It smooths distances so that points inside p's dense core all appear at least
+  core-distance away, producing the OPTICS reachability plot's valleys.
+
+Mean-shift clustering
+  Mean-shift places a kernel window over each point and iteratively shifts it toward the
+  local mean (higher density) until it converges on a mode. Points converging to the same
+  mode form a cluster; the bandwidth controls cluster count.
+
+Noise as a feature (outlier detection)
+  Unlike k-means or hierarchical clustering, DBSCAN does not force every point into a
+  cluster: points in sparse regions are given the noise label -1. This built-in outlier
+  detection is a key advantage of density-based methods.
+
+Centroid-free clustering
+  DBSCAN never computes cluster means or centres. A cluster is simply a maximal set of
+  density-connected points, so clusters can take arbitrary shapes that no single centroid
+  could summarise.
+
+Core-point determinism
+  Whether a point is a core point is fixed by the data, eps and min_samples: it is core
+  iff at least min_samples points lie within eps. Only border points can be ambiguous
+  (assigned to whichever core reaches them first), causing DBSCAN's mild order dependence.
+
+DBSCAN vs k-means (assumptions)
+  k-means assumes roughly spherical, similarly sized clusters and needs k in advance.
+  DBSCAN instead assumes clusters are dense regions separated by sparse ones, so it finds
+  arbitrary shapes, chooses the count itself, and flags noise.
+
+Convex vs non-convex clusters
+  k-means assigns each point to its nearest centroid, carving space into convex Voronoi
+  cells, so it cannot represent a crescent or ring. DBSCAN chains together
+  density-connected points, so a cluster can follow any connected shape.
+
+No native predict for new points
+  DBSCAN is transductive: it clusters a fixed dataset and has no parametric model (no
+  centroids, no boundaries) to score unseen points. To label new points you must either
+  refit or apply a heuristic, e.g. assign to a cluster if within eps of one of its core
+  points.
+
+Single global density scale
+  DBSCAN uses one eps and one min_samples everywhere, so a threshold tuned for dense
+  clusters merges or drops sparse ones (and vice versa). Varying-density data is DBSCAN's
+  main weakness; HDBSCAN and OPTICS address it by allowing multiple density scales.
+
 Spectral clustering
-  sklearn: SpectralClustering(affinity='precomputed' for graphs, 'rbf'/'nearest_neighbors' 
-  for points). O(n³) naively — use sparse graphs / Nyström at scale. The clusterer for 
+  sklearn: SpectralClustering(affinity='precomputed' for graphs, 'rbf'/'nearest_neighbors'
+  for points). O(n³) naively — use sparse graphs / Nyström at scale. The clusterer for
   networks and manifolds.
 
-## PCA  (21)
------------
+
+## PCA  (31)
+-----
 
 Dimension
-  Dimensionality counts features, not samples; PCA replaces many axes with a few 
+  Dimensionality counts features, not samples; PCA replaces many axes with a few
   high-variance ones.
 
 Reconstruction error
-  Normal points survive compression but anomalies do not, so reconstruction error doubles as 
-  an outlier score.
+  Normal points survive compression but anomalies do not, so reconstruction error doubles
+  as an outlier score.
 
 Projection
-  Dimensionality reduction is projection onto fewer directions. PCA chooses the directions 
+  Dimensionality reduction is projection onto fewer directions. PCA chooses the directions
   that keep the most spread.
 
 Principal component (PC1)
-  Each component is a blended direction. Keeping the top few is how PCA compresses while 
+  Each component is a blended direction. Keeping the top few is how PCA compresses while
   losing the least spread.
 
 Loadings
-  sklearn: pca.components_. Same-sign block of strong loadings = a shared factor you can 
+  sklearn: pca.components_. Same-sign block of strong loadings = a shared factor you can
   name; near-zero = irrelevant.
 
 The first principal component
-  PCA's whole game: flatten with minimum regret. You searched by slider; eigen-decomposition 
-  hands the answer in closed form, for 300 dimensions as easily as 2.
+  PCA's whole game: flatten with minimum regret. You searched by slider;
+  eigen-decomposition hands the answer in closed form, for 300 dimensions as easily as 2.
 
 Variance explained (PCA)
   Sum it over kept components to see how much information you retained.
@@ -1399,32 +2063,80 @@ Orthogonal components
 Whitening
   It leaves uncorrelated features all scaled to variance one.
 
+Singular value decomposition (SVD)
+  SVD factorises a data matrix X into three matrices; the right singular vectors are PCA's
+  principal directions and the singular values encode the variance along them.
+
+Singular value
+  Each singular value from SVD is the square root of an eigenvalue of the covariance
+  matrix; larger singular values mark directions holding more of the data's variance.
+
+Eigendecomposition
+  PCA can be computed by eigendecomposing the covariance matrix: its eigenvectors are the
+  principal directions and its eigenvalues are the variances along them.
+
+Mean centering
+  PCA assumes data is centred at the origin, so each feature's mean is subtracted first;
+  without centring the first component can point at the data's offset rather than its
+  spread.
+
+Orthonormal basis
+  Each principal component is a unit vector (length one) and every pair is orthogonal (dot
+  product zero), so together they form an orthonormal coordinate system for the data.
+
+Cumulative explained variance
+  Summing the explained-variance ratios of the first k components gives the fraction of
+  total variance those components retain; it is used to choose how many components to keep
+  (e.g. 95%).
+
+n_components
+  n_components sets the target dimensionality: how many top principal directions PCA
+  projects onto. It can be an integer, or a fraction meaning 'enough components to explain
+  that much variance'.
+
+Kernel PCA
+  Kernel PCA applies the kernel trick to implicitly map data into a higher-dimensional
+  space and run PCA there, letting it capture curved structure that ordinary linear PCA
+  cannot.
+
+Biplot
+  A biplot overlays the projected data points and arrows for the original features (their
+  loadings) on the first two principal components, showing both where samples fall and how
+  features drive each axis.
+
+Incremental PCA
+  IncrementalPCA processes the data in mini-batches, updating the components as it goes,
+  so it can handle datasets too large to load into memory while approximating ordinary PCA
+  closely.
+
 Randomized SVD
-  sklearn: PCA(svd_solver='randomized') — auto-selected for large inputs with small 
+  sklearn: PCA(svd_solver='randomized') — auto-selected for large inputs with small
   n_components. Oversampling + power iterations trade a little compute for accuracy.
 
 NMF (Non-negative Matrix Factorization)
-  sklearn: NMF(n_components=…). Non-negative data only (counts, pixels, magnitudes). The 
-  go-to for topic modelling (with TF-IDF), source separation, and interpretable 
+  sklearn: NMF(n_components=…). Non-negative data only (counts, pixels, magnitudes). The
+  go-to for topic modelling (with TF-IDF), source separation, and interpretable
   decomposition.
 
 TruncatedSVD (LSA)
-  sklearn: TruncatedSVD(n_components=…) for text/one-hot/count matrices. On TF-IDF it's LSA. 
-  Rule: dense → PCA, sparse → TruncatedSVD — never densify a sparse matrix by centering.
+  sklearn: TruncatedSVD(n_components=…) for text/one-hot/count matrices. On TF-IDF it's
+  LSA. Rule: dense → PCA, sparse → TruncatedSVD — never densify a sparse matrix by
+  centering.
 
-## t-SNE  (13)
--------------
+
+## t-SNE  (27)
+-------
 
 UMAP
   The modern cousin of t-SNE — read cluster membership from it, not literal distances.
 
 Dimensionality reduction
-  For visualisation (2-D), speed, denoising, or compact model inputs. PCA (linear) and 
+  For visualisation (2-D), speed, denoising, or compact model inputs. PCA (linear) and
   t-SNE/UMAP (non-linear) are the workhorses.
 
 Embedding
-  t-SNE/UMAP make 2-D embeddings for the eye; word2vec-style embeddings use many dimensions 
-  you compute with. Same deal: closeness encodes similarity.
+  t-SNE/UMAP make 2-D embeddings for the eye; word2vec-style embeddings use many
+  dimensions you compute with. Same deal: closeness encodes similarity.
 
 t-SNE
   A nonlinear map that preserves local neighbourhoods for visualisation.
@@ -1456,15 +2168,86 @@ Early exaggeration
 init='pca'
   A PCA start yields more stable, globally faithful t-SNE maps.
 
-## Feature Engineering  (20)
----------------------------
+Student's t-distribution (low-D similarities)
+  In the map, t-SNE models similarities with a heavy-tailed Student-t (one degree of
+  freedom); the fat tails let moderately dissimilar points spread out, relieving the
+  crowding that a Gaussian would cause.
+
+Barnes-Hut approximation
+  Barnes-Hut groups distant points and treats each group as a single source of repulsive
+  force, cutting t-SNE's cost from quadratic to about n log n and making larger datasets
+  feasible.
+
+Non-determinism (random_state)
+  t-SNE optimises a non-convex objective from a random start, so different seeds land in
+  different local optima; fixing random_state (or using init='pca') makes runs
+  reproducible.
+
+Cannot transform new points
+  t-SNE optimises the positions of a fixed set of points rather than learning a reusable
+  function, so there is no transform() for unseen data; you must refit with the new points
+  included (UMAP does support transform).
+
+Global structure (not preserved)
+  t-SNE is tuned to keep each point near its true neighbours, so within-cluster structure
+  is trustworthy; the distances and arrangement between separate clusters, however, carry
+  little reliable meaning.
+
+Cluster sizes are meaningless
+  Because of the heavy-tailed similarity and adaptive density handling, t-SNE stretches
+  tight clusters and compresses loose ones, so a cluster's visual area does not reflect
+  how many points or how much variance it holds.
+
+Inter-cluster distances are meaningless
+  t-SNE's objective cares about preserving neighbourhoods, not global geometry, so the
+  amount of empty space between two clusters does not reliably indicate how different
+  those groups are.
+
+Gradient descent optimisation
+  t-SNE iteratively moves the low-dimensional points using gradient descent to reduce the
+  KL divergence between high- and low-dimensional similarity distributions, which is why
+  runs are iterative and seed-dependent.
+
+High-dimensional affinities (Gaussian)
+  In the input space t-SNE converts distances into probabilities using a Gaussian kernel
+  whose width is set per point by the perplexity; these conditional probabilities express
+  how likely each point is to be a neighbour.
+
+Symmetric SNE
+  t-SNE symmetrises the pairwise affinities so that p(i,j) equals p(j,i), forming a single
+  joint probability distribution; this simplifies the gradient and avoids the outlier
+  problems that plain SNE had.
+
+Output dimensionality (n_components)
+  n_components sets how many dimensions t-SNE embeds into; because it is a visualisation
+  tool the value is essentially always 2 (or 3), unlike PCA where many components may be
+  kept.
+
+Attractive and repulsive forces
+  The t-SNE gradient acts like a physical system: similar points feel an attractive pull
+  that draws true neighbours together, while a repulsive push spreads all points apart,
+  and the equilibrium forms the clusters.
+
+No parametric mapping
+  Standard t-SNE optimises the coordinates of each training point without fitting
+  parameters of a function from input to output, so it produces an embedding but not a
+  model you can apply to new data.
+
+Metric distortion
+  t-SNE deliberately warps distances, stretching some and compressing others to preserve
+  neighbourhood identity, so you cannot convert a measured distance on the plot back into
+  a meaningful original distance.
+
+
+## Feature Engineering  (32)
+---------------------
 
 Feature engineering
   Reshaping data into good features often helps more than swapping in a fancier model.
 
 Feature
-  A feature is a measurable column describing each example; models learn from features to a 
-  target.
+  A feature is a measurable column describing each example; models learn from features to
+  a target.
 
 One-hot encoding
   Each category gets its own indicator column, avoiding any fake ordering.
@@ -1473,7 +2256,8 @@ Ordinal encoding
   Map categories to integers only when their order is genuine.
 
 Feature scaling
-  Rescaling stops big-numbered features from dominating distance- and gradient-based models.
+  Rescaling stops big-numbered features from dominating distance- and gradient-based
+  models.
 
 Standardization
   Recenters to mean 0 and rescales to standard deviation 1; values become z-scores.
@@ -1487,49 +2271,110 @@ Imputation
 Datetime features
   Extract calendar parts from timestamps to expose seasonality models can learn.
 
+Frequency encoding
+  Frequency (or count) encoding maps each category to its count or proportion in the
+  training data, turning a categorical column into one numeric column while retaining
+  information about how common each level is.
+
+Binary encoding
+  Binary encoding assigns each category an integer, writes that integer in base-2, and
+  spreads its bits across log2(k) columns, giving far fewer columns than one-hot for
+  high-cardinality features while staying collision-free.
+
+Aggregation features
+  Aggregation features summarise many rows for an entity into one value, such as the
+  count, sum, mean, min or max of a group, and are common when relating transaction-level
+  data to a customer or session level.
+
+Domain features
+  Domain features encode insight a subject expert brings, for example body-mass index from
+  height and weight, or debt-to-income ratio in credit scoring; they often help more than
+  any generic transformation.
+
+Box-Cox transform
+  Box-Cox applies a parametrised power transform (choosing the exponent by maximum
+  likelihood) to strictly positive data to reduce skew and stabilise variance, making it
+  more suitable for models that assume normality.
+
+Yeo-Johnson transform
+  Yeo-Johnson is a power transform like Box-Cox that reduces skewness and stabilises
+  variance, but it is defined for zero and negative values too, making it the more
+  general-purpose choice.
+
+Quantile binning
+  Quantile binning chooses cut points so each bin contains roughly the same number of
+  observations (e.g. deciles), which handles skew better than equal-width bins because no
+  bin ends up nearly empty.
+
+Ratio features
+  A ratio feature divides one quantity by another to expose relative rather than absolute
+  information, such as debt-to-income or price-per-square-metre; ratios often carry more
+  signal than either raw column alone.
+
+Lag features
+  A lag feature copies a value from an earlier time step (e.g. yesterday's sales) into the
+  current row, giving the model recent history; care is needed to avoid leaking future
+  information.
+
+Rolling-window features
+  Rolling (or moving) window features summarise a sliding span of recent observations,
+  such as a 7-day moving average or rolling standard deviation, smoothing noise and
+  capturing local trend for time-series models.
+
+Missingness indicator
+  Adding a 0/1 indicator for whether a feature was missing lets the model learn from the
+  fact of missingness itself, which is useful when data is not missing at random and the
+  missingness carries signal.
+
+Outlier clipping (winsorising)
+  Winsorising limits the influence of outliers by capping values below the lower and above
+  the upper percentile at those thresholds, keeping the rows while reducing the pull of
+  extreme values on the model.
+
 Binning
-  Discretizes a number into ranges; exposes stage effects and curbs outliers, losing fine 
+  Discretizes a number into ranges; exposes stage effects and curbs outliers, losing fine
   detail.
 
 Interaction feature
   Combines two features to capture joint effects a linear model can't otherwise see.
 
 Log transform
-  Compresses large values, reducing right-skew and stabilizing variance; needs positive 
+  Compresses large values, reducing right-skew and stabilizing variance; needs positive
   inputs.
 
 Feature extraction
-  Creates informative columns from raw text/images/dates; distinct from selecting existing 
+  Creates informative columns from raw text/images/dates; distinct from selecting existing
   ones.
 
 Cyclical encoding
-  Sine/cosine put cyclic values on a circle so the ends (23:00 and 00:00) sit next to each 
+  Sine/cosine put cyclic values on a circle so the ends (23:00 and 00:00) sit next to each
   other.
 
 Rare-category grouping
-  Merge infrequent categories into one bucket for stable columns and fewer 
+  Merge infrequent categories into one bucket for stable columns and fewer
   overfitting/unseen-value issues.
 
 Polynomial feature
   Powers and products of features let linear models fit curves and interactions.
 
 Target encoding
-  Collapses high-cardinality categories into one number; compute out-of-fold to avoid 
+  Collapses high-cardinality categories into one number; compute out-of-fold to avoid
   leakage.
 
 TF-IDF
-  Boosts words frequent in a document but rare across the corpus; down-weights ubiquitous 
+  Boosts words frequent in a document but rare across the corpus; down-weights ubiquitous
   words.
 
 Feature hashing
-  Hashes categories into a fixed number of columns; constant memory, at the cost of rare 
+  Hashes categories into a fixed number of columns; constant memory, at the cost of rare
   collisions.
 
 Out-of-fold target encoding
   Compute category means out-of-fold so a row never sees its own label; fit on train only.
 
-## Feature Selection  (17)
--------------------------
+
+## Feature Selection  (29)
+-------------------
 
 Feature selection
   A carefully chosen subset usually beats keeping every column.
@@ -1564,6 +2409,66 @@ SelectKBest
 Curse of dimensionality
   High dimensions scatter data thin; selection restores density.
 
+Chi-square test
+  The chi-square filter tests whether each (non-negative) categorical feature is
+  independent of the class label; a high statistic means strong dependence, so those
+  features are kept as more informative.
+
+ANOVA F-test
+  The ANOVA F-test (f_classif) compares the between-class variance to the within-class
+  variance of a numeric feature; a large F means the feature's average shifts across
+  classes, marking it as discriminative.
+
+Forward selection
+  Forward selection is a greedy wrapper that begins with no features and repeatedly adds
+  the one giving the biggest validated improvement, stopping when no addition helps; it is
+  cheaper than an exhaustive search.
+
+Backward elimination
+  Backward elimination is a greedy wrapper starting from the full feature set and removing
+  the least helpful feature at each step until further removal hurts performance; it can
+  catch redundancy that forward selection misses early.
+
+RFECV (RFE with cross-validation)
+  RFECV runs recursive feature elimination inside a cross-validation loop, scoring each
+  subset size, so instead of you fixing the number of features to keep it automatically
+  chooses the count that cross-validates best.
+
+SelectPercentile
+  SelectPercentile is a univariate filter that ranks features by a scoring function (e.g.
+  ANOVA F or mutual information) and retains the highest-scoring percentile you specify,
+  unlike SelectKBest which keeps a fixed count.
+
+SelectFromModel
+  SelectFromModel is an embedded meta-transformer that fits an estimator exposing
+  coefficients or feature importances and keeps only the features whose importance passes
+  a threshold, e.g. non-zero lasso weights or high tree importances.
+
+Boruta
+  Boruta creates shuffled 'shadow' copies of every feature and, using a random forest's
+  importances, keeps only real features that consistently outperform the best shadow
+  feature, marking the rest as unimportant.
+
+Variance inflation factor (VIF)
+  VIF quantifies multicollinearity: for each feature it regresses that feature on all the
+  others and reports 1/(1-R-squared); a high VIF means the feature is largely redundant,
+  guiding which correlated features to drop.
+
+Stability selection
+  Stability selection repeatedly subsamples the data, runs a selection method (often
+  lasso) on each subsample, and keeps features selected in a high fraction of runs, giving
+  more robust, reproducible choices than one fit.
+
+mRMR (minimum redundancy maximum relevance)
+  mRMR selects a subset that maximises relevance to the target while minimising redundancy
+  among the chosen features, so it avoids picking several features that all carry the same
+  information, unlike pure univariate ranking.
+
+Sequential feature selection
+  Sequential feature selection is a wrapper (scikit-learn's SequentialFeatureSelector)
+  that greedily builds a feature set forward or backward, using cross-validated model
+  performance to decide each add or drop.
+
 Mutual information
   MI catches non-linear dependence that correlation misses.
 
@@ -1582,16 +2487,17 @@ Multicollinearity
 Permutation importance
   Break a feature's signal and measure the damage to rank it.
 
-## Model Selection  (16)
------------------------
+
+## Model Selection  (28)
+-----------------
 
 Model selection
-  Compare candidates on data they didn't train on, then keep the best. Bigger is not 
+  Compare candidates on data they didn't train on, then keep the best. Bigger is not
   automatically better.
 
 Baseline model
-  The reference point that turns a raw score into a judgement. Beat it, or your model earns 
-  nothing.
+  The reference point that turns a raw score into a judgement. Beat it, or your model
+  earns nothing.
 
 Train/validation/test split
   Three piles with three distinct jobs. Blur them and your scores stop meaning anything.
@@ -1606,11 +2512,59 @@ k-fold cross-validation
   The workhorse recipe. k=5 or 10 balances a steady estimate against compute cost.
 
 Hyperparameter tuning
-  The model learns its weights; YOU choose its knobs by trying values and reading the 
+  The model learns its weights; YOU choose its knobs by trying values and reading the
   validation dial.
 
 Occam's razor (parsimony)
   Complexity must earn its place with a real gain. A tie goes to simplicity.
+
+Bayesian optimisation
+  A tuning strategy that fits a surrogate model (e.g. a Gaussian process) to observed
+  scores and proposes the next hyperparameters where improvement looks most likely.
+
+Successive halving
+  An adaptive search (HalvingGridSearchCV / HalvingRandomSearchCV) that starts many
+  candidates on little data and iteratively promotes only the best to larger budgets.
+
+Hyperparameter vs parameter
+  Parameters (e.g. weights) are fitted by the learning algorithm; hyperparameters (e.g.
+  tree depth, C, k) configure that algorithm and are chosen by you or a search.
+
+Search space
+  The domain of a search: which hyperparameters vary and over what values or distributions
+  (a grid, discrete lists, or continuous ranges).
+
+Scoring parameter (in tuning)
+  In tools like GridSearchCV it names the objective (e.g. 'f1', 'roc_auc',
+  'neg_root_mean_squared_error') that decides which hyperparameters win.
+
+Refit
+  After a search identifies the best hyperparameters using cross-validation, refit trains
+  one model on all available data with those settings for deployment.
+
+Tuning budget
+  The limit you place on a search, such as n_iter in random search or a wall-clock/trial
+  cap, which forces a trade-off between breadth and depth of exploration.
+
+Optuna
+  An open-source framework that defines search spaces in code and uses samplers (e.g. TPE)
+  plus early-stopping pruners to find good hyperparameters efficiently.
+
+Hyperband
+  A tuning algorithm that wraps successive halving in an outer loop over different
+  starting budgets to balance many cheap trials against fewer expensive ones.
+
+Validation curve
+  A diagnostic that varies one hyperparameter (e.g. tree depth, C) and plots training and
+  validation scores to reveal under- and over-fitting regions.
+
+Coarse-to-fine search
+  A two-stage strategy: a broad, low-resolution search locates a promising neighbourhood,
+  then a finer search refines values there.
+
+Trial pruning
+  An efficiency feature (e.g. in Optuna) that monitors a trial's intermediate results and
+  terminates it if it is clearly worse than promising ones.
 
 Grid search
   Exhaustive and simple, but the cost multiplies with every hyperparameter you add.
@@ -1619,28 +2573,30 @@ Random search
   Cheap, simple, and often better than a grid for the same budget when few knobs matter.
 
 Stratified k-fold
-  Keeps every fold a fair miniature of the whole. The sensible default for imbalanced 
+  Keeps every fold a fair miniature of the whole. The sensible default for imbalanced
   classification.
 
 Time-series split
   Order carries information. Shuffling leaks the future and fakes great scores.
 
 One-standard-error rule
-  Statistically-tied models are a tie; break it toward simplicity. Parsimony, made rigorous.
+  Statistically-tied models are a tie; break it toward simplicity. Parsimony, made
+  rigorous.
 
 Nested cross-validation
-  Tuning lives inside each outer fold, so the outer score never sees data the tuning used. 
+  Tuning lives inside each outer fold, so the outer score never sees data the tuning used.
   Honest, but costly.
 
 Bias-variance tradeoff
-  Rigid models are biased; flexible ones are high-variance. Model selection finds the 
+  Rigid models are biased; flexible ones are high-variance. Model selection finds the
   balance point.
 
 No Free Lunch theorem
   There is no universally best model. Let evidence on your own data choose the winner.
 
-## XGBoost  (17)
----------------
+
+## XGBoost  (29)
+---------
 
 XGBoost
   A fast, regularized gradient-boosting library for tabular data.
@@ -1665,6 +2621,66 @@ Objective function
 
 Early stopping
   Auto-picks the tree count and prevents over-boosting.
+
+Cover (hessian sum)
+  In XGBoost, cover is the sum of the Hessians (second-order gradients) of the instances
+  in a node; it reflects how much weighted evidence supports a split or leaf and underlies
+  the min_child_weight constraint.
+
+Similarity (structure) score
+  XGBoost scores a candidate structure with a similarity/structure score, (sum of
+  gradients)^2 / (sum of Hessians + lambda), per node; the gain of a split is the sum of
+  the children's scores minus the parent's, less gamma.
+
+Second-order Taylor approximation
+  XGBoost expands the loss to second order (gradient g and Hessian h) around the current
+  predictions each round; this Newton-style approximation yields closed-form optimal leaf
+  weights and the gain used to evaluate splits.
+
+The regularised objective
+  XGBoost minimises loss plus a regularisation term Omega over each tree: gamma times the
+  number of leaves plus half-lambda times the sum of squared leaf weights (and optional
+  alpha for L1), explicitly penalising complexity.
+
+lambda (L2 leaf-weight penalty)
+  reg_lambda adds an L2 penalty on the leaf output weights in the objective; larger values
+  shrink the leaf values, producing a smoother, more conservative model that is less prone
+  to overfitting.
+
+alpha (L1 leaf-weight penalty)
+  reg_alpha adds an L1 penalty on the leaf weights; like lasso, it can shrink some leaf
+  outputs to exactly zero, encouraging sparsity, whereas reg_lambda (L2) shrinks smoothly
+  without zeroing.
+
+Sparsity-aware split finding
+  XGBoost's sparsity-aware algorithm learns, for each split, a default branch to which
+  missing (or absent/zero) values are routed, chosen to maximise gain; this handles
+  missing data natively and speeds up training on sparse matrices.
+
+Monotonic constraints
+  A monotonic constraint tells XGBoost that predictions must be a monotone (non-decreasing
+  or non-increasing) function of a given feature; splits that would violate the required
+  direction are pruned, encoding prior knowledge.
+
+Interaction constraints
+  Interaction constraints restrict which features may jointly appear on the same decision
+  path, so the model can only form interactions among features you explicitly allow to be
+  grouped together, improving interpretability and control.
+
+max_delta_step
+  max_delta_step constrains the size of each leaf-weight update; it is usually 0 (no
+  limit) but setting a finite value (e.g. 1-10) makes updates more conservative, which
+  helps convergence on extremely imbalanced logistic-regression objectives.
+
+tree_method
+  tree_method chooses the split-finding algorithm: 'exact' evaluates every candidate
+  split, while 'hist' (and 'approx') bin continuous features into histograms first,
+  trading a little precision for large gains in speed and memory on big data.
+
+Weighted quantile sketch
+  For approximate split finding on large data, XGBoost proposes candidate split thresholds
+  using a quantile sketch in which each instance is weighted by its second-order gradient
+  (Hessian), so candidates reflect loss curvature, not just counts.
 
 DMatrix
   XGBoost's efficient data container for speedy training.
@@ -1693,107 +2709,402 @@ Gain importance
 Second-order boosting
   Newton-style steps give sharper splits and faster convergence.
 
-## Interpretability & Explainability  (5)
------------------------------------------
+
+## Interpretability & Explainability  (19)
+-----------------------------------
 
 SHAP values
-  Game-theory credit assignment: each feature's fair contribution to a single prediction; 
+  Game-theory credit assignment: each feature's fair contribution to a single prediction;
   the contributions plus a base value sum exactly to the model's output.
 
 LIME
-  Fits a simple, readable model around one prediction to explain it locally; model-agnostic 
-  but only faithful near that point.
+  Fits a simple, readable model around one prediction to explain it locally;
+  model-agnostic but only faithful near that point.
 
 Partial dependence plot (PDP)
-  The average effect of one feature on predictions, marginalising over the others; shows the 
-  shape of the relationship globally.
+  The average effect of one feature on predictions, marginalising over the others; shows
+  the shape of the relationship globally.
 
 Global vs local explanation
-  Global explains the whole model's behaviour across all data; local explains one specific 
+  Global explains the whole model's behaviour across all data; local explains one specific
   prediction.
 
 Model card
-  A spec sheet documenting a model's intended use, training data, metrics, and limits; 
+  A spec sheet documenting a model's intended use, training data, metrics, and limits;
   increasingly expected by regulators.
 
-## Class Imbalance  (4)
------------------------
+Feature importance
+  Any method that assigns each input feature a number reflecting its influence on the
+  model, used to rank features globally.
+
+Permutation importance
+  A model-agnostic method that randomly permutes one feature's column and records how much
+  the model's performance worsens; a bigger drop means more importance.
+
+ICE plot
+  An Individual Conditional Expectation plot draws one line per instance showing its
+  prediction as a feature changes, revealing heterogeneous effects a PDP would average
+  away.
+
+Surrogate model
+  An interpretable model (e.g. a shallow tree or linear model) fitted to reproduce a black
+  box's outputs, giving an approximate, explainable view of its behaviour.
+
+Counterfactual explanation
+  A local explanation of the form 'if these feature values had been different, the outcome
+  would have changed', identifying minimal, actionable edits.
+
+Anchors
+  A rule-based local explanation method: an anchor is a set of feature conditions that,
+  when met, almost always yield the same prediction regardless of other features.
+
+Saliency map
+  A local explanation, common for image models, that scores how sensitive the output is to
+  each input pixel or region, typically via gradients.
+
+Attention as explanation
+  The practice of reading attention weights in neural networks as indicators of input
+  importance; it is intuitive but its faithfulness is debated.
+
+Transparency vs post-hoc
+  Intrinsic transparency means the model's structure is itself understandable (e.g. linear
+  models, short trees); post-hoc methods explain an already-trained opaque model from
+  outside.
+
+Monotonic constraints
+  Constraints (supported by boosting libraries) requiring the model output to be
+  non-decreasing or non-increasing in a chosen feature, encoding domain knowledge.
+
+Intrinsically interpretable model
+  A model (linear/logistic regression, shallow decision tree, rule list) simple enough
+  that its decision logic is directly readable from its parameters or structure.
+
+Accumulated Local Effects (ALE) plot
+  Accumulated Local Effects plots show a feature's influence by averaging local changes
+  within small intervals, avoiding the unrealistic extrapolation that biases PDPs under
+  correlation.
+
+Grad-CAM
+  Gradient-weighted Class Activation Mapping uses the gradients flowing into a CNN's last
+  convolutional layer to produce a coarse heatmap of the regions important for a class.
+
+Integrated gradients
+  A gradient-based attribution technique that credits each input feature by integrating
+  the model's gradients along a straight path from a reference baseline to the actual
+  input.
+
+
+## Class Imbalance  (20)
+-----------------
 
 Class imbalance
-  When one class massively outnumbers the others; accuracy lies, so you resample, reweight, 
-  or move the threshold.
+  When one class massively outnumbers the others; accuracy lies, so you resample,
+  reweight, or move the threshold.
 
 SMOTE
-  Synthesises new minority-class rows by interpolating between near neighbours rather than 
+  Synthesises new minority-class rows by interpolating between near neighbours rather than
   duplicating existing ones.
 
 Over/undersampling
-  Duplicate the minority or drop the majority to rebalance; simple but blunt, and fit only 
+  Duplicate the minority or drop the majority to rebalance; simple but blunt, and fit only
   on training data to avoid leakage.
 
 Class weights
-  Tell the loss to penalise minority-class mistakes more heavily, rebalancing without 
+  Tell the loss to penalise minority-class mistakes more heavily, rebalancing without
   touching the data itself.
 
-## Extra Evaluation Metrics  (6)
---------------------------------
+ADASYN
+  Adaptive Synthetic Sampling generates synthetic minority examples, focusing more of them
+  where minority points are surrounded by majority points (harder to learn).
+
+Random oversampling
+  The simplest rebalancing method: sample minority rows with replacement and add the
+  copies to the training set until the classes are balanced.
+
+Random undersampling
+  A rebalancing method that randomly removes majority-class rows until the classes are
+  roughly equal, shrinking the training set.
+
+Tomek links
+  A pair of points from different classes that are each other's nearest neighbour;
+  removing the majority member (or both) cleans overlapping class boundaries.
+
+Cost-sensitive learning
+  An approach that bakes the real-world cost of misclassifications into the objective, so
+  the model prioritises avoiding the more expensive error type.
+
+Threshold moving
+  A post-training technique that changes the probability cutoff used to assign the
+  positive class, trading precision against recall without retraining.
+
+Minority class
+  In an imbalanced problem, the under-represented class (often the one of interest, e.g.
+  fraud or disease), which naive models tend to neglect.
+
+Majority class
+  The over-represented class in an imbalanced dataset; a trivial model predicting only
+  this class can reach high accuracy while being useless.
+
+Resampling inside cross-validation
+  Oversampling (e.g. SMOTE) the whole dataset before splitting lets synthetic or
+  duplicated minority points appear in both train and validation folds, leaking
+  information.
+
+Focal loss
+  A modification of cross-entropy that multiplies each term by a factor which shrinks as
+  the predicted probability grows, concentrating learning on hard, misclassified cases.
+
+EasyEnsemble
+  An ensemble method for imbalance that draws multiple balanced subsets by undersampling
+  the majority, trains a learner on each, and combines them.
+
+Balanced bagging
+  A bagging ensemble (e.g. BalancedBaggingClassifier) in which each base estimator is
+  trained on a class-balanced resample of the bootstrap draw.
+
+PR-AUC preference
+  Precision-recall AUC emphasises performance on the positive (minority) class; ROC-AUC
+  can look optimistic because a huge true-negative count keeps the false-positive rate
+  low.
+
+Borderline-SMOTE
+  A refinement of SMOTE that identifies minority examples on the class border (those with
+  many majority neighbours) and synthesises new points mainly there.
+
+Edited Nearest Neighbours (ENN)
+  An undersampling/cleaning rule that deletes any example whose class differs from the
+  majority class of its k nearest neighbours, removing noisy or borderline points.
+
+NearMiss undersampling
+  A family of heuristic undersampling methods that select majority examples based on their
+  distance to minority examples, keeping those nearest the minority class.
+
+
+## Extra Evaluation Metrics  (20)
+--------------------------
 
 Balanced accuracy
-  The average recall across classes; the honest version of accuracy when the classes are 
+  The average recall across classes; the honest version of accuracy when the classes are
   imbalanced.
 
 Matthews correlation coefficient (MCC)
-  One balanced score built from all four confusion-matrix cells; robust even when classes 
+  One balanced score built from all four confusion-matrix cells; robust even when classes
   are skewed.
 
 Cohen's kappa
   Classification agreement corrected for what pure chance would already produce.
 
 Brier score
-  The mean squared error of predicted probabilities; lower means better-calibrated 
+  The mean squared error of predicted probabilities; lower means better-calibrated
   confidence.
 
 Calibration curve
-  Plots predicted probability against observed frequency; a diagonal line means the 
+  Plots predicted probability against observed frequency; a diagonal line means the
   probabilities are trustworthy.
 
 Average precision (PR-AUC)
-  The area under the precision-recall curve; the go-to summary metric when positives are 
+  The area under the precision-recall curve; the go-to summary metric when positives are
   rare.
 
-## Regression & Boosting  (5)
------------------------------
+Gini coefficient (from AUC)
+  Gini = 2*AUC - 1, rescaling ROC-AUC so 0 is no-skill and 1 is perfect. Common in credit
+  scoring.
+
+Concordance index (c-index)
+  The probability that, for a random pair with different outcomes, the model scores the
+  true positive higher. For binary labels it equals ROC-AUC.
+
+G-mean (geometric mean)
+  sqrt(sensitivity * specificity) - high only when BOTH classes are handled well. Popular
+  for imbalanced problems.
+
+Top-k accuracy
+  Counts a prediction correct if the true label is among the model's k highest-probability
+  guesses. Top-1 is ordinary accuracy.
+
+Lift
+  The ratio of the positive rate within a selected (usually top-scored) group to the
+  overall positive rate. Lift of 3 means that group is 3x richer in positives.
+
+Cumulative gain curve
+  Plots the share of all positives captured against the fraction of the population
+  contacted, when cases are ranked by score. A diagonal is random.
+
+Kolmogorov-Smirnov (KS) statistic
+  The maximum separation between the cumulative distributions of scores for positives and
+  negatives. Larger KS means better class separation.
+
+Precision at k (P@k)
+  Of the top k ranked results, the proportion that are actually relevant. A core ranking
+  and recommendation metric.
+
+Mean reciprocal rank (MRR)
+  Average of 1/rank of the first relevant result across queries. Rewards putting a correct
+  answer near the top.
+
+Normalized discounted cumulative gain (NDCG)
+  Sums graded relevance discounted by position, then normalises by the ideal ordering
+  (0-1). Handles multi-level relevance and rank order.
+
+Mean average precision (mAP)
+  Average precision (area under the precision-recall curve) computed per query or class,
+  then averaged. Standard in retrieval and object detection.
+
+Hamming loss (multi-label)
+  In multi-label classification, the average fraction of label slots that are wrong across
+  all examples and labels. Lower is better.
+
+Zero-one loss
+  Assigns 1 to each misclassified example and 0 to each correct one; its average is the
+  error rate (1 - accuracy).
+
+Equal error rate (EER)
+  The operating point on a detection curve where the false-positive rate equals the
+  false-negative rate. A single-number summary common in biometrics.
+
+
+## Regression & Boosting  (19)
+-----------------------
 
 Linear regression
-  Fits a weighted sum of features to a numeric target by minimising squared error; the 
+  Fits a weighted sum of features to a numeric target by minimising squared error; the
   baseline regressor.
 
 Elastic Net regularisation
-  Blends L1 and L2 penalties: Lasso's feature-zeroing sparsity plus Ridge's stability on 
+  Blends L1 and L2 penalties: Lasso's feature-zeroing sparsity plus Ridge's stability on
   correlated features.
 
 RMSE
-  The root of mean squared error, expressed back in the target's own units for readable 
+  The root of mean squared error, expressed back in the target's own units for readable
   error size.
 
 LightGBM
-  Leaf-wise, histogram-based gradient boosting; very fast and memory-light on large tabular 
-  data.
+  Leaf-wise, histogram-based gradient boosting; very fast and memory-light on large
+  tabular data.
 
 CatBoost
-  Gradient boosting with native categorical handling and ordered boosting to curb target 
+  Gradient boosting with native categorical handling and ordered boosting to curb target
   leakage.
 
-## Validation  (3)
-------------------
+Ridge regression
+  A regularised least-squares method that adds a penalty proportional to the sum of
+  squared coefficients (L2), shrinking them toward zero without eliminating any.
+
+Lasso regression
+  A regularised regression that penalises the sum of absolute coefficient values (L1); the
+  geometry of this penalty forces some coefficients exactly to zero.
+
+Mean absolute error (MAE)
+  A regression metric equal to the mean of |prediction − actual|, expressed in the
+  target's units and treating all errors linearly.
+
+R-squared
+  A goodness-of-fit measure equal to 1 minus the ratio of the model's residual sum of
+  squares to the total variance; 1 is perfect, 0 matches predicting the mean.
+
+Residual
+  For one example, residual = actual − predicted; the collection of residuals reveals how
+  well and how evenly a regression model fits.
+
+Homoscedasticity
+  An assumption of ordinary linear regression that the error variance is the same for all
+  values of the predictors (residual spread does not change).
+
+Multicollinearity
+  When two or more predictors are highly correlated, the model cannot separate their
+  effects, so individual coefficients become unstable and hard to interpret.
+
+Ordinary least squares
+  The classic estimator for linear regression: choose coefficients that minimise the total
+  squared vertical distance between the data points and the fitted line.
+
+Gradient boosting regressor
+  A boosting ensemble for regression that builds trees sequentially, each new tree fitting
+  the negative gradient (pseudo-residuals) of the loss to correct prior errors.
+
+Quantile regression
+  A method that estimates a conditional quantile (e.g. the median or the 90th percentile)
+  of the target by minimising an asymmetric pinball loss.
+
+Huber loss
+  A robust regression loss that behaves like squared error for small residuals and like
+  absolute error beyond a threshold, softening the influence of outliers.
+
+Adjusted R-squared
+  A version of R-squared that increases only if a new predictor improves the fit more than
+  expected by chance, penalising models for extra parameters.
+
+Mean absolute percentage error (MAPE)
+  A scale-free regression metric equal to the mean of |actual − predicted| / |actual|,
+  usually shown as a percentage.
+
+Polynomial regression
+  A regression that adds powers and products of the original features (x, x^2, x^3, ...)
+  and fits a linear model to them, capturing curved relationships.
+
+
+## Validation  (16)
+------------
 
 Group k-fold
-  Keeps all rows from the same entity (user, firm, patient) inside one fold so information 
+  Keeps all rows from the same entity (user, firm, patient) inside one fold so information
   never leaks across the split.
 
 Time-series validation split
   Always train on the past and validate on the future; never shuffle time-ordered data.
 
 Leave-one-out (LOOCV)
-  k-fold taken to the extreme — each row is its own validation fold, so you train n times; 
+  k-fold taken to the extreme — each row is its own validation fold, so you train n times;
   nearly unbiased but expensive.
+
+Holdout method
+  A single train/test (or train/validation) split evaluated once. Fast but higher-variance
+  than cross-validation, especially on small data.
+
+Repeated k-fold cross-validation
+  Perform k-fold CV multiple times with different random partitions, averaging across all
+  runs to shrink the variance of the estimate.
+
+Shuffle-split (Monte Carlo CV)
+  Repeatedly draw random train/test splits (folds may overlap across runs) and average.
+  The test size and number of splits are set independently.
+
+Out-of-fold (OOF) predictions
+  For each CV fold, the prediction for its validation rows comes from a model that never
+  saw them. Stitched together, they cover all data leak-free.
+
+Data snooping (data dredging)
+  Using the test set - directly or indirectly through repeated peeking - to make modelling
+  decisions, producing optimistic, non-reproducible results.
+
+cross_val_score
+  The scikit-learn convenience function that clones an estimator, runs k-fold CV, and
+  returns the array of per-fold scores in one call.
+
+Validation set (purpose)
+  A held-out slice used during development to compare models and tune hyperparameters, so
+  the test set stays untouched for one honest final score.
+
+Leakage-safe pipeline
+  Bundling preprocessing and model into one Pipeline so every transform is fit only on the
+  training portion of each fold - no test statistics leak in.
+
+Purged cross-validation
+  For time-dependent data, removes (purges) training samples whose information window
+  overlaps the validation set, and adds an embargo gap to prevent leakage.
+
+Blocked cross-validation
+  Splits ordered data into contiguous blocks so folds respect temporal or spatial
+  structure, avoiding the leakage that random shuffling would cause.
+
+Leave-p-out cross-validation
+  Exhaustively uses every subset of p examples as the test set. Extremely thorough but
+  combinatorially expensive; p=1 gives LOOCV.
+
+Bootstrap (.632) validation
+  Draw many bootstrap samples (rows with replacement) to train; evaluate on the roughly
+  37% left out each time. The .632 estimator blends these with training error.
+
+Walk-forward validation
+  For time series, repeatedly train on data up to time t and validate on the following
+  window, then advance t - mimicking real forecasting with no look-ahead.
