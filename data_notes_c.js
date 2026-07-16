@@ -11,7 +11,7 @@
         { t: "Start from a tree", d: "A decision tree is a chain of yes/no threshold tests (income > 50k?) that send a row down branches to a leaf prediction." },
         { t: "The tree's flaw", d: "Grown deep, one tree fits almost anything but is unstable: nudge the data and its splits reshuffle. That is high variance." },
         { t: "What an ensemble is", d: "Many models combined into one prediction — a committee instead of a lone expert." },
-        { t: "Why averaging helps", d: "Ensembles cure variance, not bias. Pooling many jumpy-but-unbiased trees steadies the answer without shifting it off-target." }
+        { t: "Why averaging helps", d: "Averaging ensembles (bagging, forests) cure variance, not bias. Pooling many jumpy-but-unbiased trees steadies the answer without shifting it off-target; boosting is the ensemble that attacks bias instead." }
       ] },
       { h: "Bagging: the base recipe", items: [
         { t: "Bootstrap sample", d: "A new training set drawn from the original WITH replacement — same size, some rows repeated, about 37% left out." },

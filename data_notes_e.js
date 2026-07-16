@@ -125,7 +125,7 @@
         { t: "scoring picks the winner", d: "Optimising 'recall' versus 'accuracy' returns different best models — the metric defines what 'best' means, so choose it deliberately." }
       ] },
       { h: "Probabilities & importance", items: [
-        { t: "predict_proba vs decision_function", d: "predict_proba gives calibrated-scale [0,1] probabilities; decision_function gives an unbounded signed score. Some estimators offer one, some both." },
+        { t: "predict_proba vs decision_function", d: "predict_proba gives probability-scale [0,1] scores (not necessarily calibrated); decision_function gives an unbounded signed score. Some estimators offer one, some both." },
         { t: "Calibration", d: "Remaps scores so '90% confident' really comes true 90% of the time. CalibratedClassifierCV wraps any classifier, no retraining of it needed." },
         { t: "Permutation importance", d: "Shuffle one feature's column and measure the score drop — a model-agnostic, held-out measure of what the model actually relies on." },
         { t: "feature_importances_ can mislead", d: "Impurity-based importances inflate high-cardinality features (like an ID hash). Trust permutation importance on validation data instead." }

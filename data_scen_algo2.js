@@ -31,8 +31,8 @@
       [{ max: 1, text: "Shallow trees leave both training and test accuracy modest but close together.", tone: "info" },
        { max: 3, text: "As depth grows, training accuracy races ahead while test accuracy stalls.", tone: "info" },
        { max: 4, text: "🤯 At full depth training hits 100% yet test accuracy is far lower — the gap IS the overfitting.", tone: "wow" }],
-      { name: "Test accuracy", ys: [72, 80, 79, 74, 71] },
-      { name: "Overfitting gap", formula: "big train/test gap = memorized noise, needs pruning", text: "When training accuracy climbs but test accuracy falls, the tree is memorizing — prune it back." })
+      { name: "Overfitting gap", formula: "big train/test gap = memorized noise, needs pruning", text: "When training accuracy climbs but test accuracy falls, the tree is memorizing — prune it back." },
+      { series: [{ name: "Test accuracy", ys: [72, 80, 79, 74, 71] }] })
   });
 
   q("scen1", {
@@ -154,8 +154,8 @@
       [{ max: 0, text: "One pruned tree is fully readable but leaves some accuracy on the table.", tone: "info" },
        { max: 2, text: "Adding trees lifts and stabilizes accuracy but blurs the per-decision reason.", tone: "info" },
        { max: 3, text: "🤯 Interpretability falls off a cliff long before accuracy plateaus — the two axes move in opposite directions.", tone: "wow" }],
-      { name: "Interpretability", ys: [95, 55, 30, 22] },
-      { name: "The core trade-off", formula: "ensemble +accuracy, -readable reason", text: "Growing an ensemble buys accuracy and stability but spends interpretability — weigh what the use case needs." })
+      { name: "The core trade-off", formula: "ensemble +accuracy, -readable reason", text: "Growing an ensemble buys accuracy and stability but spends interpretability — weigh what the use case needs." },
+      { series: [{ name: "Interpretability", ys: [95, 55, 30, 22] }] })
   });
 
   q("scen2", {
@@ -175,8 +175,8 @@
       [{ max: 1, text: "Very small C keeps the margin wide and soft, underfitting the training data.", tone: "info" },
        { max: 2, text: "A moderate C balances margin width against training fit — validation peaks here.", tone: "info" },
        { max: 4, text: "🤯 Push C too high and training accuracy hits 100% while validation drops — a hard margin overfits.", tone: "wow" }],
-      { name: "Validation accuracy", ys: [77, 85, 90, 87, 80] },
-      { name: "C trade-off", formula: "small C = more bias/smoother, large C = more variance/overfit", text: "C sets the SVM's bias-variance balance; cross-validate rather than maxing it out." })
+      { name: "C trade-off", formula: "small C = more bias/smoother, large C = more variance/overfit", text: "C sets the SVM's bias-variance balance; cross-validate rather than maxing it out." },
+      { series: [{ name: "Validation accuracy", ys: [77, 85, 90, 87, 80] }] })
   });
 
   q("scen2", {
@@ -196,8 +196,8 @@
       [{ max: 1, text: "Tiny gamma gives every point a wide reach, producing a smooth boundary that can underfit.", tone: "info" },
        { max: 2, text: "A moderate gamma matches the boundary's true curvature — validation peaks.", tone: "info" },
        { max: 4, text: "🤯 Huge gamma makes each point an island, so training hits 100% while validation collapses — classic overfit.", tone: "wow" }],
-      { name: "Validation accuracy", ys: [78, 86, 91, 82, 66] },
-      { name: "Gamma trade-off", formula: "small gamma = smooth/underfit, large gamma = local/overfit", text: "Gamma tunes boundary flexibility; grid-search it together with C on held-out data." })
+      { name: "Gamma trade-off", formula: "small gamma = smooth/underfit, large gamma = local/overfit", text: "Gamma tunes boundary flexibility; grid-search it together with C on held-out data." },
+      { series: [{ name: "Validation accuracy", ys: [78, 86, 91, 82, 66] }] })
   });
 
   q("scen2", {
@@ -217,8 +217,8 @@
       [{ max: 1, text: "At small scale both models train quickly and the difference is minor.", tone: "info" },
        { max: 2, text: "Kernel-SVM training cost climbs steeply with rows while the tree stays cheap.", tone: "info" },
        { max: 3, text: "🤯 At a million rows the SVM's training cost explodes while the tree barely moves — scale flips the decision.", tone: "wow" }],
-      { name: "Tree training cost (rel.)", ys: [3, 8, 14, 22] },
-      { name: "Scaling trade-off", formula: "kernel SVM training ~ quadratic-cubic; tree ~ n log n", text: "For frequent retrains at growing scale, a tree's speed usually beats a kernel SVM's accuracy edge." })
+      { name: "Scaling trade-off", formula: "kernel SVM training ~ quadratic-cubic; tree ~ n log n", text: "For frequent retrains at growing scale, a tree's speed usually beats a kernel SVM's accuracy edge." },
+      { series: [{ name: "Tree training cost (rel.)", ys: [3, 8, 14, 22] }] })
   });
 
   q("scen2", {
@@ -258,8 +258,8 @@
       [{ max: 0, text: "A softer margin plus class weights keeps the minority class visible.", tone: "info" },
        { max: 1, text: "As C rises, the boundary favors the crowded majority and minority recall slips.", tone: "info" },
        { max: 3, text: "🤯 Big C looks great on majority accuracy while minority recall craters — the metric you watch changes the winner.", tone: "wow" }],
-      { name: "Minority-class recall", ys: [74, 70, 58, 44] },
-      { name: "Imbalance-aware SVM", formula: "softer C + class weights, choose kernel by CV", text: "With imbalance and noise, prefer a softer margin and weighted classes, and let held-out metrics pick the kernel." })
+      { name: "Imbalance-aware SVM", formula: "softer C + class weights, choose kernel by CV", text: "With imbalance and noise, prefer a softer margin and weighted classes, and let held-out metrics pick the kernel." },
+      { series: [{ name: "Minority-class recall", ys: [74, 70, 58, 44] }] })
   });
 
   /* ===================== scen3 — Subtle Traps (6) ===================== */
@@ -300,8 +300,8 @@
       [{ max: 0, text: "With one config the test score is an honest estimate.", tone: "info" },
        { max: 2, text: "Keeping the best of many configs by test score drifts the number upward.", tone: "info" },
        { max: 3, text: "🤯 The true accuracy stayed at 82% — the extra 7 points are pure test-set overfitting from repeated peeking.", tone: "wow" }],
-      { name: "True accuracy", ys: [82, 82, 82, 82] },
-      { name: "Selection bias", formula: "best-of-many on test set = optimistic, inflated estimate", text: "Tuning on the test set leaks it into selection; use cross-validation for an honest comparison." })
+      { name: "Selection bias", formula: "best-of-many on test set = optimistic, inflated estimate", text: "Tuning on the test set leaks it into selection; use cross-validation for an honest comparison." },
+      { series: [{ name: "True accuracy", ys: [82, 82, 82, 82] }] })
   });
 
   q("scen3", {
@@ -339,8 +339,8 @@
       "overall accuracy", [99, 97], "Model",
       [{ max: 0, text: "Predicting the majority for everyone scores 99% accuracy and catches zero fraud.", tone: "info" },
        { max: 1, text: "🤯 A genuinely useful model can show LOWER accuracy while catching far more fraud — accuracy is the wrong lens.", tone: "wow" }],
-      { name: "Fraud recall", ys: [0, 71] },
-      { name: "Wrong-metric trap", formula: "rare positives => use precision/recall/PR-AUC, not accuracy", text: "Under heavy imbalance, accuracy rewards ignoring the rare class; measure the positive class directly." })
+      { name: "Wrong-metric trap", formula: "rare positives => use precision/recall/PR-AUC, not accuracy", text: "Under heavy imbalance, accuracy rewards ignoring the rare class; measure the positive class directly." },
+      { series: [{ name: "Fraud recall", ys: [0, 71] }] })
   });
 
   q("scen3", {
@@ -359,8 +359,8 @@
       "training accuracy", [98, 83], "Feature set",
       [{ max: 0, text: "Splitting on a near-unique ID pushes training accuracy high by memorizing rows.", tone: "info" },
        { max: 1, text: "🤯 Remove the ID and training accuracy drops toward the honest test number — the 'importance' was memorization.", tone: "wow" }],
-      { name: "Test accuracy", ys: [79, 82] },
-      { name: "High-cardinality trap", formula: "near-unique IDs => memorization, fake importance", text: "Drop identifier-like high-cardinality features; a tree will memorize them instead of learning." })
+      { name: "High-cardinality trap", formula: "near-unique IDs => memorization, fake importance", text: "Drop identifier-like high-cardinality features; a tree will memorize them instead of learning." },
+      { series: [{ name: "Test accuracy", ys: [79, 82] }] })
   });
 
   q("scen3", {

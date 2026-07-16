@@ -183,7 +183,7 @@
       b: { name: "Random Search", oneLiner: "Sample hyperparameter combinations at random from specified ranges or distributions." },
       rows: [
         { dim: "Coverage", a: "Exhaustive over the grid you defined — but only those exact values.", b: "Sparse but spread — every draw tests a new value of every parameter." },
-        { dim: "Cost growth", a: "Explodes combinatorially: 5 params × 5 values = 3,125 fits.", b: "You choose the budget: 50 draws is 50 fits, regardless of dimensions." },
+        { dim: "Cost growth", a: "Explodes combinatorially: 5 values for each of 5 params = 5⁵ = 3,125 fits (before CV folds).", b: "You choose the budget: 50 draws is 50 fits, regardless of dimensions." },
         { dim: "Unimportant params", a: "Wastes runs re-testing values of parameters that don't matter.", b: "Handles them gracefully — no budget is locked into a fixed lattice." },
         { dim: "Continuous values", a: "Must be discretized; the best value can fall between grid points.", b: "Samples continuously (e.g. log-uniform learning rates)." },
         { dim: "Reproducibility", a: "Fully deterministic and easy to report.", b: "Needs a fixed random seed to reproduce." },

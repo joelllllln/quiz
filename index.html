@@ -838,6 +838,19 @@ input[type=range]{accent-color:var(--cobalt)}
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     });
+    // The worker skipWaiting()s and claims clients, so when a new version takes
+    // over mid-session, offer one tap to load it (otherwise it applies next visit).
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadController) { hadController = true; return; } // first install, page is already fresh
+      if (document.querySelector('.pwa-update')) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pwa-install pwa-update';
+      b.textContent = '↻ Update ready — tap to refresh';
+      b.onclick = function () { location.reload(); };
+      document.body.appendChild(b);
+    });
   }
   // Ask the browser to keep our saved progress from being evicted.
   if (navigator.storage && navigator.storage.persist) {
