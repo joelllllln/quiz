@@ -372,4 +372,160 @@
     "If a feature is pure noise the model leaned on, breaking its link with the target can nudge the score UP — small negative importances are ordinary and informative (candidates for deletion). Nothing clips them, nothing needs inverting, and being used in splits proves usage, not usefulness.",
     "Sometimes the model does better without a 'clue' — which tells you what that clue was worth.");
 
+  /* ---- pass 4: gradient boosting ---- */
+
+  tq("gb3",
+    "Which ONE of these statements about the learning rate (shrinkage) in gradient boosting is actually TRUE?",
+    "Lowering the learning rate and raising the number of rounds together usually generalises better — but the rate does NOT change what any single tree looks like; it only scales how much of each tree gets added.",
+    ["The learning rate multiplies the residuals before each tree is fitted, so a lower rate makes every individual tree shallower and more conservative.",
+     "Halving the learning rate while keeping rounds fixed leaves the final model unchanged, because the ensemble renormalises the tree weights at the end.",
+     "The learning rate only matters during the first few rounds; once the residuals shrink, its effect on later trees becomes exactly zero.",
+     "A learning rate above 1.0 is mathematically impossible in gradient boosting, since the loss would no longer be differentiable."],
+    "Shrinkage scales the CONTRIBUTION of each fitted tree (F += η·tree), not the tree-fitting itself — each tree is still grown on the current residuals at full size. Small η takes many cautious steps, which acts as regularisation and usually wins with enough rounds. Halving η without adding rounds genuinely underfits (no renormalisation exists); the rate applies every round equally; and η>1 is legal, just usually unwise.",
+    "The learning rate is the sip size, not the recipe of the drink — smaller sips, more sips, steadier result.");
+
+  tq("gb3",
+    "Which ONE of these statements about early stopping in boosting is actually TRUE?",
+    "The number of boosting rounds chosen by early stopping is itself a hyperparameter fitted to the monitoring set — so that set can no longer serve as an unbiased final test.",
+    ["Early stopping halts when TRAINING loss stops improving, which is why it needs no held-out data at all.",
+     "Because early stopping only removes rounds rather than adding them, it can bias the reported score downward but never upward.",
+     "Early stopping makes the learning rate irrelevant, since the stopping round automatically compensates for any step size.",
+     "A model stopped early is guaranteed to generalise at least as well as the same model run to completion."],
+    "Whatever data picks the stopping round has influenced the model — quoting that same data's score harvests its lucky wiggles (upward bias, not downward). Training loss almost never stops improving, so stopping on it would never trigger; the learning rate still matters enormously (it sets how fine-grained the stopping choice can be); and early stopping usually helps but guarantees nothing on any single dataset.",
+    "The judge who helped build the model can't also grade it — pick the round on validation, grade once on test.");
+
+  tq("gb3",
+    "Which ONE of these statements about boosting versus bagging is actually TRUE?",
+    "Boosting fits trees SEQUENTIALLY, each depending on all previous ones — so unlike a random forest, its trees cannot be trained in parallel with one another.",
+    ["Boosted trees are typically grown much deeper than forest trees, because boosting relies on each tree being a strong standalone learner.",
+     "Boosting reduces variance while leaving bias untouched, whereas bagging reduces bias while leaving variance untouched.",
+     "Adding more boosting rounds, like adding more forest trees, can plateau but essentially never overfits.",
+     "Because each boosted tree sees the same rows, boosting provides out-of-bag estimates just as a forest does."],
+    "Round t fits the residuals left by rounds 1..t−1 — an inherently sequential chain (engines parallelise WITHIN a tree's split search, not across trees). The other four invert reality: boosted trees are typically SHALLOW weak learners; boosting mainly attacks bias while bagging attacks variance; more rounds absolutely can overfit (hence early stopping); and standard boosting has no bootstrap, so no OOB.",
+    "A forest is a crowd voting at once; boosting is a relay race — each runner starts where the last one stumbled.");
+
+  tq("gb3",
+    "Which ONE of these statements about XGBoost's regularisation is actually TRUE?",
+    "Its objective explicitly penalises each tree's structure — the number of leaves (γ) and the leaf values (λ) — so a split is only made when its gain exceeds a real threshold, not whenever gain is positive.",
+    ["XGBoost regularises solely through the learning rate; its objective function contains no penalty terms of any kind.",
+     "The λ parameter penalises the depth of each tree directly, which is why max_depth becomes redundant once λ is set.",
+     "Regularisation in XGBoost applies only to the first tree; later trees are exempt because the residuals are already small.",
+     "The γ penalty removes rows with large gradients from training, trimming outliers before each round begins."],
+    "XGBoost's per-tree objective adds γ·(number of leaves) + ½λ·Σ(leaf values²): γ makes each split pay rent (gain must beat γ or the split is pruned), λ shrinks leaf outputs where evidence is thin via the −Σg/(Σh+λ) formula. It applies to every tree; λ penalises leaf VALUES not depth; γ prices splits, it doesn't drop rows.",
+    "Every split must pay rent (γ), every leaf speaks with a damped voice (λ) — greed taxed at the source.");
+
+  tq("gb3",
+    "Which ONE of these statements about fitting residuals is actually TRUE?",
+    "For squared-error loss the 'residuals' each round fits ARE the plain errors y−F — but for other losses the trees fit the loss's negative gradient, which need not equal the raw error at all.",
+    ["Every gradient boosting round fits the raw errors y−F regardless of the loss function; the loss only changes the final aggregation step.",
+     "For absolute-error loss the fitted targets are the squared residuals, which is what makes the method robust to outliers.",
+     "The residuals passed to each new tree are always positive, since a squared loss cannot produce a negative gradient.",
+     "After enough rounds the residuals become exactly zero on the training set, at which point boosting provably terminates."],
+    "The general recipe is 'fit the negative gradient of the loss at current predictions'. Squared error is the special case where that gradient coincides with y−F — the origin of the 'fit the residuals' shorthand. Absolute error fits SIGNS (±1, whence its robustness), gradients are signed for every loss, and training residuals approach but rarely hit exact zero — nothing terminates by itself.",
+    "'Fit the residuals' is the nursery-rhyme version; the grown-up rule is 'fit the loss's gradient' — they rhyme only for squared error.");
+
+  /* ---- pass 4: stacking & voting ---- */
+
+  tq("stack3",
+    "Which ONE of these statements about out-of-fold predictions in stacking is actually TRUE?",
+    "The meta-model must be trained on predictions each base model made for rows it did NOT train on — otherwise the meta-model learns to trust memorisation, and the stack's CV score becomes fiction.",
+    ["Out-of-fold prediction is only needed for overfitting-prone base models like deep trees; a regularised linear base model can safely predict its own training rows.",
+     "The out-of-fold procedure exists to speed up training, since predicting held-out rows requires fewer computations than predicting seen rows.",
+     "Base models in a stack must never be refitted on the full dataset afterwards, because that would invalidate the out-of-fold predictions already generated.",
+     "Out-of-fold discipline applies to the meta-model's own features too, so the raw input columns must also be cross-validated before passthrough."],
+    "A base model predicting its own training rows reports memorised, unrealistically good numbers; a meta-model calibrated on those over-trusts it in production. The rule applies to EVERY base model (even linear ones score better on seen rows); it costs more, not less, compute; standard practice refits base models on all data for deployment (the oof predictions were only meta-TRAINING material); raw features aren't predictions and need no oof treatment.",
+    "The chairperson must watch the experts sit exams they haven't seen — otherwise it's grading memory, not skill.");
+
+  tq("stack3",
+    "Which ONE of these statements about hard versus soft voting is actually TRUE?",
+    "Soft voting can pick a class that NO individual member ranked first — three members leaning 0.4 toward class B can outvote one member certain of class A.",
+    ["Hard voting and soft voting always agree whenever the number of committee members is odd, since ties are then impossible.",
+     "Soft voting requires all members to share the same model family, because probabilities from different algorithms cannot be averaged.",
+     "Hard voting is strictly more accurate than soft voting when the members are well calibrated, because discrete votes discard calibration noise.",
+     "Soft voting weights each member by its validation accuracy automatically; hard voting is the only mode where members count equally."],
+    "Averaging probabilities lets accumulated lean beat isolated certainty: A at (0.9, 0.2, 0.2, 0.2) averages 0.375 while B's steady 0.4s win — no member had B on top. Odd membership doesn't force agreement between the two modes; probabilities from any mix of calibrated models average fine; calibrated members make SOFT voting the better mode (it uses strictly more information); and neither mode auto-weights by accuracy unless you configure weights.",
+    "Four quiet 'probably B's can beat one loud 'definitely A' — that's soft voting's whole superpower.");
+
+  tq("stack3",
+    "Which ONE of these statements about ensemble diversity is actually TRUE?",
+    "Averaging identical models achieves nothing — ensemble gains come from members making DIFFERENT errors, so a weaker but different model can improve a committee that a stronger clone cannot.",
+    ["Diversity means using different random seeds; two models of the same family with different seeds are as diverse as an ensemble ever needs.",
+     "Adding any model with above-chance accuracy always improves the ensemble, since extra information can never hurt an average.",
+     "The ideal committee members are perfectly correlated in their errors, so their mistakes reinforce and can be subtracted off afterwards.",
+     "Diversity only matters for classification ensembles; regression averages improve with member count regardless of correlation."],
+    "The variance-reduction algebra depends on error CORRELATION: average n members with correlation ρ and variance falls toward ρσ² — clones (ρ=1) gain nothing, decorrelated members gain a lot. Hence a mediocre-but-different KNN can help a committee of trees while a third boosted model doesn't. Seeds add mild diversity, far less than changing family/features; an above-chance but highly correlated model can still worsen a weighted vote; perfectly correlated errors are the worst case, and regression obeys the same ρ arithmetic.",
+    "Hire people who are wrong in different places — a committee of clones is one opinion in five voices.");
+
+  tq("stack3",
+    "Which ONE of these statements about the meta-model's job is actually TRUE?",
+    "The meta-model in stacking is usually kept deliberately SIMPLE (often regularised logistic regression) — its input space is tiny and its training data is limited to one out-of-fold prediction per row.",
+    ["The meta-model should be the most powerful model in the stack, since it makes the final decision and must out-think every base model.",
+     "The meta-model is trained on the true labels of the validation set only, never on base-model predictions, which are too noisy to learn from.",
+     "A stacking meta-model cannot use regularisation, because shrinking its weights would erase the base models' contributions entirely.",
+     "The meta-model must be retrained online after every production prediction, since base-model trust shifts with each new case."],
+    "The meta-model sees only a handful of prediction columns and has exactly n out-of-fold rows to learn from — a wide, powerful learner there overfits the base models' quirks. Its inputs ARE base predictions (paired with true labels as targets); regularisation is standard and shrinks weights toward sensible blending rather than erasing anyone; and stacks are trained offline like any model — no per-prediction refit.",
+    "The chairperson needs judgement, not genius — five columns of expert opinion don't require a deep network to blend.");
+
+  tq("stack3",
+    "Which ONE of these statements about blending versus stacking is actually TRUE?",
+    "Blending fits the meta-model on a single held-out slice instead of out-of-fold predictions — simpler and leak-resistant, but the meta-model learns from fewer rows and the slice's quirks carry more weight.",
+    ["Blending and stacking are two names for exactly the same procedure; the terms are used interchangeably in every textbook and library.",
+     "Blending eliminates the need for base-model diversity, because the held-out slice teaches the meta-model to decorrelate the members itself.",
+     "Blending is the more data-efficient of the two, since the held-out slice can also be reused as the final test set without bias.",
+     "Stacking's out-of-fold machinery exists to make the base models more accurate; blending skips it because its base models are already strong."],
+    "Blending: carve off (say) 15%, train bases on the rest, fit the meta-model on that slice's predictions. No fold bookkeeping, minimal leak surface — but the meta-model only ever sees the slice (fewer rows, one draw of luck), while stacking's oof machinery gives it a prediction for EVERY training row. The oof step serves honest meta-training, not base accuracy; the slice used for blending is spent and cannot double as an unbiased test; diversity matters identically in both.",
+    "Blending trades meta-training data for simplicity — one clean rehearsal slice instead of the full fold choreography.");
+
+  /* ---- pass 4: model evaluation ---- */
+
+  tq("metrics3",
+    "Which ONE of these statements about ROC-AUC is actually TRUE?",
+    "AUC equals the probability that a randomly chosen positive case scores HIGHER than a randomly chosen negative one — it grades ranking only, and is untouched by changing the decision threshold.",
+    ["AUC measures the fraction of predictions on the correct side of the 0.5 threshold, which is why recalibrating probabilities changes it.",
+     "An AUC of 0.5 means the model gets half its predictions right, the same as 50% accuracy on a balanced dataset.",
+     "AUC below 0.5 is impossible on real data, since a classifier can never rank worse than random ordering over a full test set.",
+     "Doubling the number of negative cases in the test set halves the AUC, because the false-positive rate's denominator doubles."],
+    "AUC's probabilistic reading (the Mann-Whitney statistic) is its cleanest definition: sample one positive and one negative, AUC = P(positive ranked above negative). Thresholds and monotone recalibration leave the ranking — and hence AUC — untouched. 0.5 means ranking at chance (not 50% accuracy); below 0.5 happens whenever a model is systematically inverted; and class ratios don't change ranking probability, which is precisely why AUC is popular under imbalance.",
+    "AUC is a ranking bet: pick one sick and one healthy patient at random — how often does the model score the sick one higher?");
+
+  tq("metrics3",
+    "Which ONE of these statements about precision and recall is actually TRUE?",
+    "Precision and recall share the SAME numerator (true positives) but different denominators — precision divides by everything you flagged, recall by everything you should have flagged.",
+    ["Precision and recall must always sum to at most 1.0, which is why improving one necessarily degrades the other.",
+     "Recall depends on how many true negatives the model produces, since missing negatives shrinks its denominator.",
+     "Raising the decision threshold always increases recall, because the surviving alerts are the model's most confident ones.",
+     "A model can have high precision and high recall only if the classes are balanced; imbalance caps their product at the base rate."],
+    "Both metrics count the same catches (TP); they differ in what they answer for — precision: TP/(TP+FP), 'of my alerts, how many were real?'; recall: TP/(TP+FN), 'of the real ones, how many did I catch?'. They can both be high on any base rate (a near-perfect model on 1% fraud has both near 1); they don't sum to 1; recall's formula contains no TN at all; raising the threshold trades recall AWAY for precision, not toward it.",
+    "Same trophies, two questions: what fraction of my shots hit (precision), and what fraction of the targets got hit (recall).");
+
+  tq("metrics3",
+    "Which ONE of these statements about the F1 score is actually TRUE?",
+    "F1 is the HARMONIC mean of precision and recall, so it is dragged toward the weaker of the two — a model at 0.9 precision and 0.1 recall scores 0.18, not the 0.5 an arithmetic mean would report.",
+    ["F1 is the arithmetic mean of precision and recall, chosen because it weights both errors equally on a linear scale.",
+     "F1 incorporates true negatives through its denominator, which is what distinguishes it from plain accuracy.",
+     "F1 is threshold-independent: like AUC, it summarises the model's quality across every possible operating point at once.",
+     "An F1 of 0.5 always means precision and recall are both exactly 0.5, since the harmonic mean is invertible."],
+    "Harmonic averaging punishes imbalance between the two components: 2PR/(P+R) collapses toward the minimum, so you can't buy a good F1 with one inflated side. F1 never sees TN (its blind spot); it's computed at ONE threshold (change the cutoff, change F1 — unlike AUC); and many (P,R) pairs share an F1 of 0.5 — e.g. 0.9 and 0.35 — so the score isn't invertible to its parts.",
+    "The harmonic mean is the chain-and-weakest-link average: shine at one metric, fail the other, and F1 sides with the failure.");
+
+  tq("metrics3",
+    "Which ONE of these statements about accuracy under class imbalance is actually TRUE?",
+    "Accuracy's baseline moves with the base rate — on 99/1 data, 99% accuracy may represent ZERO skill, so accuracy is only interpretable relative to the majority-class strategy's score.",
+    ["Accuracy systematically understates performance on imbalanced data, because the rare class contributes too few correct predictions to the numerator.",
+     "On imbalanced data accuracy and recall become identical, since both reduce to the fraction of majority-class cases handled correctly.",
+     "Accuracy is undefined when a class has fewer than 30 examples, which is why imbalanced benchmarks report F1 instead.",
+     "Weighting the rare class more heavily during training makes accuracy imbalance-proof, since the model then treats both classes equally."],
+    "The do-nothing strategy ('predict majority for everyone') scores 99% on 99/1 data — so a model's 99% may mean literally nothing. The cure is anchoring: compare against that baseline (or use chance-anchored metrics like MCC/kappa). Accuracy OVERSTATES, not understates, under imbalance; it never equals recall in general; it's defined for any sample size; and class weighting changes the MODEL's behaviour, not the metric's blindness.",
+    "In a town where it rains once a year, 'never rains' is 99.7% accurate — the number is real, the skill is zero.");
+
+  tq("metrics3",
+    "Which ONE of these statements about test-set reuse is actually TRUE?",
+    "Every decision you let the test set influence — model choice, threshold, stopping round, feature set — spends some of its validity, and the damage accumulates silently across decisions even when each single peek looks harmless.",
+    ["A test set only loses validity if the model is retrained on its rows; reading its score to pick between models leaves it perfectly unbiased.",
+     "Test-set validity regenerates over time: after enough new models, earlier peeks at the data become statistically irrelevant.",
+     "Reusing a test set is safe as long as its size exceeds 10,000 rows, since large samples cannot be overfitted by selection.",
+     "The bias from test-set reuse is always smaller than the bias from a too-small validation set, so reuse is the lesser evil."],
+    "Adaptive overfitting: each choice made BY the test score selects for configurations lucky on those particular rows, and the optimism compounds decision by decision — no retraining required. Nothing regenerates the set (the information leaked stays leaked); size slows but doesn't stop the rot (selection pressure scales with the number of adaptive queries); and the comparison in the last option is a false dilemma — the fix is a fresh holdout or nested CV, not embracing reuse.",
+    "The exam leaks a little every time you glance at it — one glance per question, and eventually you're grading your memory of the answers.");
+
 })();
