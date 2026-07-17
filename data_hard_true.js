@@ -528,4 +528,160 @@
     "Adaptive overfitting: each choice made BY the test score selects for configurations lucky on those particular rows, and the optimism compounds decision by decision — no retraining required. Nothing regenerates the set (the information leaked stays leaked); size slows but doesn't stop the rot (selection pressure scales with the number of adaptive queries); and the comparison in the last option is a false dilemma — the fix is a fresh holdout or nested CV, not embracing reuse.",
     "The exam leaks a little every time you glance at it — one glance per question, and eventually you're grading your memory of the answers.");
 
+  /* ---- pass 5: performance optimisation ---- */
+
+  tq("perf3",
+    "Which ONE of these statements about grid search versus random search is actually TRUE?",
+    "When only a few of many hyperparameters actually matter, random search wins — it tries a DIFFERENT value of each important parameter on every trial, while grid search wastes trials repeating the same few values.",
+    ["Grid search is guaranteed to find the global optimum within its ranges, because it evaluates every point of the continuous search space.",
+     "Random search cannot be reproduced between runs, since the draws depend on hardware timing rather than a controllable seed.",
+     "Grid search scales linearly with the number of hyperparameters, which is why it remains the default for high-dimensional spaces.",
+     "Random search must sample at least as many trials as the equivalent grid has cells before it can match the grid's best score."],
+    "Bergstra & Bengio's argument: a 10×10 grid over two parameters tests only 10 distinct values of each; 100 random trials test ~100 distinct values of each. If one parameter dominates, random explores its axis 10× more finely for the same budget. Grids only cover their own lattice points (not the continuous space), random draws are seedable, grid cost grows EXPONENTIALLY with dimensions, and random typically matches grids with far fewer trials, not more.",
+    "A grid marches in formation over the field; random scatter covers every lane — and usually only one lane holds the treasure.");
+
+  tq("perf3",
+    "Which ONE of these statements about parallelism (n_jobs) is actually TRUE?",
+    "Cross-validation folds and forest trees parallelise cleanly because they are independent — but boosting ROUNDS cannot be parallelised across cores, since each round needs the previous round's output.",
+    ["Setting n_jobs=-1 doubles training speed for every sklearn estimator, since all algorithms decompose into independent halves.",
+     "Parallelism changes the fitted model slightly each run, which is why n_jobs must be 1 whenever reproducibility matters.",
+     "Nested parallelism multiplies the speedups, so GridSearchCV(n_jobs=-1) over a forest with n_jobs=-1 runs fastest of all.",
+     "n_jobs controls GPU usage in sklearn; on CPU-only machines it is silently ignored and everything runs single-threaded."],
+    "Embarrassing parallelism needs independent units: CV folds and bagged trees qualify; boosting's sequential chain does not (its libraries parallelise WITHIN a round's split search instead). n_jobs=-1 helps only decomposable steps; results stay deterministic given seeds (parallelism reorders work, not randomness); nested -1 oversubscribes cores and often SLOWS things; and sklearn's n_jobs spreads CPU processes — it has nothing to do with GPUs.",
+    "You can hire ten cooks for ten separate dishes — not for one recipe where each step needs the last step's pan.");
+
+  tq("perf3",
+    "Which ONE of these statements about caching in pipelines is actually TRUE?",
+    "Pipeline(memory=...) caches fitted TRANSFORMERS, so a grid search that only varies the final model's parameters can skip re-running the expensive preprocessing for every candidate.",
+    ["Pipeline caching stores the model's predictions per row, so repeated predict calls on the same data return instantly.",
+     "The memory= argument keeps the entire training DataFrame in RAM between fits, which is why it speeds up wide searches.",
+     "Caching only works when every step in the pipeline is stateless; a fitted scaler invalidates the cache on each run.",
+     "Enabling memory= changes the CV scores slightly, because cached transformers are reused across folds instead of refitted."],
+    "With memory set, each transformer's fit result is cached keyed on its parameters AND input data — so 50 classifier configs × 5 folds reuse the same 5 fitted preprocessing chains instead of fitting 250. It caches transformers, not predictions; it writes to DISK (joblib), not RAM-pinning your data; stateful transformers are exactly what benefits; and scores are identical because a cache hit requires identical inputs — folds differ, so folds never share fitted state.",
+    "Cook the stock once, freeze it, and let fifty different soups start from the freezer — same stock, same taste, fifth of the time.");
+
+  tq("perf3",
+    "Which ONE of these statements about GPU acceleration for classical ML is actually TRUE?",
+    "For small tabular datasets a GPU can be SLOWER than a CPU — transferring the data to device memory can cost more than the computation saves, so the win only appears at scale.",
+    ["Any sklearn estimator runs on GPU once CUDA is installed, since numpy automatically dispatches its arrays to the device.",
+     "GPUs speed up the maths of training but never inference, because prediction is a memory-bound operation by definition.",
+     "Gradient boosting cannot use GPUs at all, since its sequential rounds leave no parallel work for the device to do.",
+     "GPU training produces bit-identical results to CPU training, so switching hardware never needs revalidation of the model."],
+    "GPUs win by amortising parallel throughput over lots of arithmetic; a 10k-row table spends more time crossing the PCIe bus than computing. Stock sklearn is CPU-only (GPU needs cuML/XGBoost/LightGBM device builds); inference accelerates fine at batch scale; boosting parallelises heavily WITHIN each round's histogram building (GPU XGBoost is standard); and floating-point reduction order differs across hardware, so results are close but not bit-identical.",
+    "A freight train beats a van only when there's freight — for one box, loading the train IS the journey.");
+
+  tq("perf3",
+    "Which ONE of these statements about profiling before optimising is actually TRUE?",
+    "In many 'slow training' investigations the model fit is NOT the bottleneck — data loading, feature engineering or redundant CV fits dominate, which is why you profile before touching the algorithm.",
+    ["Optimisation should start with the model's mathematical core, since the algorithm always dominates a pipeline's runtime.",
+     "Profilers change the code's relative timings so severely that their output cannot identify which stage is slowest.",
+     "If total runtime is under an hour there is nothing worth profiling, since human time only outweighs compute time beyond that.",
+     "Vectorising a pandas loop and switching to a faster model are equivalent fixes, since both target the same bottleneck."],
+    "The empirical pattern: a row-wise pandas .apply, a CSV re-parsed every fold, or a grid refitting an uncached preprocessor often eats 10× the model's own time. Profilers (cProfile, line_profiler, %%time per stage) add overhead but preserve the RANKING of costs, which is all you need; 'always the algorithm' is exactly the assumption profiling exists to test; short-but-frequent runs are prime optimisation targets; and vectorising I/O-side code versus swapping the model attack DIFFERENT stages — only measurement tells you which stage is yours.",
+    "Before buying a faster oven, time the kitchen: half the 'slow baking' complaints are really slow shopping.");
+
+  /* ---- pass 5: advanced scikit-learn ---- */
+
+  tq("skl3",
+    "Which ONE of these statements about the fit/transform contract is actually TRUE?",
+    "Calling fit_transform on the training set but only transform on the test set is not a stylistic choice — refitting on test data would leak its statistics into preprocessing and quietly inflate evaluation.",
+    ["fit_transform and transform return identical results on any data once the transformer has been fitted somewhere beforehand.",
+     "The test set should also get fit_transform, so its own statistics normalise it to the same distribution as the training data.",
+     "transform may update the fitted statistics incrementally with each call, which keeps preprocessing adapted to drifting data.",
+     "The contract only matters for scalers; encoders and imputers carry no fitted state and may be refitted anywhere freely."],
+    "fit learns parameters (means, categories, imputation values) from training data; transform applies them frozen. Refitting on test data means the test set's own distribution shapes its preprocessing — information flowing backwards from evaluation into the pipeline. fit_transform ≠ transform when the input differs from the fitted data (it refits!); transform never updates state; and encoders and imputers hold exactly the kind of fitted state (category lists, fill statistics) the contract protects.",
+    "Learn the rules from the practice papers, then grade the exam by those SAME rules — regrading by the exam's own answers is cheating.");
+
+  tq("skl3",
+    "Which ONE of these statements about ColumnTransformer is actually TRUE?",
+    "Columns not named in any transformer are DROPPED by default — silently shrinking your feature set unless you pass remainder='passthrough' to keep them.",
+    ["Unlisted columns pass through untouched by default, so ColumnTransformer can never accidentally lose features.",
+     "Each column may appear in several transformers, but ColumnTransformer keeps only the last transformation of it.",
+     "ColumnTransformer requires all outputs to be the same width as its inputs, which is why one-hot steps need padding.",
+     "The transformers run sequentially, each seeing the previous one's output, exactly like the steps of a Pipeline."],
+    "remainder='drop' is the default: forget a column in your lists and it vanishes without a warning — a classic silent bug caught only by inspecting output width or names. A column CAN feed multiple transformers (all outputs are kept, concatenated); output widths are arbitrary (one-hot legitimately widens); and the transformers run in PARALLEL on their own column slices — it's Pipeline that chains sequentially.",
+    "It's a sorting office, not an assembly line — parcels go down parallel chutes, and unlabelled parcels land in the bin by default.");
+
+  tq("skl3",
+    "Which ONE of these statements about cross_val_predict is actually TRUE?",
+    "It returns one out-of-fold prediction per training row — useful for confusion matrices and stacking inputs, but averaging a metric over these predictions is NOT the same as cross_val_score's mean.",
+    ["cross_val_predict and cross_val_score always agree to the decimal, since both functions summarise identical folds of the same estimator using the same metric arithmetic.",
+     "cross_val_predict returns predictions from a single model fitted once on the full dataset, which makes its outputs in-sample values unsuitable for any honest evaluation.",
+     "The function requires a separate holdout set passed alongside the training data, because predictions on training rows would otherwise just be memorised answers.",
+     "cross_val_predict refits the estimator once per individual row (leave-one-out style), which is why it is far too slow to run on datasets of any realistic size."],
+    "Each row's prediction comes from the fold-model that did NOT train on it — honest per-row outputs, ideal for error inspection and stacking meta-features. But one global metric over the pooled predictions weights folds differently than averaging per-fold metrics (the docs warn they differ, especially for non-decomposable metrics like AUC). It fits k models, not one and not n; no holdout is needed because folds provide the separation.",
+    "Every student is graded by a teacher who never taught them — but pooling all the marks into one class average is a different statistic from averaging the five classrooms.");
+
+  tq("skl3",
+    "Which ONE of these statements about class_weight='balanced' is actually TRUE?",
+    "It reweights the LOSS inversely to class frequency — no rows are added, removed or duplicated, and the training data itself is untouched.",
+    ["It oversamples the minority class by duplicating rows until both classes contribute equal row counts to training.",
+     "It undersamples the majority class at fit time, discarding random rows so the classes reach parity before fitting.",
+     "It adjusts the decision threshold after training, moving the cutoff toward the rare class without changing the fit.",
+     "It generates synthetic minority examples by interpolation, which is why it needs the imblearn package installed."],
+    "class_weight multiplies each class's contribution to the loss by n_samples/(n_classes·n_class) — errors on rare classes simply cost more during optimisation. Nothing is resampled (that's RandomOverSampler/undersampling), nothing synthetic is created (that's SMOTE, which does live in imblearn), and the threshold is untouched (post-hoc threshold moving is a separate, also-legitimate technique). Same rows, different prices on their mistakes.",
+    "Don't add or remove voters — just make mistakes on the minority cost ten times more at training time.");
+
+  tq("skl3",
+    "Which ONE of these statements about sklearn's random_state is actually TRUE?",
+    "Fixing random_state makes runs reproducible, but the choice of seed is itself a source of variance — conclusions that hold for seed 42 and fail for seed 7 were never real conclusions.",
+    ["random_state only affects data splitting; model internals like forest bootstraps draw from an unrelated global generator.",
+     "Leaving random_state unset makes sklearn default it to zero, so unseeded runs are already reproducible by accident.",
+     "Setting random_state guarantees identical results across sklearn versions, machines and BLAS libraries alike.",
+     "Choosing a 'lucky' seed that maximises the test score is legitimate tuning, since the seed is a hyperparameter like any other."],
+    "A seed freezes ONE draw from the randomness distribution — good for debugging, insufficient for claims: robust results should survive several seeds (report mean ± spread). random_state feeds model internals too (bootstraps, initialisations, sub-sampling); unset means fresh entropy each run, not zero; cross-version/cross-BLAS bit-reproducibility is NOT guaranteed; and seed-shopping for the test score is textbook selection bias, not tuning — the seed changes no real property of the model.",
+    "Nailing the dice to the table makes the game repeatable — it doesn't make one lucky roll a law of nature.");
+
+  /* ---- pass 5: PCA & dimensionality ---- */
+
+  tq("pca3",
+    "Which ONE of these statements about scaling before PCA is actually TRUE?",
+    "Without standardisation, PCA's components chase whichever features have the biggest UNITS — measure income in cents instead of thousands and PC1 changes, though no information did.",
+    ["PCA is scale-invariant because variance ratios between features are preserved under any linear rescaling of columns.",
+     "Standardising before PCA is harmful, since dividing by the standard deviation erases the variance PCA is meant to find.",
+     "PCA requires features to be scaled to the [0,1] range specifically, which is why MinMaxScaler precedes it in pipelines.",
+     "Scaling only matters when features are correlated; independent features contribute to components equally at any scale."],
+    "PCA maximises absolute variance, and variance carries units squared — a feature measured in cents has 10,000× the variance of the same feature in dollars, and will dominate the components on bookkeeping grounds alone. Standardising (z-scores) gives every feature variance 1, letting CORRELATION structure decide instead; that removes nuisance scale, not information. No specific [0,1] range is required, and unit dominance strikes correlated and independent features alike.",
+    "Measured in millimetres, the ant out-varies the elephant-in-kilometres — standardise, or PCA studies your units, not your data.");
+
+  tq("pca3",
+    "Which ONE of these statements about explained variance is actually TRUE?",
+    "The 'first k components explain 95% of variance' figure says NOTHING about predictive value — it measures reconstruction of the INPUTS, and the discarded 5% may hold all the label signal.",
+    ["Explained variance ratios measure how much of the target variable each component predicts, ranked from most to least.",
+     "If ten components explain 95% of variance, any other ten directions chosen from the data must explain less than 90%.",
+     "Explained variance percentages depend on the sign convention of the eigenvectors, so different libraries report different ratios.",
+     "A component explaining under 1% of variance is statistically indistinguishable from noise and can always be dropped safely."],
+    "Explained variance is a fraction of INPUT variance captured — a purely unsupervised bookkeeping of reconstruction, computed without ever seeing a label. Predictive relevance can hide in low-variance directions (the classic PCA failure mode). PCA's top-k is optimal, but other ten-direction sets can come arbitrarily close to it; sign flips leave variance unchanged (it's squared); and a sub-1% component can still be the one that separates the classes — 'small' is not 'noise'.",
+    "'95% of the picture preserved' is a statement about the picture — the missing 5% might be the signature that proves who painted it.");
+
+  tq("pca3",
+    "Which ONE of these statements about PCA components is actually TRUE?",
+    "Principal components are ORTHOGONAL by construction, and the scores they produce are UNCORRELATED — but uncorrelated is weaker than independent, which is why ICA exists as a separate method.",
+    ["PCA components are statistically independent by construction, which is why ICA and PCA return identical directions.",
+     "Orthogonality is an option toggled by a parameter; by default sklearn's PCA allows components to overlap freely.",
+     "The components' signs are meaningful: a negative loading indicates the feature harms reconstruction quality.",
+     "Each component is one of the original feature axes, selected greedily by variance — PCA is a feature selector."],
+    "PCA delivers perpendicular directions and decorrelated projections — second-order cleanliness. Independence is a stronger, all-moments property: two uncorrelated variables can still be dependent, and ICA specifically hunts for independent (non-Gaussian) sources where PCA cannot. Orthogonality has no off-switch; each eigenvector's global sign is arbitrary (flipping it changes nothing); and components are weighted MIXTURES of all features — feature EXTRACTION, not selection.",
+    "PCA untangles the ropes so none cross; ICA goes further and asks that no rope even tugs on another.");
+
+  tq("pca3",
+    "Which ONE of these statements about whitening is actually TRUE?",
+    "whiten=True additionally rescales each component's scores to UNIT variance — useful when downstream algorithms assume isotropic inputs, at the cost of discarding the relative importance the variances encoded.",
+    ["Whitening reorders the components from least to most variance, so that downstream models encounter the subtle low-variance directions before the dominant ones.",
+     "Whitening centres the projected scores a second time after the rotation, which removes any residual mean that the first centering step failed to eliminate.",
+     "Whitening is lossless relabelling: since it only divides each column by a constant, nothing of consequence about the learned representation changes at all.",
+     "Whitening replaces PCA's eigenvectors with random orthogonal directions, which removes the method's built-in bias toward the highest-variance axes."],
+    "Standard PCA scores retain each component's variance (PC1 spreads widest). Whitening divides each by its singular value so every direction has variance 1 — a sphere instead of an ellipsoid. Some downstream methods (certain clusterings, ICA preprocessing) want exactly that isotropy; but the variances WERE information (which directions dominate), and equalising them erases that ranking — a real modelling choice, not a relabelling. Order is unchanged, centering happens once, directions stay the eigenvectors.",
+    "PCA lines the books up by size; whitening also shrinks them all to one height — tidier shelf, lost sense of which books were big.");
+
+  tq("pca3",
+    "Which ONE of these statements about PCA for visualisation is actually TRUE?",
+    "A 2-D PCA plot can make well-separated clusters OVERLAP — separation living in the third component and beyond is flattened away, so overlap in the plot never proves overlap in the data.",
+    ["If clusters overlap in the first two components, they overlap in the full space, since PC1 and PC2 capture the dominant structure.",
+     "PCA plots preserve all pairwise distances exactly, which is what distinguishes them from t-SNE's distorted embeddings.",
+     "The axes of a PCA scatter plot are two of the original measured features, chosen for having the highest variances.",
+     "Clusters that appear in a PCA plot are guaranteed genuine, because linear projections cannot create apparent grouping."],
+    "Projection is a shadow: distances can only shrink or stay, so groups distinct along discarded axes get pancaked together. The converse caution also holds — projections can visually compress unrelated regions into apparent 'clusters'. Overlap in 2-D proves nothing about 30-D; distances are NOT preserved exactly (that's the point of compression); the axes are learned linear combinations, not original columns; and 'looks grouped' is a hypothesis to test (silhouette, cluster stability), never a conclusion.",
+    "Two aeroplanes' shadows can cross on the runway while the planes fly a mile apart — a flat picture of deep data proves nothing by itself.");
+
 })();
