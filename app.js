@@ -1701,8 +1701,160 @@
     app.appendChild(card);
     window.scrollTo(0, 0);
   }
-  // The coding-mode home: every task with its three levels and their done-states.
+  // Coding mode has its own three doors: Practice (the tasks), Reference (solutions,
+  // searchable), Dashboard (progress). Mirrors the main home's structure.
+  function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard') ? v : 'practice'; }
+  function setCodeDoor(v) { try { localStorage.setItem('ds_code_door', v); } catch (e) {} }
+  function codeGroups() {
+    var tasks = window.CODETASKS || [], order = [], by = {};
+    tasks.forEach(function (t) { if (!by[t.group]) { by[t.group] = []; order.push(t.group); } by[t.group].push(t); });
+    return { order: order, by: by };
+  }
+  function codeLevelsDone(p) { return (p[1] ? 1 : 0) + (p[2] ? 1 : 0) + (p[3] ? 1 : 0); }
+  function startCodeLevel(key, L) { if (L === 0) startCodeExample(key); else if (L === 1) startCodeMCQ(key); else if (L === 2) startCodeOrder(key); else startCodeWrite(key); }
   function renderCodeHome() {
+    var door = getCodeDoor();
+    var nav = h('<nav class="home-doors" role="tablist"></nav>');
+    [{ v: 'practice', t: 'Practice', s: 'The tasks, four levels each' },
+     { v: 'reference', t: 'Reference', s: 'Every solution, searchable' },
+     { v: 'dashboard', t: 'Dashboard', s: 'Progress & next up' }].forEach(function (d) {
+      var b = h('<button class="door' + (d.v === door ? ' door-on' : '') + '" type="button" role="tab"><span class="door-t"></span><span class="door-s"></span></button>');
+      b.querySelector('.door-t').textContent = d.t;
+      b.querySelector('.door-s').textContent = d.s;
+      b.onclick = function () { setCodeDoor(d.v); home(); };
+      nav.appendChild(b);
+    });
+    app.appendChild(nav);
+    if (door === 'reference') return renderCodeReference();
+    if (door === 'dashboard') return renderCodeDashboard();
+    renderCodeTasks();
+  }
+  // Reference: the crib sheet — an import map plus every task's solution, collapsible and searchable.
+  function renderCodeReference() {
+    var tasks = window.CODETASKS || [], g = codeGroups();
+    // Search box, filtering tasks by title / ask / code.
+    var searchCard = h('<section class="code-intro"><div class="review-eyebrow">Code reference</div>' +
+      '<p class="code-intro-p">Every task\'s model solution in one place. Search it, or open a task to read the code — then jump to its worked example.</p>' +
+      '<input class="cref-search" type="search" placeholder="Search the code… e.g. stratify, predict_proba, KFold" autocomplete="off"></section>');
+    var searchIn = searchCard.querySelector('.cref-search');
+    app.appendChild(searchCard);
+    // Import map: every import line used anywhere, deduplicated — "where everything lives".
+    var imports = {};
+    tasks.forEach(function (t) {
+      (t.written.solution + '\n' + t.lines.join('\n')).split('\n').forEach(function (ln) {
+        var s = ln.trim();
+        if (/^(from|import)\s/.test(s) && s.indexOf('#') < 0) imports[s] = 1;
+      });
+    });
+    var impCard = h('<section class="cref-item cref-imports"><details><summary><span class="cref-title">The import map — where everything lives</span><span class="cref-group">' + Object.keys(imports).length + ' imports</span></summary><pre class="cref-code"></pre></details></section>');
+    impCard.querySelector('pre').textContent = Object.keys(imports).sort().join('\n');
+    impCard._hay = ('import map where everything lives ' + Object.keys(imports).join(' ')).toLowerCase();
+    app.appendChild(impCard);
+    // One collapsible entry per task, grouped.
+    var entries = [impCard];
+    g.order.forEach(function (grp) {
+      var head = h('<div class="sec-label sec-sub">' + esc(grp) + '</div>');
+      app.appendChild(head);
+      var groupEntries = [];
+      g.by[grp].forEach(function (t) {
+        var item = h('<section class="cref-item"><details><summary><span class="cref-title"></span><span class="cref-group"></span></summary>' +
+          '<p class="cref-why"></p><pre class="cref-code"></pre>' +
+          '<div class="next-row"><button class="btn ghost cref-see">Worked example →</button></div></details></section>');
+        item.querySelector('.cref-title').textContent = t.title;
+        item.querySelector('.cref-group').textContent = t.key;
+        item.querySelector('.cref-why').textContent = t.why;
+        item.querySelector('.cref-code').textContent = t.written.solution;
+        item.querySelector('.cref-see').onclick = function () { startCodeExample(t.key); };
+        item._hay = (t.title + ' ' + t.ask + ' ' + t.why + ' ' + t.written.solution + ' ' + t.lines.join(' ')).toLowerCase();
+        app.appendChild(item);
+        entries.push(item); groupEntries.push(item);
+      });
+      head._entries = groupEntries;
+      entries.push(head);
+    });
+    searchIn.oninput = function () {
+      var q = searchIn.value.trim().toLowerCase();
+      entries.forEach(function (el) {
+        if (el._entries) {   // group heading: show if any of its tasks match
+          el.style.display = (q && !el._entries.some(function (it) { return it._hay.indexOf(q) >= 0; })) ? 'none' : '';
+        } else if (el._hay) {
+          var hit = !q || el._hay.indexOf(q) >= 0;
+          el.style.display = hit ? '' : 'none';
+          el.querySelector('details').open = !!q && hit;   // auto-open matches, collapse on clear
+        }
+      });
+    };
+  }
+  // Dashboard: level-by-level progress, per-group bars, and the next thing to do.
+  function renderCodeDashboard() {
+    var tasks = window.CODETASKS || [], prog = codeProg(), g = codeGroups();
+    var totLevels = tasks.length * 3, doneLevels = 0, full = 0, started = 0;
+    var byLevel = { 1: 0, 2: 0, 3: 0 };
+    tasks.forEach(function (t) {
+      var p = prog[t.key] || {}, d = codeLevelsDone(p);
+      doneLevels += d; if (d === 3) full++; else if (d > 0) started++;
+      for (var L = 1; L <= 3; L++) if (p[L]) byLevel[L]++;
+    });
+    var pct = totLevels ? Math.round(100 * doneLevels / totLevels) : 0;
+    // Headline: overall bar + the three key counts.
+    app.appendChild(h('<section class="code-intro"><div class="review-eyebrow">Coding progress</div>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + pct + '%</b> of all levels</span></div>' +
+      '<div class="mast-badges cdash-badges">' +
+        '<span class="mb mb-learnt"><b>' + full + '</b> complete</span>' +
+        '<span class="mb mb-learning"><b>' + started + '</b> in progress</span>' +
+        '<span class="mb mb-new"><b>' + (tasks.length - full - started) + '</b> not started</span>' +
+      '</div></section>'));
+    // Per-level bars: how far through Spot / Build / Write across all tasks.
+    var lv = h('<section class="mastery-card"><div class="review-eyebrow">By level</div><div class="cdash-levels"></div></section>');
+    var lvHost = lv.querySelector('.cdash-levels');
+    [{ L: 1, name: '1 · Spot it' }, { L: 2, name: '2 · Build it' }, { L: 3, name: '3 · Write it' }].forEach(function (x) {
+      var n = byLevel[x.L], p = tasks.length ? Math.round(100 * n / tasks.length) : 0;
+      lvHost.appendChild(h('<div class="cdash-lrow"><span class="cdash-lname">' + x.name + '</span>' +
+        '<div class="code-progbar"><span style="width:' + p + '%"></span></div>' +
+        '<span class="cdash-lcount">' + n + '/' + tasks.length + '</span></div>'));
+    });
+    app.appendChild(lv);
+    // Per-group mastery bars, clickable through to practice.
+    var gc = h('<section class="mastery-card"><div class="review-eyebrow">By group</div><div class="mm-list"></div></section>');
+    var list = gc.querySelector('.mm-list');
+    g.order.forEach(function (grp) {
+      var ts = g.by[grp], f = 0, s = 0;
+      ts.forEach(function (t) { var d = codeLevelsDone(prog[t.key] || {}); if (d === 3) f++; else if (d > 0) s++; });
+      var n = ts.length, u = n - f - s;
+      function seg(cls, v) { return v ? '<span class="mm-seg ' + cls + '" style="flex:' + v + '"></span>' : ''; }
+      var row = h('<button class="mm-row"><div class="mm-rowhead"><span class="mm-name">' + esc(grp) + '</span>' +
+        '<span class="mm-pct">' + f + '/' + n + '</span></div>' +
+        '<span class="mm-bar">' + seg('mm-learnt', f) + seg('mm-learning', s) + seg('mm-new', u) + '</span></button>');
+      row.onclick = function () { setCodeDoor('practice'); home(); };
+      list.appendChild(row);
+    });
+    app.appendChild(gc);
+    // Next up: the first unfinished level, one tap away.
+    var next = null;
+    g.order.forEach(function (grp) {
+      if (next) return;
+      g.by[grp].forEach(function (t) {
+        if (next) return;
+        var p = prog[t.key] || {};
+        for (var L = 1; L <= 3; L++) if (!p[L]) { next = { t: t, L: L }; return; }
+      });
+    });
+    if (next) {
+      var names = { 1: 'Spot it', 2: 'Build it', 3: 'Write it' };
+      var nu = h('<section class="fav-card"><div class="fav-info"><span class="fav-star">→</span>' +
+        '<div><div class="fav-title">Next up</div><div class="fav-sub"></div></div></div>' +
+        '<button class="btn nu-go">Start →</button></section>');
+      nu.querySelector('.fav-sub').textContent = next.t.title + ' · Level ' + next.L + ' (' + names[next.L] + ')';
+      nu.querySelector('.nu-go').onclick = function () { startCodeLevel(next.t.key, next.L); };
+      app.appendChild(nu);
+    } else {
+      app.appendChild(h('<section class="fav-card"><div class="fav-info"><span class="fav-star">★</span>' +
+        '<div><div class="fav-title">All 3 levels done on every task</div><div class="fav-sub">Random drill keeps them fresh — or come back after new tasks land.</div></div></div></section>'));
+    }
+  }
+  // The practice door: every task with its four levels and their done-states.
+  function renderCodeTasks() {
     var prog = codeProg();
     var tasks = window.CODETASKS || [];
     var doneCount = tasks.reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
