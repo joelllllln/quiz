@@ -372,6 +372,9 @@
   /* ---------------- flashcards (concept → definition, flip to test) ---------------- */
   var FLASH = null;
   function normkey(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  // Curated 1/2/3 rank for definition concepts (data_defs_rank.js): 1 = simple/core,
+  // 2 = standard, 3 = advanced/peripheral. Overrides a card's displayed level everywhere.
+  function defRank(name) { var m = window.DEFRANK; return (m && m[normkey(name)]) || 0; }
   function flashDeck() {
     if (FLASH) return FLASH;
     var at = {}, deck = [];
@@ -389,6 +392,7 @@
       at[nk] = deck.length;
       deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key, def: isDef, level: e.level });
     });
+    deck.forEach(function (d) { var rk = defRank(d.front); if (rk) d.level = rk; });   // curated rank wins
     FLASH = deck; return deck;
   }
   // Difficulty filter shared by every study mode. 0 = all levels, else 1/2/3.
@@ -753,6 +757,7 @@
         else { if (e.level < cardsMap[k].level) cardsMap[k].level = e.level; if (isDef) cardsMap[k].def = true; }
       });
       var cards = Object.keys(cardsMap).map(function (k) { return cardsMap[k]; });
+      cards.forEach(function (c) { var rk = defRank(c.front); if (rk) c.level = rk; });   // curated rank wins
       if (scope === 'defs') cards = cards.filter(function (c) { return c.def; });   // definitions-only pass
       if (!cards.length) return;
       // Concept-driven: one read → recall per concept. The read is ALWAYS titled with the concept being
@@ -791,8 +796,11 @@
     }
     // Fresh order each Start, but least-mastered concepts first so short sessions hit what needs work
     // and repeated passes actually finish the topic instead of re-drilling what's already mastered.
+    // Within the same mastery band, rank-1 (core/simple) concepts come before rank-2 and rank-3.
     concepts = shuffle(concepts);
-    concepts.sort(function (a, b) { return conceptRank(a) - conceptRank(b); });   // stable: keeps the shuffle within a rank
+    concepts.sort(function (a, b) {
+      return (conceptRank(a) - conceptRank(b)) || ((a.concept.level || 2) - (b.concept.level || 2));
+    });   // stable: keeps the shuffle within a band
     var plan;
     if (cap && cap > 0) { plan = concepts.slice(0, cap); }
     else { plan = shuffle(concepts.concat(readOnly)); }   // "whole topic": include the read-only notes too
