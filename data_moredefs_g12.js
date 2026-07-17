@@ -257,7 +257,7 @@
 
   def("logreg1",
     "In binary classification, what are the positive and negative classes?",
-    "The class of interest (positive, label 1) versus the other (negative, label 0) — a naming convention.",
+    "The class of interest (positive, label 1) versus the other (negative, label 0).",
     ["The classes with above-average and below-average feature values respectively.",
      "The majority class and the minority class of the training data respectively.",
      "The classes whose examples were labelled correctly and incorrectly by annotators.",
@@ -317,7 +317,7 @@
 
   def("logreg1",
     "What do max_iter and convergence warnings mean when fitting logistic regression?",
-    "The optimiser ran out of allowed iterations before settling; results may be off — scale features or raise the cap.",
+    "The optimiser ran out of allowed iterations before settling; results may be off.",
     ["The model found more classes in the target column than it was configured to accept.",
      "Training data contained missing values, which the solver filled with column means.",
      "The regularisation parameter was so strong that every coefficient became zero.",
@@ -477,7 +477,7 @@
 
   def("trees1",
     "What is the depth of a decision tree?",
-    "The length of the longest root-to-leaf path — how many questions the tree can ask in sequence.",
+    "The length of the longest root-to-leaf path.",
     ["The total number of training examples stored across all of its leaf nodes.",
      "The number of distinct features the tree uses at least once in its splits.",
      "The count of leaves divided by the count of internal decision nodes.",
@@ -647,7 +647,7 @@
 
   def("svm1",
     "What is a margin violation?",
-    "A training point inside the margin or on the wrong side — permitted, at a cost, by the soft margin.",
+    "A training point inside the margin or on the wrong side.",
     ["A test point whose prediction differs from the majority of its neighbours.",
      "A support vector that appears twice in the training data by duplication.",
      "A kernel value that exceeds one, violating the similarity definition.",

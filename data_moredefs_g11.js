@@ -246,7 +246,7 @@
 
   def("found1",
     "What does the i.i.d. assumption say about a dataset?",
-    "Examples are independent draws from one identical distribution — no coupling between rows, no drift.",
+    "Examples are independent draws from one identical distribution.",
     ["Every feature is independent of every other feature within each class.",
      "The training and test sets contain identical numbers of each class.",
      "All features have been rescaled to be identically distributed.",
@@ -370,7 +370,7 @@
 
   def("pca1",
     "In linear algebra, what is a vector, as used for data?",
-    "An ordered list of numbers, viewable as a point or arrow in space — one row of a dataset.",
+    "An ordered list of numbers, viewable as a point or arrow in space.",
     ["A quantity that has magnitude but deliberately no defined direction.",
      "A one-column table whose entries must all share the same unit.",
      "The line segment connecting a dataset's two most distant points.",
@@ -382,7 +382,7 @@
 
   def("pca1",
     "What is the dot product of two vectors, and what does it measure geometrically?",
-    "The sum of coordinate-wise products; it measures alignment — large when vectors point the same way, zero when perpendicular.",
+    "The sum of coordinate-wise products; it measures alignment.",
     ["The vector connecting the tips of the two vectors being multiplied.",
      "The area of the parallelogram that the two vectors span between them.",
      "The larger of the two vectors' lengths, scaled by the smaller's direction.",

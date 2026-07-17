@@ -123,7 +123,7 @@
 
   def("hier1",
     "What is the big-jump rule for choosing where to cut a dendrogram?",
-    "Cut where the merge distance jumps sharply — clusters below that were natural, above it forced.",
+    "Cut where the merge distance jumps sharply.",
     ["Always cut at exactly half the height of the dendrogram's tallest merge.",
      "Cut immediately below the first merge that combines more than two points.",
      "Choose the height at which every cluster contains the same population.",
@@ -293,7 +293,7 @@
 
   def("dbscan1",
     "As a summary, when is DBSCAN the right tool to reach for?",
-    "Arbitrary-shaped clusters, unknown k, and outliers you want isolated — at roughly uniform density.",
+    "Arbitrary-shaped clusters, unknown k, and outliers you want isolated.",
     ["Whenever the clusters are known to be spherical and equal in size.",
      "When the dataset is enormous and only linear-time algorithms are viable.",
      "When every point must be assigned to a cluster with no exceptions.",
@@ -319,7 +319,7 @@
 
   def("pca1",
     "How is PCA used to visualise a high-dimensional dataset?",
-    "Project onto the first two components and scatter-plot them — the least-lossy 2-D linear view.",
+    "Project onto the first two components and scatter-plot them.",
     ["Plot every pairwise feature scatter and overlay them in a single figure.",
      "Draw one bar chart per component showing its loading magnitudes.",
      "Map the first three features to red, green and blue colour channels.",
@@ -331,7 +331,7 @@
 
   def("pca1",
     "What is lost when you keep only the top components of a PCA?",
-    "The variation along the dropped directions — gone from the data and from any reconstruction.",
+    "The variation along the dropped directions.",
     ["Nothing; PCA compression is exactly reversible from the kept components.",
      "Only the feature names, which can be restored from the loadings matrix.",
      "The ordering of the rows, which must be re-sorted after transforming.",
@@ -343,7 +343,7 @@
 
   def("pca1",
     "What is the common variance-based rule for choosing n_components?",
-    "Keep enough components to cover a target like 95% of total variance — or pass 0.95 to sklearn directly.",
+    "Keep enough components to cover a target like 95% of total variance.",
     ["Always keep exactly ten components, the standard across all datasets.",
      "Keep components until each remaining one explains at least half the total.",
      "Use the square root of the original number of features, rounded up.",
@@ -405,7 +405,7 @@
 
   def("tsne1",
     "What is t-SNE actually for?",
-    "Visual exploration: making 2-D maps of high-dimensional data — not general preprocessing.",
+    "Visual exploration: making 2-D maps of high-dimensional data.",
     ["Producing compressed features that improve downstream model accuracy.",
      "Imputing missing values by placing points near their neighbours.",
      "Selecting the most informative features from wide datasets.",
@@ -477,7 +477,7 @@
 
   def("tsne1",
     "Two classes form separate islands in a t-SNE plot. What can you reasonably conclude?",
-    "Their feature neighbourhoods are locally distinct — a hopeful sign, not a classifier guarantee.",
+    "Their feature neighbourhoods are locally distinct.",
     ["A classifier will achieve at least 95% accuracy separating these classes.",
      "The distance between the islands equals the classes' true separation.",
      "The larger island's class must contain more training examples.",
@@ -491,7 +491,7 @@
 
   def("feng1",
     "What does 'garbage in, garbage out' mean for machine learning?",
-    "Model quality is capped by input quality — no algorithm rescues wrong or meaningless features.",
+    "Model quality is capped by input quality.",
     ["Models should delete their worst features automatically during training.",
      "Outputs are unreliable until a model has been retrained at least twice.",
      "Datasets must be emptied and rebuilt between every experiment.",
@@ -563,7 +563,7 @@
 
   def("feng1",
     "What is the high-cardinality problem with categorical features?",
-    "Columns like zip code have thousands of values — one-hot explodes and rare levels lack data.",
+    "Columns like zip code have thousands of values.",
     ["Categories with long names overflow the feature-name length limit.",
      "High-cardinality features are always leaky and must be deleted.",
      "Models refuse categorical features that exceed 64 distinct values.",

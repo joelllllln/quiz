@@ -112,7 +112,7 @@
 
   def("msel1",
     "What makes a comparison between candidate models fair?",
-    "Same data splits, same metric, same preprocessing — differing only in the model itself.",
+    "Same data splits, same metric, same preprocessing.",
     ["Giving each model the preprocessing that flatters it most individually.",
      "Evaluating each model on a different random split for independence.",
      "Allowing stronger models fewer tuning trials to level the field.",
@@ -284,7 +284,7 @@
 
   def("interp",
     "What is a black-box model?",
-    "One whose internal logic isn't humanly followable — accurate perhaps, but opaque, like large ensembles.",
+    "One whose internal logic isn't humanly followable.",
     ["A model whose source code is proprietary and cannot be licensed.",
      "Any model that runs on GPU hardware rather than ordinary CPUs.",
      "A model trained on confidential data that cannot be published.",
@@ -308,7 +308,7 @@
 
   def("interp",
     "How are explanations used for debugging a model?",
-    "Importances and attributions expose nonsense — leaked features, spurious signals — before deployment.",
+    "Importances and attributions expose nonsense.",
     ["They speed up training by identifying which epochs to skip.",
      "They automatically patch the model's weights when errors appear.",
      "They cannot help debugging, being post-hoc approximations.",
@@ -382,7 +382,7 @@
 
   def("imbal",
     "Which application domains are inherently imbalanced?",
-    "Fraud, disease screening, defect detection, churn, ad clicks — anywhere the event of interest is rare.",
+    "Fraud, disease screening, defect detection, churn, ad clicks.",
     ["Handwriting recognition, where all digits occur equally often.",
      "Weather forecasting, since rain and sun alternate evenly.",
      "None; imbalance is always an artefact of bad data collection.",
@@ -468,7 +468,7 @@
 
   def("evalx",
     "What do agreement metrics like Cohen's and Fleiss' kappa measure, as a family?",
-    "Chance-corrected agreement between raters or ratings — how much accord exceeds coincidence.",
+    "Chance-corrected agreement between raters or ratings.",
     ["The internal consistency of one model across bootstrap resamples.",
      "The fraction of examples on which all classes are predicted equally.",
      "Agreement between training and test distributions of features.",
@@ -480,7 +480,7 @@
 
   def("evalx",
     "What do probability-quality metrics like log loss and the Brier score assess?",
-    "How good the predicted probabilities are — confidence honesty, not just which side of 0.5 they fall.",
+    "How good the predicted probabilities are.",
     ["The numerical precision of the floating-point probability values.",
      "The share of predictions whose probability is exactly one half.",
      "The speed at which predict_proba executes per thousand rows.",
@@ -554,7 +554,7 @@
 
   def("regr",
     "Why is extrapolation beyond the training range dangerous for regression models?",
-    "The fitted relationship is only evidenced inside the seen range — outside it, models guess by their own shape.",
+    "The fitted relationship is only evidenced inside the seen range.",
     ["Because most libraries clip predictions to the training minimum and maximum.",
      "Extrapolation is safe for linear models and risky only for tree models.",
      "It is dangerous only when the features were standardised before fitting.",
@@ -578,7 +578,7 @@
 
   def("regr",
     "Why plot the target against features before fitting any regression?",
-    "The shapes reveal linearity, curvature, outliers and spread — dictating model and transform choices.",
+    "The shapes reveal linearity, curvature, outliers and spread.",
     ["Plots are required by sklearn before regression estimators will fit.",
      "To verify the dataset contains more rows than it has columns.",
      "Plotting is decorative; summary statistics carry all information.",

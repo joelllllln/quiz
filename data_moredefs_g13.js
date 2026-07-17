@@ -49,7 +49,7 @@
 
   def("rf1",
     "What is the out-of-bag (OOB) sample of a single tree?",
-    "The ~37% of training rows the tree's bootstrap draw missed — free unseen data for that tree.",
+    "The ~37% of training rows the tree's bootstrap draw missed.",
     ["The rows the tree misclassified during training, held aside for reweighting.",
      "A random third of the test set assigned to that tree for evaluation.",
      "The rows deleted from the dataset because they contained missing values.",
@@ -123,7 +123,7 @@
 
   def("gb1",
     "What does n_estimators mean for a gradient boosting model?",
-    "The number of sequential boosting rounds — each adding one corrective tree to the running sum.",
+    "The number of sequential boosting rounds.",
     ["The number of independent restarts averaged to smooth out randomness.",
      "The number of features each individual tree is permitted to consider.",
      "The maximum number of leaves allowed across the entire ensemble.",
@@ -245,7 +245,7 @@
 
   def("stack1",
     "When does soft voting typically beat hard voting?",
-    "When members output reasonable probabilities — confidence information that hard voting throws away.",
+    "When members output reasonable probabilities.",
     ["When the base models are badly miscalibrated and overconfident on every input.",
      "When the ensemble contains models that cannot produce probability estimates.",
      "When classes are perfectly balanced, which is the only case soft voting handles.",
@@ -319,7 +319,7 @@
 
   def("metrics1",
     "What is a false positive?",
-    "A case that is actually negative but that the model predicted as positive — a false alarm.",
+    "A case that is actually negative but that the model predicted as positive.",
     ["A positive case the model found using an unreliable or leaked feature.",
      "A case predicted negative that later turned out to be positive after all.",
      "A prediction whose probability was positive but below the threshold.",
@@ -355,7 +355,7 @@
 
   def("metrics1",
     "How do you orient yourself in a confusion matrix's rows and columns?",
-    "Check the convention: one axis is truth, the other prediction — sklearn puts true labels on rows.",
+    "Check the convention: one axis is truth, the other prediction.",
     ["Rows and columns are interchangeable because the matrix is always symmetric.",
      "The larger numbers are always on the diagonal, which fixes the orientation.",
      "Rows are always the positive class and columns are always the negative class.",
@@ -379,7 +379,7 @@
 
   def("metrics1",
     "What is the majority-class baseline and why is it computed?",
-    "The accuracy of always predicting the most common class — the floor any real model must beat.",
+    "The accuracy of always predicting the most common class.",
     ["The accuracy of the best single-feature model, used to rank the features.",
      "The highest accuracy achievable by any model on the given dataset.",
      "The average of all class frequencies, weighted by their importance.",
@@ -465,7 +465,7 @@
 
   def("perf1",
     "Why should model scores be treated as noisy measurements rather than exact values?",
-    "Splits, seeds and sampling all jitter scores — differences within the noise band mean nothing.",
+    "Splits, seeds and sampling all jitter scores.",
     ["Because floating-point arithmetic makes all metrics wrong by several percent.",
      "Because metrics libraries round every score to the nearest whole number.",
      "Scores are exact; any observed variation indicates a bug in the pipeline.",
@@ -515,7 +515,7 @@
 
   def("skl1",
     "What is sklearn's score() method shortcut?",
-    "estimator.score(X, y) computes a default metric — accuracy for classifiers, R² for regressors.",
+    "estimator.score(X, y) computes a default metric.",
     ["It prints the model's hyperparameters together with their current values.",
      "It returns the training loss recorded at the final iteration of fitting.",
      "It scores the model's code quality against the library's style guide.",

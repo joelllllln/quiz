@@ -64,7 +64,7 @@
 
   def("fsel1",
     "Where must feature selection happen relative to cross-validation, and why?",
-    "Inside each fold, on that fold's training part only — otherwise selection leaks test information.",
+    "Inside each fold, on that fold's training part only.",
     ["Before cross-validation, so every fold is scored on an identical feature set.",
      "After cross-validation, applying selection only to the final production model.",
      "Selection may use all data safely because it never sees the target values.",
@@ -188,7 +188,7 @@
 
   def("xgb1",
     "What does XGBoost's eval_metric parameter control?",
-    "The metric computed on evaluation sets for monitoring and early stopping — separate from the training objective.",
+    "The metric computed on evaluation sets for monitoring and early stopping.",
     ["The loss function whose gradients the trees are fitted to during training.",
      "The metric used to choose the best split inside each individual tree.",
      "How feature importances are normalised in the final trained model.",
@@ -214,7 +214,7 @@
 
   def("interp",
     "What does a SHAP summary (beeswarm) plot display?",
-    "Every example's SHAP value per feature, coloured by feature value — global importance plus direction at a glance.",
+    "Every example's SHAP value per feature, coloured by feature value.",
     ["The model's accuracy recomputed after each feature is permuted in turn.",
      "A dendrogram grouping features whose SHAP values correlate strongly.",
      "The training-loss curve annotated with the feature responsible for each drop.",

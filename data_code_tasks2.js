@@ -118,7 +118,7 @@
         q: 'Which snippet handles a heavily imbalanced target correctly?',
         correct: "X_tr, X_te, y_tr, y_te = train_test_split(X, y, stratify=y, random_state=42)\nclf = LogisticRegression(class_weight='balanced', max_iter=1000)\nclf.fit(X_tr, y_tr)\nprint(average_precision_score(y_te, clf.predict_proba(X_te)[:, 1]))",
         wrong: [
-          "X_tr, X_te, y_tr, y_te = train_test_split(X, y, random_state=42)\nclf = LogisticRegression(max_iter=1000)\nclf.fit(X_tr, y_tr)\nprint(accuracy_score(y_te, clf.predict(X_te)))",
+          "X_tr, X_te, y_tr, y_te = train_test_split(X, y, random_state=42)\nclf = LogisticRegression(max_iter=1000)\nclf.fit(X_tr, y_tr)\ny_pred = clf.predict(X_te)\nprint(accuracy_score(y_te, y_pred))\nprint('great model!' if accuracy_score(y_te, y_pred) > 0.95 else 'tune more')",
           "X_bal, y_bal = SMOTE().fit_resample(X, y)\nX_tr, X_te, y_tr, y_te = train_test_split(X_bal, y_bal)\nclf.fit(X_tr, y_tr)\nprint(accuracy_score(y_te, clf.predict(X_te)))",
           "y_balanced = y.sample(frac=1.0)\nclf = LogisticRegression(class_weight='balanced')\nclf.fit(X, y_balanced)",
           "clf = LogisticRegression(class_weight=99)\nclf.fit(X_tr, y_tr)\nprint(clf.score(X_te, y_te))"],
