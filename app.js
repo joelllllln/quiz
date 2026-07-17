@@ -72,7 +72,9 @@
     { key: 'wpay', no: '28', name: 'Payments & Fintech', mode: 'work', desc: 'Rails, open banking, APP fraud and the fintech words of the day job.',
       levels: [{ qk: 'wpay', part: 'Part I', name: 'Definitions' }] },
     { key: 'waws', no: '29', name: 'AWS & Cloud', mode: 'work', desc: 'Instances, spinning up, S3, IAM — the everyday cloud vocabulary.',
-      levels: [{ qk: 'waws', part: 'Part I', name: 'Definitions' }] }
+      levels: [{ qk: 'waws', part: 'Part I', name: 'Definitions' }] },
+    { key: 'wai', no: '30', name: 'AI & Emerging Tech', mode: 'work', desc: 'LLMs, generative AI and the model-risk vocabulary of AI in regulation.',
+      levels: [{ qk: 'wai', part: 'Part I', name: 'Definitions' }] }
   ];
   var GROUPS = [
     { label: 'Start here — core definitions', keys: ['found'] },
@@ -83,7 +85,7 @@
     { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] },
     { label: 'Beyond the basics', keys: ['regr', 'imbal', 'evalx', 'valid', 'interp'] },
     { label: 'Putting it together', keys: ['scen'] },
-    { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws'], mode: 'work' }
+    { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws', 'wai'], mode: 'work' }
   ];
   // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'work' (FCA & innovation) ----
   function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work') ? v : 'ds'; }
@@ -1675,8 +1677,13 @@
       '<b>2 · Build it</b> — tap the blocks into a working order. ' +
       '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
       '<p class="code-intro-p code-intro-count">' + doneCount + ' of ' + tasks.length + ' tasks fully completed</p></section>'));
+    // Bucket by group (first-seen order), so tasks added later still file under the right heading.
+    var groupOrder = [], byGroup = {};
+    tasks.forEach(function (t) { if (!byGroup[t.group]) { byGroup[t.group] = []; groupOrder.push(t.group); } byGroup[t.group].push(t); });
+    var ordered = [];
+    groupOrder.forEach(function (g) { byGroup[g].forEach(function (t) { ordered.push(t); }); });
     var lastGroup = null;
-    tasks.forEach(function (t) {
+    ordered.forEach(function (t) {
       if (t.group !== lastGroup) { app.appendChild(h('<div class="sec-label sec-sub">' + esc(t.group) + '</div>')); lastGroup = t.group; }
       var p = prog[t.key] || {};
       var row = h('<section class="code-task">' +
