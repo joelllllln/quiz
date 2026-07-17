@@ -66,7 +66,13 @@
     { key: 'regr', no: '25', name: 'Regression & Boosting', desc: 'Predicting numbers, plus the fast modern boosting libraries.',
       levels: [{ qk: 'regr', part: 'Part I', name: 'Definitions' }] },
     { key: 'valid', no: '26', name: 'Validation', desc: 'Split honestly: grouped, time-ordered and leave-one-out cross-validation.',
-      levels: [{ qk: 'valid', part: 'Part I', name: 'Definitions' }] }
+      levels: [{ qk: 'valid', part: 'Part I', name: 'Definitions' }] },
+    { key: 'wcrypto', no: '27', name: 'Digital Assets & Smart Contracts', mode: 'work', desc: 'Blockchain, tokenization, stablecoins and smart-contract vocabulary.',
+      levels: [{ qk: 'wcrypto', part: 'Part I', name: 'Definitions' }] },
+    { key: 'wpay', no: '28', name: 'Payments & Fintech', mode: 'work', desc: 'Rails, open banking, APP fraud and the fintech words of the day job.',
+      levels: [{ qk: 'wpay', part: 'Part I', name: 'Definitions' }] },
+    { key: 'waws', no: '29', name: 'AWS & Cloud', mode: 'work', desc: 'Instances, spinning up, S3, IAM — the everyday cloud vocabulary.',
+      levels: [{ qk: 'waws', part: 'Part I', name: 'Definitions' }] }
   ];
   var GROUPS = [
     { label: 'Start here — core definitions', keys: ['found'] },
@@ -76,8 +82,17 @@
     { label: 'Measuring & tuning', keys: ['metrics', 'perf', 'sklearn'] },
     { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] },
     { label: 'Beyond the basics', keys: ['regr', 'imbal', 'evalx', 'valid', 'interp'] },
-    { label: 'Putting it together', keys: ['scen'] }
+    { label: 'Putting it together', keys: ['scen'] },
+    { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws'], mode: 'work' }
   ];
+  // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'work' (FCA & innovation) ----
+  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work') ? v : 'ds'; }
+  function setMode(v) { try { localStorage.setItem('ds_mode', v); } catch (e) {} }
+  // Topics belong to 'ds' unless tagged; 'code' mode shows its own screen, so shares the ds topic set.
+  function topicInMode(t) { var m = getMode() === 'work' ? 'work' : 'ds'; return (t.mode || 'ds') === m; }
+  var KEYMODE = {};
+  TOPICS.forEach(function (t) { KEYMODE[t.key] = t.mode || 'ds'; });
+  function keyInMode(k) { var m = getMode() === 'work' ? 'work' : 'ds'; return (KEYMODE[k] || 'ds') === m; }
   var UPCOMING = [
     { name: 'Regression', desc: 'Predicting quantities, done properly.' },
     { name: 'Neural Networks', desc: 'Layers of learned features.' }
@@ -140,6 +155,7 @@
   }
   function poolFor(f) {
     return buildIndex().filter(function (e) {
+      if (!keyInMode(e.key)) return false;
       if (f.type === 'def' && !e.def) return false;
       if (f.type === 'q' && e.def) return false;
       if (f.type !== 'def' && f.diff !== 'all' && e.level !== +f.diff) return false;
@@ -343,7 +359,7 @@
       var m = by[e.key] || (by[e.key] = { key: e.key, topic: e.topic, total: 0, learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 });
       m.total++; m[cardStatus(e.q)]++;
     });
-    return TOPICS.map(function (t) { return by[t.key] || { key: t.key, topic: t.name, total: 0, learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 }; });
+    return TOPICS.filter(topicInMode).map(function (t) { return by[t.key] || { key: t.key, topic: t.name, total: 0, learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 }; });
   }
   function getMix() { var v = +(localStorage.getItem('ds_practice_mix')); return isNaN(v) ? 0.5 : Math.max(0, Math.min(1, v)); }
   function setMix(v) { try { localStorage.setItem('ds_practice_mix', v); } catch (e) {} }
@@ -376,7 +392,7 @@
   // 2 = standard, 3 = advanced/peripheral. Overrides a card's displayed level everywhere.
   function defRank(name) { var m = window.DEFRANK; return (m && m[normkey(name)]) || 0; }
   function flashDeck() {
-    if (FLASH) return FLASH;
+    if (FLASH) return FLASH.filter(function (d) { return keyInMode(d.key); });
     var at = {}, deck = [];
     buildIndex().forEach(function (e) {
       var r = e.q.widget && e.q.widget.reveal;
@@ -393,7 +409,8 @@
       deck.push({ front: r.name, formula: r.formula || '', back: r.text || '', topic: e.topic, key: e.key, def: isDef, level: e.level });
     });
     deck.forEach(function (d) { var rk = defRank(d.front); if (rk) d.level = rk; });   // curated rank wins
-    FLASH = deck; return deck;
+    FLASH = deck;
+    return FLASH.filter(function (d) { return keyInMode(d.key); });
   }
   // Difficulty filter shared by every study mode. 0 = all levels, else 1/2/3.
   function getStudyDiff() { var d = +(localStorage.getItem('ds_study_diff')); return (d === 1 || d === 2 || d === 3) ? d : 0; }
@@ -432,7 +449,7 @@
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var c = deck[i];
-      var opts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+      var opts = '<option value="">All topics</option>' + TOPICS.filter(topicInMode).map(function (t) {
         return '<option value="' + t.key + '"' + (t.key === topicKey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
       }).join('');
       var view = h('<div class="flash-view">' +
@@ -736,6 +753,7 @@
     // note-less topics (e.g. Applied Scenarios) are still fully covered via their concept flashcards.
     TOPICS.forEach(function (t) {
       if (topicKey && t.key !== topicKey) return;
+      if (!topicKey && !topicInMode(t)) return;
       var notes = [];
       var nt = window.NOTES && window.NOTES[t.key];
       if (nt) (nt.groups || []).forEach(function (g) {
@@ -1125,7 +1143,7 @@
       var c = deck[i];
       var reference = (c.formula ? c.formula + ' — ' : '') + c.back;
       var prompt = 'What is ' + c.front + '?';
-      var opts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+      var opts = '<option value="">All topics</option>' + TOPICS.filter(topicInMode).map(function (t) {
         return '<option value="' + t.key + '"' + (t.key === topicKey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
       }).join('');
       var view = h('<div class="write-view">' +
@@ -1213,7 +1231,7 @@
   function practiceSelect(mix) {
     var c = loadCards(), day = dayNum(), tk = getPracticeTopic();
     var known = [], neu = [];
-    buildIndex().forEach(function (e) { if (tk && e.key !== tk) return; var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
+    buildIndex().forEach(function (e) { if (tk ? e.key !== tk : !keyInMode(e.key)) return; var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
     known.forEach(function (k) {
       var r = k.r;
       var overdue = (day - r.last) / BOX_INTERVAL[Math.max(0, Math.min(5, r.box))];  // 1 = exactly due
@@ -1511,6 +1529,176 @@
     TOPICS.forEach(function (t) { t.levels.forEach(function (L) { n += (QUESTIONS[L.qk] || []).length; }); });
     return n;
   }
+  /* ---------------- Coding mode: three levels per task — spot it, build it, write it ---------------- */
+  function codeProg() { try { return JSON.parse(localStorage.getItem('ds_code_prog') || '{}'); } catch (e) { return {}; } }
+  function setCodeDone(taskKey, level) {
+    var p = codeProg(); p[taskKey] = p[taskKey] || {}; p[taskKey][level] = 1;
+    try { localStorage.setItem('ds_code_prog', JSON.stringify(p)); } catch (e) {}
+  }
+  function codeTask(key) { var t = null; (window.CODETASKS || []).forEach(function (x) { if (x.key === key) t = x; }); return t; }
+  function codeBar(task, levelLabel) {
+    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">' + esc(task.title) + ' · <b>' + levelLabel + '</b></span></div>');
+    bar.querySelector('.back').onclick = home;
+    return bar;
+  }
+  // Level 1 — Spot it: which code is right?
+  function startCodeMCQ(key) {
+    var t = codeTask(key); if (!t) return;
+    app.innerHTML = '';
+    app.appendChild(codeBar(t, 'Level 1 · Spot it'));
+    var card = h('<article class="qcard code-card"><div class="q-eyebrow">Spot the right code</div>' +
+      '<h2 class="code-ask"></h2><p class="code-why"></p><p class="code-q"></p>' +
+      '<div class="code-opts"></div><div class="code-after" hidden></div></article>');
+    card.querySelector('.code-ask').textContent = t.title;
+    card.querySelector('.code-why').textContent = t.why;
+    card.querySelector('.code-q').textContent = t.mcq.q;
+    var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
+    var choices = shuffle([{ c: t.mcq.correct, ok: true }].concat(t.mcq.wrong.map(function (w) { return { c: w, ok: false }; })));
+    var answered = false;
+    choices.forEach(function (ch) {
+      var b = h('<button class="code-opt" type="button"><pre></pre></button>');
+      b.querySelector('pre').textContent = ch.c;
+      b.onclick = function () {
+        if (answered) return;
+        answered = true;
+        logActivity();
+        opts.querySelectorAll('.code-opt').forEach(function (o) { o.disabled = true; });
+        b.classList.add(ch.ok ? 'co-right' : 'co-wrong');
+        if (!ch.ok) opts.querySelectorAll('.code-opt').forEach(function (o, i) { if (choices[i].ok) o.classList.add('co-right'); });
+        if (ch.ok) setCodeDone(t.key, 1);
+        after.hidden = false;
+        after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' + esc(t.mcq.explain) + '</div>' +
+          '<div class="next-row"><button class="btn code-next">' + (ch.ok ? 'Level 2: build it →' : 'Try again') + '</button><button class="btn ghost code-home">Coding home</button></div>';
+        after.querySelector('.code-next').onclick = function () { ch.ok ? startCodeOrder(t.key) : startCodeMCQ(t.key); };
+        after.querySelector('.code-home').onclick = home;
+        after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      };
+      opts.appendChild(b);
+    });
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  // Level 2 — Build it: tap the code lines into order; decoy lines must be avoided.
+  function startCodeOrder(key) {
+    var t = codeTask(key); if (!t) return;
+    app.innerHTML = '';
+    app.appendChild(codeBar(t, 'Level 2 · Build it'));
+    var card = h('<article class="qcard code-card"><div class="q-eyebrow">Build the code</div>' +
+      '<h2 class="code-ask"></h2><p class="match-note">Tap the lines in the order they should run — top line first. ' +
+      (t.decoys && t.decoys.length ? 'Careful: <b>' + t.decoys.length + ' broken line' + (t.decoys.length === 1 ? '' : 's') + '</b> don\'t belong at all.' : '') + '</p>' +
+      '<pre class="code-built"></pre><div class="code-pool"></div><div class="code-after" hidden></div></article>');
+    card.querySelector('.code-ask').textContent = t.ask;
+    var built = card.querySelector('.code-built'), pool = card.querySelector('.code-pool'), after = card.querySelector('.code-after');
+    var expected = 0, wrongTaps = 0, total = t.lines.length;
+    var items = t.lines.map(function (s, i) { return { s: s, i: i, decoy: false }; })
+      .concat((t.decoys || []).map(function (s) { return { s: s, i: -1, decoy: true }; }));
+    shuffle(items).forEach(function (it) {
+      var b = h('<button class="code-line" type="button"><pre></pre></button>');
+      b.querySelector('pre').textContent = it.s;
+      b.onclick = function () {
+        if (b.classList.contains('cl-done')) return;
+        if (!it.decoy && it.i === expected) {
+          b.classList.add('cl-done');
+          built.textContent += (built.textContent ? '\n' : '') + it.s;
+          expected++;
+          if (expected === total) {
+            logActivity(); setCodeDone(t.key, 2);
+            after.hidden = false;
+            after.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Built ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Built perfectly ✓') + '</span>That\'s working code, in the right order.</div>' +
+              '<div class="next-row"><button class="btn code-next">Level 3: write it →</button><button class="btn ghost code-home">Coding home</button></div>';
+            after.querySelector('.code-next').onclick = function () { startCodeWrite(t.key); };
+            after.querySelector('.code-home').onclick = home;
+            after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else {
+          wrongTaps++;
+          b.classList.add('mi-shake');
+          if (it.decoy) { b.classList.add('cl-decoy'); setTimeout(function () { b.classList.remove('cl-decoy'); }, 900); }
+          setTimeout(function () { b.classList.remove('mi-shake'); }, 350);
+        }
+      };
+      pool.appendChild(b);
+    });
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  // Level 3 — Write it: type the code; graded kindly on the essential pieces, solution always shown.
+  function startCodeWrite(key) {
+    var t = codeTask(key); if (!t) return;
+    app.innerHTML = '';
+    app.appendChild(codeBar(t, 'Level 3 · Write it'));
+    var card = h('<article class="qcard code-card"><div class="q-eyebrow">Write the code</div>' +
+      '<h2 class="code-ask"></h2>' +
+      '<textarea class="code-write" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type the code here…"></textarea>' +
+      '<div class="next-row"><button class="btn code-check">Check my code</button><button class="btn ghost code-peek">Show solution</button></div>' +
+      '<div class="code-after" hidden></div></article>');
+    card.querySelector('.code-ask').textContent = t.written.prompt;
+    var ta = card.querySelector('.code-write'), after = card.querySelector('.code-after');
+    var peeked = false;
+    function norm(s) { return s.toLowerCase().replace(/["']/g, "'").replace(/\s+/g, ''); }
+    function showSolution(html) {
+      after.hidden = false;
+      after.innerHTML = html + '<div class="code-sol"><span class="p-label">Model solution</span><pre></pre></div>' +
+        '<div class="next-row"><button class="btn ghost code-home">Coding home</button></div>';
+      after.querySelector('.code-sol pre').textContent = t.written.solution;
+      after.querySelector('.code-home').onclick = home;
+      after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    card.querySelector('.code-peek').onclick = function () {
+      peeked = true;
+      showSolution('<div class="banner"><span class="b-label">Solution</span>Read it, then try writing it from memory.</div>');
+    };
+    card.querySelector('.code-check').onclick = function () {
+      var got = norm(ta.value);
+      if (!got) { ta.focus(); return; }
+      logActivity();
+      var missing = t.written.must.filter(function (m) { return got.indexOf(norm(m)) < 0; });
+      if (!missing.length) {
+        if (!peeked) setCodeDone(t.key, 3);
+        showSolution('<div class="banner good"><span class="b-label">All the pieces are there ✓</span>' +
+          (peeked ? 'Nice — now try it again cold next time.' : 'Every essential part present and correct — compare against the model below.') + '</div>');
+      } else {
+        showSolution('<div class="banner bad"><span class="b-label">Nearly — ' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + ' missing</span>' +
+          'Still needed: ' + missing.map(function (m) { return '<code>' + esc(m) + '</code>'; }).join(' · ') + '</div>');
+      }
+    };
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  // The coding-mode home: every task with its three levels and their done-states.
+  function renderCodeHome() {
+    var prog = codeProg();
+    var tasks = window.CODETASKS || [];
+    var doneCount = tasks.reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
+    app.appendChild(h('<section class="code-intro"><div class="review-eyebrow">How this works</div>' +
+      '<p class="code-intro-p"><b>1 · Spot it</b> — recognise the right code among lookalikes. ' +
+      '<b>2 · Build it</b> — tap the blocks into a working order. ' +
+      '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
+      '<p class="code-intro-p code-intro-count">' + doneCount + ' of ' + tasks.length + ' tasks fully completed</p></section>'));
+    var lastGroup = null;
+    tasks.forEach(function (t) {
+      if (t.group !== lastGroup) { app.appendChild(h('<div class="sec-label sec-sub">' + esc(t.group) + '</div>')); lastGroup = t.group; }
+      var p = prog[t.key] || {};
+      var row = h('<section class="code-task">' +
+        '<div class="ct-head"><h3></h3><span class="ct-done">' + (p[1] && p[2] && p[3] ? '✓ complete' : '') + '</span></div>' +
+        '<p class="ct-ask"></p>' +
+        '<div class="ct-levels">' +
+          '<button class="btn ghost ct-l' + (p[1] ? ' ct-ok' : '') + '" data-l="1">' + (p[1] ? '✓ ' : '') + '1 · Spot it</button>' +
+          '<button class="btn ghost ct-l' + (p[2] ? ' ct-ok' : '') + '" data-l="2">' + (p[2] ? '✓ ' : '') + '2 · Build it</button>' +
+          '<button class="btn ghost ct-l' + (p[3] ? ' ct-ok' : '') + '" data-l="3">' + (p[3] ? '✓ ' : '') + '3 · Write it</button>' +
+        '</div></section>');
+      row.querySelector('h3').textContent = t.title;
+      row.querySelector('.ct-ask').textContent = t.ask;
+      row.querySelectorAll('.ct-l').forEach(function (b) {
+        b.onclick = function () {
+          var L = +b.getAttribute('data-l');
+          if (L === 1) startCodeMCQ(t.key); else if (L === 2) startCodeOrder(t.key); else startCodeWrite(t.key);
+        };
+      });
+      app.appendChild(row);
+    });
+  }
+
   function home() {
     app.innerHTML = '';
     var mast = h(
@@ -1539,7 +1727,27 @@
       favBtnM.textContent = 'Tap ☆ on any question first';
       setTimeout(favLabelM, 1700);
     };
+    var MODE = getMode();
+    if (MODE === 'code') {
+      mast.querySelector('.mast-sub').innerHTML = '<b>Coding, unscrambled</b>: every task in three steps — spot the right code, build it from blocks, then write it yourself. No wall of syntax, one idea at a time.';
+      mast.querySelector('.mast-foot').textContent = 'Data-science code only · progress kept in this browser';
+    } else if (MODE === 'work') {
+      mast.querySelector('.mast-sub').innerHTML = '<b>Innovation vocabulary</b> for the day job: digital assets, payments & fintech, and the AWS words everyone assumes you know. Same drills — quiz, flashcards, read + recall.';
+      mast.querySelector('.mast-foot').textContent = 'FCA & innovation topics · progress kept in this browser';
+    }
     app.appendChild(mast);
+
+    // Mode switch: Data Science revision · Coding drills · FCA & Innovation vocabulary.
+    var tabs = h('<nav class="mode-tabs" aria-label="App mode"></nav>');
+    [{ v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
+      var b = h('<button class="mode-tab' + (m.v === MODE ? ' mode-on' : '') + '" type="button"></button>');
+      b.textContent = m.t;
+      b.onclick = function () { if (m.v !== getMode()) { setMode(m.v); home(); } };
+      tabs.appendChild(b);
+    });
+    app.appendChild(tabs);
+
+    if (MODE === 'code') { renderCodeHome(); return; }
 
     // Three tabs: Study (learn + practice, one picker), Reference (look things up), Dashboard (all metrics).
     var door = getHomeDoor();
@@ -1786,7 +1994,7 @@
         return newFilterC(flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.back && c.back.length > 15 && diffOk(c.level); })).length;
       }
       var avail = studyCount();
-      var topicOpts = '<option value="">All topics</option>' + TOPICS.map(function (t) {
+      var topicOpts = '<option value="">All topics</option>' + TOPICS.filter(topicInMode).map(function (t) {
         return '<option value="' + t.key + '"' + (t.key === tkey ? ' selected' : '') + '>' + esc(t.name) + '</option>';
       }).join('');
       var scopeLabel = tkey ? (function () { var nm = tkey; TOPICS.forEach(function (t) { if (t.key === tkey) nm = t.name; }); return nm; })() : 'all topics';
@@ -1868,7 +2076,7 @@
     function renderPractice() {
       var ptk = getPracticeTopic();
       var sum = { learnt: 0, ready: 0, learning: 0, struggling: 0, new: 0 };
-      buildIndex().forEach(function (e) { if (ptk && e.key !== ptk) return; sum[cardStatus(e.q)]++; });
+      buildIndex().forEach(function (e) { if (ptk ? e.key !== ptk : !keyInMode(e.key)) return; sum[cardStatus(e.q)]++; });
       var mixPct = Math.round(getMix() * 100);
       function splitFor(pct) {
         var m = pct / 100, N = PRACTICE_N;
@@ -1894,7 +2102,7 @@
           '<span class="mb mb-new"><b>' + sum.new + '</b> new</span>' +
         '</div>' +
         '<div class="filt-row rev-topicrow"><span class="filt-lab">Topic</span><select class="rev-topic">' +
-          '<option value="">All topics</option>' + TOPICS.map(function (t) { return '<option value="' + t.key + '"' + (t.key === getPracticeTopic() ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') +
+          '<option value="">All topics</option>' + TOPICS.filter(topicInMode).map(function (t) { return '<option value="' + t.key + '"' + (t.key === getPracticeTopic() ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') +
         '</select></div>' +
         '<div class="dial-wrap">' +
           '<div class="dial-ends"><span>Review what I know</span><span>New material</span></div>' +
@@ -2061,6 +2269,7 @@
     function renderContents() {
       app.appendChild(h('<div class="sec-label">Browse all topics</div>'));
       GROUPS.forEach(function (g) {
+        if ((g.mode || 'ds') !== (getMode() === 'work' ? 'work' : 'ds')) return;
         app.appendChild(h('<div class="sec-label sec-sub">' + g.label + '</div>'));
         g.keys.forEach(function (tk) {
           var T = null; TOPICS.forEach(function (t) { if (t.key === tk) T = t; });
