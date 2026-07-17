@@ -303,10 +303,10 @@
   tq("svm3",
     "Which ONE of these statements about SVM probability outputs is actually TRUE?",
     "decision_function returns margin distances, not probabilities — probability=True bolts a sigmoid onto them afterwards (Platt scaling), at extra cross-validation cost.",
-    ["decision_function returns calibrated probabilities scaled onto the interval from −1 to +1.",
+    ["decision_function returns calibrated probabilities, rescaled by convention onto the interval from −1 to +1 for readability.",
      "Enabling probability=True refits the margin itself, so the decision boundary moves as well.",
-     "Platt's sigmoid is estimated inside the margin optimisation as one of its constraints.",
-     "SVMs cannot produce probability estimates by any post-processing method."],
+     "Platt's sigmoid is estimated inside the margin optimisation itself, entering the dual problem as an extra constraint.",
+     "SVMs cannot produce probability estimates by any post-processing method, which is why they are avoided for risk scoring."],
     "The SVM optimises a margin, not a likelihood, so its raw scores are unbounded distances. Platt scaling learns sigmoid(a·score + b) on internal cross-validated scores — a separate, post-hoc model; predict()'s boundary is untouched, and the extra CV is why probability=True slows training noticeably.",
     "The machine outputs distances; the percentages are a translator trained afterwards.");
 
