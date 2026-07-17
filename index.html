@@ -773,6 +773,14 @@ input[type=range]{accent-color:var(--cobalt)}
 .cdash-lname{flex:0 0 92px;font-size:.85rem;font-weight:600}
 .cdash-lrow .code-progbar{flex:1}
 .cdash-lcount{flex:0 0 auto;font-size:.8rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.cdash-wide{flex-basis:118px}
+/* Coding difficulty filter chips */
+.code-diff-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px}
+.code-diff-row .filt-lab{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-right:2px}
+.cdf-chip{padding:6px 11px;border:1.5px solid var(--rule);border-radius:999px;background:var(--sheet);color:var(--ink-2);font-size:.8rem;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.cdf-chip:hover{border-color:var(--ink);color:var(--ink)}
+.cdf-on{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.ct-meta{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -928,6 +936,7 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_code_tasks4.js"></script>
 <script src="data_code_tasks5.js"></script>
 <script src="data_code_walks.js"></script>
+<script src="data_code_levels.js"></script>
 <script src="data_defs_rank.js"></script>
 <script src="app.js"></script>
 <script>

@@ -411,6 +411,15 @@
     "The ranking-metric family", "The agreement-metric family", "The probability-metric family",
     "Entity grouping (rows that travel together)"]);
 
+  /* ===== FCA & Innovation: advanced-tier overrides (base ranks live in the data files;
+     these promote the genuinely advanced terms to 3 so every work topic filters 1/2/3) ===== */
+  set(2, ["DPIA"]);
+  set(3, ["Layer 2", "Cross-chain bridge", "Travel Rule", "Oracle (blockchain)",
+    "ISO 20022", "PSD2 → PSD3 / PSR1", "Tokenized deposits",
+    "Kubernetes / EKS", "Infrastructure as Code (IaC)", "Glue & Athena (data lake basics)",
+    "Step Functions (orchestration)", "KMS (Key Management Service)",
+    "EU AI Act (risk tiers)", "Operational resilience & critical third parties", "Vector database"]);
+
   /* ===== Validation ===== */
   set(1, ["Holdout method", "Validation set (purpose)", "Leave-one-out (LOOCV)", "Time-series validation split"]);
   set(2, ["Group k-fold", "Repeated k-fold cross-validation", "Shuffle-split (Monte Carlo CV)",

@@ -134,7 +134,12 @@
       t.levels.forEach(function (L, li) {
         (QUESTIONS[L.qk] || []).forEach(function (q) {
           // A question is a "definition" iff it is in the explicit curated set (data_defs.js) — no heuristic guessing.
-          QINDEX.push({ q: q, topic: t.name, key: t.key, level: li + 1, def: !!(window.DEFS && window.DEFS[q.q]) });
+          var isDef = !!(window.DEFS && window.DEFS[q.q]);
+          // Definition questions take their curated 1/2/3 rank as their level, so every
+          // difficulty filter (daily, study, type-it) works on rank rather than part.
+          var r = q.widget && q.widget.reveal;
+          var lvl = (isDef && r && r.name && defRank(r.name)) || (li + 1);
+          QINDEX.push({ q: q, topic: t.name, key: t.key, level: lvl, def: isDef });
         });
       });
     });
@@ -1539,7 +1544,7 @@
   }
   function codeTask(key) { var t = null; (window.CODETASKS || []).forEach(function (x) { if (x.key === key) t = x; }); return t; }
   function codeBar(task, levelLabel) {
-    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">' + esc(task.title) + ' · <b>' + levelLabel + '</b></span></div>');
+    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">' + esc(task.title) + ' ' + diffTag(task.lvl || 2) + ' · <b>' + levelLabel + '</b></span></div>');
     bar.querySelector('.back').onclick = home;
     return bar;
   }
@@ -1705,12 +1710,29 @@
   // searchable), Dashboard (progress). Mirrors the main home's structure.
   function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard') ? v : 'practice'; }
   function setCodeDoor(v) { try { localStorage.setItem('ds_code_door', v); } catch (e) {} }
-  function codeGroups() {
-    var tasks = window.CODETASKS || [], order = [], by = {};
+  function codeGroups(list) {
+    var tasks = list || window.CODETASKS || [], order = [], by = {};
     tasks.forEach(function (t) { if (!by[t.group]) { by[t.group] = []; order.push(t.group); } by[t.group].push(t); });
     return { order: order, by: by };
   }
   function codeLevelsDone(p) { return (p[1] ? 1 : 0) + (p[2] ? 1 : 0) + (p[3] ? 1 : 0); }
+  // Difficulty filter for coding mode (task.lvl 1/2/3), shared by Practice and Reference.
+  function getCodeDiff() { var d = +(localStorage.getItem('ds_code_diff')); return (d === 1 || d === 2 || d === 3) ? d : 0; }
+  function setCodeDiff(d) { try { localStorage.setItem('ds_code_diff', d || 0); } catch (e) {} }
+  function codeDiffChips() {
+    var row = h('<div class="code-diff-row"><span class="filt-lab">Difficulty</span></div>');
+    [{ v: 0, t: 'All' }, { v: 1, t: 'L1 · foundations' }, { v: 2, t: 'L2 · practice' }, { v: 3, t: 'L3 · advanced' }].forEach(function (c) {
+      var b = h('<button class="cdf-chip' + (getCodeDiff() === c.v ? ' cdf-on' : '') + '" type="button"></button>');
+      b.textContent = c.t;
+      b.onclick = function () { setCodeDiff(c.v); home(); };
+      row.appendChild(b);
+    });
+    return row;
+  }
+  function codeTasksFiltered() {
+    var d = getCodeDiff();
+    return (window.CODETASKS || []).filter(function (t) { return !d || (t.lvl || 2) === d; });
+  }
   function startCodeLevel(key, L) { if (L === 0) startCodeExample(key); else if (L === 1) startCodeMCQ(key); else if (L === 2) startCodeOrder(key); else startCodeWrite(key); }
   function renderCodeHome() {
     var door = getCodeDoor();
@@ -1731,11 +1753,12 @@
   }
   // Reference: the crib sheet — an import map plus every task's solution, collapsible and searchable.
   function renderCodeReference() {
-    var tasks = window.CODETASKS || [], g = codeGroups();
-    // Search box, filtering tasks by title / ask / code.
+    var tasks = codeTasksFiltered(), g = codeGroups(tasks);
+    // Search box, filtering tasks by title / ask / code; difficulty chips share the Practice filter.
     var searchCard = h('<section class="code-intro"><div class="review-eyebrow">Code reference</div>' +
       '<p class="code-intro-p">Every task\'s model solution in one place. Search it, or open a task to read the code — then jump to its worked example.</p>' +
       '<input class="cref-search" type="search" placeholder="Search the code… e.g. stratify, predict_proba, KFold" autocomplete="off"></section>');
+    searchCard.appendChild(codeDiffChips());
     var searchIn = searchCard.querySelector('.cref-search');
     app.appendChild(searchCard);
     // Import map: every import line used anywhere, deduplicated — "where everything lives".
@@ -1757,11 +1780,10 @@
       app.appendChild(head);
       var groupEntries = [];
       g.by[grp].forEach(function (t) {
-        var item = h('<section class="cref-item"><details><summary><span class="cref-title"></span><span class="cref-group"></span></summary>' +
+        var item = h('<section class="cref-item"><details><summary><span class="cref-title"></span><span class="cref-group">' + diffTag(t.lvl || 2) + '</span></summary>' +
           '<p class="cref-why"></p><pre class="cref-code"></pre>' +
           '<div class="next-row"><button class="btn ghost cref-see">Worked example →</button></div></details></section>');
         item.querySelector('.cref-title').textContent = t.title;
-        item.querySelector('.cref-group').textContent = t.key;
         item.querySelector('.cref-why').textContent = t.why;
         item.querySelector('.cref-code').textContent = t.written.solution;
         item.querySelector('.cref-see').onclick = function () { startCodeExample(t.key); };
@@ -1815,6 +1837,18 @@
         '<span class="cdash-lcount">' + n + '/' + tasks.length + '</span></div>'));
     });
     app.appendChild(lv);
+    // By difficulty: how far through L1/L2/L3 tasks (fully completed).
+    var dv = h('<section class="mastery-card"><div class="review-eyebrow">By difficulty</div><div class="cdash-levels"></div></section>');
+    var dvHost = dv.querySelector('.cdash-levels');
+    [{ d: 1, name: 'L1 · foundations' }, { d: 2, name: 'L2 · practice' }, { d: 3, name: 'L3 · advanced' }].forEach(function (x) {
+      var ts = tasks.filter(function (t) { return (t.lvl || 2) === x.d; });
+      var f = ts.reduce(function (n, t) { return n + (codeLevelsDone(prog[t.key] || {}) === 3 ? 1 : 0); }, 0);
+      var p = ts.length ? Math.round(100 * f / ts.length) : 0;
+      dvHost.appendChild(h('<div class="cdash-lrow"><span class="cdash-lname cdash-wide">' + x.name + '</span>' +
+        '<div class="code-progbar"><span style="width:' + p + '%"></span></div>' +
+        '<span class="cdash-lcount">' + f + '/' + ts.length + '</span></div>'));
+    });
+    app.appendChild(dv);
     // Per-group mastery bars, clickable through to practice.
     var gc = h('<section class="mastery-card"><div class="review-eyebrow">By group</div><div class="mm-list"></div></section>');
     var list = gc.querySelector('.mm-list');
@@ -1856,7 +1890,8 @@
   // The practice door: every task with its four levels and their done-states.
   function renderCodeTasks() {
     var prog = codeProg();
-    var tasks = window.CODETASKS || [];
+    var tasks = codeTasksFiltered();
+    var diffLabel = getCodeDiff() ? ' at this difficulty' : '';
     var doneCount = tasks.reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
     var intro = h('<section class="code-intro"><div class="review-eyebrow">How this works</div>' +
       '<p class="code-intro-p"><b>See it</b> — the worked example, explained line by line. ' +
@@ -1864,8 +1899,9 @@
       '<b>2 · Build it</b> — tap the blocks into a working order. ' +
       '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + (tasks.length ? Math.round(100 * doneCount / tasks.length) : 0) + '%"></span></div>' +
-      '<span class="code-intro-count"><b>' + doneCount + '</b> of ' + tasks.length + ' tasks fully completed</span></div>' +
+      '<span class="code-intro-count"><b>' + doneCount + '</b> of ' + tasks.length + ' tasks' + diffLabel + '</span></div>' +
       '<div class="next-row"><button class="btn code-drill">Random drill →</button></div></section>');
+    intro.appendChild(codeDiffChips());
     // Random drill: jump straight into a level you haven't completed yet (least-done tasks first).
     intro.querySelector('.code-drill').onclick = function () {
       var todo = [];
@@ -1896,7 +1932,7 @@
       }
       var p = prog[t.key] || {};
       var row = h('<section class="code-task">' +
-        '<div class="ct-head"><h3></h3><span class="ct-done">' + (p[1] && p[2] && p[3] ? '✓ complete' : '') + '</span></div>' +
+        '<div class="ct-head"><h3></h3><span class="ct-meta">' + diffTag(t.lvl || 2) + '<span class="ct-done">' + (p[1] && p[2] && p[3] ? ' ✓ complete' : '') + '</span></span></div>' +
         '<p class="ct-ask"></p>' +
         '<div class="ct-levels">' +
           '<button class="btn ghost ct-l ct-see" data-l="0">See it</button>' +
