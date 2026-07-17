@@ -1543,6 +1543,35 @@
     bar.querySelector('.back').onclick = home;
     return bar;
   }
+  // Level 0 — See it: the worked example, line by line in plain English.
+  function startCodeExample(key) {
+    var t = codeTask(key); if (!t) return;
+    app.innerHTML = '';
+    app.appendChild(codeBar(t, 'See it · worked example'));
+    var card = h('<article class="qcard code-card"><div class="q-eyebrow">Worked example</div>' +
+      '<h2 class="code-ask"></h2><p class="code-why"></p><div class="code-walk"></div>' +
+      '<div class="next-row"><button class="btn code-next">Level 1: spot it →</button><button class="btn ghost code-home">Coding home</button></div></article>');
+    card.querySelector('.code-ask').textContent = t.ask;
+    card.querySelector('.code-why').textContent = t.why;
+    var walkEl = card.querySelector('.code-walk');
+    if (t.walk && t.walk.length) {
+      t.walk.forEach(function (pair) {
+        var row = h('<div class="cw-row"><pre class="cw-line"></pre><p class="cw-note"></p></div>');
+        row.querySelector('.cw-line').textContent = pair[0];
+        row.querySelector('.cw-note').textContent = pair[1];
+        walkEl.appendChild(row);
+      });
+    } else {
+      var sol = h('<div><div class="code-sol"><span class="p-label">The code</span><pre></pre></div><p class="cw-note cw-note-solo"></p></div>');
+      sol.querySelector('pre').textContent = t.written.solution;
+      sol.querySelector('.cw-note-solo').textContent = t.mcq.explain;
+      walkEl.appendChild(sol);
+    }
+    card.querySelector('.code-next').onclick = function () { startCodeMCQ(t.key); };
+    card.querySelector('.code-home').onclick = home;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
   // Level 1 — Spot it: which code is right?
   function startCodeMCQ(key) {
     var t = codeTask(key); if (!t) return;
@@ -1690,6 +1719,7 @@
         '<div class="ct-head"><h3></h3><span class="ct-done">' + (p[1] && p[2] && p[3] ? '✓ complete' : '') + '</span></div>' +
         '<p class="ct-ask"></p>' +
         '<div class="ct-levels">' +
+          '<button class="btn ghost ct-l ct-see" data-l="0">See it</button>' +
           '<button class="btn ghost ct-l' + (p[1] ? ' ct-ok' : '') + '" data-l="1">' + (p[1] ? '✓ ' : '') + '1 · Spot it</button>' +
           '<button class="btn ghost ct-l' + (p[2] ? ' ct-ok' : '') + '" data-l="2">' + (p[2] ? '✓ ' : '') + '2 · Build it</button>' +
           '<button class="btn ghost ct-l' + (p[3] ? ' ct-ok' : '') + '" data-l="3">' + (p[3] ? '✓ ' : '') + '3 · Write it</button>' +
@@ -1699,7 +1729,7 @@
       row.querySelectorAll('.ct-l').forEach(function (b) {
         b.onclick = function () {
           var L = +b.getAttribute('data-l');
-          if (L === 1) startCodeMCQ(t.key); else if (L === 2) startCodeOrder(t.key); else startCodeWrite(t.key);
+          if (L === 0) startCodeExample(t.key); else if (L === 1) startCodeMCQ(t.key); else if (L === 2) startCodeOrder(t.key); else startCodeWrite(t.key);
         };
       });
       app.appendChild(row);
