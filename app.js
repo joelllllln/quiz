@@ -1701,11 +1701,25 @@
     var prog = codeProg();
     var tasks = window.CODETASKS || [];
     var doneCount = tasks.reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
-    app.appendChild(h('<section class="code-intro"><div class="review-eyebrow">How this works</div>' +
-      '<p class="code-intro-p"><b>1 · Spot it</b> — recognise the right code among lookalikes. ' +
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">How this works</div>' +
+      '<p class="code-intro-p"><b>See it</b> — the worked example, explained line by line. ' +
+      '<b>1 · Spot it</b> — recognise the right code among lookalikes. ' +
       '<b>2 · Build it</b> — tap the blocks into a working order. ' +
       '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
-      '<p class="code-intro-p code-intro-count">' + doneCount + ' of ' + tasks.length + ' tasks fully completed</p></section>'));
+      '<div class="next-row"><button class="btn code-drill">Random drill →</button>' +
+      '<span class="code-intro-count">' + doneCount + ' of ' + tasks.length + ' tasks fully completed</span></div></section>');
+    // Random drill: jump straight into a level you haven't completed yet (least-done tasks first).
+    intro.querySelector('.code-drill').onclick = function () {
+      var todo = [];
+      tasks.forEach(function (t) {
+        var p = prog[t.key] || {};
+        for (var L = 1; L <= 3; L++) if (!p[L]) todo.push({ key: t.key, l: L });
+      });
+      if (!todo.length) tasks.forEach(function (t) { todo.push({ key: t.key, l: 1 + Math.floor(Math.random() * 3) }); });
+      var pick = todo[Math.floor(Math.random() * todo.length)];
+      if (pick.l === 1) startCodeMCQ(pick.key); else if (pick.l === 2) startCodeOrder(pick.key); else startCodeWrite(pick.key);
+    };
+    app.appendChild(intro);
     // Bucket by group (first-seen order), so tasks added later still file under the right heading.
     var groupOrder = [], byGroup = {};
     tasks.forEach(function (t) { if (!byGroup[t.group]) { byGroup[t.group] = []; groupOrder.push(t.group); } byGroup[t.group].push(t); });
