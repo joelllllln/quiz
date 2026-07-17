@@ -1256,4 +1256,316 @@
     "Training on personal data is processing — it needs its own lawful basis, and 'we collected it for something else' is exactly what purpose limitation polices. Memorisation attacks extract verbatim training records from models, so 'the weights are anonymous' is a claim to test, not assume; stripping names leaves quasi-identifiers (birth date + postcode re-identifies most people); and no ML exemption to purpose limitation exists — compatibility is assessed, not presumed. Practical toolkit: DPIAs, minimisation, synthetic or properly anonymised data, and honest privacy notices.",
     "The model drank the database — and can sometimes recite it back. 'We deleted the spreadsheet afterwards' impresses no regulator.");
 
+  /* ---- pass 9: foundations ---- */
+
+  tq("found3",
+    "Which ONE of these statements about overfitting is actually TRUE?",
+    "Overfitting is diagnosed by the GAP between training and held-out performance, not by training accuracy alone — a model at 99% train / 98% test is healthier than one at 85% train / 70% test, despite 'memorising' more.",
+    ["A training accuracy above roughly 95% is itself proof of overfitting, since no genuine signal in real-world data is ever clean enough to support scores at that level honestly.",
+     "Overfitting means the model has too few parameters to capture the signal, which is why the standard remedy is adding capacity until training accuracy reaches its ceiling.",
+     "A model that fits its training data perfectly must generalise perfectly too, since the test rows are drawn from the same distribution the training rows came from.",
+     "Overfitting can be detected from the training loss curve alone: whenever the loss is still falling, the model is by definition still learning transferable structure."],
+    "Overfitting is fitting noise AT THE EXPENSE of generalisation — visible only by comparing train to held-out performance. High train accuracy with high test accuracy just means the problem is learnable; a big gap is the disease. Too-few-parameters is UNDERfitting; same-distribution sampling doesn't make memorised noise transfer; and a falling training loss says nothing — it keeps falling long after validation loss turns, which is the whole reason validation curves exist.",
+    "Memorising the textbook isn't the crime — flunking the exam after memorising the textbook is.");
+
+  tq("found3",
+    "Which ONE of these statements about the train/validation/test split is actually TRUE?",
+    "The three sets answer three different questions — fit parameters, choose between models, estimate final performance — and the test set answers honestly only if it influenced NOTHING: one look to tune anything converts it into validation data.",
+    ["Validation and test sets are interchangeable names for the same held-out rows, and the three-way split exists only for datasets too large for a simple two-way division to be practical.",
+     "The test set should be consulted after each modelling decision so that every choice is grounded in the most realistic estimate of deployment performance available at that moment.",
+     "Once a model is final, best practice is to fold the test set into training and refit, then quote the earlier test score for the new model, since more data can only have improved it.",
+     "The proper split ratio is fixed at 60/20/20 by convention, and deviating from those proportions invalidates any comparison between studies that used the standard allocation."],
+    "Parameters learn from training data; hyperparameters and model choice learn from validation performance; the test set exists to be spent ONCE on the final answer. Consulting it per-decision is adaptive overfitting; quoting an old test score for a refit model is quoting a measurement of a different model (refitting on train+val and testing once is fine — folding in the TEST set unmeasures the thing quoted); and ratios are pragmatic, sized to the data, not a law.",
+    "Coursework, mock exam, real exam — glance at the real paper while revising and it silently becomes another mock.");
+
+  tq("found3",
+    "Which ONE of these statements about parametric versus non-parametric models is actually TRUE?",
+    "'Non-parametric' doesn't mean no parameters — it means the effective complexity GROWS with the data (kNN carries the whole training set; trees grow deeper) — while a parametric model's form is fixed before any data arrives.",
+    ["Non-parametric models are those trained without hyperparameters, which is why methods like kNN require no tuning choices at all before they can be applied to a dataset.",
+     "A parametric model always outperforms a non-parametric one on small datasets, and always loses on large ones, so the choice reduces to reading the row count off the data.",
+     "Linear regression is non-parametric because the fitted coefficient values are unknown before training, whereas neural networks are parametric because their architecture is designed by hand.",
+     "Non-parametric methods make no assumptions whatsoever about the data, which is what frees them from the bias component of the bias-variance decomposition entirely."],
+    "The distinction is whether model capacity is fixed in advance (linear regression's p coefficients, whatever the row count) or scales with data (kNN's memory IS the dataset; a tree's depth follows the sample). kNN famously has hyperparameters (k, the metric); small-data advantage is a tendency, not a theorem; unknown coefficient VALUES don't make a model non-parametric (the FORM is fixed); and non-parametric methods still assume things (kNN assumes local smoothness) and certainly still carry bias.",
+    "One tailor cuts every suit from the same pattern; the other's pattern grows new panels with every customer measured.");
+
+  tq("found3",
+    "Which ONE of these statements about data leakage is actually TRUE?",
+    "Leakage's signature is TOO-GOOD validation scores that evaporate in production — and its commonest forms are mundane: preprocessing fitted on all rows, duplicate records straddling splits, or a feature that quietly encodes the outcome.",
+    ["Leakage only occurs when test rows are literally copied into the training set, so a pipeline whose train and test row indices never overlap is structurally immune to the problem.",
+     "The tell-tale sign of leakage is unusually POOR validation performance, since contaminated features confuse the model with information it cannot reconcile with the labels.",
+     "Leakage is a training-time inefficiency rather than an evaluation problem: a leaky pipeline wastes compute but its reported scores remain trustworthy estimates of deployment accuracy.",
+     "Standard cross-validation automatically detects and corrects leakage, since any fold containing contaminated information will produce a visibly anomalous score in cv_results_."],
+    "Leakage is future or outcome information reaching the model through any channel: a scaler fitted on the full dataset, the same customer's rows in both partitions, a 'days_until_churn' column, target encoding computed globally. Row indices not overlapping stops only the crudest form. The symptom is inflated (never deflated) scores — the model looks brilliant on data whose secrets it was slipped; scores are precisely what stop being trustworthy; and CV inherits the leak in every fold rather than flagging it, which is why leaky pipelines sail through review.",
+    "The exam-day miracle student was marking their own paper all along — brilliance that collapses the first time the paper is sealed.");
+
+  tq("found3",
+    "Which ONE of these statements about generalisation is actually TRUE?",
+    "Every supervised model implicitly assumes deployment data resembles training data — under distribution shift that assumption breaks silently, so a model can degrade badly while emitting confident predictions, which is why production monitoring exists.",
+    ["A model that cross-validated well has proven it will perform at that level indefinitely, since cross-validation's repeated splits already simulate every way the world might change.",
+     "Distribution shift announces itself through runtime errors and malformed predictions, so a production model that returns well-formed confident outputs is demonstrably still on-distribution.",
+     "Generalisation concerns vanish for models retrained nightly, because a twenty-four-hour-old training distribution cannot meaningfully differ from the distribution encountered today.",
+     "Models generalise by extracting universal truths that hold in any environment, which is why a fraud model trained in one country transfers to another without measurable degradation."],
+    "CV estimates performance on the distribution you HAVE — it cannot speak for distributions you'll meet later (new customer mix, changed behaviour, adversaries adapting). The failure mode is silent: inputs still parse, confidence stays high, accuracy quietly rots — models don't know what they don't know. Nightly retraining narrows but doesn't close the gap (shifts happen within a day; sudden events break it entirely); and what models extract is dataset-specific correlation structure, which is exactly why cross-country transfer degrades.",
+    "The map was surveyed last year — the confident line it draws through the new motorway is still drawn confidently.");
+
+  /* ---- pass 9: validation ---- */
+
+  tq("valid",
+    "Which ONE of these statements about k-fold cross-validation is actually TRUE?",
+    "The k models built during cross-validation are throwaways — CV estimates how well the PROCEDURE performs, and standard practice then refits one final model on all the training data, whose exact score no fold directly measured.",
+    ["Cross-validation's output includes the single best of the k fitted models, and deploying that particular fold-winner is what the procedure is designed to enable and recommend.",
+     "Each of the k models must be preserved and ensembled at deployment, since the CV estimate is only valid for the average of exactly those k fitted models predicting together.",
+     "The final refit on all training data is forbidden, because a model fitted on more rows than any fold used would invalidate the cross-validated estimate already reported for the pipeline.",
+     "Cross-validation guarantees the refit final model will achieve at least the mean fold score in deployment, since training on more data cannot perform worse than the fold models did."],
+    "CV's product is a NUMBER (the procedure's estimated skill), not a model. Deploying the luckiest fold-winner bakes in selection bias; ensembling the folds is a legitimate but separate choice, not what the estimate means; refitting on everything is the standard final step (more data usually helps, and the CV number stands as the honest estimate of the procedure that produced it); and 'at least the mean' is a hope, not a guarantee — the estimate carries variance in both directions.",
+    "Five rehearsals measure how good the production will be — then the real cast performs once, with everything it has.");
+
+  tq("valid",
+    "Which ONE of these statements about time-series validation is actually TRUE?",
+    "TimeSeriesSplit trains on the past and validates on the future in expanding windows — shuffled folds would let models 'forecast' dates they trained on both sides of, scoring interpolation and calling it prediction.",
+    ["Shuffled k-fold is preferable for time-series data because mixing eras into every fold exposes the model to a wider variety of temporal conditions during each training pass.",
+     "TimeSeriesSplit works by reversing the series and predicting backwards, since a model able to retrodict the past has thereby proven it can also predict the future equally well.",
+     "Temporal ordering matters only for financial data; for sensor or demand series, autocorrelation is weak enough that ordinary shuffled folds estimate deployment accuracy honestly.",
+     "Time-series validation requires discarding all but the most recent tenth of the data, since older observations belong to distributions too stale to be worth training on at all."],
+    "Deployment means predicting FORWARD from everything so far — the split must rehearse that: train on rows 1..t, validate on t+1..t+h, slide onward. Shuffling hands the model each target's temporal neighbours (including its future), producing gap-filling scores that production can never reproduce. Backwards prediction rehearses the wrong task; autocorrelation makes shuffling dishonest for ANY dependent series, not just finance; and old data is a modelling decision (windowing, weighting), not a validation rule.",
+    "Rehearse the way you'll perform: always facing forward, never grading yourself on days you'd already seen from both sides.");
+
+  tq("valid",
+    "Which ONE of these statements about leave-one-out CV is actually TRUE?",
+    "LOOCV is nearly unbiased but its estimate has HIGH VARIANCE — the n training sets overlap almost entirely, so the n little scores are strongly correlated and their average is far noisier than n independent measurements would be.",
+    ["Averaging n scores makes LOOCV the lowest-variance validation scheme available, since variance of a mean always shrinks proportionally to the number of terms averaged together.",
+     "LOOCV is cheaper than 10-fold cross-validation on any dataset, because each of its training runs uses a single row and therefore completes almost instantaneously every time.",
+     "The n models fitted during LOOCV differ from each other substantially, which is why the procedure explores model diversity better than any smaller number of folds could.",
+     "LOOCV's bias is the largest of all CV schemes, since training on n-1 rows systematically understates what a model trained on the full dataset would actually achieve."],
+    "The 1/n variance-shrink formula assumes independent terms — LOOCV's folds share n−2 of n−1 training rows, so their scores move together and averaging buys little. Each run trains on n−1 rows (not one!), so cost is n full fits — the EXPENSIVE scheme; the near-identical training sets produce near-identical models (minimal diversity); and bias is LOOCV's strength — training on n−1 rows is as close to the full-data model as validation gets. 5–10 folds is the standard bias/variance/cost compromise.",
+    "Polling the same friend group n times with one member swapped — many answers, almost one opinion.");
+
+  tq("valid",
+    "Which ONE of these statements about validation set size is actually TRUE?",
+    "A validation set's verdicts are only as fine as its sample size — on 500 rows, an accuracy difference of a point or two sits inside sampling noise, so 'model A beat model B by 0.8%' on it is a coin-flip dressed as a finding.",
+    ["Validation reliability depends on the fraction of data held out rather than the absolute count, so five hundred rows judge models exactly as sharply from a small dataset as fifty thousand do from a large one.",
+     "Any validation set larger than thirty rows yields statistically conclusive comparisons, since the central limit theorem guarantees normality of the score estimate from that size onward.",
+     "Small validation sets bias comparisons in favour of simpler models, which is why regularised baselines so often appear to win benchmarks conducted on limited data by small margins.",
+     "Enlarging the validation set changes which model is genuinely better, so the choice of holdout size is itself a modelling decision that legitimately determines the winner."],
+    "The standard error of an accuracy estimate scales as √(p(1−p)/n): at n=500 it's ±2 points — differences inside that band are noise, however exciting they look. What matters is the absolute count (500 rows judge equally coarsely whatever they were carved from); CLT normality doesn't shrink the error bar, it just shapes it; small sets add noise, not a systematic simplicity bias; and more validation data sharpens the MEASUREMENT of a fixed underlying difference — it doesn't change which model is truly better.",
+    "A wobbly kitchen scale can't referee a half-gram bake-off — get a finer scale or stop announcing winners.");
+
+  tq("valid",
+    "Which ONE of these statements about repeated cross-validation is actually TRUE?",
+    "Repeating k-fold CV with different shuffles averages away the luck of any single fold assignment — but it CANNOT fix bias from leakage or bad splitting, and the repeats are not independent, so error bars from them are optimistic.",
+    ["Running 10-fold CV ten times yields one hundred independent scores, so the standard error of their mean is exactly one tenth of the single-run standard deviation observed.",
+     "Repetition corrects leakage: contaminated information averages out across shuffles, so repeated CV of a leaky pipeline converges on the honest deployment estimate eventually.",
+     "If repeated runs of cross-validation give visibly different mean scores, the model is broken and should be discarded before any further tuning effort is invested in it.",
+     "One run of 100-fold CV and ten runs of 10-fold CV are statistically identical procedures, since both fit one hundred models to the same underlying training data overall."],
+    "Different shuffles change which rows share folds, so averaging repeats smooths partition luck — genuinely useful on small data. But every repeat reuses the same rows: the hundred scores are correlated, so naive SE formulas overstate precision; a leak sits in EVERY shuffle identically (bias doesn't average out — repetition polishes a crooked measurement); run-to-run wobble is expected sampling behaviour, not model breakage; and 100-fold vs 10×10-fold differ in training-set sizes and structure — related, not identical.",
+    "Shuffle the deck and re-deal all you like — if the deck was marked, every deal repeats the cheat more smoothly.");
+
+  /* ---- pass 9: regression ---- */
+
+  tq("regr",
+    "Which ONE of these statements about R² is actually TRUE?",
+    "On held-out data R² can be NEGATIVE — the model predicts worse than a horizontal line at the mean — because the test-set formula carries no lower bound, and sklearn's score() will happily report it.",
+    ["R² is bounded between zero and one by mathematical construction, so any negative value appearing in a metrics report can only be the result of a software defect in the library.",
+     "An R² of 0.9 means ninety percent of the model's predictions land within one standard deviation of their true values, giving the number a direct per-prediction accuracy reading.",
+     "R² always increases when any feature is added, including on held-out evaluation data, which is why adjusted R² exists to correct test-set scores specifically for model width.",
+     "A negative R² proves the target variable is intrinsically unpredictable, since no relationship can exist in data on which one candidate model has scored below the baseline."],
+    "R² = 1 − SSE/SST: on training data with an intercept it stays in [0,1], but on NEW data a bad model's squared errors can exceed the mean-baseline's, pushing the ratio past 1 and R² below zero — a routine sight with overfit or drifted models. It's variance-explained, not a per-prediction distance statement; the always-increases property is a TRAINING-set artefact (held-out R² falls when junk is added — adjusted R² patches the training formula); and one model scoring below baseline indicts that model, not the target.",
+    "Below zero just means 'worse than guessing the average every time' — an achievement bad models unlock regularly.");
+
+  tq("regr",
+    "Which ONE of these statements about multicollinearity is actually TRUE?",
+    "Correlated predictors can leave PREDICTIONS perfectly fine while making individual COEFFICIENTS unstable and uninterpretable — huge, opposite-signed weights that swap on tiny data changes, because many weight combinations fit equally well.",
+    ["Multicollinearity's primary damage is to predictive accuracy on new data, while the fitted coefficients remain stable and interpretable since each is estimated from its own column alone.",
+     "Two features correlated above 0.9 make ordinary least squares mathematically unsolvable, which is why software refuses to fit regressions containing near-duplicate predictors.",
+     "Multicollinearity is detected by inspecting each feature's correlation with the TARGET, and any pair of features that both correlate strongly with the outcome must be collinear.",
+     "The presence of correlated predictors means the true coefficients are zero for all but one of them, so dropping every correlated feature except the strongest is always statistically safe."],
+    "When X₁ and X₂ move together, (β₁=5, β₂=0) and (β₁=105, β₂=−100) predict almost identically — the data can't tell them apart, so estimates balloon and flip while the fitted surface (and predictions) barely moves. Accuracy is the part that survives; OLS stays solvable short of PERFECT collinearity (just ill-conditioned); detection is feature-vs-FEATURE correlation and VIF, not target correlation; and 'all but one are truly zero' is unwarranted — the shared signal may genuinely belong to several (ridge shrinks; domain knowledge decides).",
+    "Two rowers in perfect sync: the boat's speed is measurable, but the ledger crediting each oar is fiction that rewrites itself.");
+
+  tq("regr",
+    "Which ONE of these statements about extrapolation is actually TRUE?",
+    "Tree-based regressors PLATEAU outside the training range — a leaf's prediction is an average of training rows, so beyond the observed x-range every input gets the edge leaf's constant — while linear models extend their trend line indefinitely.",
+    ["Random forests extrapolate trends smoothly beyond the training range, since averaging many trees interpolates the slope of the data outward past the observed boundary values.",
+     "Linear models refuse to predict outside the training range, raising errors on out-of-range inputs, which is why trees are the standard choice for forecasting beyond observed data.",
+     "All regression models converge to the training-set mean as inputs move far from the data, a stabilising property that makes extreme extrapolations the most trustworthy predictions.",
+     "Extrapolation risk applies only to the time dimension in forecasting, and models applied to inputs with unusually large feature values face no analogous distributional danger."],
+    "A tree can only output values assembled from training targets: past the largest observed x, every point lands in the same terminal leaf, so predictions go FLAT (forests average flat trees — still flat). Linear models happily extend the line — sometimes usefully, sometimes into nonsense, but neither family raises errors: both answer confidently, which is the danger. Not all models revert to the mean; and extrapolation is a FEATURE-SPACE concept — a never-seen income level is extrapolation with no time axis in sight.",
+    "The tree has never seen past the fence, so it repeats the last thing it saw; the line strides over the fence — both without a flicker of doubt.");
+
+  tq("regr",
+    "Which ONE of these statements about MAE versus RMSE is actually TRUE?",
+    "RMSE punishes large errors quadratically, so it diverges from MAE exactly when big misses exist — the gap between the two on the same predictions is itself a diagnostic of how much your error is concentrated in outliers.",
+    ["RMSE and MAE are the same quantity expressed in different units, so converting one into the other requires only multiplying by a constant factor that depends on the dataset's size.",
+     "MAE is always the larger of the two on any set of predictions, since taking absolute values before averaging inflates errors that squaring and rooting would have moderated.",
+     "Optimising MAE and optimising RMSE lead a model toward the same fitted predictions, since both are minimised by matching the conditional mean of the target at every input point.",
+     "RMSE should be avoided in reporting because squaring makes it uninterpretable, whereas MAE's units are the target's own, making it the only defensible headline error metric."],
+    "Squaring makes one 10-unit miss cost what a hundred 1-unit misses cost — RMSE ≥ MAE always, with equality only when all errors are equal, so a wide RMSE-MAE gap says 'your error budget is spent on a few disasters'. They're not unit-convertible by a constant; MAE is the SMALLER (or equal); their optima differ structurally — squared error targets the conditional MEAN, absolute error the conditional MEDIAN (a real modelling choice under skew); and RMSE is in target units too (the root restores them) — report both.",
+    "One judge fines every foul equally; the other fines the square — compare their bills and you learn where your fouls live.");
+
+  tq("regr",
+    "Which ONE of these statements about residual plots is actually TRUE?",
+    "A healthy residual plot is structureless noise — visible patterns are unmodelled signal: a curve means missing nonlinearity, a funnel means variance grows with the prediction, and either invalidates naive confidence in the fit.",
+    ["Residual plots exist to confirm the residuals sum to zero, a property that must be checked manually after every ordinary least squares fit before the model can be used at all.",
+     "A funnel shape in the residuals is the signature of a well-calibrated model, since prediction uncertainty should rightly widen wherever the predicted values become larger.",
+     "Patterns in residuals are harmless as long as the R² is high, because explained variance above ninety percent means whatever structure remains is too small to matter in practice.",
+     "Residual analysis applies only to linear regression; tree and boosting models produce residuals whose patterns carry no information about what the model failed to capture."],
+    "Residuals are what the model COULDN'T explain — if structure remains (curvature, funnels, clusters, autocorrelation), explainable signal was left on the table and error assumptions are violated (funnels wreck constant-variance inference; a log-transform or weighted fit responds). The sum-to-zero property is automatic with an intercept, not a check; funnels are a warning, not calibration; high R² can coexist with systematic regional bias — exactly what the plot exposes; and residuals from ANY regressor repay inspection: unmodelled pattern is unmodelled pattern.",
+    "The leftovers tell you what the recipe missed — leftovers with a shape mean the recipe still owes you a dish.");
+
+  /* ---- pass 9: evaluation extras ---- */
+
+  tq("evalx",
+    "Which ONE of these statements about decision thresholds is actually TRUE?",
+    "The 0.5 threshold is an arbitrary default, not part of the model — the fitted scores are the model's actual output, and the threshold is a BUSINESS decision that should be set from the relative cost of false alarms versus misses.",
+    ["The 0.5 cutoff is statistically optimal for any properly trained classifier, since a calibrated probability above one half always indicates the positive class is more likely than not.",
+     "Changing the decision threshold requires retraining the model from scratch, because the fitted parameters were optimised specifically for classifications made at the default cutoff.",
+     "Thresholds below 0.5 are invalid, since accepting cases the model rates as less-likely-than-not would mean deliberately acting against the model's own probability estimates.",
+     "The threshold should always be chosen to maximise accuracy on the validation set, since accuracy is the metric that balances both error types in exactly the proportion that matters."],
+    "Even with perfect calibration, 'more likely than not' is only the right action rule when both error types cost the same — miss a £50k fraud to avoid a £5 review and the maths says flag at 0.1. Thresholding is free post-processing on unchanged scores (no retraining); low thresholds are exactly how cost asymmetries are expressed; and maximising accuracy re-imports the equal-cost assumption through the back door — the right objective is expected cost or a chosen precision/recall operating point.",
+    "The smoke detector's sensitivity dial isn't physics — it's how you price a burnt house against a false alarm at 3am.");
+
+  tq("evalx",
+    "Which ONE of these statements about the confusion matrix is actually TRUE?",
+    "A confusion matrix is threshold-specific — one matrix per operating point — so quoting 'the' confusion matrix without its threshold is incomplete, and sweeping the threshold traces out entire curves (ROC, PR) from the same scores.",
+    ["The confusion matrix summarises a classifier's behaviour across all possible thresholds at once, which is what distinguishes it from single-threshold summaries like accuracy or F1.",
+     "For a fixed model and test set there exists exactly one confusion matrix, since the fitted parameters determine every cell count irrespective of any post-processing choices made.",
+     "Confusion matrices only exist for balanced binary problems; multi-class tasks and skewed class ratios both make the four-cell structure mathematically impossible to construct.",
+     "The four cells of a confusion matrix are independent quantities, so improving the true-positive count leaves the false-negative count unchanged for the same set of predictions."],
+    "Freeze a threshold and every prediction lands in a cell; move the threshold and the cells reshuffle — ROC and PR curves are precisely the confusion matrix animated across thresholds. It's the single-threshold snapshot, not the all-threshold summary; multi-class matrices are simply k×k; and within a fixed positive set, TP and FN are complements (TP+FN = all positives) — one rises exactly as the other falls, the dependency that makes recall a single number.",
+    "It's one frame of the film — the ROC curve is what you get when you let the projector run.");
+
+  tq("evalx",
+    "Which ONE of these statements about discrimination versus calibration is actually TRUE?",
+    "Discrimination (ranking, AUC) and calibration (honest probabilities) are separate virtues — a model can rank perfectly while its probabilities are wildly exaggerated, and monotone recalibration fixes the probabilities without moving the AUC.",
+    ["A model with an AUC of 0.95 necessarily produces trustworthy probabilities, since ranking that accurately is only possible when the scores themselves are numerically honest.",
+     "Calibrating a model's probabilities with a monotone mapping changes its AUC substantially, which is why calibration must be weighed against the ranking quality it destroys.",
+     "Calibration and discrimination are measured by the same statistic, so any model dominant on one axis is mathematically guaranteed to be dominant on the other axis as well.",
+     "Poorly calibrated probabilities are only a cosmetic issue, since every practical use of a classifier consumes its ranking rather than the numerical values of its scores."],
+    "AUC sees only ORDER: multiply every score's odds by ten and the ranking — hence AUC — is untouched, while every stated probability becomes a lie. Monotone maps (Platt, isotonic) preserve order by construction: calibration repaired, AUC unchanged — that's the whole trick of post-hoc calibration. The two virtues need separate measurement (AUC + calibration curve/Brier); and numerical scores are consumed constantly — expected-cost thresholds, pricing, triage — where exaggerated probabilities do real damage.",
+    "A pundit can rank every match correctly while quoting absurd odds — order and honesty are different talents.");
+
+  tq("evalx",
+    "Which ONE of these statements about model comparison is actually TRUE?",
+    "Comparing models on the SAME folds and testing the per-fold DIFFERENCES is far more sensitive than comparing two independent averages — shared fold difficulty cancels in the difference, shrinking the variance of the comparison.",
+    ["Models must be compared on freshly drawn random splits for each candidate, since letting two models share the same folds contaminates both estimates with correlated sampling noise.",
+     "The model with the higher mean CV score is the better model whenever the gap exceeds one tenth of a point, a threshold below which differences are conventionally ignored as noise.",
+     "Paired comparisons are invalid when models share training folds, because statistical tests universally require the two samples being compared to be fully independent of each other.",
+     "Comparing more than two models needs no multiplicity adjustment, since each pairwise comparison is a separate experiment whose error rate is unaffected by the others being run."],
+    "Fold difficulty is shared noise: if fold 3 is hard, BOTH models suffer there, and differencing subtracts that shared component — classic paired-test logic, which is why cross_val_score(model, cv=same_kfold) comparisons pair naturally. Fresh splits per model ADD noise; fixed numeric thresholds ignore the actual variance (0.1 can be signal on huge data, noise on small); pairing is what the paired t-test is FOR (independence is required BETWEEN pairs, not within); and many pairwise comparisons inflate false-positive rates — multiplicity is real.",
+    "Make both students sit the same five papers and mark the per-paper gap — hard papers punish both, so the gap speaks cleanly.");
+
+  tq("evalx",
+    "Which ONE of these statements about offline versus online evaluation is actually TRUE?",
+    "A model can win every offline metric and still fail its A/B test — offline evaluation scores predictions against LOGGED outcomes, while deployment changes behaviour (interventions, feedback loops) that the logs never contained.",
+    ["Offline metrics are strictly conservative: a model that beats the incumbent on held-out logged data is guaranteed to perform at least that well once its predictions start driving decisions.",
+     "A/B testing exists only to measure engineering latency, since the statistical questions about model quality are fully settled by offline evaluation before any deployment begins.",
+     "The gap between offline and online results indicates a bug in the serving infrastructure, since a correctly deployed model reproduces its offline metrics by mathematical necessity.",
+     "Online evaluation is obsolete for models trained on large datasets, because sufficient training data makes offline estimates converge exactly to deployment performance."],
+    "Logged data records the world under the OLD policy: a recommender trained on logs is graded on 'would they have clicked what they were shown', not 'what happens when we show different things'. Deployment intervenes — users adapt, feedback loops form, the action changes the outcome — none of which logs can rehearse. Offline wins are hypotheses, not guarantees; the offline-online gap is usually the intervention gap, not a serving bug; and no training-set size closes it: it's a difference in what QUESTION is being answered, hence the A/B test.",
+    "The chess engine studied games where nobody followed its advice — the real test starts when the moves get played.");
+
+  /* ---- pass 9: imbalanced data ---- */
+
+  tq("imbal",
+    "Which ONE of these statements about SMOTE is actually TRUE?",
+    "SMOTE must run INSIDE the training folds only — oversampling before splitting lets synthetic points (interpolated from real minority rows) sit in the test set while their parent rows sit in training, leaking the test set's neighbourhood into the fit.",
+    ["Applying SMOTE to the full dataset before cross-validation is the recommended order of operations, since balanced folds make every fold's metric directly comparable to the others.",
+     "SMOTE creates new minority examples by exactly duplicating randomly chosen existing rows, which is why it is described as a synthetic technique in the imbalanced-learning literature.",
+     "Because SMOTE's synthetic points are interpolations rather than copies, their presence in a test fold alongside their parent rows in training causes no leakage of any kind.",
+     "The test set should also be rebalanced with SMOTE, so that the reported metrics describe the model's behaviour on the class ratio it was trained to expect at deployment."],
+    "A synthetic point is a blend of two real minority neighbours: split AFTER oversampling and a test-set synthetic can be a near-copy of a training row — the model is graded on its own training neighbourhood, and scores inflate. Correct order: split first, SMOTE the training portion only (imblearn's Pipeline does this per fold). SMOTE interpolates rather than duplicates (that's RandomOverSampler); interpolation is exactly WHY the leak exists; and the test set must keep the REAL class ratio — deployment's ratio, the one your metrics must describe.",
+    "The forged exam answers were traced from real students' papers — let forgeries into the exam hall and the tracing IS the cheat.");
+
+  tq("imbal",
+    "Which ONE of these statements about undersampling is actually TRUE?",
+    "Random undersampling buys balance by THROWING AWAY majority-class information — sometimes an excellent trade on huge datasets, but on small ones the discarded rows contained boundary detail the model needed, and performance drops.",
+    ["Undersampling is information-neutral, since the discarded majority rows are statistically redundant duplicates of the retained ones by definition of belonging to the same class.",
+     "Undersampling should always be preferred to oversampling, because a smaller training set both trains faster and generalises better on every dataset where imbalance appears.",
+     "The discarded majority rows must be moved into the test set rather than deleted, which simultaneously balances training and enlarges evaluation without any statistical cost.",
+     "Undersampling the majority class changes the base rate the model observes but leaves its learned decision boundary exactly where full-data training would have placed it."],
+    "Deleting majority rows is a real cost: class members aren't duplicates of each other, and boundary-adjacent majority examples are precisely what defines where the classes meet. On millions of rows the loss is affordable (and speed is a genuine win); on thousands it bites. 'Always prefer' oversimplifies a context-dependent trade; moving discards into the test set changes ITS distribution (now unrepresentative of deployment); and shifting the observed base rate shifts the fitted boundary — that's the entire mechanism by which resampling works.",
+    "Balancing the seesaw by sending half one team home works — unless the players you sent home were the ones marking the line.");
+
+  tq("imbal",
+    "Which ONE of these statements about when imbalance matters is actually TRUE?",
+    "Imbalance is not automatically a problem to fix — a well-calibrated model on 95/5 data may serve perfectly through a tuned threshold — the real question is whether your MODEL and METRIC handle the skew, not whether the skew exists.",
+    ["Any class ratio beyond seventy-thirty mandates resampling before model training can begin, since no learning algorithm converges correctly once the majority class outnumbers two to one.",
+     "The purpose of rebalancing is to make accuracy a valid metric again, since a model trained on balanced data can be evaluated on balanced accuracy without further adjustment anywhere.",
+     "Class imbalance is a property of bad data collection, and the correct remedy is always to gather more minority examples until the natural ratio reaches parity in the raw dataset.",
+     "Rebalancing to exactly fifty-fifty is optimal in every case, since equal class frequencies are the assumption under which classification algorithms were mathematically derived."],
+    "Rare classes are usually the WORLD's ratio, not a data defect — fraud is rare because fraud is rare. Many models learn fine from skewed data; the failures are typically metric failures (accuracy flattering the do-nothing model) and threshold failures (0.5 assuming equal costs) — fixable by choosing PR/MCC and tuning the cutoff, no resampling required. No 70/30 law exists; rebalancing doesn't launder accuracy (deployment keeps the real ratio); more minority data is great when possible but parity isn't the goal; and 50/50 optimality is a myth.",
+    "Rare isn't broken — the question is whether your ruler and your alarm threshold respect the rarity, not whether you can vote it away.");
+
+  tq("imbal",
+    "Which ONE of these statements about evaluating imbalanced classifiers is actually TRUE?",
+    "The evaluation set must keep the DEPLOYMENT class ratio even when training data was rebalanced — and probabilities from a model trained on altered ratios are shifted, needing recalibration before they read as real-world risks.",
+    ["Once training data has been rebalanced, evaluation should use the same balanced ratio, since fairness requires that a model be graded under the conditions it was optimised for.",
+     "A model trained on balanced data outputs probabilities that remain correct for the original skewed population, since calibration is a property of the algorithm rather than the data mix.",
+     "Rebalanced training makes threshold selection unnecessary, since the balanced model's 0.5 cutoff is automatically the optimal operating point back in the imbalanced world.",
+     "Precision measured on an artificially balanced test set transfers directly to deployment, because precision's formula contains no term sensitive to the prevalence of the classes."],
+    "Metrics exist to predict deployment, so the test set must look like deployment — grade on a balanced set and precision especially becomes fiction, because precision depends heavily on PREVALENCE (fewer real negatives per positive means fewer false alarms per catch). Training on 50/50 teaches the model a world where positives are common: its stated probabilities are inflated for the real 95/5 world (recalibrate or adjust with the prior ratio), and 0.5 on the balanced scale is not the deployment optimum — threshold work remains.",
+    "Train in the gym however you like — the match is played at the real score-line, and the odds you quote must be match odds.");
+
+  tq("imbal",
+    "Which ONE of these statements about anomaly detection versus classification is actually TRUE?",
+    "When positives are vanishingly rare or genuinely novel — new fraud patterns, unseen failures — supervised classification runs out of examples to learn from, and one-class/anomaly methods that model NORMALITY and flag deviations become the right frame.",
+    ["Anomaly detection is simply classification with the threshold set very low, so any binary classifier converts into an anomaly detector by adjusting its cutoff without retraining anything.",
+     "Supervised classifiers detect novel attack patterns as reliably as known ones, since generalisation means recognising categories of behaviour the training labels never contained.",
+     "One-class methods require balanced samples of anomalies for training, which is why isolation forests are fitted on datasets containing equal numbers of normal and abnormal rows.",
+     "The choice between classification and anomaly detection is settled by dataset size alone: below ten thousand rows use anomaly methods, above it use supervised classification."],
+    "Supervised learning interpolates between labelled examples — with a handful of positives (or positives whose future forms differ from past ones) there's nothing to interpolate. One-class SVMs, isolation forests and autoencoder-reconstruction methods learn the shape of NORMAL and score departure from it — no anomaly labels needed (that's their defining trait, opposite of balanced-anomaly training). Threshold-twiddling doesn't convert a classifier (it still only knows labelled patterns); novelty is precisely where label-bound generalisation fails; and the decision axis is label availability and novelty, not a row-count rule.",
+    "You can't study a burglar who hasn't invented his trick yet — so learn every corner of the house, and investigate whatever doesn't belong.");
+
+  /* ---- pass 9: interpretability ---- */
+
+  tq("interp",
+    "Which ONE of these statements about SHAP values is actually TRUE?",
+    "SHAP attributions are ADDITIVE by construction — each prediction's feature contributions sum exactly to the gap between that prediction and the base value — but additive credit for correlated features can split in unintuitive ways.",
+    ["SHAP values report the causal effect of intervening on each feature, so a large SHAP value for income proves that raising a customer's income would change the model's decision accordingly.",
+     "The SHAP values for one prediction are free-floating importance scores with no arithmetic relationship to the model's output, which is why they cannot be compared across features numerically.",
+     "SHAP assigns correlated features their credit by alphabetical priority, giving the earlier-named column the full contribution and the later-named column exactly zero in every explanation.",
+     "Computing exact Shapley values is fast for any model class, since the calculation touches each feature once, which is why approximation methods were never needed in practice."],
+    "The additivity axiom is SHAP's signature: base value + Σφᵢ = prediction, making explanations audit-ready. But the values describe the MODEL's behaviour, not causal reality (association in, association out); correlated features share credit through the coalitional averaging — sometimes splitting a joint effect oddly between twins, never alphabetically; and exact Shapley computation is exponential in features — TreeSHAP's polynomial algorithm for trees and sampling approximations elsewhere are what make it usable.",
+    "The receipt's line items genuinely sum to the bill — how the till splits a two-for-one deal between the two items is murkier.");
+
+  tq("interp",
+    "Which ONE of these statements about partial dependence plots is actually TRUE?",
+    "A PDP shows the AVERAGE effect of a feature across the dataset — it can flatten two opposing subgroup effects into a misleading nothing, which is why ICE curves (one line per row) are the standard companion diagnostic.",
+    ["Partial dependence plots display the effect of a feature for every individual row separately, which is what distinguishes them from ICE curves that show only the dataset average.",
+     "A flat PDP proves the feature is unused by the model, since averaging cannot hide effects that exist, only reveal the ones too small to see in individual predictions.",
+     "PDPs are computed by deleting the feature and refitting the model, so the plotted curve reflects how a genuinely feature-free model would behave across the value range.",
+     "The PDP's construction respects feature correlations, evaluating the model only at realistic combinations of values that occur together in the actual training data."],
+    "PDP sweeps one feature's value while averaging model output over everyone else's actual rows — an average that can cancel: if age raises risk for one segment and lowers it for another, the mean line sits flat while both effects rage underneath (ICE draws every row's line, exposing the split). The definitions in the first option are swapped; a flat PDP therefore proves nothing; no refitting occurs (the FITTED model is probed); and the sweep famously IGNORES correlations, evaluating impossible combinations — a known weakness, addressed by accumulated local effects (ALE).",
+    "The town's average opinion is 'indifferent' — half love it, half hate it. Poll the individuals before reporting the shrug.");
+
+  tq("interp",
+    "Which ONE of these statements about global versus local explanations is actually TRUE?",
+    "Global importance and local explanation answer DIFFERENT questions — a feature can rank low globally yet dominate one specific decision — so a customer's adverse-action letter needs the local story, not the model's overall league table.",
+    ["A feature ranked first in global importance is necessarily the largest contributor to every individual prediction, since global rankings are computed by aggregating identical local ones.",
+     "Local explanations are approximations while global importances are exact, so any conflict between the two views should always be resolved in favour of the global ranking.",
+     "The global importance ranking changes from one prediction to the next, which is why model documentation must recompute and republish it for every scoring request received.",
+     "Providing a customer with the model's global feature ranking satisfies any obligation to explain their individual decision, since the ranking describes the model that decided."],
+    "Global views (permutation importance, mean |SHAP|) describe average behaviour across the population; a specific decision can hinge on a globally-minor feature that happens to be extreme for THIS case. Aggregation loses the individual story — which is exactly what an adverse-decision explanation must tell. Global rankings don't map onto each row; neither view is 'exact' versus 'approximate' in that sense; global rankings are stable properties of the model (not per-request); and handing a customer the league table explains the model, not their decision.",
+    "The league table says strikers score most goals — this match was decided by the goalkeeper's one mistake, and the fan asked about this match.");
+
+  tq("interp",
+    "Which ONE of these statements about surrogate models is actually TRUE?",
+    "A surrogate — a simple model trained to MIMIC a complex one's predictions — explains only as well as it imitates: its fidelity (agreement with the black box) must be reported, because a low-fidelity surrogate explains a model that doesn't exist.",
+    ["Training a decision tree to reproduce a neural network's outputs yields exact explanations of the network's reasoning, since matching the predictions entails matching the internal logic.",
+     "Surrogate models are fitted on the original ground-truth labels rather than the black box's predictions, since the goal is a second opinion on the task rather than an imitation.",
+     "A surrogate with 70% agreement to the black box is a trustworthy explainer, since fidelity above chance level demonstrates the surrogate has captured the essential decision logic.",
+     "Global surrogates and the LIME method are unrelated techniques, since LIME fits its interpretable model to the original training data rather than to any black-box outputs locally."],
+    "The surrogate's training TARGET is the black box's predictions — that's what makes it an explainer rather than a competitor — and its explanatory license extends exactly as far as its fidelity: at 70% agreement, three decisions in ten are 'explained' by a model that disagrees with the thing being explained. Matching outputs never guarantees matching mechanism (different logic can produce similar predictions); and LIME IS the local version of the idea — an interpretable model fitted to black-box outputs in one neighbourhood.",
+    "The impressionist explains the politician only where the impression is accurate — measure the impression before trusting the routine.");
+
+  tq("interp",
+    "Which ONE of these statements about the accuracy-interpretability trade-off is actually TRUE?",
+    "The 'trade-off' is often smaller than advertised — on many tabular problems, well-built interpretable models (GAMs, scorecards, small trees) land within noise of black boxes — so the gap should be MEASURED per problem, not assumed.",
+    ["Complex models outperform interpretable ones by a wide margin on every dataset, so choosing an interpretable model always means knowingly sacrificing substantial predictive accuracy.",
+     "Interpretability and accuracy are formally inversely proportional, with the product of the two held constant by an information-theoretic law that no modelling choice can circumvent.",
+     "Because post-hoc explanation tools exist, inherent interpretability offers no advantage, and the interpretable-model tradition survives only through regulatory inertia in a few industries.",
+     "Deep learning's dominance on images and text demonstrates that black boxes dominate on tabular business data equally, since architecture advantages transfer unchanged across data types."],
+    "Rudin's argument, borne out repeatedly: on structured/tabular data with meaningful features, carefully built interpretable models (generalised additive models, well-engineered scorecards) frequently match boosted black boxes within the error bars — the honest move is to benchmark an interpretable candidate, not concede by assumption. No inverse-proportionality law exists; post-hoc tools approximate rather than replace inherent transparency (the model-of-a-model gap); and deep learning's image/text dominance conspicuously does NOT transfer to tabular problems, where trees still reign.",
+    "Before paying the opacity tax, check the price list — half the time the glass-box model was within a rounding error all along.");
+
 })();
