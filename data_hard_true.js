@@ -216,4 +216,160 @@
     "Log-posteriors are sums of per-word weights times counts — linear scores, softmax-shaped posteriors: structurally logistic regression's family, but with weights estimated generatively by counting instead of discriminatively by optimisation. (Quadratic boundaries belong to Gaussian NB with unequal variances.)",
     "Same shape of boundary, different way of choosing it — counted rather than optimised.");
 
+  /* ===== Decision Trees (trees3) — pass 3 ===== */
+
+  tq("trees3",
+    "Which ONE of these statements about a fully grown decision tree's capacity is actually TRUE?",
+    "It reaches 100% training accuracy on any data free of contradictions (identical features, different labels) — capacity is never a tree's problem; generalisation is.",
+    ["Unpruned trees still underfit noisy datasets, because greedy splitting stops at locally best questions.",
+     "Deep trees cannot fit XOR-style interactions at any depth, which is why boosting exists.",
+     "Growth guarantees perfect training accuracy on every dataset, including rows that share features but disagree on labels.",
+     "The greedy search means at least a few training points always end up misclassified."],
+    "Left unchecked, splitting continues until each leaf is pure — a lookup table of the training set. The only obstruction is genuine contradiction: two identical rows with different labels can never be split apart. Greedy choice affects WHICH tree you get, not whether purity is reachable.",
+    "Given free rein it just memorises everything memorisable — the fight is against that, not for it.");
+
+  tq("trees3",
+    "Which ONE of these statements about a tree's feature_importances_ is actually TRUE?",
+    "They sum to 1 by construction — an importance of 0.4 means 40% of the total impurity reduction, not a 40-point accuracy contribution.",
+    ["They are the features' correlations with the target, rescaled onto the unit interval.",
+     "An importance of exactly zero proves the feature is statistically independent of the target.",
+     "Any single importance above 0.5 is a reliable indicator of target leakage in that feature.",
+     "They are computed on held-out data by default, making them safe generalisation evidence."],
+    "Importance is each feature's share of impurity reduction across the tree's splits — shares of a whole, hence the sum of 1. A zero can simply mean a correlated rival was picked first (masking); a big share can be legitimate; and everything is measured on the training data.",
+    "It's a pie chart of credit for the splits — slices of one pie, nothing more.");
+
+  tq("trees3",
+    "Which ONE of these statements about transforming features for a tree is actually TRUE?",
+    "Monotone transforms (log, rank, min-max) leave the fitted tree effectively unchanged — thresholds relocate, but splits, structure and predictions don't.",
+    ["Log-transforming skewed features materially improves a tree's accuracy, as it does for linear models.",
+     "Trees need standardised features for numerical stability once depth grows beyond ten or so.",
+     "Rank-transforming a feature breaks the Gini computation, which requires raw measurement units.",
+     "Monotone transforms usually change which feature wins each split, reshaping the whole tree."],
+    "A tree only asks 'is x above this cutoff?' — any order-preserving transform has an equivalent cutoff, so the same partitions of the data remain available and chosen. This is precisely why the log-transform advice that matters for linear models is a no-op for trees.",
+    "Bend the ruler however you like — as long as order survives, the tree asks the same questions.");
+
+  tq("trees3",
+    "Which ONE of these statements about cost-complexity pruning is actually TRUE?",
+    "Pruning can only delete subtrees — it never re-chooses a better split higher up, so a bad early split is beyond its power to fix.",
+    ["Pruning revisits the upper splits and replaces them where a better question has become apparent.",
+     "A pruned tree always generalises at least as well as any depth-capped tree of equal leaf count.",
+     "Setting ccp_alpha to zero removes roughly half of a fully grown tree's leaves.",
+     "Pruning is interleaved with growth, trimming each level as soon as the next one is added."],
+    "Post-pruning walks the grown tree removing branches whose gain doesn't pay their complexity rent — subtraction only, on a structure the greedy grower already committed to. Alpha at zero removes nothing, growth and pruning are separate phases, and no guarantee ranks it above pre-pruning.",
+    "The editor can only cut scenes — never reshoot the opening.");
+
+  tq("trees3",
+    "Two features each carry ZERO individual signal about the label. Which ONE statement is actually TRUE?",
+    "A depth-2 tree can still represent their XOR exactly — interactions are within a tree's reach but invisible to univariate feature filters.",
+    ["No decision tree at any depth can represent XOR, because splits examine one feature at a time.",
+     "A univariate filter such as SelectKBest would correctly keep both features for their joint signal.",
+     "Representing XOR requires oblique splits on weighted combinations of the two features.",
+     "A tree can only fit XOR if the interaction term x₁·x₂ is added as an explicit column first."],
+    "Split on x₁, then on x₂ inside each branch: four leaves, XOR solved — axis-aligned questions in sequence build the interaction. The genuine subtlety is the search: the first split shows ~zero gain, so the greedy grower needs zero-gain splits permitted. Univariate filters, scoring features alone, would throw both away.",
+    "One question can't see it; two stacked questions can.");
+
+  /* ===== Support Vector Machines (svm3) — pass 3 ===== */
+
+  tq("svm3",
+    "Which ONE of these statements about support vectors is actually TRUE?",
+    "Delete a NON-support-vector point and refit: the solution is exactly unchanged — the model depends on the support vectors alone.",
+    ["Removing any training point shifts the fitted margin at least slightly after refitting.",
+     "That sparsity property holds for hard-margin SVMs only, never for the soft-margin case.",
+     "It is the support vectors that can be discarded harmlessly, since the margin already encodes them.",
+     "Deleting points is safe only if C is retuned to compensate for the smaller dataset."],
+    "Points outside the margin have zero Lagrange multipliers — they impose no active constraint, so the identical optimum satisfies the reduced problem. The property defines soft-margin SVMs too (violators and margin points are the support vectors); discarding the support vectors themselves destroys the solution.",
+    "The fence is held up by the posts touching it — everyone else could go home.");
+
+  tq("svm3",
+    "Which ONE of these statements about RBF-SVM capacity is actually TRUE?",
+    "With large enough gamma, an RBF-SVM can perfectly separate ANY training set of distinct points — its capacity is effectively unbounded.",
+    ["RBF kernels can only separate classes that form compact, roughly blob-shaped groups.",
+     "Perfect training separation plus the maximum-margin property together guarantee strong generalisation.",
+     "Raising gamma broadens each point's influence, which makes perfect separation harder to achieve.",
+     "Capacity is capped by the number of support vectors the implementation permits."],
+    "Shrink each point's similarity bubble far enough and every point gets its own island — any labelling becomes separable. That's precisely why big gamma means memorisation, and why 'perfectly separated with a wide margin IN THE KERNEL SPACE' promises nothing about new data. Gamma up = influence narrower, not broader.",
+    "Enough zoom separates anything — which is exactly the warning, not the feature.");
+
+  tq("svm3",
+    "Which ONE of these statements about the hinge loss is actually TRUE?",
+    "Correctly classified points beyond the margin contribute exactly ZERO loss — the fit literally ignores its easy points.",
+    ["Every training point contributes at least some loss, however small, to the objective.",
+     "Log loss shares this property, assigning exactly zero to confidently correct predictions.",
+     "The hinge penalty grows quadratically once a point violates the margin.",
+     "Zero-loss points are physically removed from the working set and never rechecked."],
+    "Hinge is max(0, 1 − y·score): clear the margin and you're flat at zero — the source of sparsity, since only margin-touchers and violators shape the solution. Log loss never quite reaches zero (asymptotic), the standard hinge grows linearly, and easy points remain checked — they just cost nothing.",
+    "Comfortably right earns silence; the loss only speaks to the borderline and the wrong.");
+
+  tq("svm3",
+    "Which ONE of these statements about SVM probability outputs is actually TRUE?",
+    "decision_function returns margin distances, not probabilities — probability=True bolts a sigmoid onto them afterwards (Platt scaling), at extra cross-validation cost.",
+    ["decision_function returns calibrated probabilities scaled onto the interval from −1 to +1.",
+     "Enabling probability=True refits the margin itself, so the decision boundary moves as well.",
+     "Platt's sigmoid is estimated inside the margin optimisation as one of its constraints.",
+     "SVMs cannot produce probability estimates by any post-processing method."],
+    "The SVM optimises a margin, not a likelihood, so its raw scores are unbounded distances. Platt scaling learns sigmoid(a·score + b) on internal cross-validated scores — a separate, post-hoc model; predict()'s boundary is untouched, and the extra CV is why probability=True slows training noticeably.",
+    "The machine outputs distances; the percentages are a translator trained afterwards.");
+
+  tq("svm3",
+    "Which ONE of these statements about SVM scaling behaviour is actually TRUE?",
+    "Kernelised SVMs strain as ROWS grow (the n×n Gram matrix) yet shrug at high dimensionality — the opposite stress profile to many models.",
+    ["SVMs scale linearly with sample count but exponentially with the number of dimensions.",
+     "The Gram matrix is d×d, so very wide datasets are what exhaust the memory budget.",
+     "The number of support vectors stays roughly constant no matter how large n grows.",
+     "Linear SVMs share the kernelised solver's quadratic-in-n cost, differing only in accuracy."],
+    "Training touches data through pairwise kernel values — n² of them — while dimensionality only affects the cost of each single kernel evaluation. On messy data the support-vector count tends to grow WITH n, compounding the pain; linear SVMs escape via primal solvers (the whole point of LinearSVC).",
+    "It fears a million rows far more than a million columns.");
+
+  /* ===== Random Forests (rf3) — pass 3 ===== */
+
+  tq("rf3",
+    "Which ONE of these statements about the out-of-bag (OOB) score is actually TRUE?",
+    "It is a nearly-free stand-in for cross-validation — each row scored only by trees that never sampled it — yet it cannot catch leakage already baked into the features.",
+    ["OOB works by holding out a third of the TREES, whose votes are compared with the rest.",
+     "OOB is optimistically biased because the trees share training rows, so cross-validation always scores lower.",
+     "Computing the OOB score requires reserving a separate validation split before fitting.",
+     "OOB detects target leakage automatically, since leaky features dominate the importances."],
+    "The bootstrap leaves each row out of ~37% of trees; those trees form its private jury — honest with respect to sampling, no extra data spent. But a leaky FEATURE is present for jury and defendant alike: OOB, like CV, validates the sampling, not the meaning of the columns.",
+    "A free honest examiner — who still can't spot that the exam answers were printed on the question sheet.");
+
+  tq("rf3",
+    "Which ONE of these statements about a random forest's probabilities is actually TRUE?",
+    "They tend to be better calibrated than a single tree's, yet systematically shy of 0 and 1 — averaging many votes pulls estimates inward.",
+    ["The averaging theorem guarantees a forest's vote shares are perfectly calibrated probabilities.",
+     "Forest probabilities are MORE extreme than a single tree's, since agreement compounds.",
+     "Calibration is meaningless for forests, because voting produces only hard labels.",
+     "As n_estimators grows to infinity, vote shares converge to the true class probabilities."],
+    "Averaging hundreds of 0/1-ish leaf outputs smooths the wild extremes a lone deep tree produces — but unanimous 1.0 requires EVERY tree to agree, so forests rarely commit fully: the characteristic S-shaped calibration curve. No theorem promises honesty; more trees converge to the ensemble's own expectation, not to truth.",
+    "The committee is saner than any member — and constitutionally incapable of certainty.");
+
+  tq("rf3",
+    "Which ONE of these statements about max_features is actually TRUE?",
+    "Raising it makes each tree individually stronger but the trees more alike — and the ENSEMBLE can get worse even as every member gets better.",
+    ["Stronger individual trees always translate into a stronger forest, by the averaging argument.",
+     "max_features affects only training speed; the fitted forest is statistically unchanged.",
+     "Inter-tree correlation is determined entirely by the bootstrap, not by feature sampling.",
+     "Setting max_features to 1 maximises forest accuracy, since it maximises tree diversity."],
+    "Ensemble error depends on member strength AND member correlation: give every split the full feature menu and all trees chase the same dominant splits — variance reduction evaporates. Feature sampling exists precisely to manage that correlation; at the other extreme, max_features=1 buys diversity with members too weak to help.",
+    "A choir of soloists singing the same line is just one loud soloist.");
+
+  tq("rf3",
+    "Which ONE of these statements about bootstrap sampling in forests is actually TRUE?",
+    "Each tree's sample contains about 63% of the distinct rows — and some rows appear MULTIPLE times within one tree's sample.",
+    ["Each tree receives exactly 63% of the rows, allocated by stratified assignment.",
+     "Duplicate draws are removed, so every tree trains on a clean subset of unique rows.",
+     "Every row is guaranteed to appear at least once in every tree's bootstrap sample.",
+     "The ~37% a tree misses is the same fixed set of rows for every tree in the forest."],
+    "Sampling n times WITH replacement leaves each row out with probability (1−1/n)ⁿ ≈ e⁻¹ ≈ 37% — an expectation, not a quota — while lucky rows are drawn twice or thrice and weigh more in that tree. Each tree draws independently, so every tree misses a different 37%: the fact OOB scoring depends on.",
+    "Each tree deals itself a hand with repeats — and every tree's missing cards differ.");
+
+  tq("rf3",
+    "Which ONE of these statements about permutation importance is actually TRUE?",
+    "It can legitimately come out NEGATIVE — shuffling a feature sometimes improves the score, a sign the model was slightly overfitting that noise.",
+    ["A negative value indicates a bug in the computation, since destroying information cannot help.",
+     "Permutation importances are clipped at zero by definition in every implementation.",
+     "A negative importance means the feature's values should be inverted before refitting.",
+     "Any feature used in at least one split is guaranteed a strictly positive importance."],
+    "If a feature is pure noise the model leaned on, breaking its link with the target can nudge the score UP — small negative importances are ordinary and informative (candidates for deletion). Nothing clips them, nothing needs inverting, and being used in splits proves usage, not usefulness.",
+    "Sometimes the model does better without a 'clue' — which tells you what that clue was worth.");
+
 })();
