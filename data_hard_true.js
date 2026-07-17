@@ -840,4 +840,212 @@
     "t-SNE can shatter continuous manifolds into fake islands and merge distinct groups — at any single perplexity, and occasionally across a sweep. So the map generates candidates; the verdict comes from the ORIGINAL space: silhouette/stability computed on original distances (scoring on t-SNE coordinates grades the distortion itself — circular), resampling reproducibility, and domain sense as a complement (naming things is post-hoc storytelling on its own). Pictures propose; originals dispose.",
     "The treasure map is a lead, not the treasure — dig at the original coordinates before telling anyone you're rich.");
 
+  /* ---- pass 7: feature engineering ---- */
+
+  tq("feng3",
+    "Which ONE of these statements about target encoding is actually TRUE?",
+    "Naive target encoding lets each row's own label leak into its feature — a category seen once encodes to exactly its target value — so honest implementations compute the means OUT-OF-FOLD and smooth rare categories toward the global mean.",
+    ["Target encoding is leak-proof by construction, since replacing a category with a mean uses aggregate information rather than any individual row's label, and aggregates cannot transmit leakage.",
+     "The leak in target encoding only appears for high-cardinality columns with thousands of levels; for a column with ten categories, encoding on the full dataset is perfectly safe at any size.",
+     "Out-of-fold computation exists purely to speed up target encoding on large data by parallelising across folds; statistically it produces the same numbers as encoding on everything at once.",
+     "Smoothing rare categories toward the global mean is a stylistic preference that trades away accuracy for tidiness, since a category's own mean is always the best available estimate of it."],
+    "A singleton category's encoded value IS its label — the feature becomes a copy of the target for that row, and CV scores soar while production collapses. The leak operates through each row's own label being inside the mean, regardless of cardinality (rare levels in a 10-category column leak identically). Out-of-fold changes the NUMBERS (each row's encoding excludes its own fold), and smoothing is statistics, not style: a mean over 2 rows is noise, so shrinking it toward the global mean is the honest estimate.",
+    "If Paris appears once, 'average outcome for Paris' is just that customer's answer written in invisible ink.");
+
+  tq("feng3",
+    "Which ONE of these statements about one-hot versus ordinal encoding is actually TRUE?",
+    "Ordinal-encoding an UNORDERED category invents a fake ranking that linear models take literally — but tree models often shrug it off, since they can split the integer line anywhere and carve categories apart regardless.",
+    ["Ordinal encoding of unordered categories corrupts every model class equally, since the invented ordering enters the data itself and no algorithm can recover the truth once the integers are assigned.",
+     "One-hot encoding preserves category order while ordinal encoding destroys it, which is why ordered ratings like poor/fair/good must always be one-hot encoded to keep their ranking intact.",
+     "Tree models require one-hot encoding to handle categories at all, because a split on an integer-coded column would be meaningless to the tree's threshold-based decision rule.",
+     "One-hot and ordinal encodings always yield identical model accuracy, differing only in memory usage, so the choice between them is purely an engineering convenience."],
+    "A linear model must assign one coefficient to 'city': coding Paris=1, Tokyo=2, Cairo=3 forces it to treat Tokyo as 'twice Paris' — structural nonsense. A tree can split at 1.5 and again at 2.5, isolating any category, so the fake order costs it far less (though it can still bias split choices). The corruption is model-DEPENDENT; ordered ratings are exactly where ordinal coding is RIGHT (one-hot discards their order); trees handle integer codes fine; and the encodings genuinely change accuracy, not just memory.",
+    "Numbering unranked cities pretends third beats first — a line-drawer believes it; a fence-builder just fences each city off anyway.");
+
+  tq("feng3",
+    "Which ONE of these statements about feature scaling is actually TRUE?",
+    "Tree-based models are indifferent to monotone feature scaling — a split at 30,000 works the same as one at 3 after dividing by 10,000 — while distance-based and gradient-based methods can change answers entirely.",
+    ["Every model benefits from standardisation, including decision trees and random forests, because equalised variances always make the optimisation landscape smoother regardless of the algorithm.",
+     "Scaling changes what k-nearest-neighbours predicts but never what a regularised linear model learns, since penalty terms are defined to be invariant to the units of every feature.",
+     "StandardScaler and MinMaxScaler produce identical outputs on any data whose distribution is symmetric, so for roughly Gaussian features the two are fully interchangeable in a pipeline.",
+     "Scaling must always be fitted on the combined train and test data together, so that both partitions land in exactly the same range and no distribution shift can enter the pipeline."],
+    "Trees compare one feature to a threshold — rescaling the feature just rescales the threshold, same partition, same predictions. KNN's distances and SVM/regularised-regression penalties are NOT unit-invariant: a feature in grams dominates the same feature in kilograms, and L2 punishes coefficients whose scale-dependence the penalty inherits. Standard and MinMax scalers differ even on Gaussians (z-scores vs range squeeze); and fitting scalers on train+test is the classic leak — fit on train, apply to test.",
+    "The fence-builder doesn't care if the field is measured in feet or metres — the runner measuring distances between points cares enormously.");
+
+  tq("feng3",
+    "Which ONE of these statements about datetime features is actually TRUE?",
+    "Encoding hour-of-day as a plain number 0-23 tells the model 23:00 and 00:00 are maximally FAR apart — cyclical encoding (sin/cos of the angle) restores the fact that they are one hour apart on a circle.",
+    ["Hour-of-day as a raw 0-23 integer is the correct representation, because midnight genuinely is the farthest moment of the day from 23:00 in every behavioural sense that matters to a model.",
+     "Cyclical sin/cos encoding of the hour destroys the ordering of times inside a single day, which is why it can only ever be used for features that carry no meaningful order at all.",
+     "The sin transform alone fully captures a cycle; the cos column is a redundant duplicate kept only by convention, and dropping it changes nothing about what the model can learn.",
+     "Timestamps should always be fed to models as raw Unix epoch seconds, since that single column already contains the hour, weekday and month signals in recoverable form."],
+    "On the clock face, 23:00 and 00:00 are neighbours; on the number line they're the two ends. Mapping hour h to (sin(2πh/24), cos(2πh/24)) places hours on a circle where distances match reality. Sin ALONE is ambiguous (sin is equal at h and 12−h — you need cos to disambiguate); the pair preserves, not destroys, within-day adjacency; and epoch seconds bury periodic structure in one monotone number that threshold or linear models cannot unfold into hour/weekday cycles by themselves.",
+    "Draw the hours on a clock face, not a ruler — the model then knows 11pm and midnight share a border.");
+
+  tq("feng3",
+    "Which ONE of these statements about missing-value indicators is actually TRUE?",
+    "The FACT that a value is missing can itself be predictive — imputing without adding a was-missing indicator column silently destroys that signal, which is why sklearn's imputers offer add_indicator=True.",
+    ["Once a sensible imputation strategy fills in each gap, all the information connected to the missingness has been fully restored, so an extra indicator column can only add redundant noise.",
+     "Missingness indicators are only justified when values are missing completely at random, since informative missingness would bias the indicator column and must never be exposed to a model.",
+     "Adding indicator columns is invalid for tree models specifically, because a split on a 0/1 column conveys nothing a split on the imputed value would not already have conveyed.",
+     "Mean imputation with an indicator is statistically identical to dropping every row containing a missing value, so the choice between the two approaches is purely computational."],
+    "'Income is blank' often means something — self-employed, refused to answer, a failed sensor — and models can exploit that if you preserve it as a 0/1 column. Imputation REPLACES the gap with a plausible value, erasing the distinction between 'was 50k' and 'was blank, guessed 50k'. Informative missingness is exactly when the indicator helps MOST (the random case is when it's useless); trees can absolutely use the flag (the imputed value alone doesn't reveal which rows were imputed); and dropping rows discards data, changing sample and estimates entirely.",
+    "The blank on the form is an answer too — fill it in without noting it was blank, and you've shredded a clue.");
+
+  /* ---- pass 7: feature selection ---- */
+
+  tq("fsel3",
+    "Which ONE of these statements about L1 (Lasso) selection is actually TRUE?",
+    "Among several highly correlated informative features, Lasso tends to keep ONE and zero out the rest quasi-arbitrarily — so a zeroed coefficient is evidence of redundancy given the kept set, not proof the feature carries no signal.",
+    ["A feature that Lasso drives to zero has been proven to carry no information about the target, since the optimisation only removes coefficients whose predictive contribution is exactly nil.",
+     "Lasso distributes weight evenly across a group of correlated features, giving each a small but stable nonzero coefficient, which is why it is preferred for correlated inputs over ridge.",
+     "The set of features Lasso selects is independent of the regularisation strength, so tuning alpha changes coefficient sizes but never which columns survive with nonzero weights.",
+     "Lasso's selections are perfectly stable across resamples of the same data, which is what qualifies it as a selection method rather than merely a regularised regression."],
+    "The L1 penalty pays for total absolute weight, so it concentrates a correlated group's signal into one representative — which twin survives can flip with tiny data perturbations. Reading zeros as 'useless' is the classic misinterpretation: the dropped twin predicts nearly as well ALONE as the kept one. Even distribution across a correlated group is ridge/elastic-net behaviour; alpha directly controls the surviving set (that's the regularisation path); and instability under resampling is Lasso's known weakness, patched by stability selection.",
+    "Two identical witnesses: the court hears one and sends the other home — sent home isn't the same as having nothing to say.");
+
+  tq("fsel3",
+    "Which ONE of these statements about recursive feature elimination is actually TRUE?",
+    "RFE's rankings are only as good as the importance scores of the model driving it — feed it a model whose importances are biased (say, impurity importance on mixed-cardinality data) and RFE inherits and compounds that bias at every elimination round.",
+    ["RFE is model-agnostic in the strong sense: the order in which it eliminates features is a property of the data alone, so any base estimator with importances produces the same final subset.",
+     "RFE evaluates every possible subset of the requested size and returns the global optimum, which is what separates it from cheaper greedy heuristics like forward selection.",
+     "Each RFE round removes the feature with the HIGHEST importance, on the logic that dominant features mask the subtler contributions the analyst is usually searching for.",
+     "RFECV chooses the number of features by testing on the training rows it fitted, since a separate validation split would leave too little data for the repeated refits to converge."],
+    "RFE is a loop: fit, read importances, drop the weakest, repeat — so importance bias (cardinality favouritism, correlation masking) propagates into which features survive, and an early wrong drop is never revisited. Different base estimators genuinely produce different subsets; RFE is greedy, not exhaustive (2^n subsets are unenumerable); it removes the LOWEST-ranked feature each round; and RFECV scores candidate sizes by cross-validation precisely to avoid grading on the training rows.",
+    "A talent show judged by a biased judge, round after round — the bias doesn't average out, it compounds with every cut.");
+
+  tq("fsel3",
+    "Which ONE of these statements about variance thresholding is actually TRUE?",
+    "Variance thresholding never looks at the target — it can only remove near-constant columns, and a low-variance feature can still be the most predictive one in the dataset (a rare-event flag, for instance).",
+    ["Removing low-variance features is guaranteed safe for accuracy, since a column that barely varies mathematically cannot contribute predictive signal about any target variable.",
+     "Variance thresholding examines each feature's correlation with the label and drops the weakest, making it the fastest of the supervised univariate selection methods available.",
+     "The variance threshold is scale-free: a column's variance is unchanged by unit conversions, so the same cutoff works identically whether income is stored in cents or in thousands.",
+     "A binary flag that is 1 for only two percent of rows will comfortably pass any reasonable variance threshold, since rare events produce the highest variances of all."],
+    "It's an unsupervised janitor: sweep out columns that are (nearly) constant. But 'low spread' and 'low signal' are different — a fraud flag at 2% prevalence has variance 0.0196 and might be the best feature you own; a careless threshold deletes it. It never sees the label (so it isn't supervised anything); variance scales with units SQUARED (cents vs thousands changes it by 10 orders of magnitude — scale first); and rare binary flags produce among the LOWEST variances, which is exactly the danger.",
+    "The janitor bins whatever barely moves — including, occasionally, the silent alarm that only rings for fires.");
+
+  tq("fsel3",
+    "Which ONE of these statements about mutual information is actually TRUE?",
+    "Mutual information detects ANY statistical dependency, linear or not — a perfect U-shaped relationship that scores zero Pearson correlation scores high MI — at the cost of needing more data and giving no direction or sign.",
+    ["Mutual information and Pearson correlation always rank features identically, since both ultimately measure the same underlying dependence between each feature and the target.",
+     "A mutual information score of zero leaves open the possibility of a strong nonlinear relationship, which is why MI screening must always be followed by a polynomial check.",
+     "Mutual information reports the direction of each relationship — positive for increasing, negative for decreasing — making it a drop-in replacement for correlation in reports.",
+     "Because mutual information is estimated from binned or nearest-neighbour statistics, it needs less data than correlation to reach the same reliability on small samples."],
+    "MI measures how much knowing X reduces uncertainty about Y — symmetric-in-dependence, blind to shape. A U-curve (young and old buy, middle-aged don't) is invisible to Pearson but bright to MI, so the two rankings genuinely diverge on nonlinear data. MI = 0 (truly) means independence — nothing nonlinear hides below it; it's non-negative and directionless (a U has no single direction to report); and its estimators are data-HUNGRIER than correlation, not lighter — the price of shape-blindness.",
+    "Correlation asks 'does the line slope?'; mutual information asks 'does knowing one tell you anything at all about the other?'.");
+
+  tq("fsel3",
+    "Which ONE of these statements about selection inside cross-validation is actually TRUE?",
+    "Feature selection is part of the MODEL — it must run inside each CV training fold (e.g. as a pipeline step), because selecting on the full dataset first lets every test fold influence which features the model gets to use.",
+    ["Selecting features on the full dataset before cross-validation is acceptable whenever the selector is unsupervised, since methods that never see the label have no channel through which to leak it.",
+     "Running the selector inside each fold produces a different feature subset per fold, which invalidates the cross-validation — the whole point of CV is scoring one fixed feature set.",
+     "Pre-selecting features on all the data biases cross-validation scores downward, making the model look worse than it is, so the practice is conservative rather than dangerous.",
+     "Selection outside CV is fine as long as the final model is retrained from scratch on the training portion only, since retraining resets any influence the test rows may have had."],
+    "The selection DECISION is learned from data, so it must be learned inside each fold like any other fitted component (Pipeline(selector, model) does this automatically). Supervised selectors leak most, but even unsupervised choices tuned on all data mildly contaminate; per-fold subsets are CORRECT — CV scores the whole procedure, not one frozen set; the bias from pre-selection is UPWARD (test rows helped pick features that flatter them); and retraining doesn't reset the leak, because the feature list itself still remembers the test rows.",
+    "Choosing your exam-cheat-sheet after reading the exam, then 'studying honestly' — the sheet already knows the questions.");
+
+  /* ---- pass 7: model selection ---- */
+
+  tq("msel3",
+    "Which ONE of these statements about the bias-variance decomposition is actually TRUE?",
+    "Expected squared error splits into bias² + variance + IRREDUCIBLE noise — so a model can be simultaneously unbiased and low-variance and still miss badly wherever the outcome is inherently random.",
+    ["Expected error equals bias plus variance exactly, so any model driven to zero on both components achieves perfect prediction on every dataset regardless of how noisy the domain is.",
+     "Bias and variance always move in opposite directions along every axis of model design, so any change that reduces one is mathematically guaranteed to increase the other by at least as much.",
+     "The variance term in the decomposition refers to the variance of the input features, which is why standardising all columns to unit variance directly reduces a model's expected error.",
+     "Irreducible noise can be eliminated by ensembling enough diverse models, since averaging over sufficiently many independent predictors cancels every source of randomness in the limit."],
+    "The third term is the ceiling nobody escapes: if identical customers genuinely behave differently, no model — however perfectly specified — predicts them all. The decomposition is bias² + variance + σ², not a two-term identity; the tradeoff is a TENDENCY, not a law (more data cuts variance without raising bias; better features cut bias without raising variance); the variance is over TRAINING SETS (how much the fitted model wobbles across resamples), not feature variance; and ensembling averages away model variance only — the coin flip inside the world remains.",
+    "Two dart players can both aim true and hold steady — the dartboard that jiggles on its own is the error nobody removes.");
+
+  tq("msel3",
+    "Which ONE of these statements about learning curves is actually TRUE?",
+    "If training and validation scores have CONVERGED at a mediocre level, collecting more rows of the same data will barely help — the model has hit a bias/feature ceiling, and the fix is capacity or better features.",
+    ["A persistent gap between high training and lower validation scores means the model is underfitting, and the standard remedy is to reduce its capacity until the two curves finally separate.",
+     "Learning curves plot performance against training epochs, so their primary use is choosing when to stop gradient descent rather than deciding whether more data is worth collecting.",
+     "More training data reliably improves any model's validation score at every point of the curve, which is why data acquisition is always the safest first investment on any project.",
+     "Converged-but-mediocre learning curves indicate label noise in the validation split, and the correct response is to relabel the validation set before touching the model."],
+    "The two-curve read: big train-validation gap = variance problem (more data or regularisation helps); curves converged low = bias problem (more of the SAME data is nearly worthless — the model already extracts all it can; add capacity, features, or a different family). A large gap is OVERfitting, and the remedy runs opposite to shrinking capacity further; sklearn's learning_curve varies TRAINING SET SIZE (epoch curves are a different tool); more data helping 'always' is precisely what the converged regime refutes; and convergence is a statement about the model, not an accusation against the labels.",
+    "When both the practice scores and the real scores plateau together at a C-grade, more practice sheets won't help — the student needs a better method.");
+
+  tq("msel3",
+    "Which ONE of these statements about no-free-lunch is actually TRUE?",
+    "Averaged over ALL possible problems no algorithm beats any other — practical algorithm choice works only because real-world problems are a structured subset, so matching a model's assumptions to your data is the whole game.",
+    ["The no-free-lunch theorem proves benchmarking is pointless, since any measured ranking of algorithms on real datasets is guaranteed to invert on the next real dataset you encounter.",
+     "No-free-lunch applies only to neural networks and other high-capacity models; simple models like linear regression are exempt and can dominate universally across all problem types.",
+     "The theorem says every algorithm achieves identical accuracy on every individual dataset, which is why observed performance differences must always be attributed to random seeds.",
+     "No-free-lunch implies hyperparameter tuning cannot help, since improving performance on one configuration of a problem must exactly degrade it on the same problem elsewhere."],
+    "NFL's average runs over a space dominated by structureless noise-worlds where nothing generalises; real problems (smoothness, sparsity, hierarchy, locality) live in a thin structured slice, and there, assumption-matching creates real, reproducible rankings. Benchmarks on REPRESENTATIVE tasks remain informative; no model family is exempt; the theorem speaks about averages across problems, not identical scores within one; and tuning within one problem is untouched by it — NFL never traded performance inside a single dataset.",
+    "Across every conceivable universe no compass beats another — but you live in THIS universe, where north exists and compasses work.");
+
+  tq("msel3",
+    "Which ONE of these statements about Occam's razor in model selection is actually TRUE?",
+    "When two models score within noise of each other, prefer the simpler — not for elegance, but because it's cheaper to run, easier to debug and explain, and has fewer ways to break silently under drift.",
+    ["Occam's razor is a proven theorem of statistics stating that the simpler of any two models always generalises better to unseen data, whatever the measured validation scores say.",
+     "The razor applies only when the simpler model scores strictly higher; at equal validation performance, the complex model should win because its extra capacity is a free insurance policy.",
+     "Simplicity preferences are obsolete in the era of cheap compute, since serving cost and debugging effort no longer scale with model complexity on modern infrastructure.",
+     "Choosing the simpler of two statistically tied models is p-hacking, since the tie means the data has expressed no preference and the choice must instead be made at random."],
+    "A statistical tie means predictive evidence has run out — so decide on the axes where evidence remains: latency, memory, retraining cost, explainability, failure modes, drift robustness. All favour simplicity systematically. The razor is a heuristic, not a theorem (complex models often DO win when data supports them); untapped capacity at equal performance is risk (more to overfit under drift), not insurance; complexity costs are alive and well in production budgets and 3am debugging; and choosing by legitimate secondary criteria after a tie is sound decision theory, not p-hacking.",
+    "Two engines, same lap times — buy the one with fewer parts to snap, and let the tie-break be the mechanic's bill.");
+
+  tq("msel3",
+    "Which ONE of these statements about stratified splitting is actually TRUE?",
+    "Stratification preserves the CLASS RATIO in every fold — vital when a class is rare (a 5-fold split of 3% fraud can otherwise land a fold with almost none) — but it does nothing about group leakage or time order.",
+    ["Stratified k-fold is the universally safest splitter: because it balances the label distribution, it simultaneously protects against duplicated entities straddling folds and against future rows training past ones.",
+     "Stratification equalises the SIZE of the folds rather than their label mix, which matters because unequal fold sizes are the main source of variance in cross-validation estimates.",
+     "For regression targets stratification is impossible even in principle, since continuous values have no classes to balance and no binning scheme could ever approximate the idea.",
+     "Stratifying is unnecessary above roughly ten thousand rows, because at that scale random folds are mathematically guaranteed to reproduce the class ratio to within any tolerance."],
+    "Random folds of an imbalanced set can starve a fold of positives, making per-fold metrics wildly unstable; stratification pins each fold's ratio to the global one. But it shuffles rows freely — a patient's visits still straddle folds (GroupKFold's job) and future rows still train past ones (TimeSeriesSplit's job): three orthogonal protections. Fold sizes are near-equal under ANY k-fold; regression stratification works fine via target binning; and large n shrinks but never zeroes the imbalance risk — guarantees come from the splitter, not the row count.",
+    "It fills every exam room with the same mix of easy and rare cases — it says nothing about siblings sitting in different rooms or tomorrow's paper leaking into today's.");
+
+  /* ---- pass 7: XGBoost ---- */
+
+  tq("xgb3",
+    "Which ONE of these statements about XGBoost and missing values is actually TRUE?",
+    "XGBoost handles NaN natively by LEARNING a default direction per split — during training it tries sending the missing rows left and right and keeps whichever improves the loss — so imputation is optional, not required.",
+    ["XGBoost silently drops every row containing a missing value before training begins, which is why datasets with widespread missingness show mysteriously shrunken training set sizes.",
+     "XGBoost mean-imputes each column internally as a preprocessing step before any tree is built, so passing NaN or passing mean-filled columns produces exactly the same fitted model.",
+     "Missing values are always routed to the left child by a fixed convention, chosen because the left branch by construction holds the lower half of every split's threshold range.",
+     "Native missing handling only functions for categorical features; numeric columns containing NaN still raise an error unless the user imputes them before constructing the DMatrix."],
+    "At each split the algorithm evaluates both assignments of the missing rows and bakes the better one into the tree as that node's default direction — missingness becomes learnable signal (informative missingness is exploited automatically, like a free indicator). Nothing is dropped; nothing is mean-imputed (NaN and mean-filled models genuinely differ); the direction is learned per node, not fixed left; and numeric NaN is the primary supported case.",
+    "At every fork the tree learned which way to wave the blank-form customers — sometimes the blank itself was the tell.");
+
+  tq("xgb3",
+    "Which ONE of these statements about scale_pos_weight is actually TRUE?",
+    "Setting scale_pos_weight rebalances training by multiplying the positive class's gradient contributions — it typically improves recall-oriented metrics but DISTORTS predicted probabilities, which then need recalibration if used as real probabilities.",
+    ["scale_pos_weight duplicates minority rows inside the training matrix until the classes are numerically balanced, so its effect is identical to random oversampling with replacement.",
+     "The parameter adjusts the decision threshold applied after training rather than the training process itself, leaving the fitted trees and their leaf values completely unchanged.",
+     "Setting scale_pos_weight equal to the negative-to-positive ratio makes the model's predicted probabilities MORE calibrated, since the correction exactly cancels the base-rate skew.",
+     "scale_pos_weight affects only the first boosting round; later rounds see residuals rather than labels, so the weighting fades out of the ensemble as training proceeds deeper."],
+    "It scales the loss gradients (and hessians) of positives — errors on the rare class push harder on every round's tree. That shifts the model's operating point toward catching positives, but the outputs now reflect a reweighted world: a stated 0.5 no longer means 50% in the real base rate (recalibrate, or threshold-tune instead). No rows are duplicated; training itself changes (not a post-hoc threshold); calibration gets WORSE, not better; and the weighting applies to every round's gradient computation, undiminished.",
+    "Paying triple for missed frauds makes the guard vigilant — and makes his stated 'certainties' exaggerations you must translate back.");
+
+  tq("xgb3",
+    "Which ONE of these statements about early stopping in XGBoost is actually TRUE?",
+    "With early_stopping_rounds, training halts when the validation metric fails to improve for that many consecutive rounds — and the returned model's best_iteration marks the peak, which predict() uses rather than the final overshot round.",
+    ["Early stopping monitors the TRAINING loss and halts at its minimum, which is why no validation set needs to be passed to fit() for the mechanism to function correctly.",
+     "Training halts the very first round the validation metric fails to improve, since any single non-improving round already proves the model has passed its generalisation peak.",
+     "After early stopping triggers, predictions automatically use every round that was built including the non-improving tail, so the user must manually truncate the ensemble to the peak.",
+     "early_stopping_rounds and n_estimators are mutually exclusive settings: providing both raises an error because a fixed tree count contradicts a data-driven stopping rule."],
+    "The patience window matters: validation metrics wobble, so stopping at the FIRST non-improvement would quit on noise — the rule waits for a sustained plateau. It requires an eval_set (training loss essentially never stops improving); modern XGBoost predicts from the best iteration automatically; and n_estimators coexists happily as the ceiling the stopper may never reach. One subtlety worth remembering: the eval_set has now influenced model choice, so it's no longer a pristine test set.",
+    "Give the metric a patience of fifty rounds: shrug off bad days, stop at genuine plateaus, and rewind to the best day when done.");
+
+  tq("xgb3",
+    "Which ONE of these statements about histogram-based tree building is actually TRUE?",
+    "tree_method='hist' buckets each feature into ~256 bins and evaluates splits only at bin edges — a tiny approximation that slashes split-search cost and memory, usually with negligible accuracy loss; LightGBM made the same bet.",
+    ["Histogram binning evaluates strictly more candidate thresholds than exact greedy search does, which is how it improves both accuracy and speed simultaneously over the exact method.",
+     "The 'hist' method changes only memory layout and touches no numerical decisions, so exact and hist runs of the same configuration produce bit-identical trees on every dataset.",
+     "Binning features into 256 buckets loses so much resolution that hist is only usable on datasets with fewer than a hundred distinct values per feature to begin with.",
+     "The histogram method requires all features to be categorical, since continuous values cannot be meaningfully assigned to a fixed number of discrete buckets without supervision."],
+    "Exact greedy sorts every feature and tests every distinct value as a threshold — O(n log n) per feature per node. Hist pre-buckets values into coarse quantile bins; candidate splits are the bin boundaries: hundreds of candidates instead of millions, integer-indexed, cache-friendly, plus the parent-minus-sibling histogram subtraction trick. Accuracy cost is tiny because a threshold's exact position between neighbours rarely matters. It tests FEWER candidates, produces slightly DIFFERENT (not identical) trees, and thrives precisely on continuous features with millions of distinct values.",
+    "Stop auctioning at every penny — bid in whole pounds. The hammer falls almost identically, a hundred times faster.");
+
+  tq("xgb3",
+    "Which ONE of these statements about XGBoost versus LightGBM tree growth is actually TRUE?",
+    "Classic XGBoost grows trees LEVEL-WISE (whole depth at a time) while LightGBM grows LEAF-WISE (always splitting the highest-gain leaf) — leaf-wise reaches lower loss with fewer leaves but overfits more readily, hence num_leaves as its key control.",
+    ["LightGBM's leaf-wise strategy is a pure speed optimisation with no statistical consequences, since any tree built leaf-wise can be exactly reproduced by some level-wise growth schedule.",
+     "Level-wise growth focuses effort on the single most promising region of the data, while leaf-wise growth spreads splits evenly across all branches to keep the tree balanced.",
+     "Leaf-wise trees are shallower than level-wise trees of the same leaf count by construction, which is why LightGBM models resist overfitting more strongly than XGBoost models.",
+     "The two growth strategies always produce identical ensembles whenever the learning rate and number of rounds match, differing only in the order the identical splits are discovered."],
+    "Level-wise expands every node at the current depth (balanced, hardware-friendly, implicitly conservative); leaf-wise greedily splits wherever gain is highest, producing deep, lopsided trees that chase the loss efficiently — and chase noise just as efficiently on small data, so num_leaves (and min_data_in_leaf) replace max_depth as the crucial brake. The descriptions in the second option are swapped; leaf-wise trees are DEEPER and more overfit-prone, not less; and the strategies genuinely build different trees, not reordered identical ones.",
+    "One gardener trims the whole hedge a layer at a time; the other keeps cutting wherever growth is wildest — sharper hedge, deeper holes.");
+
 })();
