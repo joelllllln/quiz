@@ -305,6 +305,112 @@
     "Huber loss", "Target transformation (log target)", "LightGBM", "CatBoost"]);
   set(3, ["Quantile regression", "RMSLE", "Poisson regression"]);
 
+  /* ===== Core-basics batches (g12–g15) ===== */
+  set(1, [
+    // foundations
+    "Dataset", "Prediction", "Model parameters (weights)", "Training (fitting)", "Inference",
+    "Feature matrix X and target y", "Noise", "Missing values", "Binary vs multiclass classification",
+    "Data cleaning",
+    // knn
+    "k (number of neighbours)", "Nearest neighbour", "Query point", "Similarity vs distance",
+    "Effect of small k (overfitting)", "Effect of large k (oversmoothing)", "Neighbourhood (in feature space)",
+    "Distance-based methods", "Store now, compute later (KNN's cost profile)",
+    // logreg
+    "Linear model", "Positive vs negative class", "Probability output", "The default 0.5 threshold",
+    "Reading coefficients (sign and size)", "Why not linear regression for classification",
+    "Score → probability → label pipeline",
+    // bayes
+    "Estimating probabilities by counting", "Argmax decision rule", "alpha (smoothing strength)",
+    "Text classification (NB's home turf)", "Likelihood table", "Priors from class frequencies",
+    // trees
+    "Branch", "Tree depth", "Pure node", "Splitting criterion", "Candidate splits",
+    "Majority class at a leaf", "Stopping conditions", "White-box model (tree interpretability)",
+    "Trees don't need feature scaling",
+    // svm
+    "Linear separability", "Handling non-separable data", "Large C vs small C", "Large gamma vs small gamma",
+    "Choosing a kernel", "Why a wide margin generalises", "Margin violation",
+    // rf
+    "Wisdom of the crowd", "Row vs feature randomness", "Why more trees don't overfit", "Out-of-bag sample",
+    "Vote share as probability", "Forest vs single tree", "Forest limitations",
+    // gboost
+    "Boosting vs bagging", "Number of boosting rounds", "Too many rounds (boosting overfits)",
+    "Loss function choice in boosting", "The U-curve over rounds", "Boosting for regression",
+    // stacking
+    "Why ensembles beat single models", "Stacking vs voting", "Tie-breaking in hard voting",
+    "When soft beats hard voting", "Correlated errors (ensemble failure mode)", "Cost of ensembles",
+    "Sources of ensemble diversity", "The simple blend (baseline ensemble)",
+    // metrics
+    "True positive (TP)", "False positive (FP)", "True negative (TN)", "False negative (FN)",
+    "Reading a confusion matrix", "Error rate", "Majority-class baseline",
+    "The two questions (precision vs recall)", "Evaluate on unseen data",
+    // perf
+    "Train vs validation error (the diagnostic pair)", "Fixes for overfitting", "Fixes for underfitting",
+    "Regularisation strength (the dial)", "Start-simple workflow",
+    // sklearn
+    "score() (default metric shortcut)", "Trailing-underscore convention (fitted attributes)",
+    "DummyClassifier / DummyRegressor", "Hyperparameters in the constructor", "Final refit on all data",
+    // kmeans
+    "labels_ (cluster assignments)", "Assigning new points (predict)", "Within- vs between-cluster distance",
+    "Outliers drag centroids", "Interpreting centroids", "Choosing k from domain needs",
+    // hier
+    "No k required upfront", "The big-jump rule", "Pairwise-distance input",
+    "Nested clusters (the hierarchy property)", "Which linkage to choose", "Dendrogram leaves",
+    // dbscan
+    "The three point roles", "eps too small vs too large", "Raising min_samples (stricter density)",
+    "The all-noise outcome", "Cluster count is discovered", "Feature scaling for DBSCAN",
+    "The −1 noise label", "When to use DBSCAN",
+    // pca
+    "Why reduce dimensions", "PCA for 2-D visualisation", "Information loss (dropped variance)",
+    "The 95% variance rule", "transform / inverse_transform", "Interpretation loss (components are blends)",
+    "PCA ignores the target",
+    // tsne
+    "Visualisation-only tool", "Typical perplexity range (5–50)", "t-SNE vs PCA",
+    "Map axes have no meaning", "Colouring by labels (reading the map)",
+    // feng
+    "Garbage in, garbage out", "Why models need numbers", "Drop vs impute", "Mean/median imputation",
+    "Text-to-features pipeline", "Encoding choice (one-hot vs ordinal)", "High cardinality",
+    "Scaling: who needs it",
+    // fsel
+    "Why select features", "How many features to keep (k as a hyperparameter)",
+    "Feature selection vs feature extraction", "Univariate vs multivariate selection",
+    "Domain-knowledge selection", "Selection for interpretability",
+    // msel
+    "Candidate models", "Fair comparison (same folds, same metric)", "Defaults first",
+    "When to stop tuning", "Final training after selection", "The test set's unique job",
+    "'Best' is task-relative",
+    // xgb
+    "Why XGBoost is popular", "Boosted trees under the hood", "Tabular-data strength",
+    "The three key knobs", "XGBoost vs random forest", "XGBClassifier (sklearn API)",
+    // interp
+    "Why interpretability matters", "Black-box model", "Debugging with explanations",
+    "Anatomy of a local explanation", "Expectation-checking via importances",
+    // imbal
+    "Why accuracy misleads under imbalance", "Spotting imbalance (count the labels)", "Rare-event domains",
+    "More minority data (the direct fix)", "Stratified splits under imbalance", "Never resample the test set",
+    // evalx
+    "Choosing the right metric", "Threshold-dependent vs threshold-free", "Regression vs classification metrics",
+    // regr
+    "Slope and intercept", "The best-fit line", "Over- vs under-prediction (residual sign)",
+    "Extrapolation risk", "Predict-the-mean baseline", "Scatter-plot first", "Choosing MAE vs RMSE",
+    // valid
+    "Why validation exists", "Common split ratios", "Shuffle before splitting", "What a fold is",
+    "Validation vs test set", "When not to shuffle (time series)"]);
+  set(2, [
+    "max_iter and convergence", "Discriminative model", "Posterior normalisation",
+    "NB vs logistic regression (data-size story)", "Linear parameter growth (high-dimensional grace)",
+    "SVC vs LinearSVC", "Division of labour (trees vs ensemble)", "Outlier sensitivity of boosting",
+    "Boosting's regularisation toolkit", "Overfitting-control toolkit (XGBoost)",
+    "Score noise (runs are measurements)", "Overfit-a-tiny-sample check", "Features beat algorithms (usually)",
+    "Pipeline step names (and __ parameters)", "make_column_selector", "handle_unknown='ignore'",
+    "Sparse matrices in sklearn", "Pandas output (set_config)",
+    "Monotone descent (why the loop converges)", "Degenerate clusters (reading the sizes)",
+    "Quadratic scalability limit", "Greedy, irreversible merging",
+    "PCA as preprocessing (speed-up)", "Slow on large data (subsample first)", "Reading separation honestly",
+    "Speed benefits of selection", "Right to explanation (regulation)",
+    "Interpretability vs accuracy (a trade-off, sometimes)", "Imbalance playbook (order of remedies)",
+    "The ranking-metric family", "The agreement-metric family", "The probability-metric family",
+    "Entity grouping (rows that travel together)"]);
+
   /* ===== Validation ===== */
   set(1, ["Holdout method", "Validation set (purpose)", "Leave-one-out (LOOCV)", "Time-series validation split"]);
   set(2, ["Group k-fold", "Repeated k-fold cross-validation", "Shuffle-split (Monte Carlo CV)",
