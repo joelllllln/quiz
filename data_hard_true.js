@@ -684,4 +684,160 @@
     "Projection is a shadow: distances can only shrink or stay, so groups distinct along discarded axes get pancaked together. The converse caution also holds — projections can visually compress unrelated regions into apparent 'clusters'. Overlap in 2-D proves nothing about 30-D; distances are NOT preserved exactly (that's the point of compression); the axes are learned linear combinations, not original columns; and 'looks grouped' is a hypothesis to test (silhouette, cluster stability), never a conclusion.",
     "Two aeroplanes' shadows can cross on the runway while the planes fly a mile apart — a flat picture of deep data proves nothing by itself.");
 
+  /* ---- pass 6: hierarchical clustering ---- */
+
+  tq("hier3",
+    "Which ONE of these statements about dendrograms is actually TRUE?",
+    "Cutting one dendrogram at different heights yields clusterings for EVERY k from a single run — but each cut is constrained to merges already made, so it can be worse than running a flat clusterer directly at that k.",
+    ["A dendrogram must be rebuilt from scratch for every value of k you want to inspect, which is precisely why hierarchical methods cost so much more than a single k-means run does.",
+     "Every horizontal cut of a dendrogram reproduces exactly the partition k-means would find for that number of clusters, since both optimise the same within-cluster objective.",
+     "The left-to-right order of the leaves in a dendrogram ranks the points by their distance to the global centroid, from the most central member out to the farthest outlier.",
+     "Two points drawn as adjacent leaves are always each other's nearest neighbours in the original feature space — adjacency in the drawing is a distance guarantee."],
+    "One agglomerative run encodes all granularities: cut high for few clusters, low for many. But the tree is GREEDY — early merges are never undone, so the k-cluster cut inherits any early mistake, and a direct k-means at that k can beat it. No rebuild per k is needed; cuts don't reproduce k-means; and leaf order is largely arbitrary (subtrees can flip), so adjacency in the drawing implies neither centroid rank nor nearest-neighbour status.",
+    "One tree, every zoom level — but the branches were welded greedily, and a weld made at step 3 can't be undone at step 300.");
+
+  tq("hier3",
+    "Which ONE of these statements about agglomerative versus divisive clustering is actually TRUE?",
+    "Agglomerative (bottom-up) dominates practice largely for COMPUTATIONAL reasons — each step considers pairwise merges, while a divisive step must choose among exponentially many ways to split a cluster.",
+    ["Divisive clustering is the standard in practice because splitting is computationally cheaper than merging: a single cut produces two clusters at once, halving the work per step.",
+     "Agglomerative and divisive runs on the same data always produce exactly the same tree, just drawn upside-down from each other, so the choice between them is purely cosmetic.",
+     "Divisive methods cannot produce a dendrogram at all, since successive splits create disconnected forests rather than the nested tree structure a dendrogram needs to draw.",
+     "Agglomerative clustering is preferred because its merges are reversible, letting the algorithm detect and undo an early mistaken merge once later evidence contradicts it."],
+    "Merging asks 'which pair of current clusters?' — O(n²) options; splitting asks 'which of 2^(m−1) bipartitions of this cluster?' — combinatorially explosive, so divisive methods need heuristics (e.g. bisecting k-means). The two directions generally give DIFFERENT trees; divisive splits nest perfectly well into dendrograms; and agglomerative merges are exactly as irreversible as splits — greediness is the shared weakness, not the difference.",
+    "Gluing considers pairs; cutting considers every possible way to halve a crowd — that asymmetry decided which direction the field walks.");
+
+  tq("hier3",
+    "Which ONE of these statements about Ward linkage is actually TRUE?",
+    "Ward merges the pair of clusters whose union INCREASES total within-cluster variance the least — the same objective family as k-means, which is why Ward trees and k-means partitions often broadly agree.",
+    ["Ward linkage merges whichever two clusters currently have the closest centroids, which is the precise property that distinguishes it from what textbooks call centroid linkage.",
+     "Ward maximises the variance inside each newly merged cluster, ensuring that every branch of the growing tree stays as internally diverse and representative as possible.",
+     "Ward linkage works with any distance metric you configure, including cosine and Manhattan, in exactly the same flexible way as single and complete linkage do.",
+     "Ward tends to produce one giant cluster plus a fringe of many singletons, since variance-based merging systematically favours deeply unbalanced tree shapes."],
+    "Ward's criterion is minimum variance GROWTH: merge whichever pair costs least in added within-cluster sum of squares — k-means' objective pursued greedily and hierarchically, hence the frequent agreement and Ward's popularity as a k-means companion. Closest-centroids is centroid linkage (a different rule); Ward minimises, not maximises, internal spread; it is locked to Euclidean geometry; and its signature bias is BALANCED, similar-sized clusters — the opposite of singleton-spawning.",
+    "Ward asks the k-means question — 'which merge bloats the spread least?' — one greedy wedding at a time.");
+
+  tq("hier3",
+    "Which ONE of these statements about hierarchical clustering's cost is actually TRUE?",
+    "Standard agglomerative clustering needs the full pairwise distance matrix — O(n²) memory — so 100k points want ~40GB of distances before any merging even starts, which is why it's a small-to-medium-data tool.",
+    ["Agglomerative clustering streams through the dataset in a single pass, holding only the current cluster centroids in memory, which is why it scales so comfortably to millions of rows.",
+     "The memory cost grows linearly with the number of points, since each point needs to store only the one distance to its current nearest neighbour rather than a full matrix.",
+     "Hierarchical clustering is cheaper than k-means at every scale, because building the tree once avoids the repeated relocation iterations that k-means must run to converge.",
+     "The distance matrix can be discarded immediately after the first merge, since Lance-Williams updates are computed fresh from the raw points and need no previously stored distances."],
+    "n(n−1)/2 pairwise distances is the entry fee: 100k points ≈ 5×10⁹ distances ≈ 40GB in float64 — the wall that pushes big-data users toward BIRCH, sampling, or MiniBatchKMeans. Nothing streams (that's BIRCH's innovation); memory is quadratic, not linear; k-means is O(nkd) per iteration and far cheaper at scale; and Lance-Williams works BY reusing the stored prior distances — the matrix is its input, not its waste.",
+    "Before the first merge, you must price every handshake in the room — and handshakes grow with the square of the guest list.");
+
+  tq("hier3",
+    "Which ONE of these statements about choosing k from a dendrogram is actually TRUE?",
+    "The 'largest vertical gap' heuristic — cut where merge heights jump most — is a visual guide, not a guarantee: merge heights depend on the linkage chosen, so different linkages can suggest different 'natural' k on the same data.",
+    ["The largest vertical gap in a dendrogram identifies the true number of clusters with statistical certainty, which is why it is treated as a formal hypothesis test in practice.",
+     "All linkage methods produce identical merge heights on the same data, so the gap-based choice of k is a property of the data alone and cannot shift when you swap linkages.",
+     "The correct k always equals the number of leaves divided by the height of the tallest merge, rounded down to the nearest whole number — a closed-form answer needing no judgement.",
+     "Dendrogram-based k selection is fully objective precisely because no parameter or preprocessing choices have any influence on the shape the tree finally takes."],
+    "A big jump in merge height suggests 'the algorithm suddenly had to join things that were far apart' — a plausible cluster boundary. But heights are computed BY the linkage: single's chained heights, complete's max-pair heights and Ward's variance costs tell different stories about the same points, so the 'natural' gap moves. It's evidence to combine with silhouette scores and domain sense, not a certainty; the leaves-divided-by-height formula is invented nonsense; and linkage/metric choices shape everything.",
+    "The 'obvious' place to cut the tree was drawn by your choice of ruler — swap rulers and the obvious place moves.");
+
+  /* ---- pass 6: DBSCAN ---- */
+
+  tq("dbscan3",
+    "Which ONE of these statements about DBSCAN's point types is actually TRUE?",
+    "Border points are assigned to whichever core point's cluster claims them FIRST — so DBSCAN's output can genuinely differ between runs on the same data with the same parameters, purely from processing order.",
+    ["DBSCAN is fully deterministic in every respect: identical data with identical parameters always produces identical labels for every single point, whatever order they are processed in.",
+     "Border points are excluded from the minPts quota of their neighbours' eps-balls, and it is precisely this exclusion that relegates them to second-class cluster membership.",
+     "Noise points are permanently noise for that dataset: no alternative choice of eps or minPts could ever bring a point once labelled noise inside any cluster.",
+     "A core point can belong to two clusters simultaneously whenever it happens to sit within eps of both of their centres, receiving a fractional label from each."],
+    "A border point (within eps of a core point, but not core itself) reachable from TWO clusters goes to whichever expansion reached it first — the one order-dependence in an otherwise deterministic algorithm. Core points' labels never depend on order; border points DO count inside other points' eps-neighbourhoods when tallying minPts; 'noise' is parameter-relative (grow eps and noise points join clusters); and clusters of core points are disjoint by construction — no dual membership.",
+    "The suburbs between two cities belong to whichever city's bus arrived first — the downtowns were never in doubt.");
+
+  tq("dbscan3",
+    "Which ONE of these statements about the k-distance plot is actually TRUE?",
+    "You plot every point's distance to its k-th neighbour, SORTED — the elbow marks where 'cluster interior' distances end and 'noise' distances begin, and that height is your eps candidate.",
+    ["The k-distance plot shows accuracy against k, and its peak selects the best number of clusters to request.",
+     "Points are plotted in dataset order, and eps is read off wherever the curve first crosses its own average.",
+     "The plot graphs eps against the resulting cluster count, so you choose the eps that yields the count you want.",
+     "The elbow gives the optimal minPts; eps must then be found separately by a grid search over the data."],
+    "Sort all points by their distance to the k-th nearest neighbour (k ≈ minPts) and plot the sorted curve: points inside clusters have small, similar values (the flat shelf); noise points' values climb steeply. The bend between regimes is the natural density threshold — read eps there. DBSCAN doesn't take a cluster count so there's none to select; sorting, not dataset order, creates the readable shape; and the plot chooses eps GIVEN minPts, not the other way round.",
+    "Line everyone up by how far their k-th friend lives — the bend where distances take off is where 'resident' becomes 'drifter'.");
+
+  tq("dbscan3",
+    "Which ONE of these statements about DBSCAN and cluster shape is actually TRUE?",
+    "DBSCAN finds arbitrarily-shaped clusters because it grows them by CONNECTIVITY — chains of overlapping dense neighbourhoods — with no centroid and no compactness assumption anywhere in the algorithm.",
+    ["DBSCAN handles odd shapes by fitting a flexible boundary curve around each cluster after the density scan completes, smoothing the raw point memberships into a contour.",
+     "DBSCAN first runs a lightweight k-means pass to seed provisional centroids, then reassigns points along local density gradients toward whichever centroid pulls hardest.",
+     "Arbitrary shapes emerge because DBSCAN measures each point's distance to its cluster's running mean rather than between individual points, letting the mean wander freely.",
+     "DBSCAN only appears shape-flexible from the outside: internally it approximates every cluster by an ellipse with variable axes, then assigns points by ellipse membership."],
+    "A cluster is a maximal set of density-connected points: core points within eps of each other chain together, and the chain can snake, spiral or ring — any shape density can trace. There are no centroids, no means, no boundary models, no ellipses at any stage; that absence IS the mechanism. K-means-style 'distance to centre' reasoning is exactly what DBSCAN discards, which is why it succeeds on the moons and rings that defeat centroid methods.",
+    "No centre, no shape template — just 'crowded touching crowded', link by link, wherever the crowd wanders.");
+
+  tq("dbscan3",
+    "Which ONE of these statements about minPts is actually TRUE?",
+    "Raising minPts demands MORE evidence of density before any point counts as core — smoothing away thin bridges and reclassifying small, sparse groups as noise, at the price of losing genuinely small clusters.",
+    ["minPts sets the maximum size a cluster may reach before DBSCAN splits it into two separate clusters, keeping every discovered group below the configured membership ceiling.",
+     "minPts fixes exactly how many clusters DBSCAN returns, since each cluster requires precisely that many core points and the algorithm stops once the quota of clusters is filled.",
+     "Lowering minPts all the way to 1 makes every point noise, because with so weak a requirement no point can gather the evidence needed to satisfy the core condition.",
+     "minPts and eps are interchangeable dials: doubling one while halving the other always yields an identical clustering, since only their product enters the density test."],
+    "minPts is the density quorum: a point is core only if its eps-ball holds that many points. Higher values suppress noise-chaining and flimsy micro-clusters, but a real cluster smaller than minPts can no longer produce a core and dissolves. It caps nothing and fixes no cluster count; at minPts=1 EVERY point is core (each ball contains itself), abolishing noise entirely; and the two parameters probe different things — a count quorum and a radius — with no exchange rate between them.",
+    "It's the quorum rule: how many neighbours must show up before your meeting counts as an official chapter.");
+
+  tq("dbscan3",
+    "Which ONE of these statements about DBSCAN's noise label is actually TRUE?",
+    "Labelling points as noise (-1) is a FEATURE, not a failure — but treating '-1' as a cluster in downstream code (averaging it, profiling it as a 'segment') is a real bug, since it's a heterogeneous catch-all.",
+    ["The -1 label marks the largest discovered cluster, following sklearn's convention of numbering clusters in descending size order starting from -1 for the biggest.",
+     "Every dataset yields at least some noise under DBSCAN, since the algorithm is required to reject a fixed minimum fraction of points as outliers on every run.",
+     "Noise points are simply the algorithm's failures: a properly tuned pair of eps and minPts values always reduces the noise count to exactly zero on real data.",
+     "Downstream models should treat the noise group as one coherent segment, since all of its members demonstrably share the distinguishing behavioural trait of isolation."],
+    "Refusing to force outliers into clusters is DBSCAN's honesty — k-means has no such option. But the -1 group is 'everything that fit nowhere': scattered, unrelated points with no shared profile, so computing its 'segment mean' or targeting it as a cohort is meaningless. -1 is not a size rank; dense datasets can legitimately have zero noise; noise isn't mis-tuning (forcing it to zero often means a bloated eps); and 'shares isolation' is not a marketing segment.",
+    "The lost-property bin is honest bookkeeping — but write a customer profile of 'the bin' and you've profiled an umbrella, a glove and a parrot.");
+
+  /* ---- pass 6: t-SNE & UMAP ---- */
+
+  tq("tsne3",
+    "Which ONE of these statements about perplexity is actually TRUE?",
+    "Perplexity is roughly the EFFECTIVE NUMBER OF NEIGHBOURS each point attends to — the same data can show fragmented micro-clusters at low perplexity and merged blobs at high, so honest analyses show several values.",
+    ["Perplexity sets the output dimensionality of the finished map, with the default of 30 producing the standard two-dimensional layout and larger values adding further axes.",
+     "Higher perplexity always yields a strictly more accurate map, since attending to more neighbours means strictly more of the data's information enters the final embedding.",
+     "Perplexity is really a learning-rate schedule that only affects how quickly the layout converges during optimisation, never the shape the final converged picture takes.",
+     "The perplexity value directly fixes the number of clusters t-SNE will draw in the map, at a rate of roughly one island for every multiple of ten perplexity units."],
+    "Perplexity tunes each point's Gaussian bandwidth so its neighbour distribution has that effective size — small values privilege very local structure (risking shattered artefacts), large values blend neighbourhoods (risking merged clusters). It has nothing to do with output dimension, isn't monotonically 'better' with size, genuinely changes the final structure rather than convergence speed, and sets no cluster count. Since the 'right' value is unknowable a priori, robust workflows sweep it (e.g. 5, 30, 100) and trust only features stable across the sweep.",
+    "It's the size of each point's social circle — tiny circles fragment the town into cliques, huge circles blur it into one crowd.");
+
+  tq("tsne3",
+    "Which ONE of these statements about reading t-SNE maps is actually TRUE?",
+    "The apparent SIZE and DENSITY of clusters in a t-SNE map are artefacts — the algorithm expands dense regions and contracts sparse ones, so a big spread-out island is not evidence of a big or diverse cluster.",
+    ["Cluster area in a t-SNE map is directly proportional to that cluster's variance in the original high-dimensional space, so bigger islands reliably indicate more spread-out groups.",
+     "Denser-looking islands correspond to genuinely denser regions of the original data, since preserving relative densities is one of the properties the objective explicitly protects.",
+     "Distances between islands can be read as a similarity scale: clusters drawn three times farther apart in the map are close to three times less alike in the original space.",
+     "If two islands touch or overlap anywhere in the map, their member points must genuinely overlap in the original feature space as well — contact is preserved both ways."],
+    "t-SNE's bandwidths adapt per point: crowded neighbourhoods get sharp kernels and spread out; sparse ones get wide kernels and tighten — normalising away true density and size. Between-island distances are likewise unreliable (the KL objective barely constrains them). So area, density, inter-island spacing, and touching are all decoration; the trustworthy content is co-membership — which points share an island. Verify anything more in the original space.",
+    "The mapmaker inflates busy districts and shrinks empty ones so everything's readable — never measure acreage off a tourist map.");
+
+  tq("tsne3",
+    "Which ONE of these statements about t-SNE preprocessing is actually TRUE?",
+    "Running PCA down to ~50 dimensions BEFORE t-SNE is standard practice — it strips high-dimensional noise and slashes pairwise-distance cost, usually improving both the map's quality and its runtime.",
+    ["t-SNE must always receive the raw untouched features, since any prior reduction destroys the local structure it needs.",
+     "PCA before t-SNE is redundant, because t-SNE's internal Gaussian kernel already performs an implicit linear projection.",
+     "The correct pre-reduction target is 2 dimensions, letting t-SNE merely fine-tune PCA's finished two-dimensional layout.",
+     "Standardising features before t-SNE is forbidden, as equalising scales removes the density differences t-SNE plots."],
+    "The pipeline PCA→50D→t-SNE is in the original paper: the discarded tail components are mostly noise that corrupts neighbour distances, and t-SNE's O(n²)-ish distance work gets cheaper in 50-D than 5000-D. t-SNE contains no implicit linear projection; pre-reducing all the way to 2-D would leave t-SNE nothing to do but distort PCA's picture; and standardising beforehand is often SENSIBLE (unit dominance corrupts distances) — density in the map is artefact anyway.",
+    "Sweep the noise off the workbench with the cheap broom before the expensive microscope goes to work.");
+
+  tq("tsne3",
+    "Which ONE of these statements about t-SNE randomness is actually TRUE?",
+    "Two t-SNE runs on identical data can place clusters in completely different positions and orientations — the loss cares only about neighbour relationships, so the global arrangement is free to vary with the random init.",
+    ["t-SNE is deterministic by construction: its optimisation problem is convex, so every run from any random starting point descends to the same unique global layout.",
+     "Only the map's colour assignments change between repeated runs; the coordinates themselves are fully reproducible without setting any seed, because the layout is unique.",
+     "Differing layouts between runs are a symptom that perplexity was set too low; once perplexity is chosen correctly, repeated runs become identical without any seeding.",
+     "The map's orientation encodes real feature directions: the vertical axis is the first principal component and the horizontal axis the second, exactly as in a PCA plot."],
+    "The KL objective is non-convex and invariant to rotation, reflection and island rearrangement — many layouts score identically, and gradient descent from random starts lands on different ones. Nothing about that implies mis-tuned perplexity; coordinates (not colours) are what change; and the axes carry NO meaning (unlike PCA's ordered components). Practical habits: fix random_state for reproducibility, and never interpret 'cluster X is top-left' as a finding.",
+    "Ask two decorators to seat the same friend groups — both keep friends together, but the tables land in different corners.");
+
+  tq("tsne3",
+    "Which ONE of these statements about validating t-SNE clusters is actually TRUE?",
+    "Visual clusters in a t-SNE map are HYPOTHESES — confirm them in the original feature space (silhouette on original distances, cluster stability, domain checks), because the map can both invent and hide structure.",
+    ["A clear separation between islands in the map is itself statistical proof that distinct clusters exist in the data, since the objective cannot manufacture gaps that are not real.",
+     "Validation is unnecessary whenever perplexity was swept across several values, since any structure shared across the whole sweep cannot possibly be an artefact of the method.",
+     "Silhouette scores must be computed on the two t-SNE coordinates rather than the original features, since those map distances are the ones the viewer actually sees and judges.",
+     "If domain experts can confidently name each island after inspecting its members, the clustering is thereby validated and no further quantitative check is needed at all."],
+    "t-SNE can shatter continuous manifolds into fake islands and merge distinct groups — at any single perplexity, and occasionally across a sweep. So the map generates candidates; the verdict comes from the ORIGINAL space: silhouette/stability computed on original distances (scoring on t-SNE coordinates grades the distortion itself — circular), resampling reproducibility, and domain sense as a complement (naming things is post-hoc storytelling on its own). Pictures propose; originals dispose.",
+    "The treasure map is a lead, not the treasure — dig at the original coordinates before telling anyone you're rich.");
+
 })();
