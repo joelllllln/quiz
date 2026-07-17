@@ -694,35 +694,52 @@ input[type=range]{accent-color:var(--cobalt)}
 }
 /* ---- Mode switch (Data Science · Coding · FCA & Innovation) ---- */
 .mode-tabs{display:flex;gap:4px;padding:4px;margin:18px 0 4px;background:var(--grid);border:1px solid var(--rule);border-radius:13px}
-.mode-tab{flex:1;padding:10px 6px;min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--ink-2);cursor:pointer;font-family:var(--serif);font-weight:700;font-size:.98rem;transition:background .15s,color .15s,box-shadow .15s}
+.mode-tab{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 6px;min-height:46px;border:0;border-radius:9px;background:transparent;color:var(--ink-2);cursor:pointer;font-family:var(--serif);font-weight:700;font-size:.96rem;line-height:1.15;transition:background .15s,color .15s,box-shadow .15s}
 .mode-tab:hover{color:var(--ink)}
-.mode-on{background:var(--sheet);color:var(--ink);box-shadow:0 1px 2px rgba(31,41,51,.14)}
+.mode-on{background:var(--sheet);color:var(--ink);box-shadow:0 1px 2px rgba(31,41,51,.14),inset 0 -3px 0 var(--ink)}
 /* ---- Coding mode ---- */
 .code-intro{border:1px solid var(--rule);border-radius:3px;background:var(--sheet);padding:16px 18px;margin:16px 0 6px}
 .code-intro-p{margin:6px 0 0;line-height:1.55}
-.code-intro-count{color:var(--ink-2);font-size:.85rem;align-self:center}
+.code-intro-count{color:var(--ink-2);font-size:.85rem;align-self:center;white-space:nowrap}
+.code-progwrap{display:flex;align-items:center;gap:12px;margin:12px 0 2px}
+.code-progbar{flex:1;height:8px;border-radius:6px;background:var(--grid);border:1px solid var(--rule);overflow:hidden}
+.code-progbar span{display:block;height:100%;background:var(--ink);border-radius:6px;transition:width .3s}
+.code-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cg-count{font-size:.72rem;letter-spacing:.06em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.cg-full{color:var(--good,#2e7d32);font-weight:700}
 .code-task{border:1px solid var(--rule);border-radius:3px;background:var(--sheet);padding:14px 16px;margin:10px 0}
 .ct-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .ct-head h3{margin:0;font-size:1.05rem}
 .ct-done{color:var(--good,#2e7d32);font-size:.8rem;font-weight:700}
 .ct-ask{margin:6px 0 10px;color:var(--ink-2);line-height:1.45}
 .ct-levels{display:flex;gap:8px;flex-wrap:wrap}
-.ct-l{font-size:.85rem;padding:8px 12px}
+.ct-l{flex:1 1 40%;font-size:.85rem;padding:8px 10px;white-space:nowrap}
+@media (min-width:560px){.ct-l{flex:1 1 auto}}
 .ct-ok{border-color:var(--good,#2e7d32);color:var(--good,#2e7d32)}
 .code-card .code-ask{font-size:1.12rem;margin:6px 0 4px}
 .code-why{color:var(--ink-2);margin:0 0 12px;line-height:1.45}
 .code-q{font-weight:600;margin:0 0 10px}
 .code-opts{display:flex;flex-direction:column;gap:10px}
-.code-opt{display:block;width:100%;text-align:left;border:1.5px solid var(--rule);border-radius:3px;background:var(--sheet);padding:10px 12px;cursor:pointer;overflow-x:auto}
+.code-opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:1.5px solid var(--rule);border-radius:3px;background:var(--sheet);padding:10px 12px;cursor:pointer}
 .code-opt:hover:not(:disabled){border-color:var(--ink)}
+.code-opt pre{flex:1;overflow-x:auto;min-width:0}
+.co-key{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1.5px solid var(--rule);border-radius:50%;font-size:.72rem;font-weight:700;color:var(--ink-2);margin-top:1px}
+.co-right .co-key{border-color:var(--good,#2e7d32);color:var(--good,#2e7d32)}
+.co-wrong .co-key{border-color:var(--bad,#c62828);color:var(--bad,#c62828)}
 .code-opt pre,.code-line pre,.code-built,.code-sol pre{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.5;white-space:pre;tab-size:4}
 .co-right{border-color:var(--good,#2e7d32);box-shadow:inset 0 0 0 1px var(--good,#2e7d32)}
 .co-wrong{border-color:var(--bad,#c62828);box-shadow:inset 0 0 0 1px var(--bad,#c62828)}
-.code-built{min-height:2.2em;border:1.5px dashed var(--rule);border-radius:3px;background:var(--grid);padding:10px 12px;margin:0 0 12px;overflow-x:auto}
+.code-built-wrap{margin:0 0 12px}
+.cb-label{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:5px;font-variant-numeric:tabular-nums}
+.code-built{min-height:2.6em;border:1.5px dashed var(--rule);border-radius:3px;background:var(--grid);padding:10px 12px;margin:0;overflow-x:auto}
+.code-built:empty::before{content:'Tap the first line of the program below — it will appear here.';font-family:inherit;font-size:.85rem;color:var(--ink-2);white-space:normal}
 .code-pool{display:flex;flex-direction:column;gap:8px}
-.code-line{display:block;width:100%;text-align:left;border:1.5px solid var(--rule);border-radius:3px;background:var(--sheet);padding:8px 12px;cursor:pointer;overflow-x:auto}
+.code-line{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:1.5px solid var(--rule);border-radius:3px;background:var(--sheet);padding:8px 12px;cursor:pointer}
+.code-line pre{flex:1;overflow-x:auto;min-width:0}
 .code-line:hover:not(.cl-done){border-color:var(--ink)}
-.cl-done{opacity:.35;cursor:default;text-decoration:line-through}
+.cl-no{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1.5px dashed var(--rule);border-radius:50%;font-size:.72rem;font-weight:700;color:var(--ink-2)}
+.cl-done{opacity:.5;cursor:default;background:var(--grid)}
+.cl-done .cl-no{border-style:solid;border-color:var(--good,#2e7d32);color:var(--good,#2e7d32)}
 .cl-decoy{border-color:var(--bad,#c62828);box-shadow:inset 0 0 0 1px var(--bad,#c62828)}
 .code-write{width:100%;box-sizing:border-box;border:1.5px solid var(--rule);border-radius:3px;background:var(--sheet);color:var(--ink);padding:10px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.5;resize:vertical;margin:4px 0 10px}
 .code-write:focus{outline:none;border-color:var(--ink)}

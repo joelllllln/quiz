@@ -1586,8 +1586,9 @@
     var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
     var choices = shuffle([{ c: t.mcq.correct, ok: true }].concat(t.mcq.wrong.map(function (w) { return { c: w, ok: false }; })));
     var answered = false;
-    choices.forEach(function (ch) {
-      var b = h('<button class="code-opt" type="button"><pre></pre></button>');
+    choices.forEach(function (ch, ci) {
+      var b = h('<button class="code-opt" type="button"><span class="co-key"></span><pre></pre></button>');
+      b.querySelector('.co-key').textContent = LETTERS[ci] || '·';
       b.querySelector('pre').textContent = ch.c;
       b.onclick = function () {
         if (answered) return;
@@ -1617,21 +1618,25 @@
     var card = h('<article class="qcard code-card"><div class="q-eyebrow">Build the code</div>' +
       '<h2 class="code-ask"></h2><p class="match-note">Tap the lines in the order they should run — top line first. ' +
       (t.decoys && t.decoys.length ? 'Careful: <b>' + t.decoys.length + ' broken line' + (t.decoys.length === 1 ? '' : 's') + '</b> don\'t belong at all.' : '') + '</p>' +
-      '<pre class="code-built"></pre><div class="code-pool"></div><div class="code-after" hidden></div></article>');
+      '<div class="code-built-wrap"><span class="cb-label">Your program · <b class="cb-count">0</b> of ' + t.lines.length + ' lines</span>' +
+      '<pre class="code-built"></pre></div><div class="code-pool"></div><div class="code-after" hidden></div></article>');
     card.querySelector('.code-ask').textContent = t.ask;
     var built = card.querySelector('.code-built'), pool = card.querySelector('.code-pool'), after = card.querySelector('.code-after');
+    var cbCount = card.querySelector('.cb-count');
     var expected = 0, wrongTaps = 0, total = t.lines.length;
     var items = t.lines.map(function (s, i) { return { s: s, i: i, decoy: false }; })
       .concat((t.decoys || []).map(function (s) { return { s: s, i: -1, decoy: true }; }));
     shuffle(items).forEach(function (it) {
-      var b = h('<button class="code-line" type="button"><pre></pre></button>');
+      var b = h('<button class="code-line" type="button"><span class="cl-no"></span><pre></pre></button>');
       b.querySelector('pre').textContent = it.s;
       b.onclick = function () {
         if (b.classList.contains('cl-done')) return;
         if (!it.decoy && it.i === expected) {
           b.classList.add('cl-done');
+          b.querySelector('.cl-no').textContent = expected + 1;
           built.textContent += (built.textContent ? '\n' : '') + it.s;
           expected++;
+          cbCount.textContent = expected;
           if (expected === total) {
             logActivity(); setCodeDone(t.key, 2);
             after.hidden = false;
@@ -1706,8 +1711,9 @@
       '<b>1 · Spot it</b> — recognise the right code among lookalikes. ' +
       '<b>2 · Build it</b> — tap the blocks into a working order. ' +
       '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
-      '<div class="next-row"><button class="btn code-drill">Random drill →</button>' +
-      '<span class="code-intro-count">' + doneCount + ' of ' + tasks.length + ' tasks fully completed</span></div></section>');
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + (tasks.length ? Math.round(100 * doneCount / tasks.length) : 0) + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + doneCount + '</b> of ' + tasks.length + ' tasks fully completed</span></div>' +
+      '<div class="next-row"><button class="btn code-drill">Random drill →</button></div></section>');
     // Random drill: jump straight into a level you haven't completed yet (least-done tasks first).
     intro.querySelector('.code-drill').onclick = function () {
       var todo = [];
@@ -1725,9 +1731,17 @@
     tasks.forEach(function (t) { if (!byGroup[t.group]) { byGroup[t.group] = []; groupOrder.push(t.group); } byGroup[t.group].push(t); });
     var ordered = [];
     groupOrder.forEach(function (g) { byGroup[g].forEach(function (t) { ordered.push(t); }); });
+    function groupDoneCount(g) {
+      return byGroup[g].reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
+    }
     var lastGroup = null;
     ordered.forEach(function (t) {
-      if (t.group !== lastGroup) { app.appendChild(h('<div class="sec-label sec-sub">' + esc(t.group) + '</div>')); lastGroup = t.group; }
+      if (t.group !== lastGroup) {
+        var gd = groupDoneCount(t.group), gn = byGroup[t.group].length;
+        app.appendChild(h('<div class="sec-label sec-sub code-group-head">' + esc(t.group) +
+          '<span class="cg-count' + (gd === gn ? ' cg-full' : '') + '">' + gd + '/' + gn + (gd === gn ? ' ✓' : '') + '</span></div>'));
+        lastGroup = t.group;
+      }
       var p = prog[t.key] || {};
       var row = h('<section class="code-task">' +
         '<div class="ct-head"><h3></h3><span class="ct-done">' + (p[1] && p[2] && p[3] ? '✓ complete' : '') + '</span></div>' +
