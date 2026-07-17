@@ -7,7 +7,7 @@
       "Several, split by fractional weights",
       "Two whenever it sits near a border",
       "Zero until a cut-off is chosen",
-      "Any number that overlap its area"
+      "Any number whose regions overlap its position"
     ],
     "explain": "K-means uses hard assignment: every point is given to exactly one cluster — the one whose centroid is nearest — and gets a single definite label. There are no partial or percentage memberships; a point on a boundary is still forced fully into whichever centroid edges it out. Soft methods like Gaussian mixtures relax this, but plain k-means never does.",
     "simple": "It is like everyone in a room walking to the nearest exit: you pick ONE door and go through it, even if two doors are almost equally close. Nobody stands half in one doorway and half in another. K-means labels each point with a single cluster, full stop.",
