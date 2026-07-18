@@ -251,6 +251,196 @@
     "Kernels operate ON the raw distances/dot-products — they inherit scale problems, not launder them (nothing normalises internally). Centring alone doesn't fix range imbalance. This family and KNN sit together at the far end of scale sensitivity, opposite the trees.",
     "The kernel measures raw distance, and distance believes whichever feature shouts loudest — level the units first, always.");
 
+  /* ===== round 2: the knob, the classic mistake, the rival — KNN ===== */
+
+  g("medium",
+    "Which KNN hyperparameter matters most, and what does it trade?",
+    "k itself — small k gives jagged, noise-sensitive boundaries (low bias, high variance); large k gives smooth, majority-drift boundaries (high bias, low variance) — with the distance metric a close second.",
+    ["The leaf_size of the k-d tree — it directly controls the bias-variance balance of the fitted model, with the number of neighbours being purely a speed setting.",
+     "The training batch size — larger batches let KNN average away label noise during its fitting iterations, which is where most of its accuracy is decided.",
+     "The learning rate — too high and the neighbour weights oscillate without converging, too low and the model needs many more epochs to stabilise.",
+     "The number of estimators — KNN's accuracy comes from averaging many independently-seeded neighbour searches, so more searches mean smoother boundaries."],
+    "KNN's key knob (k)",
+    "k is the bias-variance dial in its purest form: k=1 memorises (every training point carves its own island, noise included), k=n predicts the global majority for everyone. Odd values dodge ties; sweep k on validation and the U-shaped error curve is the textbook picture. The metric (Euclidean vs Manhattan vs cosine) decides what 'near' even means — worth as much thought as k.",
+    "KNN has no training loop, so batch size, learning rate and epochs are borrowed from the wrong families; leaf_size only affects search speed, never predictions. The two real decisions: how many neighbours vote, and which ruler measures nearness.",
+    "One dial: how many neighbours get a vote — few voters memorise the noise, too many drown the locals in the national average.");
+
+  g("medium",
+    "What is the classic practical mistake with KNN?",
+    "Forgetting to scale features (or leaving irrelevant columns in), so distances are dominated by units and noise — the model looks broken when the geometry was never meaningful.",
+    ["Setting k to an odd number, which biases the vote toward the minority class and quietly degrades accuracy on every balanced dataset it touches.",
+     "Using it on small datasets, where too few candidate neighbours exist for the voting mechanism to produce statistically stable answers at all.",
+     "Standardising the features first, which erases the natural variance differences that KNN's distance computation depends on for its signal.",
+     "Caching the training set in memory, which introduces stale-data bugs since KNN is designed to re-read its data from disk at every query."],
+    "KNN's classic mistake",
+    "The failure is silent: nothing errors, accuracy is just mysteriously poor, because 'nearest' was computed on one loud feature or twenty irrelevant ones. The fix costs two lines (StandardScaler in a pipeline; prune features first). Distance methods have no mechanism to down-weight junk columns — every column votes in the distance whether informative or not.",
+    "Odd k is a tie-breaking virtue, not a bug; small data is KNN's comfort zone (big data is the problem); standardising is the CURE not the crime; and in-memory training data is simply how KNN works. The mistake that actually happens in practice is geometric neglect.",
+    "The model did exactly what you asked: found the nearest points in a space where 'near' meant nothing.");
+
+  g("medium",
+    "When should you pick KNN over logistic regression?",
+    "When the boundary is genuinely irregular, features are few and well-scaled, and you don't need probabilities or coefficients — KNN bends where logistic regression's single line can't.",
+    ["When the dataset is wide and sparse, like text, where distances between documents are more informative than any weighted sum of their word counts could be.",
+     "When you need the model to explain each decision to a regulator, since 'your five nearest neighbours voted' is the stronger legal explanation of the two.",
+     "When deployment latency is critical, because KNN answers from a lookup while logistic regression must evaluate its full coefficient vector per request.",
+     "When the training set is enormous, since KNN's per-query search cost shrinks as the dataset grows while logistic regression's stays constant."],
+    "KNN vs logistic regression",
+    "The real decision axis is boundary shape versus everything else. Logistic regression wins on speed, scale, probabilities, coefficients and wide sparse data (where distance concentrates but linear structure thrives). KNN's one advantage is expressiveness without engineering: if the classes interleave in curls a line can't follow — and your feature space is small and honest — the local vote wins.",
+    "Text is logistic regression's home turf, not KNN's (high dimensions kill distance); neighbour votes explain less formally than coefficients; KNN is SLOWER at prediction, not faster; and its query cost GROWS with data. Pick KNN for shape, logreg for almost everything else.",
+    "A line that's fast and explains itself, or a local vote that can follow any curl — choose by the shape of the truth.");
+
+  /* ===== round 2 — Logistic Regression ===== */
+
+  g("logreg1",
+    "Which logistic regression hyperparameter matters most, and what does it trade?",
+    "The regularisation strength C — small C shrinks coefficients hard (simpler, underfit risk), large C trusts the data (overfit risk on wide data) — plus the L1/L2 choice deciding whether weak features are zeroed or shrunk.",
+    ["The number of trees — more of them smooths the ensemble's decision surface, at the cost of the linear interpretability the model is chosen for.",
+     "The maximum depth — deeper logistic regressions capture higher-order interactions automatically, trading transparency for representational power.",
+     "The kernel bandwidth gamma — it controls how far each training example's influence reaches, which is where over- and underfitting are decided.",
+     "The perplexity — too low fragments the fitted probabilities into local clumps, too high blurs the classes into one indistinct mass."],
+    "Logistic regression's key knob (C)",
+    "C is inverse regularisation: the dial between 'trust the data' and 'stay humble'. On wide data (text, one-hots) it's the difference between a robust model and a memorising one. The penalty TYPE matters too: L1 produces sparse, feature-selecting models; L2 shares weight across correlated columns; elastic net mixes. Sweep C on a log scale — the answer is rarely the default.",
+    "Trees, depth, kernels and perplexity belong to other families — logistic regression's whole hyperparameter surface is essentially penalty strength, penalty type, and (implicitly) which engineered features you offered it. That smallness is itself a selling point: little to tune, hard to get catastrophically wrong.",
+    "One dial between humility and confidence — and a switch choosing whether weak features are silenced (L1) or merely quietened (L2).");
+
+  g("logreg1",
+    "What is the classic practical mistake with logistic regression?",
+    "Reading coefficients as feature importance without standardising first, and comparing raw coefficient sizes across features measured in different units — the numbers reflect units as much as influence.",
+    ["Using it for binary targets, which wastes the multinomial machinery it was actually designed for and biases the intercept toward the larger class.",
+     "Applying regularisation, which is redundant for linear models since their limited capacity already prevents any meaningful overfitting from occurring.",
+     "One-hot encoding categorical features, which the model cannot consume and which silently converts every category column into missing values.",
+     "Checking calibration curves, which are meaningless for logistic outputs because the sigmoid guarantees perfect calibration by construction."],
+    "Logistic regression's classic mistake",
+    "A coefficient of 0.0001 on income-in-pounds and 0.5 on age-in-decades says nothing about which matters more — the units differ by orders of magnitude. Standardised inputs make coefficients comparable; odds-ratio interpretation (per standard deviation) makes them honest. The related sin: interpreting individually unstable coefficients when features are correlated.",
+    "Binary is its home case; regularisation is near-essential on wide data (linear ≠ overfit-proof); one-hot encoding is exactly how categoricals ENTER the model; and calibration is good but not guaranteed (the sigmoid shapes outputs, it doesn't certify them) — checking remains worthwhile.",
+    "The biggest number isn't the biggest influence — it might just be the smallest unit doing the shouting.");
+
+  g("logreg1",
+    "When should you pick logistic regression over a boosted tree ensemble?",
+    "When calibration, coefficients, speed or auditability outrank a possible accuracy edge — and on wide sparse data or small samples, where the linear model often matches or beats the ensemble anyway.",
+    ["When the data is dense, abundant and full of interactions, which is the regime where a single weighted sum systematically outperforms staged tree corrections.",
+     "When features contain missing values, which boosted trees cannot process natively but the logistic likelihood integrates out during maximum likelihood fitting.",
+     "When the target is imbalanced, since boosting has no reweighting mechanism while logistic regression handles skew automatically through its intercept.",
+     "When retraining must happen monthly, because boosted ensembles cannot be refitted after their first deployment without invalidating earlier predictions."],
+    "Logistic regression vs boosting",
+    "Boosting usually wins raw accuracy on dense tabular data with interactions — that's its kingdom. Logistic regression takes the rematch when the problem is wide-and-sparse (text: linear wins routinely), samples are small (less to overfit), or the deployment demands what ensembles do badly: native calibration, sub-millisecond scoring, coefficients a committee can audit, trivially explainable adverse decisions.",
+    "The other options invert reality: dense interaction-rich data favours boosting; XGBoost handles missing values NATIVELY while logistic regression needs imputation; boosting reweights (scale_pos_weight) while logreg's intercept does no automatic rebalancing; and both families retrain freely. The choice is accuracy-versus-operability, decided per problem.",
+    "If the ensemble's extra point of AUC costs you the audit, the calibration and the millisecond — the straight line was the better deal.");
+
+  /* ===== round 2 — Naive Bayes ===== */
+
+  g("bayes1",
+    "Which Naive Bayes hyperparameter matters most, and what does it trade?",
+    "The smoothing constant alpha — too small and unseen feature-class pairs still zero out whole classes; too large and real frequency differences wash toward uniform — plus choosing the right variant for your data type.",
+    ["The number of estimators — averaging many independently-fitted Bayes models is where the family's celebrated small-data robustness actually comes from.",
+     "The maximum tree depth — shallow Bayes models underfit text while deep ones memorise it, making depth the central overfitting control in practice.",
+     "The learning rate schedule — the class-conditional counts must be annealed slowly or the posterior oscillates and never settles on stable frequencies.",
+     "The margin parameter C — it sets how heavily misclassified documents near the decision boundary are penalised during the iterative count refinement."],
+    "Naive Bayes's key knob (alpha)",
+    "Laplace/Lidstone smoothing is the one dial: alpha pretends every feature-class pair was seen alpha extra times, rescuing the model from the zero-frequency veto (one unseen word shouldn't erase a class). Small alpha trusts observed counts; large alpha flattens them. The bigger 'hyperparameter' is variant choice: Multinomial for counts, Bernoulli for presence/absence, Gaussian for continuous — mismatching variant to data type costs more than any alpha.",
+    "No estimator counts, depths, learning rates or margins exist here — NB fits by counting, once. Its tuning surface is nearly empty, which is exactly why it's the one-afternoon baseline: alpha on a small grid, correct variant, done.",
+    "One pinch of imaginary counts: too little and a single unseen word vetoes a class, too much and every word looks the same.");
+
+  g("bayes1",
+    "What is the classic practical mistake with Naive Bayes?",
+    "Trusting its probability outputs — feeding the near-0-or-1 confidences into thresholds or cost decisions without recalibration, when correlation-driven double-counting made those numbers fiction.",
+    ["Using it on text data, whose thousands of correlated token features violate the independence assumption too severely for the classifier to function at all.",
+     "Applying Laplace smoothing, which biases every class-conditional estimate away from its true maximum-likelihood value and degrades accuracy measurably.",
+     "Training it on small datasets, where per-class frequency estimates are too noisy to beat even a majority-class baseline in practice.",
+     "Reporting its accuracy, which is misleading for generative models since only discriminative classifiers can be meaningfully scored on held-out labels."],
+    "Naive Bayes's classic mistake",
+    "NB's argmax is often right while its confidence is absurd — stacked correlated evidence pushes posteriors to 0.9999s that calibration curves expose as ~0.7s. Use the LABELS freely; before using the PROBABILITIES (cost thresholds, triage queues, risk reports), recalibrate with Platt or isotonic on held-out data. It's the family's one dangerous output.",
+    "Text is where NB SHINES despite the violated assumption (the argmax survives); smoothing is protective, not corrupting; small data is its comfort zone; and held-out accuracy is meaningful for any classifier, generative or not. The real-world burn is always the same one: someone believed the 0.9999.",
+    "Right verdicts, delusional certainty — ship the answers, never the confidence, until a calibrator has translated it.");
+
+  g("bayes1",
+    "When should you pick Naive Bayes over logistic regression?",
+    "When training cost is the constraint — huge vocabularies, streaming updates, or tiny training sets — NB fits in one pass and updates by counting, where logistic regression must iterate.",
+    ["When you need trustworthy probability estimates, since generative models produce better-calibrated posteriors than any discriminative alternative can.",
+     "When features are strongly correlated, because the factorised likelihood averages correlated evidence where logistic regression double-counts it badly.",
+     "When accuracy on large datasets is paramount, as the independence assumption becomes an advantage precisely where data is most abundant.",
+     "When the decision boundary is nonlinear, since multiplying likelihoods composes curves that a weighted sum of features cannot represent."],
+    "Naive Bayes vs logistic regression",
+    "They're siblings (NB is the generative counterpart of discriminative logreg), and the classic result says: NB reaches its (worse) asymptote FASTER — winning on very small data — while logreg wins as data grows, and handles correlation properly by learning joint weights. NB's remaining edges are operational: one-pass fitting, trivial partial_fit streaming, and zero tuning.",
+    "Calibration runs the OTHER way (logreg honest, NB extreme); correlation is NB's weakness, logreg's strength (weights adjust jointly); abundance favours logreg; and both draw linear boundaries in log-space — nonlinearity is neither one's advantage. Pick NB for speed and scarcity, logreg for everything the extra fitting time buys.",
+    "The counting cousin wins when data is scarce or the vocabulary is vast and flowing — the fitting cousin wins once there's enough data to learn the correlations.");
+
+  /* ===== round 2 — Decision Trees ===== */
+
+  g("trees1",
+    "Which decision tree hyperparameter matters most, and what does it trade?",
+    "The depth/leaf-size family — max_depth, min_samples_leaf, ccp_alpha — one complexity brake is essential: unlimited depth memorises, heavy limits underfit; min_samples_leaf is often the most robust single choice.",
+    ["The learning rate — deep trees must be grown slowly, with each level's splits damped, or the early levels dominate and the tree never recovers from them.",
+     "The number of neighbours consulted at each split, which controls how local the impurity estimate is and thereby the tree's whole bias-variance balance.",
+     "The kernel choice — an RBF-split tree bends around curved class boundaries where the default linear-split tree can only staircase across them.",
+     "The bootstrap fraction — trees are fitted on resampled data by default, and the resample size is what separates overfitting from underfitting."],
+    "Decision tree's key knob (depth/leaves)",
+    "An unconstrained tree grows until leaves are pure — on noisy data that's memorisation with a diagram. All the important knobs are one brake in different places: cap the depth, require min_samples_leaf rows per leaf (blocks the one-row leaf that IS overfitting), or grow-then-prune with cost-complexity (ccp_alpha). Tune one properly rather than three casually.",
+    "No learning rates (nothing iterates), no neighbours, no kernels (splits are axis-aligned thresholds), and no bootstrap in a SINGLE tree (that's bagging/forests). The tree's tuning question is singular: how much complexity may it spend on this data's noise?",
+    "One brake pedal with three positions — depth, leaf size, or prune-after — press at least one, or the tree memorises the training set verbatim.");
+
+  g("trees1",
+    "What is the classic practical mistake with decision trees?",
+    "Growing to default unlimited depth, reading the training accuracy (≈100%), and trusting the resulting tree — including treating its top splits and importances as insight when they may be noise artefacts.",
+    ["Pruning the tree, which removes the deep branches where most of the generalisable signal lives and reliably harms held-out accuracy on real data.",
+     "One-hot encoding categoricals, which trees cannot split on, silently reducing every encoded column to an unused constant in the fitted model.",
+     "Using them on tabular data, where their threshold logic is structurally mismatched and distance-based methods are known to dominate them.",
+     "Setting a random_state, which restricts the split search space and produces systematically shallower trees than unseeded runs would find."],
+    "Decision tree's classic mistake",
+    "sklearn's DecisionTreeClassifier defaults to unlimited depth: it WILL reach ~100% training accuracy, and the 15-level tree it grows is part signal, part memorised noise — including plausible-looking splits that don't replicate. The habit: always constrain or prune, always read HELD-OUT accuracy, and distrust deep-tree 'insights' that a resample would restructure.",
+    "Pruning is the remedy, not the mistake; one-hot columns split fine (threshold 0.5); tabular data is trees' home field; and random_state only breaks ties reproducibly. The trap is the seductive default: a model that aces training and narrates a convincing, partly fictional story about your data.",
+    "It aced the training set and drew you a beautiful diagram of the noise — cap it, prune it, and grade it on unseen data.");
+
+  g("trees1",
+    "When should you pick a single tree over a random forest?",
+    "When the model must BE the explanation — a printable, auditable rule set — or when deployment is radically constrained; on raw accuracy, expect to pay for that transparency versus the forest.",
+    ["When accuracy is paramount, since a well-pruned single tree generalises better than a forest whose bootstrap noise contaminates every constituent vote.",
+     "When the dataset is small, because forests need thousands of rows per tree while a single tree extracts more signal from limited data on its own.",
+     "When features are correlated, which breaks the forest's decorrelation mechanism but leaves an individual tree's greedy splits entirely unaffected.",
+     "When training time is unlimited, since single trees are slower to fit than forests but produce better-calibrated probability estimates when given time."],
+    "Single tree vs random forest",
+    "The forest wins accuracy almost always — averaging decorrelated trees erases the variance that plagues singles. What it costs is the story: 500 voting trees explain via importance scores and SHAP, not via a rule a person can follow. Choose the single tree when the explanation IS the deliverable (credit rules, medical triage protocols, policy documents) or when the runtime must be microscopic.",
+    "The bootstrap 'noise' is the forest's MECHANISM, not contamination; small data favours the variance-reducing forest if anything; correlated features hurt both about equally; and singles train FASTER, not slower. The honest framing: you trade measurable accuracy for a model that fits on one page — sometimes exactly the right trade.",
+    "Five hundred experts vote better than one — but only the one can stand up and read out his reasoning.");
+
+  /* ===== round 2 — SVM ===== */
+
+  g("svm1",
+    "Which SVM hyperparameters matter most, and what do they trade?",
+    "C and gamma, tuned TOGETHER — C prices margin violations (soft vs hard boundaries), gamma sets the RBF kernel's reach (local spikes vs global smoothness) — and the two compensate for each other, so grid-search jointly on log scales.",
+    ["The number of support vectors — set directly by the user, it fixes model sparsity in advance, with the optimiser then choosing the best points for the budget.",
+     "The tree depth of the decision surface — deeper surfaces bend around more islands of each class, at the usual cost of memorising the training data.",
+     "The number of boosting rounds — each round adds one more support vector to the ensemble, so rounds control both capacity and training time linearly.",
+     "The learning rate and momentum — as with neural networks, most SVM failures are optimisation failures caused by badly-scheduled gradient steps."],
+    "SVM's key knobs (C and gamma)",
+    "C answers 'how expensive is a training point inside the margin?' (high C: contorted boundary chasing every point; low C: wide tolerant margin). Gamma answers 'how far does one example's influence reach?' (high: tight islands around points; low: near-linear smoothness). They interact — a high-gamma overfit can be partly masked by low C — hence the standard log-scale joint grid, never one-at-a-time.",
+    "Support vectors are DISCOVERED by the convex optimisation, not budgeted; no trees or rounds exist here; and the QP solver has no learning-rate pathologies — with scaled features, SVM failures are almost always C-gamma failures, which is why that grid is the whole tuning story.",
+    "Two dials: the price of breaking the margin, and the reach of each example's vote — turned together, never alone.");
+
+  g("svm1",
+    "What is the classic practical mistake with SVMs?",
+    "Running an RBF SVM on unscaled features with default C and gamma, getting mediocre accuracy, and concluding 'SVMs don't work on this data' — when the geometry was broken before the model ever ran.",
+    ["Standardising the features first, which destroys the raw distance information the kernel needs and reliably costs several points of accuracy.",
+     "Using the linear kernel on text data, a known anti-pattern since documents require the RBF kernel's curvature to separate topics properly.",
+     "Tuning C and gamma on a validation set, which overfits the kernel to that split — defaults were chosen to be optimal across all datasets.",
+     "Requesting probability estimates, which silently disables the margin maximisation and turns the SVM into an ordinary logistic regression."],
+    "SVM's classic mistake",
+    "The RBF kernel's distances are unit-weighted, and defaults assume standardised inputs — unscaled data makes gamma effectively untunable and the margin meaningless. The pattern repeats in countless abandoned experiments: scale first (pipeline it), THEN grid C×gamma, and the 'broken' SVM often becomes competitive. Diagnosis before dismissal.",
+    "Standardising is the fix, not the sin; linear kernels are the STANDARD for text (high-dimensional sparse data is often linearly separable); validation tuning is simply correct methodology; and probability=True bolts Platt scaling on top without touching the margin objective. The classic burn is always the unscaled default run.",
+    "Nine of ten 'SVMs are useless' verdicts were really 'we never scaled the features and never moved the two dials'.");
+
+  g("svm1",
+    "When should you pick an SVM over a boosted tree ensemble?",
+    "When dimensions are high relative to samples, or when a domain kernel (strings, graphs, custom similarity) encodes structure trees can't see — margins regularise where boosting's flexibility overfits.",
+    ["When the dataset is large, dense and low-dimensional, which is the regime where kernel evaluations become cheap and tree ensembles struggle most.",
+     "When features have wildly mixed types and scales with many missing values, conditions the SVM handles natively and boosting cannot tolerate.",
+     "When per-feature explanations are contractually required, since support vectors provide clearer attribution than any tree-based importance measure.",
+     "When training compute is scarce, because the quadratic programme solves in a fraction of the time that gradient boosting's many rounds consume."],
+    "SVM vs boosting",
+    "Boosting owns dense mixed-type tabular data — but its flexibility needs data to discipline it. When p is large and n modest (bioinformatics, specialised text), the SVM's margin is built-in restraint and often wins. And kernels are its unique door: a string kernel or graph kernel injects domain structure that no tree split can express.",
+    "The other claims run backwards: large-n is where kernel SVMs DIE (n² matrix); mixed types, scales and missing values are boosting's native comforts and SVM's chores; support vectors explain little (they're just the boundary-defining points); and the QP is far slower than a boosting run at scale. Pick the SVM for high-p/low-n and kernelisable structure.",
+    "When your data is wide, scarce, or 'similar' means something only you can define — the margin and the kernel earn their ceremony.");
+
   g("svm1",
     "What are the honest pros and cons of SVMs?",
     "Pros: strong in high dimensions, convex training, kernels for custom similarity, sparse support-vector solutions. Cons: poor scaling with rows, mandatory feature scaling, awkward probabilities, fiddly tuning.",
