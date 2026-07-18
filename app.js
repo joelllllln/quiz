@@ -163,6 +163,7 @@
   function poolFor(f) {
     return buildIndex().filter(function (e) {
       if (!keyInMode(e.key)) return false;
+      if (qHidden(e.q)) return false;
       if (f.type === 'def' && !e.def) return false;
       if (f.type === 'q' && e.def) return false;
       if (f.type !== 'def' && f.diff !== 'all' && e.level !== +f.diff) return false;
@@ -376,14 +377,79 @@
   function logActivity() { try { var a = loadActivity(), d = today(); a[d] = (a[d] || 0) + 1; localStorage.setItem('ds_activity', JSON.stringify(a)); } catch (e) {} }
   function fmtDay(dt) { return dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2); }
 
-  /* ---------------- favourites ---------------- */
-  var FAVS = null;
+  /* ---------------- favourites + dislikes ---------------- */
+  // Both stores hold ids: 'c<hash>' = a question (cardId), 'k<normkey>' = a concept/term,
+  // 'o<normkey>' = an order-the-steps set, 't<key>' = a coding task. Favouriting floats an
+  // item to the front of decks (and questions join the Favourites drill); disliking hides
+  // it from future rounds. The two are mutually exclusive per item.
+  var FAVS = null, HIDDEN = null;
   function loadFavs() { if (FAVS) return FAVS; try { FAVS = JSON.parse(localStorage.getItem('ds_favs') || '{}') || {}; } catch (e) { FAVS = {}; } return FAVS; }
   function saveFavs() { try { localStorage.setItem('ds_favs', JSON.stringify(FAVS)); } catch (e) {} }
-  function isFav(q) { return !!loadFavs()[cardId(q)]; }
-  function toggleFav(q) { var f = loadFavs(), id = cardId(q); if (f[id]) delete f[id]; else f[id] = 1; saveFavs(); return !!f[id]; }
+  function loadHidden() { if (HIDDEN) return HIDDEN; try { HIDDEN = JSON.parse(localStorage.getItem('ds_hidden') || '{}') || {}; } catch (e) { HIDDEN = {}; } return HIDDEN; }
+  function saveHidden() { try { localStorage.setItem('ds_hidden', JSON.stringify(HIDDEN)); } catch (e) {} }
+  function cid(front) { return 'k' + normkey(front); }
+  function isFavId(id) { return !!loadFavs()[id]; }
+  function isDisId(id) { return !!loadHidden()[id]; }
+  function toggleFavId(id) {
+    var f = loadFavs();
+    if (f[id]) delete f[id];
+    else { f[id] = 1; var d = loadHidden(); if (d[id]) { delete d[id]; saveHidden(); } }
+    saveFavs(); return !!f[id];
+  }
+  function toggleDisId(id) {
+    var d = loadHidden();
+    if (d[id]) delete d[id];
+    else { d[id] = 1; var f = loadFavs(); if (f[id]) { delete f[id]; saveFavs(); } }
+    saveHidden(); return !!d[id];
+  }
+  function isFav(q) { return isFavId(cardId(q)); }
+  function toggleFav(q) { return toggleFavId(cardId(q)); }
   function favCount() { return Object.keys(loadFavs()).length; }
-  function favQuestions() { var f = loadFavs(); return buildIndex().filter(function (e) { return f[cardId(e.q)]; }); }
+  function disCount() { return Object.keys(loadHidden()).length; }
+  function clearHidden() { HIDDEN = {}; saveHidden(); }
+  // The concept a question teaches (its reveal name) — dislike a concept and every question
+  // that teaches it disappears with it, matching how flashcards/writing record progress.
+  function qConcept(q) { var wf = widgetFor(q), r = (wf && wf.reveal) || (q.widget && q.widget.reveal); return (r && r.name) || ''; }
+  function qHidden(q) { if (isDisId(cardId(q))) return true; var n = qConcept(q); return !!(n && isDisId(cid(n))); }
+  function favQuestions() {
+    var f = loadFavs();
+    return buildIndex().filter(function (e) {
+      if (qHidden(e.q)) return false;
+      if (f[cardId(e.q)]) return true;
+      var n = qConcept(e.q);
+      return !!(n && f[cid(n)]);
+    });
+  }
+  // After shuffling a deck, float favourites to the front (order within each half preserved).
+  function favFirst(arr, idFn) { var fa = [], rest = []; arr.forEach(function (x) { (isFavId(idFn(x)) ? fa : rest).push(x); }); return fa.concat(rest); }
+  // The ★ save / 👎 hide control pair shown on every question and card, in every mode.
+  function rateCtl(id, opts) {
+    opts = opts || {};
+    var wrap = h('<span class="rate-ctl">' +
+      (opts.noFav ? '' : '<button class="fav-btn" type="button"></button>') +
+      '<button class="dis-btn" type="button"></button></span>');
+    var fb = wrap.querySelector('.fav-btn'), db = wrap.querySelector('.dis-btn');
+    function paint() {
+      if (fb) {
+        var f = isFavId(id);
+        fb.textContent = f ? '★' : '☆';
+        fb.classList.toggle('is-fav', f);
+        fb.setAttribute('aria-pressed', f ? 'true' : 'false');
+        fb.title = f ? 'Saved to favourites — tap to remove' : 'Save to favourites';
+        fb.setAttribute('aria-label', fb.title);
+      }
+      var d = isDisId(id);
+      db.textContent = '👎';
+      db.classList.toggle('is-dis', d);
+      db.setAttribute('aria-pressed', d ? 'true' : 'false');
+      db.title = d ? 'Disliked — hidden from future rounds. Tap to restore' : 'Dislike — hide from future rounds';
+      db.setAttribute('aria-label', db.title);
+    }
+    if (fb) fb.onclick = function (ev) { ev.stopPropagation(); toggleFavId(id); paint(); };
+    db.onclick = function (ev) { ev.stopPropagation(); toggleDisId(id); paint(); };
+    paint();
+    return wrap;
+  }
   function startFavourites() {
     var sel = shuffle(favQuestions());
     if (!sel.length) return;
@@ -399,7 +465,7 @@
   // 2 = standard, 3 = advanced/peripheral. Overrides a card's displayed level everywhere.
   function defRank(name) { var m = window.DEFRANK; return (m && m[normkey(name)]) || 0; }
   function flashDeck() {
-    if (FLASH) return FLASH.filter(function (d) { return keyInMode(d.key); });
+    if (FLASH) return FLASH.filter(function (d) { return keyInMode(d.key) && !isDisId(cid(d.front)); });
     var at = {}, deck = [];
     buildIndex().forEach(function (e) {
       var r = e.q.widget && e.q.widget.reveal;
@@ -417,7 +483,7 @@
     });
     deck.forEach(function (d) { var rk = defRank(d.front); if (rk) d.level = rk; });   // curated rank wins
     FLASH = deck;
-    return FLASH.filter(function (d) { return keyInMode(d.key); });
+    return FLASH.filter(function (d) { return keyInMode(d.key) && !isDisId(cid(d.front)); });
   }
   // Difficulty filter shared by every study mode. 0 = all levels, else 1/2/3.
   function getStudyDiff() { var d = +(localStorage.getItem('ds_study_diff')); return (d === 1 || d === 2 || d === 3) ? d : 0; }
@@ -445,7 +511,7 @@
     window.scrollTo(0, 0);
   }
   function startFlashcards(topicKey, defsOnly) {
-    var deck = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def) && diffOk(c.level); })));
+    var deck = favFirst(shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && (!defsOnly || c.def) && diffOk(c.level); }))), function (c) { return cid(c.front); });
     if (!deck.length) return noContent('Flashcards');
     var i = 0, flipped = false;
     function draw() {
@@ -461,6 +527,7 @@
       }).join('');
       var view = h('<div class="flash-view">' +
         '<select class="flash-topic">' + opts + '</select>' +
+        '<div class="rate-row"></div>' +
         '<div class="flash-stage"><button class="flash-card' + (flipped ? ' flipped' : '') + '" aria-label="Flip card">' +
           '<div class="flash-face flash-front"><span class="flash-tag">Concept ' + diffTag(c.level) + '</span><div class="flash-term"></div><span class="flash-hint">tap to reveal the definition</span></div>' +
           '<div class="flash-face flash-back"><span class="flash-tag">Definition</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div><span class="flash-topictag">' + esc(c.topic) + ' ' + diffTag(c.level) + '</span></div>' +
@@ -470,6 +537,7 @@
           '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Review again</button></div>' +
         '<button class="flash-shuffle">↻ Shuffle deck</button>' +
       '</div>');
+      view.querySelector('.rate-row').appendChild(rateCtl(cid(c.front)));
       view.querySelector('.flash-term').textContent = c.front;
       view.querySelector('.flash-def').textContent = c.back;
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
@@ -522,7 +590,7 @@
     return false;
   }
   function startTypeIt(topicKey) {
-    var deck = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }))).slice(0, 10);
+    var deck = favFirst(shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }))), function (c) { return cid(c.front); }).slice(0, 10);
     if (!deck.length) return noContent('Type-the-term cards');
     var i = 0, score = 0;
     function draw() {
@@ -532,12 +600,13 @@
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var card = h('<article class="qcard type-card">' +
-        '<div class="q-eyebrow">Type the term · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div>' +
+        '<div class="q-top"><div class="q-eyebrow">Type the term · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div></div>' +
         '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
         '<label class="type-lab" for="type-in">Which term is this?</label>' +
         '<form class="type-form"><input id="type-in" class="type-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type the term…">' +
         '<button class="btn type-go" type="submit">Check</button><button class="btn ghost type-skip" type="button">Skip →</button></form>' +
         '<div class="type-result" hidden></div></article>');
+      card.querySelector('.q-top').appendChild(rateCtl(cid(c.front)));
       card.querySelector('.type-deftext').textContent = c.back;
       if (c.formula) card.querySelector('.type-formula').textContent = c.formula;
       var form = card.querySelector('.type-form');
@@ -586,8 +655,8 @@
 
   /* ---------------- matching: pair terms with definitions, then order algorithm steps ---------------- */
   function startMatching(topicKey) {
-    var pool = shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); })));
-    var orders = getStudyNew() === 'new' ? [] : shuffle((window.ORDERS || []).filter(function (o) { return (!topicKey || o.key === topicKey) && diffOk(o.level || 1); })).slice(0, 2);
+    var pool = favFirst(shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }))), function (c) { return cid(c.front); });
+    var orders = getStudyNew() === 'new' ? [] : favFirst(shuffle((window.ORDERS || []).filter(function (o) { return (!topicKey || o.key === topicKey) && diffOk(o.level || 1) && !isDisId('o' + normkey(o.title)); })), function (o) { return 'o' + normkey(o.title); }).slice(0, 2);
     var PAIRS = 5, ROUNDS = Math.min(3, Math.floor(pool.length / PAIRS));
     if (!ROUNDS && !orders.length) return noContent('Match & order sets');
     var round = 0, orderIdx = 0, totalRight = 0, totalPairs = 0;
@@ -600,7 +669,15 @@
       app.appendChild(bar);
       var sec = h('<article class="qcard match-card"><div class="q-eyebrow">Match each term to its definition</div>' +
         '<div class="match-cols"><div class="match-terms"></div><div class="match-defs"></div></div>' +
-        '<p class="match-note">Tap a term, then tap its definition.</p></article>');
+        '<p class="match-note">Tap a term, then tap its definition.</p>' +
+        '<div class="match-rate"><span class="mr-lab">Save ★ or hide 👎 a term for future rounds:</span></div></article>');
+      var mrStrip = sec.querySelector('.match-rate');
+      cards.forEach(function (c) {
+        var chip = h('<span class="mr-item"><span class="mr-term"></span></span>');
+        chip.querySelector('.mr-term').textContent = c.front;
+        chip.appendChild(rateCtl(cid(c.front)));
+        mrStrip.appendChild(chip);
+      });
       var termsEl = sec.querySelector('.match-terms'), defsEl = sec.querySelector('.match-defs');
       var selTerm = null, solved = 0, errs = {};
       shuffle(cards.slice()).forEach(function (c) {
@@ -646,10 +723,11 @@
       var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Order the steps · ' + esc(o.title) + '</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
-      var sec = h('<article class="qcard order-card"><div class="q-eyebrow">Put the steps in order ' + diffTag(o.level || 1) + '</div>' +
+      var sec = h('<article class="qcard order-card"><div class="q-top"><div class="q-eyebrow">Put the steps in order ' + diffTag(o.level || 1) + '</div></div>' +
         '<h2 class="order-title">' + esc(o.title) + '</h2>' +
         '<p class="match-note">Tap the steps in the order they happen — first step first.</p>' +
         '<div class="order-list"></div><div class="order-done" hidden></div></article>');
+      sec.querySelector('.q-top').appendChild(rateCtl('o' + normkey(o.title)));
       var list = sec.querySelector('.order-list');
       var expected = 0, wrongTaps = 0;
       shuffle(o.steps.map(function (s, i) { return { s: s, i: i }; })).forEach(function (it) {
@@ -784,6 +862,7 @@
       var cards = Object.keys(cardsMap).map(function (k) { return cardsMap[k]; });
       cards.forEach(function (c) { var rk = defRank(c.front); if (rk) c.level = rk; });   // curated rank wins
       if (scope === 'defs') cards = cards.filter(function (c) { return c.def; });   // definitions-only pass
+      cards = cards.filter(function (c) { return !isDisId(cid(c.front)); });   // disliked concepts sit out
       if (!cards.length) return;
       // Concept-driven: one read → recall per concept. The read is ALWAYS titled with the concept being
       // tested; its body is a strongly-matching study note's explanation where one exists, otherwise the
@@ -809,7 +888,7 @@
     // Split into testable concepts (deduped) and pure read-only notes (headings with no concept).
     var seenC = {}, concepts = [], readOnly = [];
     items.forEach(function (x) {
-      if (!x.concept) { readOnly.push(x); return; }
+      if (!x.concept) { if (!isDisId(cid(x.note.t))) readOnly.push(x); return; }
       var k = normkey(x.concept.front);
       if (seenC[k]) return; seenC[k] = 1;   // a concept is tested once per pass; prefer its first (note) form
       concepts.push(x);
@@ -834,7 +913,7 @@
       var n = x.note, concept = x.concept, byConcept = x.byConcept;
       seq.push({ type: 'read', note: n });
       if (!concept) return;
-      var conceptQs = byConcept[normkey(concept.front)] || [];
+      var conceptQs = (byConcept[normkey(concept.front)] || []).filter(function (q) { return !isDisId(cardId(q)); });
       var testCard = { front: concept.front, back: concept.back, formula: concept.formula || '', topic: x.topic, record: concept.front, level: concept.level };
       var pick = testType;
       if (pick === 'mix') {
@@ -883,9 +962,10 @@
     }
     function drawRead(n) {
       var card = h('<article class="qcard learn-read">' +
-        '<div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div>' +
+        '<div class="q-top"><div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div></div>' +
         '<div class="note-item lr-item"><div class="ni-t"></div><div class="ni-d"></div>' + (n.f ? '<div class="ni-f"></div>' : '') + '</div>' +
         '<div class="next-row"><button class="btn lr-next">' + nextLabel() + '</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
+      card.querySelector('.q-top').appendChild(rateCtl(cid(n.t)));
       card.querySelector('.ni-t').textContent = n.t;
       card.querySelector('.ni-d').textContent = n.d;
       if (n.f) card.querySelector('.ni-f').textContent = n.f;
@@ -908,11 +988,12 @@
       var reference = (c.formula ? c.formula + ' — ' : '') + c.back;
       var prompt = 'In your own words, explain: ' + c.front;
       var view = h('<article class="qcard learn-writeq">' +
-        '<div class="q-eyebrow">Explain what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div>' +
+        '<div class="q-top"><div class="q-eyebrow">Explain what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div></div>' +
         '<h2 class="write-prompt"></h2>' +
         '<textarea class="write-ta" rows="5" placeholder="Write your explanation here… then press Mark it."></textarea>' +
         '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost lw-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
         '<div class="write-result" hidden></div></article>');
+      view.querySelector('.q-top').appendChild(rateCtl(cid(c.record || c.front)));
       view.querySelector('.write-prompt').textContent = prompt;
       var ta = view.querySelector('.write-ta'), result = view.querySelector('.write-result'), mark = view.querySelector('.write-mark');
       view.querySelector('.lw-skip').onclick = advance;
@@ -946,7 +1027,7 @@
     function drawCard(c) {
       var flipped = false;
       var view = h('<article class="qcard learn-cardq">' +
-        '<div class="q-eyebrow">Recall what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div>' +
+        '<div class="q-top"><div class="q-eyebrow">Recall what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div></div>' +
         '<div class="flash-stage"><button class="flash-card" aria-label="Flip card">' +
           '<div class="flash-face flash-front"><span class="flash-tag">Can you explain it?</span><div class="flash-term"></div><span class="flash-hint">tap to reveal</span></div>' +
           '<div class="flash-face flash-back"><span class="flash-tag">Answer</span>' + (c.formula ? '<div class="flash-formula"></div>' : '') + '<div class="flash-def"></div></div>' +
@@ -954,6 +1035,7 @@
         '<div class="flash-rate" hidden><span class="fr-lab">Did you get it?</span>' +
           '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Not yet</button></div>' +
         '<div class="next-row lr-reveal"><button class="btn lr-show">Show the answer →</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
+      view.querySelector('.q-top').appendChild(rateCtl(cid(c.record || c.front)));
       view.querySelector('.flash-term').textContent = c.front;
       view.querySelector('.flash-def').textContent = c.back;
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
@@ -991,7 +1073,7 @@
   function setStudyTopic(k) { try { localStorage.setItem('ds_study_topic', k || ''); } catch (e) {} }
   // Multiple-choice study: N questions from the chosen topic scope (or all), fresh each time.
   function startQuiz(topicKey, n) {
-    var pool = newFilterQ(buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level); }));
+    var pool = newFilterQ(buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level) && !qHidden(e.q); }));
     if (!pool.length) return noContent('Questions');
     pool = shuffle(pool).slice(0, Math.min(n, pool.length));
     begin({ name: 'Study', no: '✎', key: '__study__' },
@@ -1045,15 +1127,12 @@
     if (q.simple) card.querySelector('.ca-simple').textContent = q.simple;
     card.querySelector('.concept-explain').innerHTML = q.explain || '';
     renderWidget(card, widgetFor(q));
-    var row = h('<div class="next-row"><button class="btn cc-practice">Practice this →</button><button class="btn ghost cc-fav"></button></div>');
+    var row = h('<div class="next-row"><button class="btn cc-practice">Practice this →</button></div>');
     row.querySelector('.cc-practice').onclick = function () {
       begin({ name: 'Lookup', no: '🔎', key: '__look__' }, { qk: '__look__', part: 'Practice', name: '' },
         { qs: [q], origins: [topic], mixed: true, modeLabel: 'Practice', more: true });
     };
-    var favBtn = row.querySelector('.cc-fav');
-    function setFav() { favBtn.textContent = isFav(q) ? '★ Saved' : '☆ Save'; }
-    setFav();
-    favBtn.onclick = function () { toggleFav(q); setFav(); };
+    row.appendChild(rateCtl(cardId(q)));
     card.appendChild(row);
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -1137,7 +1216,7 @@
     if (clr) clr.onclick = function () { setApiKey(''); container.innerHTML = '<div class="wr-ok">Key removed.</div>'; };
   }
   function startWriting(topicKey) {
-    var deck = shuffle(newFilterC(writingDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && diffOk(c.level); })));
+    var deck = favFirst(shuffle(newFilterC(writingDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && diffOk(c.level); }))), function (c) { return cid(c.front); });
     if (!deck.length) return noContent('Writing prompts');
     var i = 0;
     function draw() {
@@ -1156,7 +1235,7 @@
       var view = h('<div class="write-view">' +
         '<select class="write-topic">' + opts + '</select>' +
         '<div class="write-card">' +
-          '<span class="write-eyebrow">Final test · explain it in your own words · ' + esc(c.topic) + '</span>' +
+          '<div class="q-top"><span class="write-eyebrow">Final test · explain it in your own words · ' + esc(c.topic) + '</span></div>' +
           '<h2 class="write-prompt"></h2>' +
           '<textarea class="write-ta" rows="6" placeholder="Write your explanation here… then press Mark it."></textarea>' +
           '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost write-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
@@ -1164,6 +1243,7 @@
         '</div>' +
         '<button class="flash-shuffle write-newset">↻ New set</button>' +
       '</div>');
+      view.querySelector('.q-top').appendChild(rateCtl(cid(c.front)));
       view.querySelector('.write-prompt').textContent = prompt;
       var ta = view.querySelector('.write-ta');
       var result = view.querySelector('.write-result');
@@ -1238,7 +1318,7 @@
   function practiceSelect(mix) {
     var c = loadCards(), day = dayNum(), tk = getPracticeTopic();
     var known = [], neu = [];
-    buildIndex().forEach(function (e) { if (tk ? e.key !== tk : !keyInMode(e.key)) return; var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
+    buildIndex().forEach(function (e) { if (tk ? e.key !== tk : !keyInMode(e.key)) return; if (qHidden(e.q)) return; var r = c[cardId(e.q)]; if (r && r.seen) known.push({ e: e, r: r }); else neu.push(e); });
     known.forEach(function (k) {
       var r = k.r;
       var overdue = (day - r.last) / BOX_INTERVAL[Math.max(0, Math.min(5, r.box))];  // 1 = exactly due
@@ -1546,6 +1626,7 @@
   function codeBar(task, levelLabel) {
     var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">' + esc(task.title) + ' ' + diffTag(task.lvl || 2) + ' · <b>' + levelLabel + '</b></span></div>');
     bar.querySelector('.back').onclick = home;
+    bar.appendChild(rateCtl('t' + task.key));
     return bar;
   }
   // Level 0 — See it: the worked example, line by line in plain English.
@@ -1869,7 +1950,7 @@
     g.order.forEach(function (grp) {
       if (next) return;
       g.by[grp].forEach(function (t) {
-        if (next) return;
+        if (next || isDisId('t' + t.key)) return;
         var p = prog[t.key] || {};
         for (var L = 1; L <= 3; L++) if (!p[L]) { next = { t: t, L: L }; return; }
       });
@@ -1912,12 +1993,17 @@
     intro.appendChild(codeDiffChips());
     // Random drill: jump straight into a level you haven't completed yet (least-done tasks first).
     intro.querySelector('.code-drill').onclick = function () {
+      // Disliked tasks sit the drill out; if any favourites still have work, draw from those first.
+      var drillable = tasks.filter(function (t) { return !isDisId('t' + t.key); });
+      if (!drillable.length) drillable = tasks;
       var todo = [];
-      tasks.forEach(function (t) {
+      drillable.forEach(function (t) {
         var p = prog[t.key] || {};
-        for (var L = 1; L <= 3; L++) if (!p[L]) todo.push({ key: t.key, l: L });
+        for (var L = 1; L <= 3; L++) if (!p[L]) todo.push({ key: t.key, l: L, fav: isFavId('t' + t.key) });
       });
-      if (!todo.length) tasks.forEach(function (t) { todo.push({ key: t.key, l: 1 + Math.floor(Math.random() * 3) }); });
+      if (!todo.length) drillable.forEach(function (t) { todo.push({ key: t.key, l: 1 + Math.floor(Math.random() * 3), fav: isFavId('t' + t.key) }); });
+      var favTodo = todo.filter(function (x) { return x.fav; });
+      if (favTodo.length) todo = favTodo;
       var pick = todo[Math.floor(Math.random() * todo.length)];
       if (pick.l === 1) startCodeMCQ(pick.key); else if (pick.l === 2) startCodeOrder(pick.key); else startCodeWrite(pick.key);
     };
@@ -1949,6 +2035,7 @@
           '<button class="btn ghost ct-l' + (p[3] ? ' ct-ok' : '') + '" data-l="3">' + (p[3] ? '✓ ' : '') + '3 · Write it</button>' +
         '</div></section>');
       row.querySelector('h3').textContent = t.title;
+      row.querySelector('.ct-meta').appendChild(rateCtl('t' + t.key));
       row.querySelector('.ct-ask').textContent = t.ask;
       row.querySelectorAll('.ct-l').forEach(function (b) {
         b.onclick = function () {
@@ -1984,7 +2071,7 @@
     fontBtn.onclick = function () { setFont((getFont() + 1) % 3); fontLabel(); };
     keyBtn.onclick = openSettings;
     favBtnM.onclick = function () {
-      if (favCount()) { startFavourites(); return; }
+      if (favQuestions().length) { startFavourites(); return; }
       favBtnM.textContent = 'Tap ☆ on any question first';
       setTimeout(favLabelM, 1700);
     };
@@ -2248,7 +2335,7 @@
       }
       // How many items the current mode + topic + difficulty actually yields.
       function studyCount() {
-        if (mode === 'mc') return newFilterQ(buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level); })).length;
+        if (mode === 'mc') return newFilterQ(buildIndex().filter(function (e) { return (!tkey || e.key === tkey) && diffOk(e.level) && !qHidden(e.q); })).length;
         if (mode === 'written') return newFilterC(writingDeck().filter(function (c) { return (!tkey || c.key === tkey) && diffOk(c.level); })).length;
         if (mode === 'defs') return newFilterC(flashDeck().filter(function (c) { return (!tkey || c.key === tkey) && c.def && diffOk(c.level); })).length;
         if (mode === 'learn') { var seenC = {}, n = 0, nc = loadCards(), ci = conceptIndex(), only = getStudyNew() === 'new'; learnConcepts(tkey, getLearnScope()).forEach(function (x) { if (x.concept) { var k = normkey(x.concept.front); if (!seenC[k]) { seenC[k] = 1; if (!only || !conceptSeen(x.concept.front, nc, ci)) n++; } } }); return n; }
@@ -2382,14 +2469,24 @@
     }
 
     function renderFavourites() {
-      var n = favCount();
+      var n = favCount(), playable = favQuestions().length;
       var fav = h('<section class="fav-card">' +
         '<div class="fav-info"><span class="fav-star">' + (n ? '★' : '☆') + '</span>' +
         '<div><div class="fav-title">Favourites</div>' +
-        '<div class="fav-sub">' + (n ? n + ' saved question' + (n === 1 ? '' : 's') : 'Tap the ☆ on any question to save it here') + '</div></div></div>' +
-        '<button class="btn ghost fav-go"' + (n ? '' : ' disabled') + '>Review →</button></section>');
-      if (n) fav.querySelector('.fav-go').onclick = startFavourites;
+        '<div class="fav-sub">' + (n ? n + ' saved item' + (n === 1 ? '' : 's') + ' — saved cards & questions come up first' : 'Tap the ☆ on any question or card to save it here') + '</div></div></div>' +
+        '<button class="btn ghost fav-go"' + (playable ? '' : ' disabled') + '>Review →</button></section>');
+      if (playable) fav.querySelector('.fav-go').onclick = startFavourites;
       app.appendChild(fav);
+      var hid = disCount();
+      if (hid) {
+        var dis = h('<section class="fav-card dis-card">' +
+          '<div class="fav-info"><span class="fav-star dis-star">👎</span>' +
+          '<div><div class="fav-title">Hidden</div>' +
+          '<div class="fav-sub">' + hid + ' disliked item' + (hid === 1 ? '' : 's') + ' kept out of your rounds</div></div></div>' +
+          '<button class="btn ghost dis-restore">Restore all</button></section>');
+        dis.querySelector('.dis-restore').onclick = function () { clearHidden(); home(); };
+        app.appendChild(dis);
+      }
     }
 
     function renderMastery() {
@@ -2644,22 +2741,15 @@
     var card = h('<article class="qcard">' +
       '<div class="q-top"><div class="q-eyebrow">' + eyebrow +
       (isRetry ? ' · <span class="retry-note">second attempt</span>' : '') + '</div>' +
-      '<button class="fav-btn' + (isFav(q) ? ' is-fav' : '') + '" type="button" aria-label="Save to favourites" aria-pressed="' + (isFav(q) ? 'true' : 'false') + '">' + (isFav(q) ? '★' : '☆') + '</button>' +
       '</div>' +
       '<h2 class="qtext"></h2><div class="choices"></div></article>');
+    card.querySelector('.q-top').appendChild(rateCtl(cardId(q)));
     card.querySelector('.qtext').textContent = q.q;
     if (S.learnNote) {
       var recall = h('<div class="lr-recall"><span class="lr-recall-tag">You just read</span><span class="lr-recall-t"></span></div>');
       recall.querySelector('.lr-recall-t').textContent = S.learnNote.t;
       card.insertBefore(recall, card.querySelector('.qtext'));
     }
-    var favBtn = card.querySelector('.fav-btn');
-    favBtn.onclick = function () {
-      var on = toggleFav(q);
-      favBtn.classList.toggle('is-fav', on);
-      favBtn.textContent = on ? '★' : '☆';
-      favBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    };
     var box = card.querySelector('.choices');
     if (q.fig && window.renderFigure) {
       var figHost = document.createElement('div');
