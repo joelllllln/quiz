@@ -91,6 +91,23 @@
     widget: { reveal: { name: "BernoulliNB vs MultinomialNB", formula: "counts (Multinomial) vs presence/absence (Bernoulli)", text: "Multinomial uses word counts and ignores absences; Bernoulli uses presence/absence and ignores counts. Short texts → Bernoulli's absence signal often wins; when frequency matters → Multinomial." } }
   });
 
+  /* ---------------- probability density: what GaussianNB's "curve height" really is ---------------- */
+  var D = (window.DEFS = window.DEFS || {});
+  var pd = {
+    q: "GaussianNB scores a value by the 'height of the class's bell curve'. What exactly is that height — the probability density?",
+    choices: [
+      "How thickly probability is packed around that value — probability per unit of x, where real probabilities are AREAS under the curve, not heights",
+      "The exact probability of observing precisely that value, which for a continuous measurement is always a tidy number sitting between zero and one",
+      "The cumulative probability of seeing that value or anything smaller, read off the curve from the far left all the way up to the observed point",
+      "The share of the class's training rows that took exactly that value, smoothed slightly so that never-seen values cannot score a literal zero",
+      "The probability that the value belongs to this class rather than any other, already normalised so the heights across classes sum to exactly one"
+    ],
+    explain: "For a continuous feature, the probability of any EXACT value is zero — nonzero probability belongs to intervals, as area under the curve. The height is a density: probability per unit of x, describing how tightly probability is packed near that point. That is why a density can exceed 1 where the curve is a tall narrow spike (tiny variance). GaussianNB may still use raw densities as likelihoods because it only ever COMPARES classes at the same x: multiply each class's density by the same tiny interval width and the widths cancel in the argmax.",
+    simple: "Think rainfall. Density is how hard it is raining at one spot; a real probability is how much water collects over a stretch of ground. At a single mathematical point the collected water is zero — yet the rain can still fall harder over one class's curve than another's, and 'harder here' is all Naive Bayes needs to pick a class.",
+    widget: { reveal: { name: "Probability density", formula: "f(x) = probability per unit x · P(a ≤ x ≤ b) = area under f", text: "The bell-curve height GaussianNB reads is a density, not a probability: probability per unit of x. Any exact value has probability zero (areas carry the probability), and densities can top 1 in narrow spikes. Comparing classes' densities at the same x is valid — the interval widths cancel." } }
+  };
+  push("bayes1", pd); D[pd.q] = 1;
+
   /* ---------------- choosing alpha: big vs small smoothing ---------------- */
   push("bayes1", {
     q: "You set Naive Bayes' smoothing to a tiny value like alpha=0.001. What behaviour are you choosing?",
