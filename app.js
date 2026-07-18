@@ -470,7 +470,23 @@
     if (fb) fb.onclick = function (ev) { ev.stopPropagation(); toggleFavId(id); paint(); };
     db.onclick = function (ev) { ev.stopPropagation(); toggleDisId(id); paint(); };
     paint();
+    wrap._paint = paint;   // lets the after-answer rating prompt refresh this control
     return wrap;
+  }
+  function repaintRateCtls() { document.querySelectorAll('.rate-ctl').forEach(function (w) { if (w._paint) w._paint(); }); }
+  // After-answer nudge: if the item has no rating yet, ask for one — like, dislike, or
+  // explicitly leave it unrated. Never blocks moving on; collapses once a choice is made.
+  function ratePrompt(id, vote) {
+    if ((vote || voteOfId(id)) !== 'none') return null;
+    var el = h('<div class="rate-ask"><span class="ra-lab">Rate this one?</span>' +
+      '<button class="btn ghost ra-like" type="button">★ Like</button>' +
+      '<button class="btn ghost ra-dis" type="button">👎 Dislike</button>' +
+      '<button class="ra-skip" type="button">Leave unrated</button></div>');
+    function settle(msg) { el.innerHTML = '<span class="ra-done">' + msg + '</span>'; repaintRateCtls(); }
+    el.querySelector('.ra-like').onclick = function () { if (!isFavId(id)) toggleFavId(id); settle('★ Saved to favourites'); };
+    el.querySelector('.ra-dis').onclick = function () { if (!isDisId(id)) toggleDisId(id); settle('👎 Disliked — hidden from future rounds'); };
+    el.querySelector('.ra-skip').onclick = function () { settle('Left unrated'); };
+    return el;
   }
   function startFavourites() {
     var sel = shuffle(favQuestions());
@@ -564,7 +580,14 @@
       view.querySelector('.flash-def').textContent = c.back;
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
       var fc = view.querySelector('.flash-card');
-      function flip() { flipped = !flipped; fc.classList.toggle('flipped', flipped); }
+      var prompted = false;
+      function maybePrompt() {
+        if (!flipped || prompted) return;
+        prompted = true;
+        var rp = ratePrompt(cid(c.front));
+        if (rp) view.insertBefore(rp, view.querySelector('.flash-shuffle'));
+      }
+      function flip() { flipped = !flipped; fc.classList.toggle('flipped', flipped); maybePrompt(); }
       function advance() { i = (i + 1) % deck.length; flipped = false; draw(); }
       fc.onclick = flip;
       view.querySelector('.flash-flip').onclick = function (ev) { ev.stopPropagation(); flip(); };
@@ -692,6 +715,8 @@
           '<div class="next-row"><button class="btn tr-next">' + (i + 1 < deck.length ? 'Next definition →' : 'See the score →') + '</button></div>';
         result.querySelector('.tr-term').textContent = c.front;
         result.insertBefore(aiExplainConcept(c.front, c.back), result.querySelector('.next-row'));
+        var rp = ratePrompt(cid(c.front));
+        if (rp) result.insertBefore(rp, result.querySelector('.next-row'));
         result.querySelector('.tr-next').onclick = goNext;
         input.blur();
       }
@@ -763,7 +788,17 @@
             recordConcept(t.front, right ? 'right' : 'wrong');
             totalPairs++; if (right) totalRight++;
             selTerm = null; solved++;
-            if (solved === cards.length) setTimeout(nextStage, 450);
+            if (solved === cards.length) {
+              // All pairs done: move straight on if every term is rated, otherwise pause
+              // with a nudge so unrated terms can be saved or hidden before continuing.
+              if (!cards.some(function (x) { return voteOfId(cid(x.front)) === 'none'; })) { setTimeout(nextStage, 450); }
+              else {
+                var ask = h('<div class="rate-ask match-ask"><span class="ra-lab">Round done ✓ — rate any of the terms above (★ / 👎), or carry on.</span>' +
+                  '<button class="btn ra-cont" type="button">Continue →</button></div>');
+                ask.querySelector('.ra-cont').onclick = nextStage;
+                sec.insertBefore(ask, sec.querySelector('.match-nav'));
+              }
+            }
           } else {
             errs[normkey(t.front)] = 1;
             b.classList.add('mi-shake'); selTerm.classList.add('mi-shake');
@@ -813,6 +848,8 @@
               d.hidden = false;
               d.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Ordered ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Perfect order ✓') + '</span>Every step in its place.</div>' +
                 '<div class="next-row"><button class="btn od-next">Continue →</button></div>';
+              var orp = ratePrompt('o' + normkey(o.title));
+              if (orp) d.insertBefore(orp, d.querySelector('.next-row'));
               d.querySelector('.od-next').onclick = function () { orderIdx++; nextStage(); };
             }
           } else {
@@ -1093,6 +1130,8 @@
           result.appendChild(markResultEl(c.record || c.front, reference, res,
             advance,
             function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); }));
+          var rp = ratePrompt(cid(c.record || c.front));
+          if (rp) result.appendChild(rp);
         });
       }
       mark.onclick = runMark;
@@ -1122,7 +1161,12 @@
       var rate = view.querySelector('.flash-rate');
       var revealRow = view.querySelector('.lr-reveal');
       var eli = aiExplainConcept(c.front, c.back); eli.hidden = true;
-      function reveal() { if (flipped) return; flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; eli.hidden = false; }
+      function reveal() {
+        if (flipped) return;
+        flipped = true; fc.classList.add('flipped'); revealRow.hidden = true; rate.hidden = false; eli.hidden = false;
+        var rp = ratePrompt(cid(c.record || c.front));
+        if (rp) view.insertBefore(rp, eli);
+      }
       fc.onclick = reveal;
       view.querySelector('.lr-show').onclick = reveal;
       view.querySelector('.lr-skip').onclick = function () { seen++; recordConcept(c.record || c.front, 'seen'); advance(); };
@@ -1355,6 +1399,8 @@
             function () { mark.disabled = false; ta.disabled = false; result.hidden = true; ta.focus(); });
           el.querySelector('.wr-next').textContent = 'Next prompt →';
           result.appendChild(el);
+          var rp = ratePrompt(cid(c.front));
+          if (rp) result.appendChild(rp);
         });
       }
       mark.onclick = runMark;
@@ -1774,6 +1820,8 @@
         after.hidden = false;
         after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' + esc(t.mcq.explain) + '</div>' +
           '<div class="next-row"><button class="btn code-next">' + (ch.ok ? 'Level 2: build it →' : 'Try again') + '</button><button class="btn ghost code-home">Coding home</button></div>';
+        var crp = ratePrompt('t' + t.key);
+        if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
         after.querySelector('.code-next').onclick = function () { ch.ok ? startCodeOrder(t.key) : startCodeMCQ(t.key); };
         after.querySelector('.code-home').onclick = home;
         after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1820,6 +1868,8 @@
             after.hidden = false;
             after.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Built ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Built perfectly ✓') + '</span>That\'s working code, in the right order.</div>' +
               '<div class="next-row"><button class="btn code-next">Level 3: write it →</button><button class="btn ghost code-home">Coding home</button></div>';
+            var crp = ratePrompt('t' + t.key);
+            if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
             after.querySelector('.code-next').onclick = function () { startCodeWrite(t.key); };
             after.querySelector('.code-home').onclick = home;
             after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1878,6 +1928,8 @@
         showSolution('<div class="banner bad"><span class="b-label">Nearly — ' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + ' missing</span>' +
           'Still needed: ' + missing.map(function (m) { return '<code>' + esc(m) + '</code>'; }).join(' · ') + '</div>');
       }
+      var crp = ratePrompt('t' + t.key);
+      if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
     };
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -2989,6 +3041,8 @@
         '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
       var ww = whyOthersEl(q, null, false); if (ww) card.appendChild(ww);
       card.appendChild(aiExplainEl(q));
+      var rp = ratePrompt(cardId(q), qVote(q));
+      if (rp) card.appendChild(rp);
       var row = h('<div class="next-row"><button class="btn">Next exercise →</button>' +
         (isRetry || !hasLab(q) ? '' : '<button class="btn ghost">Open the lab anyway</button>') + '</div>');
       row.children[0].onclick = next;
@@ -3003,6 +3057,8 @@
         '<div class="explain">' + q.explain + '</div>' + rememberHTML(q) + '</div>'));
       var ww2 = whyOthersEl(q, chosen, true); if (ww2) card.appendChild(ww2);
       card.appendChild(aiExplainEl(q));
+      var rp2 = ratePrompt(cardId(q), qVote(q));
+      if (rp2) card.appendChild(rp2);
       var row2 = h('<div class="next-row"><button class="btn">Next exercise →</button></div>');
       row2.children[0].onclick = next;
       card.appendChild(row2);
