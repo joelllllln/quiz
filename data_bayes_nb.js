@@ -90,4 +90,61 @@
     simple: "On a tweet, words show up once or not at all, so counting them adds nothing — but noticing which expected words are missing does. That's Bernoulli's edge here; on long text, counts matter again and Multinomial wins.",
     widget: { reveal: { name: "BernoulliNB vs MultinomialNB", formula: "counts (Multinomial) vs presence/absence (Bernoulli)", text: "Multinomial uses word counts and ignores absences; Bernoulli uses presence/absence and ignores counts. Short texts → Bernoulli's absence signal often wins; when frequency matters → Multinomial." } }
   });
+
+  /* ---------------- choosing alpha: big vs small smoothing ---------------- */
+  push("bayes1", {
+    q: "You set Naive Bayes' smoothing to a tiny value like alpha=0.001. What behaviour are you choosing?",
+    choices: [
+      "Trust the raw training counts almost completely — sharp evidence, but rare words get harsh near-zero likelihoods",
+      "Ignore the training counts almost completely, so every word contributes the same likelihood to every class score",
+      "Force every class toward the same prior probability regardless of what the training word counts actually said",
+      "Guarantee that unseen words are treated as strong positive evidence for whichever class is rarest overall",
+      "Turn the classifier deterministic so that retraining on the same data can never change any fitted likelihood"
+    ],
+    explain: "Alpha adds fake occurrences to every word's count, so a tiny alpha means the fitted likelihoods sit almost exactly on the raw training frequencies. That keeps the evidence sharp, but a word seen once or twice gets an extreme, overconfident likelihood, and a word never seen in a class still gets squashed to nearly zero — one step from the alpha=0 veto bug. Tiny alpha = low bias, high variance.",
+    simple: "Small alpha says 'believe the counts as-is'. Great when the counts are trustworthy — risky when a word only appeared a couple of times, because the model takes those few sightings far too seriously.",
+    widget: { reveal: { name: "Small alpha: trust the counts", formula: "α→0: P(word|class) ≈ count/total (sharp, risky)", text: "A tiny alpha keeps likelihoods glued to the raw training counts: sharp evidence, but rare and unseen words get extreme near-zero estimates — overconfident and one step from the zero-veto. Low bias, high variance." } }
+  });
+
+  push("bayes2", {
+    q: "You crank Naive Bayes' smoothing up to a huge value like alpha=1000 on an ordinary spam filter. What does the model drift toward?",
+    choices: [
+      "Guessing mostly from the class priors — the fake counts swamp the real ones and every word's evidence flattens toward ×1",
+      "Refusing to classify any email that contains a single word it never met during training, exactly like alpha=0 does",
+      "Memorising the training emails perfectly, so that training accuracy and validation accuracy both climb together towards a flawless hundred",
+      "Weighting rare words far more heavily than common ones, because the fake counts boost only the rare vocabulary",
+      "Producing likelihoods above one for frequent words, which makes the multiplied class scores overflow to infinity"
+    ],
+    explain: "Each word's likelihood becomes (count + α)/(total + α·V). With α huge, the α terms dominate and every word's probability looks nearly identical in every class — likelihood ratios collapse toward ×1. Multiplying a wall of ×1s leaves only the priors, so the model slides toward always guessing the base rate. That is underfitting: high bias, low variance, evidence erased.",
+    simple: "Big alpha buries the real counts under fake ones. Every word ends up looking equally spammy and equally hammy, so the only voice left is 'most email is ham' — the model becomes an amnesiac that guesses the majority.",
+    widget: { reveal: { name: "Large alpha: flatten the evidence", formula: "α→∞: ratios → ×1, prediction → priors", text: "A huge alpha drowns real counts in fake ones: every word's likelihood ratio squashes toward ×1, the evidence cancels out, and predictions collapse to the class priors. Underfitting — high bias, low variance." } }
+  });
+
+  push("bayes2", {
+    q: "Two spam filters: A trains on 200 emails full of rarely-seen words, B trains on 2 million emails covering its vocabulary thoroughly. Who benefits from the LARGER alpha?",
+    choices: [
+      "A — with skimpy counts per word, extra smoothing steadies the noisy estimates; B's counts are already reliable enough for a small alpha",
+      "B — the bigger dataset always demands the bigger smoothing, so that its millions of accumulated counts cannot drown out the class priors during scoring",
+      "Both need exactly the same alpha, because smoothing depends only on the vocabulary size and never on the corpus size",
+      "Neither — alpha only matters for continuous features, and word-count features are immune to the smoothing setting entirely",
+      "A should use alpha of exactly zero, since tiny datasets cannot afford to have any fake counts diluting their evidence"
+    ],
+    explain: "Smoothing is protection against unreliable counts. Filter A's per-word counts are tiny and noisy — one chance sighting shouldn't set an extreme likelihood, so a larger alpha usefully pulls estimates toward neutral. Filter B has seen so much data that its frequencies are already trustworthy; heavy smoothing would only blur real evidence. Rule of thumb: sparse, noisy counts → more smoothing; abundant, well-covered counts → less.",
+    simple: "Alpha is benefit-of-the-doubt for words you barely know. The filter that barely knows its words (small, patchy data) needs more of it; the filter that has seen everything a million times needs hardly any.",
+    widget: { reveal: { name: "Choosing alpha: the data-size rule", formula: "sparse/noisy counts → bigger α · plentiful counts → smaller α", text: "Pick alpha by how trustworthy the counts are: small or patchy training data needs a bigger alpha to steady noisy estimates; a large corpus that covers its vocabulary well earns a smaller alpha that keeps the evidence sharp." } }
+  });
+
+  push("bayes3", {
+    q: "In practice, how should you actually set Naive Bayes' alpha, and what trade-off are you steering?",
+    choices: [
+      "Cross-validate a log-spaced grid (0.01, 0.1, 1, 10…) around the default 1.0 — alpha is a bias-variance dial, small = sharp but jumpy, large = stable but blurred",
+      "Always keep the library default of exactly 1.0, because the smoothing strength has been proven mathematically incapable of changing validation accuracy on real data",
+      "Set alpha equal to the vocabulary size, so that every word receives exactly one fake occurrence per document in the corpus",
+      "Choose the alpha that maximises TRAINING accuracy, since smoothing exists purely to make the training fit as tight as possible",
+      "Derive alpha in closed form from the class priors — the optimal value is always one divided by the number of classes"
+    ],
+    explain: "There is no formula for the best alpha — it depends on how noisy your counts are — so you tune it like any hyperparameter: a log-spaced grid through cross-validation, centred on the 1.0 default. What the dial trades is bias against variance: small alpha hugs the raw counts (low bias, high variance — jumpy on rare words), large alpha pulls toward uniform (high bias, low variance — evidence blurred). Training accuracy is the wrong compass: it is highest at alpha≈0, exactly where validation suffers.",
+    simple: "Try a spread of values — a pinch, a spoonful, a cupful — and keep whichever scores best on held-out data. You're choosing between 'trust the counts' (sharp but twitchy) and 'doubt the counts' (calm but vague); the validation set tells you where the balance sits for YOUR data.",
+    widget: { reveal: { name: "Tuning alpha", formula: "CV over log grid: α ∈ {0.01, 0.1, 1, 10} · bias ↔ variance", text: "Tune alpha by cross-validating a log-spaced grid around the default 1.0. Small alpha = low bias, high variance (trusts raw counts); large alpha = high bias, low variance (flattens evidence). Validation accuracy, never training accuracy, picks the winner." } }
+  });
 })();
