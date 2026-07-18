@@ -1894,10 +1894,18 @@
     var diffLabel = getCodeDiff() ? ' at this difficulty' : '';
     var doneCount = tasks.reduce(function (n, t) { var p = prog[t.key] || {}; return n + (p[1] && p[2] && p[3] ? 1 : 0); }, 0);
     var intro = h('<section class="code-intro"><div class="review-eyebrow">How this works</div>' +
-      '<p class="code-intro-p"><b>See it</b> — the worked example, explained line by line. ' +
-      '<b>1 · Spot it</b> — recognise the right code among lookalikes. ' +
-      '<b>2 · Build it</b> — tap the blocks into a working order. ' +
-      '<b>3 · Write it</b> — type it yourself, marked kindly on the pieces that matter.</p>' +
+      '<p class="code-intro-p">Each task is one small piece of real code. Learn it in four short steps, easiest first:</p>' +
+      '<ol class="hiw-steps">' +
+        '<li class="hiw-step"><span class="hiw-badge">👀</span><div class="hiw-text"><b>See it</b>' +
+          '<span class="hiw-sub">Just read. The finished code, with every line explained in plain English.</span></div></li>' +
+        '<li class="hiw-step"><span class="hiw-badge">1</span><div class="hiw-text"><b>Spot it</b>' +
+          '<span class="hiw-sub">Pick the correct code out of a few lookalikes.</span></div></li>' +
+        '<li class="hiw-step"><span class="hiw-badge">2</span><div class="hiw-text"><b>Build it</b>' +
+          '<span class="hiw-sub">Tap the lines into the order they should run.</span></div></li>' +
+        '<li class="hiw-step"><span class="hiw-badge">3</span><div class="hiw-text"><b>Write it</b>' +
+          '<span class="hiw-sub">Type it yourself — marked kindly, only on the parts that matter.</span></div></li>' +
+      '</ol>' +
+      '<p class="hiw-tip">New here? Open any task below and start with <b>See it</b>. A green ✓ means a level is done; finish levels 1–3 to complete the task.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + (tasks.length ? Math.round(100 * doneCount / tasks.length) : 0) + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + doneCount + '</b> of ' + tasks.length + ' tasks' + diffLabel + '</span></div>' +
       '<div class="next-row"><button class="btn code-drill">Random drill →</button></div></section>');
