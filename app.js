@@ -614,8 +614,35 @@
   function startTypeIt(topicKey) {
     var deck = favFirst(shuffle(newFilterC(flashDeck().filter(function (c) { return (!topicKey || c.key === topicKey) && c.back && c.back.length > 15 && diffOk(c.level); }))), function (c) { return cid(c.front); }).slice(0, 10);
     if (!deck.length) return noContent('Type-the-term cards');
-    var i = 0, score = 0;
+    var i = 0, score = 0, viewIdx = null;
+    // Read-only look back at an earlier card: definition + the term, no re-answering.
+    function drawReview() {
+      var c = deck[viewIdx];
+      app.innerHTML = '';
+      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Type the term · reviewing <b>' + (viewIdx + 1) + '</b> of ' + deck.length + '</span></div>');
+      bar.querySelector('.back').onclick = home;
+      app.appendChild(bar);
+      var card = h('<article class="qcard type-card">' +
+        '<div class="q-top"><div class="q-eyebrow">Review · ' + esc(c.topic) + ' ' + diffTag(c.level) + '</div></div>' +
+        '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
+        '<div class="type-result tr-good"><span class="tr-mark">The term</span><div class="tr-term"></div></div>' +
+        '<div class="next-row">' + (viewIdx > 0 ? '<button class="btn ghost rev-prev">← Previous</button>' : '') +
+        '<button class="btn rev-next">' + (viewIdx + 1 >= i ? 'Back to the card →' : 'Forward →') + '</button></div></article>');
+      card.querySelector('.q-top').appendChild(rateCtl(cid(c.front)));
+      card.querySelector('.type-deftext').textContent = c.back;
+      if (c.formula) card.querySelector('.type-formula').textContent = c.formula;
+      card.querySelector('.tr-term').textContent = c.front;
+      var rp = card.querySelector('.rev-prev');
+      if (rp) rp.onclick = function () { viewIdx--; draw(); };
+      card.querySelector('.rev-next').onclick = function () { viewIdx++; draw(); };
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+    }
     function draw() {
+      if (viewIdx != null) {
+        if (viewIdx >= i) viewIdx = null;
+        else return drawReview();
+      }
       var c = deck[i];
       app.innerHTML = '';
       var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Type the term · <b>' + (i + 1) + '</b> of ' + deck.length + ' · <b>' + score + '</b> right</span></div>');
@@ -626,7 +653,9 @@
         '<div class="type-def"><span class="p-label">The definition</span><p class="type-deftext"></p>' + (c.formula ? '<div class="type-formula"></div>' : '') + '</div>' +
         '<label class="type-lab" for="type-in">Which term is this?</label>' +
         '<form class="type-form"><input id="type-in" class="type-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type the term…">' +
-        '<button class="btn type-go" type="submit">Check</button><button class="btn ghost type-skip" type="button">Skip →</button></form>' +
+        '<button class="btn type-go" type="submit">Check</button>' +
+        (i > 0 ? '<button class="btn ghost type-back" type="button">← Back</button>' : '') +
+        '<button class="btn ghost type-skip" type="button">Skip →</button></form>' +
         '<div class="type-result" hidden></div></article>');
       card.querySelector('.q-top').appendChild(rateCtl(cid(c.front)));
       card.querySelector('.type-deftext').textContent = c.back;
@@ -667,6 +696,8 @@
         input.blur();
       }
       form.onsubmit = function (ev) { ev.preventDefault(); reveal(termMatches(input.value, c.front) ? 'right' : 'wrong'); };
+      var tb = card.querySelector('.type-back');
+      if (tb) tb.onclick = function () { viewIdx = i - 1; draw(); };
       card.querySelector('.type-skip').onclick = function () { reveal('skip'); };
       app.appendChild(card);
       window.scrollTo(0, 0);
@@ -692,7 +723,9 @@
       var sec = h('<article class="qcard match-card"><div class="q-eyebrow">Match each term to its definition</div>' +
         '<div class="match-cols"><div class="match-terms"></div><div class="match-defs"></div></div>' +
         '<p class="match-note">Tap a term, then tap its definition.</p>' +
-        '<div class="match-rate"><span class="mr-lab">Save ★ or hide 👎 a term for future rounds:</span></div></article>');
+        '<div class="match-rate"><span class="mr-lab">Save ★ or hide 👎 a term for future rounds:</span></div>' +
+        '<div class="next-row match-nav">' + (round > 0 ? '<button class="btn ghost mn-prev">← Previous round</button>' : '') +
+        '<button class="btn ghost mn-skip">Skip round →</button></div></article>');
       var mrStrip = sec.querySelector('.match-rate');
       cards.forEach(function (c) {
         var chip = h('<span class="mr-item"><span class="mr-term"></span></span>');
@@ -700,6 +733,9 @@
         chip.appendChild(rateCtl(cid(c.front)));
         mrStrip.appendChild(chip);
       });
+      var mnp = sec.querySelector('.mn-prev');
+      if (mnp) mnp.onclick = function () { round--; drawMatch(); };
+      sec.querySelector('.mn-skip').onclick = nextStage;
       var termsEl = sec.querySelector('.match-terms'), defsEl = sec.querySelector('.match-defs');
       var selTerm = null, solved = 0, errs = {};
       shuffle(cards.slice()).forEach(function (c) {
@@ -748,8 +784,16 @@
       var sec = h('<article class="qcard order-card"><div class="q-top"><div class="q-eyebrow">Put the steps in order ' + diffTag(o.level || 1) + '</div></div>' +
         '<h2 class="order-title">' + esc(o.title) + '</h2>' +
         '<p class="match-note">Tap the steps in the order they happen — first step first.</p>' +
-        '<div class="order-list"></div><div class="order-done" hidden></div></article>');
+        '<div class="order-list"></div><div class="order-done" hidden></div>' +
+        '<div class="next-row match-nav">' + (orderIdx > 0 || ROUNDS > 0 ? '<button class="btn ghost mn-prev">← Back</button>' : '') +
+        '<button class="btn ghost mn-skip">Skip →</button></div></article>');
       sec.querySelector('.q-top').appendChild(rateCtl('o' + normkey(o.title)));
+      var onp = sec.querySelector('.mn-prev');
+      if (onp) onp.onclick = function () {
+        if (orderIdx > 0) { orderIdx--; drawOrder(); }
+        else { round = ROUNDS - 1; drawMatch(); }
+      };
+      sec.querySelector('.mn-skip').onclick = function () { orderIdx++; nextStage(); };
       var list = sec.querySelector('.order-list');
       var expected = 0, wrongTaps = 0;
       shuffle(o.steps.map(function (s, i) { return { s: s, i: i }; })).forEach(function (it) {
@@ -763,6 +807,8 @@
             expected++;
             if (expected === o.steps.length) {
               logActivity();
+              var mn = sec.querySelector('.match-nav');
+              if (mn) mn.remove();
               var d = sec.querySelector('.order-done');
               d.hidden = false;
               d.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Ordered ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Perfect order ✓') + '</span>Every step in its place.</div>' +
@@ -955,6 +1001,7 @@
     if (!seq.length) return noContent('Read + recall');
     var i = 0, seen = 0, known = 0;
     function advance() { i++; if (i >= seq.length) return finish(); draw(); }
+    function goBack() { if (i > 0) { i--; draw(); } }
     // Skip this note AND its attached test (if any), jumping to the next note.
     function skipPair() { i += (seq[i + 1] && seq[i + 1].type !== 'read') ? 2 : 1; if (i >= seq.length) return finish(); draw(); }
     function bar() {
@@ -986,12 +1033,15 @@
       var card = h('<article class="qcard learn-read">' +
         '<div class="q-top"><div class="q-eyebrow">Read · ' + esc(n.topic) + ' · ' + esc(n.group) + '</div></div>' +
         '<div class="note-item lr-item"><div class="ni-t"></div><div class="ni-d"></div>' + (n.f ? '<div class="ni-f"></div>' : '') + '</div>' +
-        '<div class="next-row"><button class="btn lr-next">' + nextLabel() + '</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
+        '<div class="next-row">' + (i > 0 ? '<button class="btn ghost lr-back">← Back</button>' : '') +
+        '<button class="btn lr-next">' + nextLabel() + '</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
       card.querySelector('.q-top').appendChild(rateCtl(cid(n.t)));
       card.querySelector('.ni-t').textContent = n.t;
       card.querySelector('.ni-d').textContent = n.d;
       if (n.f) card.querySelector('.ni-f').textContent = n.f;
       card.appendChild(aiExplainConcept(n.t, n.d));
+      var lrb = card.querySelector('.lr-back');
+      if (lrb) lrb.onclick = goBack;
       card.querySelector('.lr-next').onclick = advance;
       card.querySelector('.lr-skip').onclick = skipPair;
       app.appendChild(card);
@@ -1002,6 +1052,7 @@
       begin({ name: 'Read + recall', no: '✎', key: '__learn__' },
         { qk: '__learn__', part: 'Read + recall', name: step.topic },
         { qs: [step.q], origins: [step.topic], mixed: true, modeLabel: 'Read + recall', learnNote: step.note, learnConcept: step.concept,
+          learnBack: i > 0 ? goBack : null,
           learnNext: function (correct) { seen++; if (correct) known++; advance(); } });
     }
     // Open written test step: explain the concept; Claude Haiku marks it /5 (needs the user's key).
@@ -1013,11 +1064,14 @@
         '<div class="q-top"><div class="q-eyebrow">Explain what you just read · ' + esc(c.topic) + (c.level ? ' ' + diffTag(c.level) : '') + '</div></div>' +
         '<h2 class="write-prompt"></h2>' +
         '<textarea class="write-ta" rows="5" placeholder="Write your explanation here… then press Mark it."></textarea>' +
-        '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost lw-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
+        '<div class="write-actions">' + (i > 0 ? '<button class="btn ghost lw-back" type="button">← Back</button>' : '') +
+        '<button class="btn write-mark">Mark it →</button><button class="btn ghost lw-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
         '<div class="write-result" hidden></div></article>');
       view.querySelector('.q-top').appendChild(rateCtl(cid(c.record || c.front)));
       view.querySelector('.write-prompt').textContent = prompt;
       var ta = view.querySelector('.write-ta'), result = view.querySelector('.write-result'), mark = view.querySelector('.write-mark');
+      var lwb = view.querySelector('.lw-back');
+      if (lwb) lwb.onclick = goBack;
       view.querySelector('.lw-skip').onclick = advance;
       view.querySelector('.write-key-link').onclick = function () { showKeyPanel(result); };
       function runMark() {
@@ -1056,8 +1110,11 @@
         '</button></div>' +
         '<div class="flash-rate" hidden><span class="fr-lab">Did you get it?</span>' +
           '<button class="btn fr-good">✓ Got it</button><button class="btn ghost fr-again">↻ Not yet</button></div>' +
-        '<div class="next-row lr-reveal"><button class="btn lr-show">Show the answer →</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
+        '<div class="next-row lr-reveal">' + (i > 0 ? '<button class="btn ghost lr-back">← Back</button>' : '') +
+        '<button class="btn lr-show">Show the answer →</button><button class="btn ghost lr-skip">Skip →</button></div></article>');
       view.querySelector('.q-top').appendChild(rateCtl(cid(c.record || c.front)));
+      var crb = view.querySelector('.lr-back');
+      if (crb) crb.onclick = goBack;
       view.querySelector('.flash-term').textContent = c.front;
       view.querySelector('.flash-def').textContent = c.back;
       if (c.formula) view.querySelector('.flash-formula').textContent = c.formula;
@@ -1260,7 +1317,8 @@
           '<div class="q-top"><span class="write-eyebrow">Final test · explain it in your own words · ' + esc(c.topic) + '</span></div>' +
           '<h2 class="write-prompt"></h2>' +
           '<textarea class="write-ta" rows="6" placeholder="Write your explanation here… then press Mark it."></textarea>' +
-          '<div class="write-actions"><button class="btn write-mark">Mark it →</button><button class="btn ghost write-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
+          '<div class="write-actions">' + (deck.length > 1 ? '<button class="btn ghost write-back" type="button">← Back</button>' : '') +
+          '<button class="btn write-mark">Mark it →</button><button class="btn ghost write-skip">Skip →</button><button class="write-key-link" type="button">API key</button></div>' +
           '<div class="write-result" hidden></div>' +
         '</div>' +
         '<button class="flash-shuffle write-newset">↻ New set</button>' +
@@ -1271,6 +1329,8 @@
       var result = view.querySelector('.write-result');
       var mark = view.querySelector('.write-mark');
       function nextPrompt() { i = (i + 1) % deck.length; draw(); }
+      var wb = view.querySelector('.write-back');
+      if (wb) wb.onclick = function () { i = (i - 1 + deck.length) % deck.length; draw(); };
       view.querySelector('.write-skip').onclick = nextPrompt;
       view.querySelector('.write-newset').onclick = function () { deck = shuffle(deck); i = 0; draw(); };
       view.querySelector('.write-topic').onchange = function () { startWriting(this.value); };
@@ -1691,6 +1751,10 @@
     card.querySelector('.code-ask').textContent = t.title;
     card.querySelector('.code-why').textContent = t.why;
     card.querySelector('.code-q').textContent = t.mcq.q;
+    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← See it (worked example)</button><button class="btn ghost cn-skip">Skip to build it →</button></div>');
+    nav.querySelector('.cn-back').onclick = function () { startCodeExample(t.key); };
+    nav.querySelector('.cn-skip').onclick = function () { startCodeOrder(t.key); };
+    card.appendChild(nav);
     var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
     var choices = shuffle([{ c: t.mcq.correct, ok: true }].concat(t.mcq.wrong.map(function (w) { return { c: w, ok: false }; })));
     var answered = false;
@@ -1702,6 +1766,7 @@
         if (answered) return;
         answered = true;
         logActivity();
+        nav.remove();
         opts.querySelectorAll('.code-opt').forEach(function (o) { o.disabled = true; });
         b.classList.add(ch.ok ? 'co-right' : 'co-wrong');
         if (!ch.ok) opts.querySelectorAll('.code-opt').forEach(function (o, i) { if (choices[i].ok) o.classList.add('co-right'); });
@@ -1729,6 +1794,10 @@
       '<div class="code-built-wrap"><span class="cb-label">Your program · <b class="cb-count">0</b> of ' + t.lines.length + ' lines</span>' +
       '<pre class="code-built"></pre></div><div class="code-pool"></div><div class="code-after" hidden></div></article>');
     card.querySelector('.code-ask').textContent = t.ask;
+    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← Level 1: spot it</button><button class="btn ghost cn-skip">Skip to write it →</button></div>');
+    nav.querySelector('.cn-back').onclick = function () { startCodeMCQ(t.key); };
+    nav.querySelector('.cn-skip').onclick = function () { startCodeWrite(t.key); };
+    card.appendChild(nav);
     var built = card.querySelector('.code-built'), pool = card.querySelector('.code-pool'), after = card.querySelector('.code-after');
     var cbCount = card.querySelector('.cb-count');
     var expected = 0, wrongTaps = 0, total = t.lines.length;
@@ -1747,6 +1816,7 @@
           cbCount.textContent = expected;
           if (expected === total) {
             logActivity(); setCodeDone(t.key, 2);
+            nav.remove();
             after.hidden = false;
             after.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Built ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Built perfectly ✓') + '</span>That\'s working code, in the right order.</div>' +
               '<div class="next-row"><button class="btn code-next">Level 3: write it →</button><button class="btn ghost code-home">Coding home</button></div>';
@@ -1777,6 +1847,9 @@
       '<div class="next-row"><button class="btn code-check">Check my code</button><button class="btn ghost code-peek">Show solution</button></div>' +
       '<div class="code-after" hidden></div></article>');
     card.querySelector('.code-ask').textContent = t.written.prompt;
+    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← Level 2: build it</button></div>');
+    nav.querySelector('.cn-back').onclick = function () { startCodeOrder(t.key); };
+    card.appendChild(nav);
     var ta = card.querySelector('.code-write'), after = card.querySelector('.code-after');
     var peeked = false;
     function norm(s) { return s.toLowerCase().replace(/["']/g, "'").replace(/\s+/g, ''); }
@@ -2758,6 +2831,7 @@
       origins: opts.origins || null,
       daily: !!opts.daily, practice: !!opts.practice, mixed: !!opts.mixed, favourites: !!opts.favourites, more: !!opts.more,
       modeLabel: opts.modeLabel || '', sig: opts.sig || null, learnNext: opts.learnNext || null, learnNote: opts.learnNote || null, learnConcept: opts.learnConcept || null,
+      learnBack: opts.learnBack || null, view: null,
       i: opts.startAt || 0, correct: opts.startCorrect || 0,
       results: opts.results ? opts.results.slice() : []
     };
@@ -2765,6 +2839,12 @@
   }
 
   function question(isRetry) {
+    // Browsing backwards opens earlier questions read-only, so revisiting can't re-record
+    // or re-score anything; stepping forward past the last answered one resumes the quiz.
+    if (S.view != null) {
+      if (S.view >= S.i) S.view = null;
+      else return reviewQuestion();
+    }
     var q = S.qs[S.i];
     var L = S.level;
     app.innerHTML = '';
@@ -2810,10 +2890,57 @@
       box.appendChild(b);
     });
     if (!isRetry) {
-      var skipRow = h('<div class="skip-row"><button class="skip-btn" type="button">Skip for now →</button></div>');
-      skipRow.querySelector('.skip-btn').onclick = skip;
+      var navPrev = S.i > 0 ? '<button class="skip-btn nav-prev" type="button">← Previous</button>'
+        : (S.learnBack ? '<button class="skip-btn nav-prev" type="button">← Back to the note</button>' : '');
+      var skipRow = h('<div class="skip-row">' + navPrev + '<button class="skip-btn skip-go" type="button">Skip for now →</button></div>');
+      skipRow.querySelector('.skip-go').onclick = skip;
+      var np = skipRow.querySelector('.nav-prev');
+      if (np) np.onclick = function () { if (S.i > 0) { S.view = S.i - 1; question(false); } else S.learnBack(); };
       card.appendChild(skipRow);
     }
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
+  // Read-only look at an already-answered (or skipped) question: the correct answer,
+  // the explanation, and how you did — with ← / → to walk the whole set.
+  function reviewQuestion() {
+    var v = S.view, q = S.qs[v];
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+      '<div class="ruler" role="progressbar" aria-valuemin="0" aria-valuemax="' + S.qs.length + '" aria-valuenow="' + S.i + '"><div style="width:' + (100 * S.i / S.qs.length) + '%"></div></div>' +
+      '<span class="exmeta">Reviewing <b>' + (v + 1) + '</b> of ' + S.qs.length + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var res = S.results[v];
+    var resLab = res === true ? 'You answered this one correctly ✓' : res === false ? 'You missed this one ✗' : 'You skipped this one';
+    var eyebrow = 'Review · ' + (S.mixed ? esc((S.origins && S.origins[v]) || S.modeLabel || 'Mixed') : esc(S.topic.name));
+    var card = h('<article class="qcard">' +
+      '<div class="q-top"><div class="q-eyebrow">' + eyebrow + '</div></div>' +
+      '<h2 class="qtext"></h2><div class="choices"></div></article>');
+    card.querySelector('.q-top').appendChild(rateCtl(cardId(q)));
+    card.querySelector('.qtext').textContent = q.q;
+    var box = card.querySelector('.choices');
+    shuffle(q.choices.map(function (_, i) { return i; })).forEach(function (origIdx, pos) {
+      var b = document.createElement('button');
+      b.className = 'choice ' + (origIdx === 0 ? 'is-correct' : 'dim');
+      b.disabled = true;
+      var letter = document.createElement('span');
+      letter.className = 'ch-letter'; letter.textContent = LETTERS[pos];
+      var text = document.createElement('span');
+      text.className = 'ch-text'; text.textContent = q.choices[origIdx];
+      b.appendChild(letter); b.appendChild(text);
+      box.appendChild(b);
+    });
+    card.appendChild(h('<div class="banner ' + (res === true ? 'good' : res === false ? 'bad' : '') + '"><span class="b-label">' + resLab + '</span>' +
+      '<div class="explain">' + q.explain + '</div></div>'));
+    var nav = h('<div class="next-row">' +
+      (v > 0 ? '<button class="btn ghost rev-prev">← Previous</button>' : '') +
+      '<button class="btn rev-next">' + (v + 1 >= S.i ? 'Back to the question →' : 'Forward →') + '</button></div>');
+    var rp = nav.querySelector('.rev-prev');
+    if (rp) rp.onclick = function () { S.view--; question(false); };
+    nav.querySelector('.rev-next').onclick = function () { S.view++; question(false); };
+    card.appendChild(nav);
     app.appendChild(card);
     window.scrollTo(0, 0);
   }
