@@ -63,7 +63,7 @@
     "Laplace (additive) smoothing", "Joint probability", "Complement rule", "Sample space and event",
     "Statistical independence", "The zero-frequency problem"]);
   set(2, ["Likelihood ratio", "Generative model", "Gaussian Naive Bayes", "MultinomialNB", "BernoulliNB: binary features",
-    "GaussianNB", "Evidence (marginal likelihood)", "MAP estimate", "Bag-of-words", "CategoricalNB", "Probability density",
+    "GaussianNB", "Evidence (marginal likelihood)", "MAP estimate", "Bag-of-words", "CategoricalNB", "Probability density", "Underflow",
     "Marginal probability (marginalisation)", "Product rule (chain rule of probability)", "Law of total probability",
     "Conditional independence", "Log-space computation", "Discretising continuous features for NB",
     "Posterior odds", "Setting priors (fit_prior / class_prior)", "Base rate fallacy",

@@ -108,6 +108,22 @@
   };
   push("bayes1", pd); D[pd.q] = 1;
 
+  /* ---------------- underflow: why NB's long products die in floating point ---------------- */
+  var uf = {
+    q: "Naive Bayes multiplies hundreds of small likelihoods, which risks 'underflow'. What is floating-point underflow?",
+    choices: [
+      "A result so close to zero that it drops below the smallest positive number a float can hold, so the computer stores it as exactly 0.0",
+      "A result that grows beyond the largest number a float can hold, so the computer clips the answer to infinity and abandons the comparison",
+      "A gradual loss of the leading digits that happens when two nearly equal numbers are subtracted, leaving mostly rounding noise behind",
+      "A memory fault where the running product spills past its array cell and silently corrupts the neighbouring likelihoods in the model",
+      "The situation where the training set holds fewer example rows than features, so the fitted probabilities cannot be estimated reliably"
+    ],
+    explain: "Float64 can only represent positive numbers down to roughly 10⁻³⁰⁸ — below that floor, the value is stored as literal zero. A 2,000-word email at ~0.001 per word gives 10⁻⁶⁰⁰⁰, absurdly far below the floor, so EVERY class's product becomes exactly 0.0 and the argmax compares 0 with 0: total signal loss, not mere inaccuracy. This is precisely why real Naive Bayes implementations never multiply raw probabilities — they sum log-probabilities, which stay in a safe range and keep the same winner.",
+    simple: "Imagine a calculator that can't write any number smaller than a speck — anything tinier just becomes 0. Multiply enough small probabilities and every class's score hits that 0 floor, and a tie of zeroes tells you nothing about which class was winning. That's underflow, and it's why the real computation adds logs instead.",
+    widget: { reveal: { name: "Underflow", formula: "result < float floor (~10⁻³⁰⁸) → stored as exactly 0.0", text: "When a result dives below the smallest positive float, the computer rounds it to literal zero. NB's long products of small likelihoods do exactly this for every class, wrecking the argmax — the reason implementations sum log-probabilities instead." } }
+  };
+  push("bayes2", uf); D[uf.q] = 1;
+
   /* ---------------- choosing alpha: big vs small smoothing ---------------- */
   push("bayes1", {
     q: "You set Naive Bayes' smoothing to a tiny value like alpha=0.001. What behaviour are you choosing?",
