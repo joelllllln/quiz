@@ -113,4 +113,115 @@
         does: 'Trees are deterministic except for those ties — set a seed and the same data always yields the same tree. Essential for debugging and honest comparisons.' }
     ]
   });
+
+  H.push({
+    key: 'rf', model: 'Random Forest', cls: 'RandomForestClassifier',
+    imp: 'from sklearn.ensemble import RandomForestClassifier',
+    sig: "RandomForestClassifier(n_estimators=100, max_features='sqrt', max_depth=None, bootstrap=True, oob_score=False, n_jobs=None)",
+    intro: 'Many deliberately different deep trees, averaged. The knobs split into two families: how MANY and how DIFFERENT the trees are (that is where the magic lives), and the usual per-tree stopping rules.',
+    params: [
+      { name: 'n_estimators', def: '100',
+        means: 'How many trees are grown and averaged.',
+        does: 'More trees = a smoother, more stable average — and unlike boosting, adding trees CANNOT overfit; the curve just flattens. The only cost is time and memory, so pick the largest count your patience affords (100–500 typical) and spend your tuning budget elsewhere.' },
+      { name: 'max_features', def: "'sqrt'",
+        means: 'How many randomly-chosen features each split may consider — the decorrelation lever.',
+        does: 'THE knob that makes a forest more than bagged trees: restricting each split\'s menu ("sqrt" ≈ √p features) forces trees to use different evidence, so their errors disagree and averaging cancels them. Larger values → stronger but more similar trees; smaller → weaker but more diverse. The forest\'s main tuning knob after size.' },
+      { name: 'bootstrap', def: 'True',
+        means: 'Whether each tree trains on a bootstrap resample (drawn with replacement) instead of the full training set.',
+        does: 'True gives every tree its own ~63%-unique sample of rows — the "bagging" half of the recipe, adding a second source of tree-to-tree disagreement. False trains every tree on identical rows, leaving max_features as the only randomness.' },
+      { name: 'max_depth / min_samples_leaf', def: 'None / 1',
+        means: 'The per-tree stopping rules — identical to a lone decision tree\'s knobs.',
+        does: 'Forests deliberately grow trees DEEP (high variance is fine — averaging cancels it), so the defaults stay loose on purpose. Raise min_samples_leaf or cap depth mainly to cut memory and prediction time, or when data is extremely noisy.' },
+      { name: 'oob_score', def: 'False',
+        means: 'Score each tree on the ~37% of rows its bootstrap sample missed (out-of-bag rows).',
+        does: 'True gives a free, honest validation estimate (.oob_score_) without touching your test set or running cross-validation — every row is judged only by the trees that never trained on it. Nearly free lunch; costs a little fit time.' },
+      { name: 'n_jobs / random_state', def: 'None / None',
+        means: 'Cores used to grow trees in parallel; seed for the bootstrap and feature sampling.',
+        does: 'Trees are independent, so n_jobs=-1 parallelises beautifully. The seed makes the whole ensemble reproducible — same data, same forest.' }
+    ]
+  });
+
+  H.push({
+    key: 'gboost', model: 'Gradient Boosting', cls: 'GradientBoostingClassifier',
+    imp: 'from sklearn.ensemble import GradientBoostingClassifier',
+    sig: 'GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, subsample=1.0)',
+    intro: 'Small trees added one at a time, each fitting the errors the ensemble still makes. Because every round chases residuals, MORE of almost anything can overfit — the knobs are brakes, and the big two trade against each other.',
+    params: [
+      { name: 'learning_rate', def: '0.1',
+        means: 'The shrinkage (eta): how much of each new tree\'s correction is actually applied.',
+        does: 'The brake. Small values (0.01–0.1) mean each tree fixes only a sliver of the remaining error — slower learning, more rounds needed, almost always better generalisation. Large values sprint and overshoot. Classic recipe: lower the rate, raise the rounds, let validation pick the pair.' },
+      { name: 'n_estimators', def: '100',
+        means: 'How many boosting rounds — trees added to the chain.',
+        does: 'Opposite personality to a forest\'s tree count: because each round fits what is left of the error, TOO MANY ROUNDS OVERFITS — training loss keeps falling while validation turns back up. Tune together with learning_rate, ideally with early stopping watching a validation set.' },
+      { name: 'max_depth', def: '3',
+        means: 'Depth of each individual weak learner.',
+        does: 'Boosting wants SHALLOW trees (2–5): depth controls how many features may interact in one correction. Deep trees per round make a chain of strong learners that memorises fast. If a lone tree needs depth 10+, boosting will usually beat it with depth 3 and patience.' },
+      { name: 'subsample', def: '1.0',
+        means: 'The fraction of training rows each round sees (below 1.0 = stochastic gradient boosting).',
+        does: 'Sampling rows each round (0.5–0.8) injects randomness that decorrelates successive corrections — a genuine regulariser that often lifts validation accuracy, and it trains faster too.' },
+      { name: 'min_samples_leaf', def: '1',
+        means: 'Minimum rows per leaf inside each small tree.',
+        does: 'Same guard as in a lone tree: raising it stops rounds from carving corrections around single noisy rows. A secondary brake worth a small grid (1, 5, 20).' },
+      { name: 'n_iter_no_change / validation_fraction', def: 'None / 0.1',
+        means: 'Built-in early stopping: hold out a slice and stop when validation score stalls.',
+        does: 'Set n_iter_no_change (e.g. 10) and the model stops adding rounds once the held-out slice stops improving — n_estimators becomes a ceiling instead of a promise, and the overfitting tail is cut off automatically.' }
+    ]
+  });
+
+  H.push({
+    key: 'xgb', model: 'XGBoost', cls: 'XGBClassifier',
+    imp: 'from xgboost import XGBClassifier',
+    sig: 'XGBClassifier(n_estimators=100, learning_rate=0.3, max_depth=6, subsample=1.0, colsample_bytree=1.0, reg_lambda=1.0, gamma=0)',
+    intro: 'Gradient boosting, industrialised: same chain-of-corrections idea, plus explicit regularisation inside the objective and sampling on both axes. The knobs group into pace (rate × rounds), tree shape, sampling, and penalty.',
+    params: [
+      { name: 'learning_rate (eta)', def: '0.3',
+        means: 'Shrinkage on each round\'s correction — XGBoost\'s default is deliberately fast.',
+        does: 'Same brake as sklearn boosting but defaulting to 0.3: fine for quick experiments, usually lowered to 0.01–0.1 for serious fits (with more rounds). The single most impactful knob.' },
+      { name: 'n_estimators + early_stopping_rounds', def: '100 / None',
+        means: 'Boosting rounds, and the patience for stopping when an eval set stalls.',
+        does: 'Set a big ceiling (1000+) and let early_stopping_rounds (e.g. 50) with an eval_set decide the real count: training halts when validation has not improved for that many rounds, and the best iteration is kept. Rounds without early stopping = overfitting risk, exactly like GradientBoosting.' },
+      { name: 'max_depth', def: '6',
+        means: 'Depth of each tree in the chain.',
+        does: 'Deeper = higher-order feature interactions per round and faster overfitting; 3–8 is the practical band. Lower it before reaching for stronger penalties — shape first, then regularise.' },
+      { name: 'subsample / colsample_bytree', def: '1.0 / 1.0',
+        means: 'Fraction of ROWS each round sees, and fraction of COLUMNS each tree may use.',
+        does: 'The two sampling dials: 0.6–0.9 on each injects forest-style disagreement into the chain, regularising and speeding training. colsample also stops one dominant feature from starring in every round — the boosting cousin of max_features.' },
+      { name: 'reg_lambda / reg_alpha', def: '1.0 / 0',
+        means: 'L2 and L1 penalties on the leaf weights, written directly into the training objective.',
+        does: 'What the "regularised" in XGBoost refers to: lambda smoothly shrinks leaf outputs (on by default), alpha can zero some out entirely. Raise them when validation lags training and the sampling dials alone have not closed the gap.' },
+      { name: 'gamma (min_split_loss)', def: '0',
+        means: 'The minimum loss reduction a split must achieve before it is allowed to happen.',
+        does: 'A pruning tax on splits: at 0 any improvement passes; raising it deletes marginal splits, making every tree in the chain more conservative. Tune on a log-ish grid (0, 0.1, 1, 5) when trees look too eager.' },
+      { name: 'scale_pos_weight', def: '1',
+        means: 'A multiplier on the positive class\'s gradient — XGBoost\'s imbalance lever.',
+        does: 'Rule of thumb: set it near count(negatives)/count(positives) so the rare class\'s errors weigh as much as the common class\'s. The XGBoost counterpart of class_weight=\'balanced\'.' }
+    ]
+  });
+
+  H.push({
+    key: 'svm', model: 'Support Vector Machine', cls: 'SVC',
+    imp: 'from sklearn.svm import SVC',
+    sig: "SVC(C=1.0, kernel='rbf', gamma='scale', probability=False, class_weight=None)",
+    intro: 'Draw the widest street between the classes; kernels let the street bend. Two knobs rule everything — C (how hard the margin is) and gamma (how local the kernel is) — and both are meaningless without scaled features.',
+    params: [
+      { name: 'C', def: '1.0',
+        means: 'The price of a margin violation — how hard the margin is.',
+        does: 'Small C: a wide, soft street that tolerates points inside or across it — strong regularisation, smoother boundary, underfit risk. Big C: violations punished severely, so the boundary contorts to classify every training point — overfit risk. Tune on a log grid (0.01…100), always jointly with gamma.' },
+      { name: 'kernel', def: "'rbf'",
+        means: 'The similarity function that implicitly lifts the data into a richer space where a line can separate it.',
+        does: "'linear': a flat boundary — best for wide, sparse data (text) and huge feature counts. 'rbf': local bumps of similarity, the flexible default for tabular data. 'poly': polynomial interactions of a chosen degree. Start linear if p is large, rbf otherwise." },
+      { name: 'gamma', def: "'scale'",
+        means: 'The reach of the RBF kernel: how far one training point\'s influence extends.',
+        does: 'BIG gamma = tiny reach: each support vector wraps a tight bump around itself, giving jagged islands — overfitting. SMALL gamma = broad reach: influences overlap into a nearly flat, almost linear boundary — underfitting. \'scale\' (1/(p·Var)) is a sane start; tune the C×gamma pair as one grid, never separately.' },
+      { name: 'degree', def: '3',
+        means: 'Polynomial order — used only when kernel=\'poly\'.',
+        does: 'Higher degree = higher-order feature interactions and a bendier boundary, with overfitting arriving fast past 3–4. Ignored entirely by rbf and linear kernels.' },
+      { name: 'probability', def: 'False',
+        means: 'Whether predict_proba is available — SVMs natively output margins (decision_function), not probabilities.',
+        does: 'True bolts on Platt scaling via an internal cross-validation: fitting gets noticeably slower and probabilities are calibrated approximations. Leave False when the class label or margin is all the pipeline needs.' },
+      { name: 'class_weight', def: 'None',
+        means: 'Per-class multiplier on C — how expensive each class\'s violations are.',
+        does: "'balanced' raises the price of rare-class mistakes inversely to frequency, pushing the street toward the majority side so the minority is not swallowed. The SVM's imbalance lever." }
+    ]
+  });
 })();
