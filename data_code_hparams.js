@@ -224,4 +224,139 @@
         does: "'balanced' raises the price of rare-class mistakes inversely to frequency, pushing the street toward the majority side so the minority is not swallowed. The SVM's imbalance lever." }
     ]
   });
+
+  H.push({
+    key: 'kmeans', model: 'k-Means', cls: 'KMeans',
+    imp: 'from sklearn.cluster import KMeans',
+    sig: "KMeans(n_clusters=8, init='k-means++', n_init='auto', max_iter=300, random_state=None)",
+    intro: 'Place k centroids, assign points to the nearest, move centroids to the mean, repeat. You must choose k yourself — and because "nearest" is a distance, unscaled features quietly rig every assignment.',
+    params: [
+      { name: 'n_clusters', def: '8',
+        means: 'The k — how many clusters the algorithm is ORDERED to find (it will find exactly that many, structure or not).',
+        does: 'The decision the algorithm cannot make for you: sweep several k values and read the elbow of inertia or the peak of silhouette score. Too small merges real groups; too large slices real groups into arbitrary shards. Never trust a single unexamined k.' },
+      { name: 'init', def: "'k-means++'",
+        means: 'How the starting centroids are chosen before the first iteration.',
+        does: "'k-means++' seeds centroids spread apart (each new seed prefers points far from existing ones), which mostly avoids the terrible starts random seeding produces — two centroids born inside one true cluster. Keep the default; 'random' exists mainly for teaching the failure." },
+      { name: 'n_init', def: "'auto'",
+        means: 'How many complete restarts to run, keeping the best result (lowest inertia).',
+        does: 'k-Means only finds a LOCAL optimum — where it ends depends on where it starts. Multiple restarts with different seeds are the insurance policy; \'auto\' resolves sensibly (1 for k-means++, 10 for random). Raise it when clusterings look unstable between runs.' },
+      { name: 'max_iter', def: '300',
+        means: 'The cap on assign-then-move rounds within a single run.',
+        does: 'Convergence (assignments stop changing) usually arrives long before 300 — this is a safety net, not a tuning knob. If runs genuinely hit the cap, the data likely has no clean k-cluster structure at that k.' },
+      { name: 'random_state', def: 'None',
+        means: 'Seed for the centroid seeding (and restarts).',
+        does: 'Fix it and the same data gives the same clusters every run — essential once cluster labels feed anything downstream, since labels can otherwise permute or shift between runs.' }
+    ]
+  });
+
+  H.push({
+    key: 'hier', model: 'Hierarchical Clustering', cls: 'AgglomerativeClustering',
+    imp: 'from sklearn.cluster import AgglomerativeClustering',
+    sig: "AgglomerativeClustering(n_clusters=2, linkage='ward', metric='euclidean', distance_threshold=None)",
+    intro: 'Start with every point as its own cluster and repeatedly merge the closest pair — the full merge history is a tree (dendrogram), and the knobs decide what "closest" means and where the tree is cut.',
+    params: [
+      { name: 'n_clusters', def: '2',
+        means: 'Where to cut the merge tree — how many clusters to read off it.',
+        does: 'Unlike k-Means the tree is built once and any cut is available afterwards; plot the dendrogram and cut where the vertical gaps are tallest (merges that cost the most). The default 2 is a placeholder, not a recommendation.' },
+      { name: 'linkage', def: "'ward'",
+        means: 'The definition of the distance BETWEEN two clusters (not between two points).',
+        does: "The personality knob. 'ward': merge the pair whose union grows total variance least — compact, similar-sized blobs. 'complete': farthest-points distance, tight clusters. 'average': in between. 'single': nearest-points distance — follows chains and finds elongated shapes, but one noisy bridge can weld two real clusters together." },
+      { name: 'metric', def: "'euclidean'",
+        means: 'The point-to-point distance underneath the linkage.',
+        does: "Ward mathematically requires 'euclidean'; the other linkages accept manhattan, cosine and friends — cosine is the classic choice for text vectors where direction matters more than length. And as ever with distances: scale the features first." },
+      { name: 'distance_threshold', def: 'None',
+        means: 'Cut the tree at a HEIGHT (merge distance) instead of at a cluster count.',
+        does: 'Set it (with n_clusters=None) and the data decides how many clusters survive: everything closer than the threshold merges, everything farther stays split. Read a sensible height straight off the dendrogram\'s big gaps.' }
+    ]
+  });
+
+  H.push({
+    key: 'dbscan', model: 'DBSCAN', cls: 'DBSCAN',
+    imp: 'from sklearn.cluster import DBSCAN',
+    sig: "DBSCAN(eps=0.5, min_samples=5, metric='euclidean')",
+    intro: 'Clusters are regions dense enough to matter; everything else is noise. No k at all — instead two knobs jointly DEFINE what "dense" means, and both read distances, so scaling is not optional.',
+    params: [
+      { name: 'eps', def: '0.5',
+        means: 'The neighbourhood radius: how close two points must be to count as neighbours.',
+        does: 'A REAL distance in feature units — meaningless before scaling. Too small: nothing reaches min_samples neighbours, everything is noise. Too large: neighbourhoods overlap everywhere and clusters fuse into one blob. Pick it from the k-distance plot: sort each point\'s distance to its k-th neighbour and take the elbow.' },
+      { name: 'min_samples', def: '5',
+        means: 'How many neighbours (within eps, self included) a point needs to qualify as a CORE point.',
+        does: 'The density bar. Raising it demands denser regions: more points become border or noise, and thin bridges between blobs stop welding them together. Rule of thumb: at least the data\'s dimensionality + 1, higher on noisy data.' },
+      { name: 'metric', def: "'euclidean'",
+        means: 'The distance definition eps is measured in.',
+        does: 'Change it and eps changes meaning entirely (an eps tuned for euclidean is nonsense under cosine). Choose the metric first, scale the features, then tune eps — in that order.' },
+      { name: '(no n_clusters)', def: '—',
+        means: 'DBSCAN has no cluster-count knob: the count EMERGES from density, and label -1 marks noise.',
+        does: 'The trade for not choosing k: you choose density instead. Points in no dense region stay labelled -1 — outliers are allowed to remain outliers rather than being forced into the nearest cluster, which is half the reason to pick DBSCAN at all.' }
+    ]
+  });
+
+  H.push({
+    key: 'pca', model: 'PCA', cls: 'PCA',
+    imp: 'from sklearn.decomposition import PCA',
+    sig: 'PCA(n_components=None, whiten=False, svd_solver=\'auto\', random_state=None)',
+    intro: 'Rotate the axes to point along the directions of greatest variance, then keep only the first few. One knob truly matters — how much to keep — and because variance is the whole criterion, standardise first or the biggest-unit feature wins the rotation.',
+    params: [
+      { name: 'n_components', def: 'None',
+        means: 'How much of the rotated space to keep — a count of components, or a target share of variance.',
+        does: 'The knob. An int keeps that many components (2 for plotting); a FLOAT between 0 and 1 is the elegant form — n_components=0.95 keeps however many components it takes to retain 95% of the variance, letting the data choose the count. None keeps everything (pure rotation, no reduction).' },
+      { name: 'whiten', def: 'False',
+        means: 'After projecting, rescale each kept component to unit variance.',
+        does: 'Off, components keep their natural sizes (component 1 dominates). On, they are equalised — useful when a downstream model assumes comparable scales, at the cost of throwing away the very variance ordering PCA discovered. Leave off unless the next stage asks for it.' },
+      { name: 'svd_solver', def: "'auto'",
+        means: 'The linear-algebra route used to find the components: exact decomposition or fast randomised approximation.',
+        does: "Speed only, in practice: 'auto' picks exact for small data and 'randomized' for big wide matrices, which is dramatically faster and accurate enough. Results are the same directions to within tiny numerical wiggle (and sign flips, which mean nothing)." },
+      { name: 'random_state', def: 'None',
+        means: 'Seed for the randomised solver.',
+        does: 'Only meaningful when svd_solver ends up randomised — set it so repeated fits give identical components. Exact solvers ignore it.' }
+    ]
+  });
+
+  H.push({
+    key: 'tsne', model: 't-SNE', cls: 'TSNE',
+    imp: 'from sklearn.manifold import TSNE',
+    sig: "TSNE(n_components=2, perplexity=30.0, learning_rate='auto', init='pca', random_state=None)",
+    intro: 'A map-drawing tool, not a model: it arranges points in 2-D so that NEIGHBOURS stay neighbours, sacrificing global distances to do it. The knobs steer what "neighbourhood" means and whether the optimisation lands well.',
+    params: [
+      { name: 'perplexity', def: '30.0',
+        means: 'Roughly, the effective number of neighbours each point tries to keep close — the size of the neighbourhood being preserved.',
+        does: 'THE t-SNE knob. Small (5): ultra-local focus — real clusters shatter into confetti. Large (50+): broader structure, local detail blurred, and it must stay below the number of points. Honest practice is to run several perplexities and only trust what persists across them.' },
+      { name: 'learning_rate', def: "'auto'",
+        means: 'The optimisation step size for laying points onto the map.',
+        does: 'Badly set, the map lies in characteristic ways: too low and points crumple into one dense ball; too high and the layout explodes into evenly-spread noise. \'auto\' (n/early_exaggeration heuristic) largely retired this failure mode — keep it.' },
+      { name: 'init', def: "'pca'",
+        means: 'The starting arrangement the optimisation refines.',
+        does: "'pca' starts from the linear map, so global placement is more stable and repeatable; 'random' starts from scratch and can scatter the same clusters differently every run. PCA init is simply the better default." },
+      { name: 'n_components', def: '2',
+        means: 'The dimensionality of the output map.',
+        does: '2 for plots, occasionally 3. t-SNE is for LOOKING — its axes and inter-cluster distances carry no meaning, so its output is not a sensible feature set for downstream models (use PCA for that).' },
+      { name: 'random_state', def: 'None',
+        means: 'Seed for the initial layout and optimisation randomness.',
+        does: 'Different seeds give visibly different (equally valid) maps — fix it for reproducible figures, and remember that cluster POSITIONS and BETWEEN-cluster gaps would differ next run: read grouping, never geometry.' }
+    ]
+  });
+
+  H.push({
+    key: 'stacking', model: 'Stacking', cls: 'StackingClassifier',
+    imp: 'from sklearn.ensemble import StackingClassifier',
+    sig: 'StackingClassifier(estimators=[...], final_estimator=LogisticRegression(), cv=5, stack_method=\'auto\', passthrough=False)',
+    intro: 'Train diverse base models, then train a meta-learner ON THEIR PREDICTIONS. The whole design question is leakage: the meta-learner must only ever see predictions made on data the base model had not seen.',
+    params: [
+      { name: 'estimators', def: '(required)',
+        means: 'The named base models whose predictions become the meta-learner\'s features.',
+        does: 'Diversity is the point: models that err DIFFERENTLY (a linear model + trees + kNN) give the meta-learner disagreements worth arbitrating. Five similar tree ensembles stack poorly — their errors align, so there is nothing to reconcile.' },
+      { name: 'final_estimator', def: 'LogisticRegression()',
+        means: 'The meta-learner that combines the base predictions into the final answer.',
+        does: 'Keep it SIMPLE: with only a handful of prediction-features and out-of-fold rows to learn from, a complex meta-learner just overfits the base models\' quirks. Logistic regression — effectively learned, well-calibrated weighted voting — is the default for good reason.' },
+      { name: 'cv', def: '5',
+        means: 'The internal cross-validation that generates OUT-OF-FOLD base predictions to train the meta-learner on.',
+        does: 'The anti-leakage heart of stacking: each base model predicts each row from a fold it was not trained on, so the meta-learner sees honest predictions, not memorised ones. Skip this discipline (fit base models on everything, stack their training predictions) and the meta-learner learns to trust whoever memorised hardest.' },
+      { name: 'stack_method', def: "'auto'",
+        means: 'WHICH output of each base model feeds the meta-learner: probabilities, decision scores, or hard labels.',
+        does: "'auto' prefers predict_proba, then decision_function, then predict. Probabilities carry confidence — a 0.51 and a 0.99 'yes' are very different evidence — so richer methods usually stack better than hard 0/1 votes." },
+      { name: 'passthrough', def: 'False',
+        means: 'Whether the meta-learner also receives the ORIGINAL features alongside the base predictions.',
+        does: 'False: the meta-learner judges only the models\' opinions. True: it can learn "trust the kNN in this region of feature space" — occasionally a real win, always a bigger overfitting surface. Try False first.' }
+    ]
+  });
 })();
