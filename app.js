@@ -2115,6 +2115,44 @@
         '<div><div class="fav-title">All 3 levels done on every task</div><div class="fav-sub">Random drill keeps them fresh — or come back after new tasks land.</div></div></div></section>'));
     }
   }
+  // "Know the knobs": one page per model listing every hyperparameter — what it
+  // means and what it does. The first breakdown on the Coding practice page.
+  function showCodeHparams(idx) {
+    var all = window.CODE_HPARAMS || [];
+    var m = all[idx]; if (!m) return;
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">Know the knobs · <b>' + (idx + 1) + '</b> of ' + all.length + '</span></div>');
+    bar.querySelector('.back').onclick = home;
+    app.appendChild(bar);
+    var card = h('<article class="qcard hparam-card">' +
+      '<div class="q-top"><div class="q-eyebrow">Hyperparameters · ' + esc(m.model) + '</div></div>' +
+      '<h2 class="code-ask"></h2><p class="code-why"></p>' +
+      '<div class="code-sol"><span class="p-label">The signature</span><pre></pre></div>' +
+      '<div class="hp-list"></div></article>');
+    card.querySelector('.q-top').appendChild(rateCtl('h' + m.key));
+    card.querySelector('.code-ask').textContent = m.cls;
+    card.querySelector('.code-why').textContent = m.intro;
+    card.querySelector('.code-sol pre').textContent = m.imp + '\n' + m.sig;
+    var list = card.querySelector('.hp-list');
+    m.params.forEach(function (p) {
+      var row = h('<div class="hp-row"><div class="hp-head"><code class="hp-name"></code><span class="hp-def"></span></div>' +
+        '<p class="hp-txt hp-means"><b>What it means</b> <span></span></p>' +
+        '<p class="hp-txt hp-does"><b>What it does</b> <span></span></p></div>');
+      row.querySelector('.hp-name').textContent = p.name;
+      row.querySelector('.hp-def').textContent = 'default: ' + p.def;
+      row.querySelector('.hp-means span').textContent = p.means;
+      row.querySelector('.hp-does span').textContent = p.does;
+      list.appendChild(row);
+    });
+    var prev = all[(idx - 1 + all.length) % all.length], next = all[(idx + 1) % all.length];
+    var nav = h('<div class="next-row"><button class="btn ghost hp-prev">← ' + esc(prev.model) + '</button>' +
+      '<button class="btn hp-next">' + esc(next.model) + ' →</button></div>');
+    nav.querySelector('.hp-prev').onclick = function () { showCodeHparams((idx - 1 + all.length) % all.length); };
+    nav.querySelector('.hp-next').onclick = function () { showCodeHparams((idx + 1) % all.length); };
+    card.appendChild(nav);
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
   // The practice door: every task with its four levels and their done-states.
   function renderCodeTasks() {
     var prog = codeProg();
@@ -2155,6 +2193,22 @@
       if (pick.l === 1) startCodeMCQ(pick.key); else if (pick.l === 2) startCodeOrder(pick.key); else startCodeWrite(pick.key);
     };
     app.appendChild(intro);
+    // First breakdown: the hyperparameter guide — get familiar with every model's
+    // knobs (what they mean, what they do) before drilling the code that sets them.
+    var hp = window.CODE_HPARAMS || [];
+    if (hp.length) {
+      var hpSec = h('<section class="code-intro hp-guide"><div class="review-eyebrow">Know the knobs</div>' +
+        '<p class="code-intro-p"><b>Hyperparameter guide</b> — every model\'s dials: what each one means, what it does, and which way to turn it. Read a model\'s knobs before you drill its code.</p>' +
+        '<div class="cmp-chips hp-chips"></div></section>');
+      var hpChips = hpSec.querySelector('.hp-chips');
+      hp.forEach(function (mm, i) {
+        var chip = h('<button class="cmp-chip" type="button"></button>');
+        chip.textContent = mm.model;
+        chip.onclick = function () { showCodeHparams(i); };
+        hpChips.appendChild(chip);
+      });
+      app.appendChild(hpSec);
+    }
     // Bucket by group (first-seen order), so tasks added later still file under the right heading.
     var groupOrder = [], byGroup = {};
     tasks.forEach(function (t) { if (!byGroup[t.group]) { byGroup[t.group] = []; groupOrder.push(t.group); } byGroup[t.group].push(t); });
