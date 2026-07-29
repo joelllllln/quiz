@@ -7,6 +7,13 @@
   function nk(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
   function set(rank, names) { names.forEach(function (n) { R[nk(n)] = rank; }); }
 
+  /* ===== Podcast corner (all deliberately level 1) ===== */
+  set(1, ["Markov chain", "Markov property (memorylessness)", "Transition matrix", "Stationary distribution",
+    "Markov chains: use cases", "Bayesian probability", "Bayesian updating", "Bayesian vs frequentist",
+    "Bayesian probability: use cases", "Benford's law", "Why Benford's law holds", "When Benford applies (and doesn't)",
+    "Benford's law: fraud detection", "Monte Carlo method", "Monte Carlo π estimate", "Monte Carlo convergence (1/√N)",
+    "Monte Carlo: use cases", "MCMC (Markov chain Monte Carlo)"]);
+
   /* ===== Core Definitions ===== */
   set(1, ["Algorithm vs model", "Example (row)", "Model", "Supervised learning", "Unsupervised learning",
     "Classification", "Regression", "Feature", "Label (target)", "Training set", "Test set", "Overfitting",

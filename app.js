@@ -67,6 +67,8 @@
       levels: [{ qk: 'regr', part: 'Part I', name: 'Definitions' }] },
     { key: 'valid', no: '26', name: 'Validation', desc: 'Split honestly: grouped, time-ordered and leave-one-out cross-validation.',
       levels: [{ qk: 'valid', part: 'Part I', name: 'Definitions' }] },
+    { key: 'podcast', no: '31', name: 'Podcast', desc: 'Ideas from the commute: Markov chains, Bayesian belief, Benford’s law and Monte Carlo.',
+      levels: [{ qk: 'podcast', part: 'Part I', name: 'Definitions' }] },
     { key: 'wcrypto', no: '27', name: 'Digital Assets & Smart Contracts', mode: 'work', desc: 'Blockchain, tokenization, stablecoins and smart-contract vocabulary.',
       levels: [{ qk: 'wcrypto', part: 'Part I', name: 'Definitions' }] },
     { key: 'wpay', no: '28', name: 'Payments & Fintech', mode: 'work', desc: 'Rails, open banking, APP fraud and the fintech words of the day job.',
@@ -85,6 +87,7 @@
     { label: 'Unsupervised learning', keys: ['kmeans', 'hier', 'dbscan', 'pca', 'tsne'] },
     { label: 'Beyond the basics', keys: ['regr', 'imbal', 'evalx', 'valid', 'interp'] },
     { label: 'Putting it together', keys: ['scen'] },
+    { label: 'Podcast corner', keys: ['podcast'] },
     { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws', 'wai'], mode: 'work' }
   ];
   // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'work' (FCA & innovation) ----
