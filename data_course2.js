@@ -244,9 +244,12 @@
           ] },
           { t: 'quick', title: 'Where everything lives', groups: ['scikit-learn · imports'] },
           { t: 'quick', title: 'Fit and predict', groups: ['scikit-learn · fit & predict'] },
+          { t: 'problem', id: 'pt-ml-split' },
+          { t: 'problem', id: 'pt-ml-distance' },
           { t: 'task', key: 'split' },
           { t: 'task', key: 'scale' },
-          { t: 'task', key: 'knn' }
+          { t: 'task', key: 'knn' },
+          { t: 'problem', id: 'pt-ml-knn' }
         ] },
 
       { key: 'm2', name: 'Preparing features',
@@ -264,6 +267,7 @@
             ['aside', 'Save the whole pipeline, not just the model: `joblib.dump(pipe, \'model.joblib\')`. A model without its preprocessing is unusable, and rebuilding that preprocessing from memory in six months is how production bugs are born.']
           ] },
           { t: 'quick', title: 'Preprocessing', groups: ['scikit-learn · preprocessing'] },
+          { t: 'problem', id: 'pt-ml-standardise' },
           { t: 'task', key: 'impute' },
           { t: 'task', key: 'encode' },
           { t: 'task', key: 'pipeline' }
@@ -285,10 +289,16 @@
             ['code', "scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')\nprint(scores.mean(), scores.std())", 'Report the mean AND the spread. A model that scores 0.82 ± 0.01 is a different proposition from one that scores 0.82 ± 0.09.']
           ] },
           { t: 'quick', title: 'Evaluation and tuning', groups: ['scikit-learn · evaluation & tuning'] },
+          { t: 'problem', id: 'pt-ml-accuracy' },
+          { t: 'problem', id: 'pt-ml-confusion' },
+          { t: 'problem', id: 'pt-ml-precision-recall' },
+          { t: 'problem', id: 'pt-ml-f1' },
+          { t: 'problem', id: 'pt-ml-mae' },
           { t: 'task', key: 'metrics' },
           { t: 'task', key: 'prf' },
           { t: 'task', key: 'cv' },
-          { t: 'task', key: 'rocauc' }
+          { t: 'task', key: 'rocauc' },
+          { t: 'problem', id: 'pt-ml-crossval-folds' }
         ] },
 
       { key: 'm4', name: 'Making it better',
@@ -305,6 +315,8 @@
             'Know the two failure modes. **Underfitting** is bad on training and test alike — the model is too simple. **Overfitting** is excellent on training and poor on test — it memorised. A learning curve tells you which one you have, and therefore whether more data or more model is the answer.',
             ['aside', 'Every time you look at the test set and change something, you leak a little information into your decisions. Keep a final holdout you touch once — and stop when the improvement stops mattering to the decision the model supports.']
           ] },
+          { t: 'problem', id: 'pt-ml-majority' },
+          { t: 'problem', id: 'pt-ml-gini' },
           { t: 'task', key: 'baseline' },
           { t: 'task', key: 'grid' },
           { t: 'task', key: 'imbal' },
