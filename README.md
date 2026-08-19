@@ -4,7 +4,14 @@ Open `index.html` in a browser. No build, no dependencies.
 
 ## Course
 
-The spine of the app: one ordered path from *what a variable is* to sitting a timed Python test. Four stages, 32 units, ~200 steps. Each unit reads you into the idea, drills the lines until you can type them cold, checks you can predict what Python does, then makes you write something that has to run.
+The spine of the app: one ordered path from *what a variable is* to sitting a timed Python test. Four stages, 40 units, ~285 steps.
+
+- **01 First steps in Python** — printing and naming, types, decisions, loops, lists, text, dicts, functions, errors and tracebacks, comprehensions, files and a first class.
+- **02 Working with data** — NumPy, loading a file, selecting, cleaning, grouping, joining, SQL, dates, feature engineering, plotting, statistics, working habits.
+- **03 Machine learning** — the four verbs, preparing features, judging a model, improving it, choosing between models, validating properly, metrics beyond accuracy, unsupervised learning, and the six errors scikit-learn actually gives you.
+- **04 Sitting a coding test** — how these tests work, counting problems, strings, algorithms under time, debugging, data questions, capstones and timed mocks.
+
+Each unit reads you into the idea, drills the lines until you can type them cold, checks you can predict what Python does, then makes you write something that has to run.
 
 Nothing is locked — but a single Continue button always knows what comes next, and progress is tracked per step.
 

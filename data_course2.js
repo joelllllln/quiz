@@ -371,6 +371,118 @@
           { t: 'task', key: 'imbal' },
           { t: 'task', key: 'threshold' },
           { t: 'task', key: 'save' }
+        ] },
+
+      { key: 'm5', name: 'Choosing a model',
+        blurb: 'Linear, tree, forest, boosting — what each is good at, and how little the choice usually matters.',
+        needs: 'the workflow, evaluation',
+        steps: [
+          { t: 'read', title: 'Which model, and does it matter?', body: [
+            'Less than people think. On tabular data, the gap between a well-prepared dataset and a badly-prepared one is almost always larger than the gap between two reasonable algorithms. Get the features and the validation right first.',
+            'That said, four families cover nearly everything you will do:',
+            ['code', "LogisticRegression / LinearRegression   # a weighted sum — fast, and you can read the coefficients\nDecisionTreeClassifier                   # nested yes/no questions — readable, and it overfits alone\nRandomForestClassifier                   # many trees on random subsets, averaged — a strong default\nHistGradientBoostingClassifier           # trees built on each other's errors — usually the best on tabular data"],
+            '**Start linear.** It is fast, it needs scaling, and its coefficients are an explanation you can take to a stakeholder. If a linear model does well, the problem was linear and you have saved yourself a lot of trouble.',
+            '**Reach for a forest next.** It needs no scaling, copes with mixed types and interactions, rarely embarrasses you, and gives feature importances for free.',
+            '**Boosting when the score matters.** Gradient boosting usually wins on tabular data, at the cost of more tuning and less interpretability.',
+            '**Keep a decision tree for explaining.** One shallow tree drawn on a slide explains a rule better than any importance chart.',
+            'Two habits matter more than the choice. Always compare against the baseline from the last unit. And always compare models under the SAME cross-validation, on the same folds — a score from a different split is not a comparison.',
+            ['aside', 'Regularisation is the dial that decides how much a linear model is allowed to fit: smaller C (or larger alpha) means simpler. Ridge keeps every feature small; Lasso pushes some to exactly zero and so does feature selection for you.']
+          ] },
+          { t: 'task', key: 'logreg' },
+          { t: 'task', key: 'ridge' },
+          { t: 'task', key: 'rf' },
+          { t: 'task', key: 'histgb' },
+          { t: 'task', key: 'permimp' }
+        ] },
+
+      { key: 'm6', name: 'Validating properly',
+        blurb: 'Folds that respect groups and time, learning curves, and the searches that do not cheat.',
+        needs: 'evaluation',
+        steps: [
+          { t: 'read', title: 'The ways a validation score lies', body: [
+            'A cross-validation score is a promise about data you have not seen. Four situations break that promise, and each has a splitter that fixes it.',
+            '**Imbalanced classes** → StratifiedKFold, so every fold keeps the class balance. It is the default for classifiers, and worth stating anyway.',
+            '**Repeated entities** → GroupKFold. If the same customer appears in ten rows, a random split puts some of their rows in train and some in test, and the model scores brilliantly by recognising the customer rather than the pattern.',
+            ['code', "from sklearn.model_selection import GroupKFold\ncv = GroupKFold(n_splits=5)\ncross_val_score(pipe, X, y, cv=cv, groups=df['customer_id'])"],
+            '**Anything with a date** → TimeSeriesSplit, which always trains on the past and tests on the future. A shuffled split on time-ordered data trains on tomorrow to predict yesterday.',
+            '**Tuning on the test set** → nested cross-validation, or simply a holdout you touch once. Every time you look at the test score and change something, you have used it for training a little.',
+            'And two diagnostics worth running before you reach for a bigger model:',
+            ['code', "from sklearn.model_selection import learning_curve, validation_curve", 'A learning curve says whether more DATA would help; a validation curve says whether more MODEL would. If training and validation scores are both poor, the model is too simple and more rows will not save you.']
+          ] },
+          { t: 'task', key: 'kfold' },
+          { t: 'task', key: 'skfold' },
+          { t: 'task', key: 'groupkfold' },
+          { t: 'task', key: 'tssplit' },
+          { t: 'task', key: 'nestedcv' },
+          { t: 'task', key: 'lcurve' },
+          { t: 'task', key: 'valcurve' },
+          { t: 'task', key: 'pipegrid' },
+          { t: 'task', key: 'rsearch' }
+        ] },
+
+      { key: 'm7', name: 'Beyond accuracy',
+        blurb: 'Regression metrics, probabilities you can trust, multi-metric scoring and feature selection.',
+        needs: 'evaluation',
+        steps: [
+          { t: 'read', title: 'Scores that answer the actual question', body: [
+            'Classification and regression ask different questions of a metric, and both have a "which number do I report" problem.',
+            '**Regression.** RMSE punishes large misses hardest, MAE treats every pound the same, R² says how much of the variation you explained. Report RMSE or MAE in the units of the target — a stakeholder understands "out by £2 on average"; nobody has ever acted on an R² of 0.61.',
+            '**Probabilities.** A model can rank perfectly and still be badly calibrated: predicting 0.9 for things that happen half the time. If the number itself will be used — expected value, a risk threshold, a price — check calibration and fix it with CalibratedClassifierCV. If only the ranking matters, ROC-AUC is enough.',
+            ['code', "from sklearn.calibration import CalibratedClassifierCV", 'Log loss is the metric that punishes confident wrong answers, which is exactly what a badly calibrated model produces.'],
+            '**Several metrics at once.** cross_validate takes a list, so you can watch precision and recall move together as you tune instead of chasing one and wrecking the other.',
+            '**Feature selection** belongs inside the pipeline. Selecting the "best" features by looking at the whole dataset — and then cross-validating — leaks, and the score it produces is fiction.',
+            ['aside', 'Whatever you optimise is what you get. Choose the metric with whoever owns the decision, before you tune anything.']
+          ] },
+          { t: 'task', key: 'regmetrics' },
+          { t: 'task', key: 'logloss' },
+          { t: 'task', key: 'calib' },
+          { t: 'task', key: 'cvmulti' },
+          { t: 'task', key: 'fsel' },
+          { t: 'task', key: 'full' }
+        ] },
+
+      { key: 'm8', name: 'Unsupervised learning',
+        blurb: 'Clustering when there are no labels, and reducing dimensions to see what is there.',
+        needs: 'the workflow',
+        steps: [
+          { t: 'read', title: 'When there is no answer column', body: [
+            'Sometimes there is no target — you want to know what groups exist, or to squeeze forty columns into two you can plot.',
+            '**k-Means** puts every point in exactly one of k round clusters, and needs you to choose k up front:',
+            ['code', "from sklearn.cluster import KMeans\nlabels = KMeans(n_clusters=4, n_init=10, random_state=42).fit_predict(X_scaled)", 'Scale first — k-Means measures distance, so an unscaled column in thousands decides everything. The silhouette score and the elbow chart are how you argue for a k.'],
+            '**DBSCAN** finds clusters of any shape by density, decides the number itself, and labels sparse points as noise (-1). It trades choosing k for choosing eps.',
+            '**Hierarchical clustering** builds a tree of merges, which you cut at whatever height you like — the dendrogram is the most explainable output of the three.',
+            '**PCA** is not clustering: it finds the directions the data varies in most, so you can keep 95% of the variation in a fraction of the columns, or plot two of them.',
+            ['code', "from sklearn.decomposition import PCA\npca = PCA(n_components=0.95)\nX_small = pca.fit_transform(X_scaled)\npca.explained_variance_ratio_.cumsum()"],
+            'The honest caveat: unsupervised results have no accuracy to check them against. A clustering is useful when the groups mean something to someone who knows the business — not when the silhouette score is 0.6.',
+            ['aside', 't-SNE and UMAP make beautiful two-dimensional pictures, but the distances between clusters in them mean nothing. Use them to look, never to conclude.']
+          ] },
+          { t: 'task', key: 'kmeans' },
+          { t: 'task', key: 'silhouette' },
+          { t: 'task', key: 'dbscan' },
+          { t: 'task', key: 'hier' },
+          { t: 'task', key: 'pca' }
+        ] },
+
+      { key: 'm9', name: 'When it will not work',
+        blurb: 'The six errors every scikit-learn user meets, and what each one is telling you.',
+        needs: 'the workflow',
+        steps: [
+          { t: 'read', title: 'Reading scikit-learn\'s complaints', body: [
+            'scikit-learn\'s error messages are unusually good once you know what they are pointing at. These six cover most of a first year.',
+            ['code', "NotFittedError: This StandardScaler instance is not fitted yet", 'You called transform or predict before fit. In a pipeline this usually means you built the object but never fitted the pipeline.'],
+            ['code', "ValueError: could not convert string to float: 'London'", 'A text column reached a model. Encode it — one-hot or ordinal — or route it through a ColumnTransformer.'],
+            ['code', "ValueError: Expected 2D array, got 1D array instead", 'A single feature or a single row was passed as a flat list. Reshape it: X.reshape(-1, 1) for one column, X.reshape(1, -1) for one row.'],
+            ['code', "ConvergenceWarning: lbfgs failed to converge", 'Usually unscaled features, sometimes just too few iterations. Scale first, then raise max_iter — in that order, because scaling normally fixes it.'],
+            ['code', "ValueError: Input contains NaN", 'Impute inside the pipeline. Filling before the split leaks; filling by hand after it is one more thing to get wrong at prediction time.'],
+            ['code', "AttributeError: predict_proba is not available when probability=False", "SVC needs probability=True to give probabilities, and it costs a lot of time. If you only need a ranking, use decision_function instead."],
+            'And the error that never appears: a score that is too good. If your model is 0.99 on a problem nobody has solved, look for a leaked column before you celebrate.'
+          ] },
+          { t: 'task', key: 'fixnotfit' },
+          { t: 'task', key: 'fixstring' },
+          { t: 'task', key: 'fixshape' },
+          { t: 'task', key: 'fixconverge' },
+          { t: 'task', key: 'fixproba' },
+          { t: 'task', key: 'fixleak' }
         ] }
     ]
   });
