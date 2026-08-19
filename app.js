@@ -1995,10 +1995,14 @@
     return prev[b.length];
   }
   // 'right' · 'case' (right but capitals off) · 'close' (a typo away) · 'wrong'
+  // Python cares about capitals, so a case slip is worth flagging. SQL does not —
+  // its keywords are case-insensitive by definition — so those cards never nag.
+  function snipCaseFree(t) { return !!t.nocase || /^SQL/.test(t.group || ''); }
   function snipCheck(t, input) {
     var got = snipNorm(input);
     if (!got) return 'empty';
     if (snipAccepts(t).indexOf(got) >= 0) {
+      if (snipCaseFree(t)) return 'right';
       return snipAccepts(t, true).indexOf(snipNorm(input, true)) >= 0 ? 'right' : 'case';
     }
     var close = snipAccepts(t).some(function (a) { return editDist(a, got) <= (a.length > 24 ? 2 : 1); });

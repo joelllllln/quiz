@@ -144,6 +144,28 @@
           { t: 'problem', id: 'pt-pd-latest' }
         ] },
 
+      { key: 'd6b', name: 'Asking the database instead',
+        blurb: 'SQL: the same questions you have been asking in pandas, one layer earlier.',
+        needs: 'grouping, joining',
+        steps: [
+          { t: 'read', title: 'The same four questions, in SQL', body: [
+            'Most data does not start in a CSV — it starts in a database, and a data-role test nearly always has a SQL half. The good news is that you already know the questions; only the spelling changes.',
+            ['code', "-- filter\nSELECT * FROM orders WHERE amount > 100;\n-- pandas: df[df['amount'] > 100]\n\n-- group and aggregate\nSELECT region, SUM(amount) FROM orders GROUP BY region;\n-- pandas: df.groupby('region')['amount'].sum()\n\n-- join\nSELECT * FROM orders o LEFT JOIN customers c ON o.customer_id = c.id;\n-- pandas: orders.merge(customers, left_on='customer_id', right_on='id', how='left')", 'Filter, group, join, sort. Four verbs, two languages.'],
+            'Three things trip people up, and all three are asked about deliberately.',
+            '**WHERE versus HAVING.** WHERE filters rows before grouping; HAVING filters the groups afterwards. You cannot put an aggregate in a WHERE.',
+            ['code', "SELECT region, SUM(amount) FROM orders\nWHERE order_date >= '2024-01-01'   -- which rows count\nGROUP BY region\nHAVING SUM(amount) > 1000;         -- which groups survive"],
+            '**NULL is not a value.** It is unknown, so nothing equals it — not even another NULL.',
+            ['code', "WHERE email IS NULL      -- correct\nWHERE email = NULL       -- matches nothing, ever\nCOALESCE(email, 'unknown')  -- the SQL fillna"],
+            '**Window functions keep every row.** GROUP BY collapses; OVER (PARTITION BY ...) computes alongside. That is what makes "the latest row per customer" answerable in one query:',
+            ['code', "SELECT * FROM (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn\n  FROM orders\n) t WHERE rn = 1;", 'Number the rows within each customer, then keep number one. Learn this shape — it is the most-asked advanced SQL question there is.'],
+            ['aside', 'The clauses run FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. That order explains why a SELECT alias works in ORDER BY but not in WHERE.']
+          ] },
+          { t: 'quick', title: 'Querying', groups: ['SQL · querying'] },
+          { t: 'quick', title: 'Grouping and aggregates', groups: ['SQL · grouping & aggregates'] },
+          { t: 'quick', title: 'Joins and subqueries', groups: ['SQL · joins & subqueries'] },
+          { t: 'quick', title: 'Window functions', groups: ['SQL · window functions'] }
+        ] },
+
       { key: 'd7', name: 'Dates and time series',
         blurb: 'Parsing dates, the .dt accessor, resampling and rolling windows.',
         needs: 'cleaning, grouping',
