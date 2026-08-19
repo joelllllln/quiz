@@ -2593,9 +2593,9 @@
   /* ---- Mock test: a timed sitting, marked at the end ---- */
   function mockState() { try { return JSON.parse(localStorage.getItem('ds_pt_mock') || 'null'); } catch (e) { return null; } }
   function saveMockState(s) { try { s ? localStorage.setItem('ds_pt_mock', JSON.stringify(s)) : localStorage.removeItem('ds_pt_mock'); } catch (e) {} }
-  function buildMock(count, levelMix) {
+  function buildMock(count, levelMix, withPackages) {
     var by = { 1: [], 2: [], 3: [] };
-    pyTests().forEach(function (t) { if (!t.noMock) by[t.lvl || 2].push(t); });
+    pyTests().forEach(function (t) { if (!t.noMock || withPackages) by[t.lvl || 2].push(t); });
     Object.keys(by).forEach(function (k) { by[k] = shuffle(by[k]); });
     var out = [];
     levelMix.forEach(function (L) { if (by[L] && by[L].length) out.push(by[L].shift()); });
@@ -2618,11 +2618,14 @@
     saveMockState(s);
     runMock(s);
   }
+  var MOCK_TIMER = null;
+  function stopMockTimer() { if (MOCK_TIMER) { clearInterval(MOCK_TIMER); MOCK_TIMER = null; } }
   function runMock(s) {
+    stopMockTimer();
     var ctx = {
       ids: s.ids, code: s.code, idx: s.idx,
       save: function () { s.idx = ctx.idx; s.code = ctx.code; saveMockState(s); },
-      submit: function () { clearInterval(timer); markMock(s); }
+      submit: function () { stopMockTimer(); markMock(s); }
     };
     var clock = h('<span class="pt-clock"></span>');
     ctx.clockEl = clock;
@@ -2630,9 +2633,9 @@
       var left = (s.endsAt - Date.now()) / 1000;
       clock.textContent = '⏱ ' + fmtClock(left);
       clock.classList.toggle('pt-clock-low', left < 300);
-      if (left <= 0) { clearInterval(timer); alert('Time is up — your answers are being marked.'); markMock(s); }
+      if (left <= 0) { stopMockTimer(); alert('Time is up — your answers are being marked.'); markMock(s); }
     }
-    var timer = setInterval(tick, 1000);
+    MOCK_TIMER = setInterval(tick, 1000);
     tick();
     startPyProblem(s.ids[ctx.idx], ctx);
   }
@@ -2839,12 +2842,13 @@
     app.appendChild(intro);
     [{ n: 3, m: 45, t: 'Short screen', d: '3 questions · 45 minutes', mix: [1, 2, 2] },
      { n: 4, m: 60, t: 'Standard test', d: '4 questions · 60 minutes', mix: [1, 2, 2, 3] },
-     { n: 6, m: 90, t: 'Full sitting', d: '6 questions · 90 minutes', mix: [1, 1, 2, 2, 3, 3] }].forEach(function (cfg) {
+     { n: 6, m: 90, t: 'Full sitting', d: '6 questions · 90 minutes', mix: [1, 1, 2, 2, 3, 3] },
+     { n: 4, m: 60, t: 'Data test', d: '4 questions · 60 minutes · pandas questions included (bigger download)', mix: [1, 2, 2, 3], pkg: true }].forEach(function (cfg) {
       var card = h('<button class="pt-mockcard" type="button"><span class="pt-mock-t"></span><span class="pt-mock-d"></span></button>');
       card.querySelector('.pt-mock-t').textContent = cfg.t;
       card.querySelector('.pt-mock-d').textContent = cfg.d;
       card.onclick = function () {
-        var problems = buildMock(cfg.n, cfg.mix);
+        var problems = buildMock(cfg.n, cfg.mix, cfg.pkg);
         if (problems.length < cfg.n) { alert('Not enough problems loaded for that sitting yet.'); return; }
         if (confirm('Start a ' + cfg.m + '-minute test with ' + problems.length + ' questions?')) startMock(problems, cfg.m);
       };
@@ -3254,6 +3258,7 @@
   }
 
   function home() {
+    stopMockTimer();
     app.innerHTML = '';
     var mast = h(
       '<header class="masthead">' +
