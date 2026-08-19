@@ -200,8 +200,9 @@
       a: 'from math import sqrt' },
 
     { id: 'py-import-as', group: OOP, lvl: 1,
-      ask: 'Import matplotlib.pyplot under its usual short name',
-      a: 'import matplotlib.pyplot as plt' },
+      ask: 'Import the module `statsmodels.api`, renaming it to sm on the way in',
+      a: 'import statsmodels.api as sm',
+      note: '"import X as Y" renames anything on import — pd, np, plt and sns all come from this one form.' },
 
     { id: 'py-type', group: OOP, lvl: 1,
       ask: 'Check the type of the object x',
