@@ -2683,7 +2683,7 @@
       app.appendChild(ptBar('<b>Test report</b>'));
       var head = h('<article class="qcard pt-card"><div class="q-eyebrow">Test report</div>' +
         '<h2 class="pt-title">' + pct + '% of tests passed</h2>' +
-        '<p class="pt-p">' + solvedFully + ' of ' + scores.length + ' questions fully solved, in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '. ' +
+        '<p class="pt-p">' + solvedFully + ' of ' + scores.length + ' questions fully solved, in ' + (mins < 1 ? 'under a minute' : mins + ' minute' + (mins === 1 ? '' : 's')) + '. ' +
         (pct >= 80 ? 'That is a strong sitting.' : pct >= 50 ? 'A real pass mark is usually 70–80% — worth another round.' : 'Work back through the ones that failed; the model solutions are below.') + '</p>' +
         '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
         '<span class="code-intro-count"><b>' + got + '</b> / ' + tot + ' tests</span></div>' +
