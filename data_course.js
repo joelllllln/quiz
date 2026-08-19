@@ -73,7 +73,8 @@
           { t: 'quiz', title: 'Which branch runs?', ids: ['pq0-if-elif', 'pq0-empty-falsy', 'pq0-equals', 'pq-truthy', 'pq-or-default'] },
           { t: 'problem', id: 'pt-is-even' },
           { t: 'problem', id: 'pt-grade' },
-          { t: 'problem', id: 'pt-rectangle' }
+          { t: 'problem', id: 'pt-rectangle' },
+          { t: 'problem', id: 'pt-clamp' }
         ] },
 
       { key: 'py4', name: 'Doing it again: loops',
@@ -92,11 +93,15 @@
             'Two words steer a loop from inside: `break` leaves it immediately, `continue` skips to the next pass.',
             ['aside', 'When you want the position as well as the value, `enumerate` gives you both: `for i, name in enumerate(names):`. Reach for that before you reach for `range(len(names))`.']
           ] },
+          { t: 'quick', title: 'Loops, step by step', groups: ['First steps · loops in practice'] },
           { t: 'quick', title: 'Loops and conditions', groups: ['Python · loops & conditions'] },
           { t: 'quiz', title: 'How many times does it run?', ids: ['pq0-indent-block', 'pq0-augmented', 'pq0-range-end', 'pq0-while', 'pq-range-lazy'] },
           { t: 'problem', id: 'pt-sum-loop' },
           { t: 'problem', id: 'pt-fizz-simple' },
           { t: 'problem', id: 'pt-fizzbuzz' },
+          { t: 'problem', id: 'pt-count-above' },
+          { t: 'problem', id: 'pt-first-match' },
+          { t: 'problem', id: 'pt-fizz-count' },
           { t: 'problem', id: 'pt-primes' }
         ] },
 
@@ -114,11 +119,15 @@
             'One more thing to be careful about, because it causes real bugs:',
             ['code', "a = [1, 2, 3]\nb = a          # NOT a copy — another name for the same list\nb.append(4)\nprint(a)       # [1, 2, 3, 4]", 'To get a genuine copy, use `a.copy()` or `a[:]`. Assignment never copies a list; it only adds a second label to it.']
           ] },
+          { t: 'quick', title: 'Lists, step by step', groups: ['First steps · lists in practice'] },
           { t: 'quick', title: 'Working with lists', groups: ['Python · lists'] },
           { t: 'quiz', title: 'Indexes, copies and sorting', ids: ['pq0-index-zero', 'pq0-len-vs-index', 'pq0-list-append', 'pq-sort-return', 'pq-list-alias', 'pq-copy-slice', 'pq-slice-step'] },
           { t: 'problem', id: 'pt-last-item' },
           { t: 'problem', id: 'pt-double-list' },
           { t: 'problem', id: 'pt-second-largest' },
+          { t: 'problem', id: 'pt-list-stats' },
+          { t: 'problem', id: 'pt-odd-even-split' },
+          { t: 'problem', id: 'pt-remove-item' },
           { t: 'problem', id: 'pt-max-consecutive' },
           { t: 'problem', id: 'pt-chunk' }
         ] },
@@ -143,6 +152,9 @@
           { t: 'problem', id: 'pt-shout' },
           { t: 'problem', id: 'pt-count-letter' },
           { t: 'problem', id: 'pt-swap-case' },
+          { t: 'problem', id: 'pt-longest-word' },
+          { t: 'problem', id: 'pt-vowel-free' },
+          { t: 'problem', id: 'pt-repeat-word' },
           { t: 'problem', id: 'pt-palindrome' }
         ] },
 
@@ -161,11 +173,15 @@
             ['code', "seen = set(['a', 'b', 'a'])   # {'a', 'b'}\n'a' in seen                   # True, and fast even on millions", 'Swapping a list for a set when you are repeatedly asking `in` is one of the standard ways to turn a slow program into a fast one.'],
             'A **tuple** is a list that cannot be changed, written with round brackets: `point = (1, 2)`. Because it is fixed, it can be used as a dictionary key — and functions that return several values are really returning tuples.'
           ] },
+          { t: 'quick', title: 'Dictionaries, step by step', groups: ['First steps · dictionaries in practice'] },
           { t: 'quick', title: 'Dicts, sets and tuples', groups: ['Python · dicts, sets & tuples'] },
           { t: 'quiz', title: 'Keys, order and membership', ids: ['pq0-dict-access', 'pq-dict-get', 'pq-dict-order', 'pq-set-dedupe', 'pq-set-literal', 'pq-in-dict', 'pq-string-in-list'] },
           { t: 'problem', id: 'pt-group-sum' },
           { t: 'problem', id: 'pt-mode-value' },
           { t: 'problem', id: 'pt-dedupe-order' },
+          { t: 'problem', id: 'pt-tally-letters' },
+          { t: 'problem', id: 'pt-initial-sum' },
+          { t: 'problem', id: 'pt-reverse-dict' },
           { t: 'problem', id: 'pt-intersection' }
         ] },
 
@@ -183,6 +199,7 @@
             'Names created inside a function belong to that function and vanish when it ends. That isolation is the point: you can read a function on its own and know it cannot quietly change something elsewhere — unless you hand it something mutable, like a list, and it changes that.',
             ['aside', 'Write the function so it takes what it needs as arguments and returns what it produces. Functions that reach out to variables defined elsewhere are the ones that break when you move them.']
           ] },
+          { t: 'quick', title: 'Functions, step by step', groups: ['First steps · functions in practice'] },
           { t: 'quick', title: 'Defining and calling functions', groups: ['Python · functions'] },
           { t: 'quiz', title: 'Arguments, returns and scope', ids: ['pq0-print-return', 'pq0-function-args', 'pq-return-none', 'pq-scope', 'pq-args-mutable', 'pq-mutable-default'] },
           { t: 'problem', id: 'pt-biggest' },
@@ -208,6 +225,7 @@
           { t: 'quiz', title: 'Which error, and when?', ids: ['pq-except-order', 'pq-index-error', 'pq-finally', 'pq-mutable-key'] },
           { t: 'problem', id: 'pt-bug-return' },
           { t: 'problem', id: 'pt-bug-average' },
+          { t: 'problem', id: 'pt-safe-divide' },
           { t: 'problem', id: 'pt-bug-boundary' }
         ] },
 
@@ -233,6 +251,7 @@
           { t: 'problem', id: 'pt-count-vowels' },
           { t: 'problem', id: 'pt-longest-streak' },
           { t: 'problem', id: 'pt-fill-forward' },
+          { t: 'problem', id: 'pt-word-lengths' },
           { t: 'problem', id: 'pt-flatten' }
         ] },
 
