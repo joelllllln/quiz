@@ -116,7 +116,8 @@
           { t: 'problem', id: 'pt-pd-groupby' },
           { t: 'problem', id: 'pt-avg-by-key' },
           { t: 'problem', id: 'pt-top-n' },
-          { t: 'problem', id: 'pt-pd-summary' }
+          { t: 'problem', id: 'pt-pd-summary' },
+          { t: 'problem', id: 'pt-pd-monthly' }
         ] },
 
       { key: 'd6', name: 'Joining and reshaping',
@@ -139,7 +140,8 @@
           { t: 'quiz', title: 'Alignment and joins', ids: ['pq-pd-index-align'] },
           { t: 'problem', id: 'pt-pd-merge' },
           { t: 'problem', id: 'pt-join-records' },
-          { t: 'problem', id: 'pt-pd-topn' }
+          { t: 'problem', id: 'pt-pd-topn' },
+          { t: 'problem', id: 'pt-pd-latest' }
         ] },
 
       { key: 'd7', name: 'Dates and time series',
@@ -163,6 +165,31 @@
           { t: 'problem', id: 'pt-days-between' },
           { t: 'problem', id: 'pt-weekdays' },
           { t: 'problem', id: 'pt-moving-average' }
+        ] },
+
+      { key: 'd7b', name: 'Turning columns into features',
+        blurb: 'Encoding, binning, ratios, dates and group aggregates — and the leak that ruins them.',
+        needs: 'grouping, dates',
+        steps: [
+          { t: 'read', title: 'Feature engineering, and the one rule that matters', body: [
+            'A model can only use what you give it. Feature engineering is the work of turning the columns you have into the columns a model can learn from — and it moves scores far more than swapping algorithms does.',
+            '**Categories have to become numbers.** How you do it depends on whether the order means anything:',
+            ['code', "pd.get_dummies(df, columns=['city'], drop_first=True)          # no order — one column per value\ndf['size'].map({'small': 0, 'medium': 1, 'large': 2})           # a real order — keep it", 'Encoding an unordered category as 1, 2, 3 tells a linear model that "large is three times small", which is nonsense it will happily learn.'],
+            '**Continuous columns can become bands** when the relationship is not a straight line:',
+            ['code', "pd.cut(df['age'], bins=[0, 18, 65, 120], labels=['child', 'adult', 'senior'])   # edges you choose\npd.qcut(df['income'], 4)                                                       # equal-sized groups"],
+            '**The strongest features are usually derived, not raw:**',
+            ['code', "df['spend_per_visit'] = df['spend'] / df['visits']                        # a ratio\ndf['is_weekend'] = (df['date'].dt.dayofweek >= 5).astype(int)              # a calendar flag\ndf['customer_mean'] = df.groupby('customer_id')['spend'].transform('mean') # a group aggregate\ndf['prev_value'] = df.groupby('customer_id')['value'].shift(1)             # a lag", 'Ratios, calendar parts, group averages and lags cover most of what wins competitions and most of what works at work.'],
+            'Now the rule that governs all of it. **Anything learned from the data must be learned from the training set only** — the scaler\'s mean, the imputer\'s median, the target encoding, the feature selection. Learn it on train, apply it to both halves. A pipeline enforces this for you; doing it by hand before the split is the single most common way a model looks brilliant in a notebook and fails in production.',
+            'And the leak that no pipeline can catch: a column that would not exist at prediction time. A cancellation date when you are predicting churn, a refund flag when you are predicting fraud. If it scores suspiciously well, ask when the value was recorded.',
+            ['aside', 'On anything with a date, split by time rather than at random. A shuffled split trains on the future, and the score it reports is one you will never see again.']
+          ] },
+          { t: 'quick', title: 'Encoding and binning', groups: ['Features · encoding & binning'] },
+          { t: 'quick', title: 'Deriving columns', groups: ['Features · deriving columns'] },
+          { t: 'quick', title: 'Selecting, and avoiding leakage', groups: ['Features · selecting & leakage'] },
+          { t: 'problem', id: 'pt-pd-features' },
+          { t: 'problem', id: 'pt-pd-encode' },
+          { t: 'problem', id: 'pt-pd-bin' },
+          { t: 'problem', id: 'pt-pd-lag' }
         ] },
 
       { key: 'd8', name: 'Drawing it',
