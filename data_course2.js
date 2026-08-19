@@ -505,6 +505,26 @@
           { t: 'problem', id: 'pt-running-total' }
         ] },
 
+      { key: 't6b', name: 'Put it all together',
+        blurb: 'Four longer briefs with several requirements each — the take-home shape.',
+        needs: 'everything above',
+        steps: [
+          { t: 'read', title: 'Holding four requirements at once', body: [
+            'The questions in this unit are longer than anything so far, and deliberately so. Nothing in them needs an idea you have not already met — the difficulty is holding several requirements in your head at the same time and covering the edges of each.',
+            'Work them the way you would a take-home:',
+            '**Turn the brief into a checklist first.** Four bullet points in the brief means four things to satisfy, and usually four or five hidden tests. Write them as comments before you write any code, and tick them off.',
+            ['code', "def report(sales):\n    # total, rounded to 2dp\n    # per-region totals\n    # top customer, ties alphabetical\n    # distinct customer count\n    # ignore rows with a bad amount\n    ..."],
+            '**Do one pass, then answer the questions.** Almost every one of these is: walk the data once building a couple of dictionaries, then read the answers out of them. Trying to compute four things in four separate loops is slower to write and easier to get wrong.',
+            '**Return the same shape whatever happens.** An empty input must still return a dict with all four keys, not None — otherwise the caller breaks on the day the file arrives empty. That is nearly always one of the visible tests, and it is telling you something about how the function will be used.',
+            '**Read the type rules twice.** "Non-numeric amounts are ignored" means you have to think about `True`, which is an int in Python, and about a string that looks like a number. The hidden tests will contain exactly those.',
+            ['aside', 'When you finish one, read the model solution beside your own — not for the answer, which you already have, but for the shape. On a take-home, how the code reads is half of what is being marked.']
+          ] },
+          { t: 'problem', id: 'pt-cap-report' },
+          { t: 'problem', id: 'pt-cap-text' },
+          { t: 'problem', id: 'pt-cap-clean' },
+          { t: 'problem', id: 'pt-cap-knn-pipeline' }
+        ] },
+
       { key: 't7', name: 'Sit one, properly',
         blurb: 'Timed sittings under real conditions, then read the report.',
         needs: 'everything above',
@@ -518,7 +538,16 @@
           ] },
           { t: 'mock', n: 3, mins: 45, mix: [1, 2, 2] },
           { t: 'mock', n: 4, mins: 60, mix: [1, 2, 2, 3] },
-          { t: 'mock', n: 4, mins: 60, mix: [1, 2, 2, 3], pkg: true }
+          { t: 'mock', n: 4, mins: 60, mix: [1, 2, 2, 3], pkg: true },
+          { t: 'read', title: 'What to do now', body: [
+            'If you have worked through the whole path, you have written a few hundred lines of Python that had to run, recalled several hundred lines from memory, and sat a timed test more than once. That is a genuine base.',
+            'Three things keep it:',
+            '**Quickfire, little and often.** The cards track what has gone stale — a ten-card round on the way to work is worth more than an hour at the weekend. Weak spots first.',
+            '**Sit a mock before every real test.** Not to learn anything new, but so that the format is boring by the time it counts.',
+            '**Write something of your own.** A script that reads a file you care about, cleans it and prints five numbers. Every gap it exposes is a real one, and fixing it teaches more than any exercise here.',
+            'And when you meet something this course did not cover — and you will — you now have the thing that matters: you can read the error, look up the method, try the small version first, and tell whether the answer is right.',
+            ['aside', 'The reference modes stay open for good: Coding for quickfire and the four-level drills, Python tests for the problem bank and timed sittings, Data Science for the theory behind the models.']
+          ] }
         ] }
     ]
   });
