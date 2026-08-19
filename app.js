@@ -2292,7 +2292,7 @@
       .then(function () { return pyLoadPackages(problem.needs, onStatus); })
       .then(function () {
         if (onStatus) onStatus('Running your code…');
-        var opts = { unordered: !!problem.unordered, tol: problem.tol || 1e-6, budget: problem.budget || 10 };
+        var opts = { unordered: !!problem.unordered, tol: problem.tol || 1e-6, budget: problem.budget || 10, setup: problem.setup || '' };
         var fn = PY.pyodide.globals.get('_ds_run');
         var raw = fn(code, JSON.stringify(cases), JSON.stringify(opts));
         if (fn.destroy) { try { fn.destroy(); } catch (e) {} }
@@ -2394,6 +2394,11 @@
       '<div class="pt-results" hidden></div>' +
       '<div class="pt-after" hidden></div></article>');
     card.querySelector('.pt-group').textContent = t.group;
+    if (t.needs && t.needs.length) {
+      var need = h('<span class="pt-needs"></span>');
+      need.textContent = 'needs ' + t.needs.join(' + ');
+      card.querySelector('.q-eyebrow').appendChild(need);
+    }
     card.querySelector('.pt-title').textContent = t.title;
     var brief = card.querySelector('.pt-brief');
     (t.brief || '').split('\n\n').forEach(function (para) {
