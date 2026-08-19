@@ -23,7 +23,7 @@
           ] },
           { t: 'quick', title: 'Making and inspecting arrays', groups: ['NumPy · make & inspect arrays'] },
           { t: 'quick', title: 'Indexing and maths', groups: ['NumPy · indexing & maths'] },
-          { t: 'quiz', title: 'Array behaviour', ids: ['pq-np-broadcast', 'pq-np-view', 'pq-np-nan'] },
+          { t: 'quiz', title: 'Array behaviour', ids: ['pq-np-broadcast', 'pq-np-view', 'pq-np-nan', 'pq4-np-axis', 'pq4-np-int-div'] },
           { t: 'problem', id: 'pt-column-means' }
         ] },
 
@@ -63,7 +63,7 @@
           { t: 'quick', title: 'Selecting columns and rows', groups: ['pandas · select columns & rows'] },
           { t: 'quick', title: 'Filtering rows', groups: ['pandas · filter rows'] },
           { t: 'quick', title: 'Sorting and ranking', groups: ['pandas · sort & rank'] },
-          { t: 'quiz', title: 'Views, copies and assignment', ids: ['pq-pd-copy-warning'] },
+          { t: 'quiz', title: 'Views, copies and assignment', ids: ['pq-pd-copy-warning', 'pq4-pd-sort-index'] },
           { t: 'problem', id: 'pt-pd-filter' },
           { t: 'problem', id: 'pt-pd-newcol' }
         ] },
@@ -88,7 +88,7 @@
           { t: 'quick', title: 'Types and conversion', groups: ['pandas · types & conversion'] },
           { t: 'quick', title: 'Duplicates and replacing', groups: ['pandas · duplicates & replace'] },
           { t: 'quick', title: 'Text columns', groups: ['pandas · text columns'] },
-          { t: 'quiz', title: 'What pandas does with missing values', ids: ['pq-pd-mean-nan', 'pq-pd-value-counts-na'] },
+          { t: 'quiz', title: 'What pandas does with missing values', ids: ['pq-pd-mean-nan', 'pq-pd-value-counts-na', 'pq4-pd-string-num', 'pq4-pd-astype-int'] },
           { t: 'problem', id: 'pt-pd-missing' },
           { t: 'problem', id: 'pt-pd-clean' },
           { t: 'problem', id: 'pt-clean-records' },
@@ -112,7 +112,7 @@
           ] },
           { t: 'quick', title: 'Group and aggregate', groups: ['pandas · group & aggregate'] },
           { t: 'quick', title: 'Cross-tabs and summaries', groups: ['pandas · cross-tabs & summaries'] },
-          { t: 'quiz', title: 'What groupby does with gaps', ids: ['pq-pd-groupby-nan'] },
+          { t: 'quiz', title: 'What groupby does with gaps', ids: ['pq-pd-groupby-nan', 'pq4-pd-apply-vs-vector'] },
           { t: 'problem', id: 'pt-pd-groupby' },
           { t: 'problem', id: 'pt-avg-by-key' },
           { t: 'problem', id: 'pt-top-n' },
