@@ -13,6 +13,8 @@ The spine of the app: one ordered path from *what a variable is* to sitting a ti
 
 Each unit reads you into the idea, drills the lines until you can type them cold, checks you can predict what Python does, then makes you write something that has to run.
 
+Every drill has a **View** twin beside its **Test**: the cards with their answers showing, the quiz snippets with the output and the reason, a problem walked through with its test cases explained. Viewing never ticks a step off — it is the help, not the test — and each view ends by offering the same set to be tested on.
+
 Nothing is locked — but a single Continue button always knows what comes next, and progress is tracked per step.
 
 ## Data Science

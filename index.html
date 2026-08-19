@@ -975,6 +975,28 @@ input[type=range]{accent-color:var(--cobalt)}
 .cr-code pre{margin:0;padding:12px 14px;background:var(--paper);border:1px solid var(--grid);border-left:3px solid var(--cobalt);border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
 .cr-note{margin:6px 0 0;font-size:.88rem;color:var(--ink-2);line-height:1.55}
 .cr-aside{margin:0 0 14px;padding:11px 13px;background:var(--hilite);border-radius:6px;font-size:.9rem;line-height:1.55}
+/* ---- View mode: every drill has a "see it worked" twin ---- */
+.sv-btn{flex:0 0 auto;align-self:stretch;padding:0 13px;border:0;border-left:1px solid var(--grid);background:var(--paper);color:var(--ink-2);font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}
+.sv-btn:hover{background:var(--ink);color:var(--sheet)}
+.qf-grow-split{padding:0;overflow:hidden;cursor:default}
+.qf-grow-split:hover{border-color:var(--rule)}
+.qf-grow-split:focus-within{border-color:var(--ink)}
+.qf-grow-main{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 13px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.qf-grow-main:hover .qf-grow-t{text-decoration:underline}
+.pt-row-split{padding:0;overflow:hidden;cursor:default}
+.pt-row-main{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;padding:11px 13px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.pt-row-main:hover .pt-row-t{text-decoration:underline}
+.cstep-split{padding:0;overflow:hidden}
+.cstep-main{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:11px;padding:10px 13px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.cstep-main:hover .cstep-title{text-decoration:underline}
+.cstep-split .sv-btn{font-size:.62rem;padding:0 11px}
+.cc-view{margin-top:8px}
+.sv-row{padding:9px 0;border-top:1px solid var(--grid)}
+.sv-ask{display:block;font-size:.9rem;line-height:1.45}
+.sv-a{margin:4px 0 0;padding:7px 10px;background:var(--paper);border-left:2px solid var(--cobalt);border-radius:3px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;white-space:pre-wrap;overflow-x:auto}
+.sv-note{margin:5px 0 0;font-size:.82rem;color:var(--ink-2);line-height:1.5}
+.sv-cases{margin-top:14px}
+.sv-out{white-space:pre-wrap}
 </style>
 </head>
 <body>
