@@ -2234,21 +2234,24 @@
      Answers are executed for real in the browser by Pyodide (CPython compiled to WebAssembly),
      loaded from a CDN on first use. With no network we fall back to self-check mode, and say so. */
 
-  var PYODIDE_VERSION = '0.26.4';
-  var PY = { pyodide: null, promise: null, state: 'idle', error: null, packages: {} };
-  // window.PYODIDE_URL (a folder holding pyodide.js) or window.PYODIDE_VERSION override the CDN —
-  // handy for self-hosting the runtime, or pinning a different build, without touching this file.
-  function pyIndexUrl() {
-    if (window.PYODIDE_URL) return window.PYODIDE_URL;
-    return 'https://cdn.jsdelivr.net/pyodide/v' + (window.PYODIDE_VERSION || PYODIDE_VERSION) + '/full/';
+  // Builds to try, in order. If a pinned build has gone from the CDN the next one is
+  // tried rather than dropping the whole feature; window.PYODIDE_URL (a folder holding
+  // pyodide.js) or window.PYODIDE_VERSION override the list entirely, which is what you
+  // want if you ever self-host the runtime next to the app.
+  var PYODIDE_VERSIONS = ['0.26.4', '0.25.1', '0.24.1'];
+  var PY = { pyodide: null, promise: null, state: 'idle', error: null, packages: {}, indexUrl: null };
+  function pyCandidateUrls() {
+    if (window.PYODIDE_URL) return [window.PYODIDE_URL];
+    var vs = window.PYODIDE_VERSION ? [window.PYODIDE_VERSION].concat(PYODIDE_VERSIONS) : PYODIDE_VERSIONS;
+    return vs.map(function (v) { return 'https://cdn.jsdelivr.net/pyodide/v' + v + '/full/'; });
   }
-  function loadScriptOnce(src) {
+  function loadRuntimeScript(src) {
     return new Promise(function (resolve, reject) {
-      if (document.querySelector('script[data-py="1"]')) return resolve();
+      if (window.loadPyodide) return resolve();
       var s = document.createElement('script');
-      s.src = src; s.async = true; s.setAttribute('data-py', '1');
-      s.onload = function () { resolve(); };
-      s.onerror = function () { s.parentNode && s.parentNode.removeChild(s); reject(new Error('could not fetch the Python runtime')); };
+      s.src = src + 'pyodide.js'; s.async = true; s.setAttribute('data-py', '1');
+      s.onload = function () { window.loadPyodide ? resolve() : reject(new Error('runtime script loaded but empty')); };
+      s.onerror = function () { s.parentNode && s.parentNode.removeChild(s); reject(new Error('could not reach the Python runtime')); };
       document.head.appendChild(s);
     });
   }
@@ -2257,13 +2260,20 @@
     if (PY.state === 'ready') return Promise.resolve(PY.pyodide);
     if (PY.promise) { if (onStatus) onStatus('Starting Python…'); return PY.promise; }
     PY.state = 'loading';
-    if (onStatus) onStatus('Fetching Python (first time only — about 10 MB)…');
-    PY.promise = loadScriptOnce(pyIndexUrl() + 'pyodide.js')
-      .then(function () {
-        if (!window.loadPyodide) throw new Error('the Python runtime did not load');
-        if (onStatus) onStatus('Booting the interpreter…');
-        return window.loadPyodide({ indexURL: pyIndexUrl() });
-      })
+    var urls = pyCandidateUrls(), attempt = 0;
+    function tryNext() {
+      if (attempt >= urls.length) throw (PY.error || new Error('could not reach the Python runtime'));
+      var url = urls[attempt++];
+      if (onStatus) onStatus(attempt === 1 ? 'Fetching Python (first time only — about 10 MB)…' : 'Trying another Python build…');
+      return loadRuntimeScript(url)
+        .then(function () {
+          if (onStatus) onStatus('Booting the interpreter…');
+          return window.loadPyodide({ indexURL: url });
+        })
+        .then(function (p) { PY.indexUrl = url; return p; })
+        .catch(function (e) { PY.error = e; return tryNext(); });
+    }
+    PY.promise = Promise.resolve().then(tryNext)
       .then(function (p) {
         if (onStatus) onStatus('Setting up the test runner…');
         return p.runPythonAsync(window.PYHARNESS || '').then(function () {
