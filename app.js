@@ -2149,9 +2149,12 @@
     var all = snipAll();
     if (!all.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">No quickfire cards loaded.</p></section>')); return; }
     var st = snipStats(all);
+    // Name the categories from the data itself, so a new bank needs no copy edit.
+    var cats0 = snipCats().order;
+    var catList = cats0.length > 1 ? cats0.slice(0, -1).join(', ') + ' and ' + cats0[cats0.length - 1] : (cats0[0] || '');
     var intro = h('<section class="code-intro"><div class="review-eyebrow">Quickfire recall</div>' +
       '<p class="code-intro-p">One small ask, one line of code, typed from memory — <i>“how do I check the head of a data source?”</i> → <code>df.head()</code>. ' +
-      'Spacing and quote style don\'t matter; the words do. ' + all.length + ' cards across pandas, NumPy, plain Python, plotting and scikit-learn.</p>' +
+      'Spacing and quote style don\'t matter; the words do. ' + all.length + ' cards across ' + esc(catList) + '.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + st.pct + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + st.pct + '%</b> recalled</span></div>' +
       '<div class="mast-badges cdash-badges">' +
@@ -3019,6 +3022,26 @@
   }
   // Dashboard: level-by-level progress, per-group bars, and the next thing to do.
   function renderCodeDashboard() {
+    // Quickfire first — it is the biggest thing in this mode by card count.
+    var qAll = snipAll();
+    if (qAll.length) {
+      var qs = snipStats(qAll);
+      var qcard = h('<section class="code-intro"><div class="review-eyebrow">Quickfire recall</div>' +
+        '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + qs.pct + '%"></span></div>' +
+        '<span class="code-intro-count"><b>' + qs.pct + '%</b> of ' + qAll.length + ' cards</span></div>' +
+        '<div class="mast-badges cdash-badges">' +
+          '<span class="mb mb-learnt"><b>' + qs.solid + '</b> solid</span>' +
+          '<span class="mb mb-learning"><b>' + qs.known + '</b> getting there</span>' +
+          '<span class="mb mb-strug"><b>' + qs.shaky + '</b> shaky</span>' +
+          '<span class="mb mb-new"><b>' + qs["new"] + '</b> not seen</span>' +
+        '</div>' +
+        '<div class="next-row"><button class="btn ghost cdash-qf">' + (qs.shaky ? 'Drill my ' + qs.shaky + ' shaky cards →' : 'Start a quickfire round →') + '</button></div></section>');
+      qcard.querySelector('.cdash-qf').onclick = function () {
+        var round = buildQuickRound(qAll, getQuickSize(), qs.shaky ? 'shaky' : null);
+        startQuick(round.length ? round : buildQuickRound(qAll, getQuickSize()), qs.shaky ? 'weak spots' : 'mixed');
+      };
+      app.appendChild(qcard);
+    }
     var tasks = window.CODETASKS || [], prog = codeProg(), g = codeGroups();
     var totLevels = tasks.length * 3, doneLevels = 0, full = 0, started = 0;
     var byLevel = { 1: 0, 2: 0, 3: 0 };
@@ -3260,7 +3283,7 @@
     };
     var MODE = getMode();
     if (MODE === 'code') {
-      mast.querySelector('.mast-sub').innerHTML = '<b>Coding, unscrambled</b>: every task in three steps — spot the right code, build it from blocks, then write it yourself. No wall of syntax, one idea at a time.';
+      mast.querySelector('.mast-sub').innerHTML = '<b>Coding, unscrambled</b>: quickfire recall — one small ask, one line typed from memory — plus every task in three steps: spot the right code, build it from blocks, then write it yourself.';
       mast.querySelector('.mast-foot').textContent = 'Data-science code only · progress kept in this browser';
     } else if (MODE === 'ptest') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Python coding tests</b>: the hiring-test half of the platform. Real problems, a real interpreter running in your browser, hidden test cases and a countdown clock.';
