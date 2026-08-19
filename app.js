@@ -90,8 +90,8 @@
     { label: 'Podcast corner', keys: ['podcast'] },
     { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws', 'wai'], mode: 'work' }
   ];
-  // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'work' (FCA & innovation) ----
-  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work') ? v : 'ds'; }
+  // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'ptest' (Python coding tests) · 'work' (FCA & innovation) ----
+  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work' || v === 'ptest') ? v : 'ds'; }
   function setMode(v) { try { localStorage.setItem('ds_mode', v); } catch (e) {} }
   // Topics belong to 'ds' unless tagged; 'code' mode shows its own screen, so shares the ds topic set.
   function topicInMode(t) { var m = getMode() === 'work' ? 'work' : 'ds'; return (t.mode || 'ds') === m; }
@@ -2227,6 +2227,678 @@
       });
     });
   }
+  /* ================= Python coding tests — the mode that emulates a real hiring test =================
+     Problems live in data_pytest_*.js as window.PYTESTS:
+       { id, group, lvl, title, brief, fn, sig, starter, examples[], tests[], hint, solution, walk,
+         unordered?, needs?:['pandas'], mins? }
+     Answers are executed for real in the browser by Pyodide (CPython compiled to WebAssembly),
+     loaded from a CDN on first use. With no network we fall back to self-check mode, and say so. */
+
+  var PYODIDE_VERSION = '0.26.4';
+  var PY = { pyodide: null, promise: null, state: 'idle', error: null, packages: {} };
+  // window.PYODIDE_URL (a folder holding pyodide.js) or window.PYODIDE_VERSION override the CDN —
+  // handy for self-hosting the runtime, or pinning a different build, without touching this file.
+  function pyIndexUrl() {
+    if (window.PYODIDE_URL) return window.PYODIDE_URL;
+    return 'https://cdn.jsdelivr.net/pyodide/v' + (window.PYODIDE_VERSION || PYODIDE_VERSION) + '/full/';
+  }
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[data-py="1"]')) return resolve();
+      var s = document.createElement('script');
+      s.src = src; s.async = true; s.setAttribute('data-py', '1');
+      s.onload = function () { resolve(); };
+      s.onerror = function () { s.parentNode && s.parentNode.removeChild(s); reject(new Error('could not fetch the Python runtime')); };
+      document.head.appendChild(s);
+    });
+  }
+  // Starts Python once and keeps it. onStatus gets human-readable progress lines.
+  function pyStart(onStatus) {
+    if (PY.state === 'ready') return Promise.resolve(PY.pyodide);
+    if (PY.promise) { if (onStatus) onStatus('Starting Python…'); return PY.promise; }
+    PY.state = 'loading';
+    if (onStatus) onStatus('Fetching Python (first time only — about 10 MB)…');
+    PY.promise = loadScriptOnce(pyIndexUrl() + 'pyodide.js')
+      .then(function () {
+        if (!window.loadPyodide) throw new Error('the Python runtime did not load');
+        if (onStatus) onStatus('Booting the interpreter…');
+        return window.loadPyodide({ indexURL: pyIndexUrl() });
+      })
+      .then(function (p) {
+        if (onStatus) onStatus('Setting up the test runner…');
+        return p.runPythonAsync(window.PYHARNESS || '').then(function () {
+          PY.pyodide = p; PY.state = 'ready';
+          return p;
+        });
+      })
+      .catch(function (e) {
+        PY.state = 'failed'; PY.error = e; PY.promise = null;
+        throw e;
+      });
+    return PY.promise;
+  }
+  function pyLoadPackages(names, onStatus) {
+    if (!names || !names.length) return Promise.resolve();
+    var todo = names.filter(function (n) { return !PY.packages[n]; });
+    if (!todo.length) return Promise.resolve();
+    if (onStatus) onStatus('Loading ' + todo.join(' and ') + ' (this one is a big download)…');
+    return PY.pyodide.loadPackage(todo).then(function () {
+      todo.forEach(function (n) { PY.packages[n] = 1; });
+    });
+  }
+  // Run candidate code against a problem's cases. Resolves to the harness's report object.
+  function pyRunTests(problem, code, cases, onStatus) {
+    return pyStart(onStatus)
+      .then(function () { return pyLoadPackages(problem.needs, onStatus); })
+      .then(function () {
+        if (onStatus) onStatus('Running your code…');
+        var opts = { unordered: !!problem.unordered, tol: problem.tol || 1e-6, budget: problem.budget || 10 };
+        var fn = PY.pyodide.globals.get('_ds_run');
+        var raw = fn(code, JSON.stringify(cases), JSON.stringify(opts));
+        if (fn.destroy) { try { fn.destroy(); } catch (e) {} }
+        return JSON.parse(raw);
+      });
+  }
+  function pyTests() { return window.PYTESTS || []; }
+  function pyTest(id) { var t = null; pyTests().forEach(function (x) { if (x.id === id) t = x; }); return t; }
+  function ptProg() { try { return JSON.parse(localStorage.getItem('ds_pt_prog') || '{}'); } catch (e) { return {}; } }
+  function savePtProg(p) { try { localStorage.setItem('ds_pt_prog', JSON.stringify(p)); } catch (e) {} }
+  function ptMark(id, patch) {
+    var p = ptProg(), r = p[id] || { runs: 0 };
+    Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+    p[id] = r; savePtProg(p);
+  }
+  function ptCode(id) { try { return localStorage.getItem('ds_pt_code_' + id) || ''; } catch (e) { return ''; } }
+  function savePtCode(id, code) { try { localStorage.setItem('ds_pt_code_' + id, code); } catch (e) {} }
+  function ptMocks() { try { return JSON.parse(localStorage.getItem('ds_pt_mocks') || '[]'); } catch (e) { return []; } }
+  function savePtMocks(m) { try { localStorage.setItem('ds_pt_mocks', JSON.stringify(m.slice(-40))); } catch (e) {} }
+  function ptGroups(list) {
+    var order = [], by = {};
+    (list || pyTests()).forEach(function (t) { if (!by[t.group]) { by[t.group] = []; order.push(t.group); } by[t.group].push(t); });
+    return { order: order, by: by };
+  }
+  function ptSolvedCount() {
+    var p = ptProg(), n = 0;
+    pyTests().forEach(function (t) { if (p[t.id] && p[t.id].solved) n++; });
+    return n;
+  }
+  function fmtClock(secs) {
+    secs = Math.max(0, Math.round(secs));
+    var m = Math.floor(secs / 60), s = secs % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  // A textarea that behaves enough like a code editor: Tab indents, Enter keeps the indent,
+  // and a closing colon opens a new indented block.
+  function wireEditor(ta) {
+    ta.setAttribute('spellcheck', 'false');
+    ta.setAttribute('autocapitalize', 'off');
+    ta.setAttribute('autocomplete', 'off');
+    ta.setAttribute('autocorrect', 'off');
+    ta.onkeydown = function (e) {
+      var v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        if (s !== en) {   // indent every selected line
+          var a = v.lastIndexOf('\n', s - 1) + 1;
+          var block = v.slice(a, en).split('\n').map(function (l) { return e.shiftKey ? l.replace(/^ {1,4}/, '') : '    ' + l; }).join('\n');
+          ta.value = v.slice(0, a) + block + v.slice(en);
+          ta.selectionStart = a; ta.selectionEnd = a + block.length;
+        } else {
+          ta.value = v.slice(0, s) + '    ' + v.slice(en);
+          ta.selectionStart = ta.selectionEnd = s + 4;
+        }
+        ta.oninput && ta.oninput();
+      } else if (e.key === 'Enter') {
+        var lineStart = v.lastIndexOf('\n', s - 1) + 1;
+        var line = v.slice(lineStart, s);
+        var indent = (line.match(/^\s*/) || [''])[0];
+        if (/:\s*$/.test(line)) indent += '    ';
+        if (indent) {
+          e.preventDefault();
+          ta.value = v.slice(0, s) + '\n' + indent + v.slice(en);
+          ta.selectionStart = ta.selectionEnd = s + 1 + indent.length;
+          ta.oninput && ta.oninput();
+        }
+      }
+    };
+  }
+  function ptBar(label, right) {
+    var bar = h('<div class="exbar"><button class="back">← Tests</button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').onclick = home;
+    bar.querySelector('.exmeta').innerHTML = label;
+    if (right) bar.appendChild(right);
+    return bar;
+  }
+  // The problem screen. ctx is null in practice, or the live mock-test session.
+  function startPyProblem(id, ctx) {
+    var t = pyTest(id); if (!t) return home();
+    var mock = !!ctx;
+    app.innerHTML = '';
+    var bar = ptBar('<b>' + esc(t.title) + '</b> ' + diffTag(t.lvl || 1) + (mock ? ' · question ' + (ctx.idx + 1) + ' of ' + ctx.ids.length : ' · practice'),
+      mock ? ctx.clockEl : null);
+    if (mock) bar.querySelector('.back').textContent = '← Test menu';
+    if (mock) bar.querySelector('.back').onclick = function () { if (confirm('Leave the test? Your answers are saved and you can resume.')) home(); };
+    app.appendChild(bar);
+
+    var card = h('<article class="qcard pt-card">' +
+      '<div class="q-eyebrow"><span class="pt-group"></span></div>' +
+      '<h2 class="pt-title"></h2>' +
+      '<div class="pt-brief"></div>' +
+      '<div class="pt-sig-wrap" hidden><span class="p-label">Write this function</span><pre class="pt-sig"></pre></div>' +
+      '<div class="pt-examples"></div>' +
+      '<div class="pt-editor-wrap"><span class="p-label">Your solution</span>' +
+      '<textarea class="pt-editor" rows="16"></textarea>' +
+      '<div class="pt-editor-foot"><span class="pt-saved">saved as you type</span><button class="pt-reset" type="button">Reset to the starter code</button></div></div>' +
+      '<div class="next-row pt-actions"></div>' +
+      '<div class="pt-status" hidden></div>' +
+      '<div class="pt-results" hidden></div>' +
+      '<div class="pt-after" hidden></div></article>');
+    card.querySelector('.pt-group').textContent = t.group;
+    card.querySelector('.pt-title').textContent = t.title;
+    var brief = card.querySelector('.pt-brief');
+    (t.brief || '').split('\n\n').forEach(function (para) {
+      var p = document.createElement('p'); p.className = 'pt-p'; p.textContent = para; brief.appendChild(p);
+    });
+    if (t.sig) {
+      card.querySelector('.pt-sig-wrap').hidden = false;
+      card.querySelector('.pt-sig').textContent = t.sig;
+    }
+    var exWrap = card.querySelector('.pt-examples');
+    (t.examples || []).forEach(function (ex, i) {
+      var row = h('<div class="pt-ex"><span class="pt-ex-n">Example ' + (i + 1) + '</span>' +
+        '<pre class="pt-ex-in"></pre><pre class="pt-ex-out"></pre><p class="pt-ex-note" hidden></p></div>');
+      row.querySelector('.pt-ex-in').textContent = ex.in;
+      row.querySelector('.pt-ex-out').textContent = '→ ' + ex.out;
+      if (ex.note) { var n = row.querySelector('.pt-ex-note'); n.hidden = false; n.textContent = ex.note; }
+      exWrap.appendChild(row);
+    });
+    if (t.constraints) exWrap.appendChild(h('<p class="pt-constraints"><b>Constraints:</b> ' + esc(t.constraints) + '</p>'));
+
+    var ta = card.querySelector('.pt-editor');
+    var saved = mock ? (ctx.code[t.id] || '') : ptCode(t.id);
+    ta.value = saved || t.starter;
+    wireEditor(ta);
+    ta.oninput = function () {
+      if (mock) { ctx.code[t.id] = ta.value; ctx.save(); }
+      else savePtCode(t.id, ta.value);
+    };
+    card.querySelector('.pt-reset').onclick = function () {
+      if (!confirm('Replace your code with the starter stub?')) return;
+      ta.value = t.starter; ta.oninput();
+    };
+
+    var actions = card.querySelector('.pt-actions');
+    var statusEl = card.querySelector('.pt-status');
+    var resultsEl = card.querySelector('.pt-results');
+    var afterEl = card.querySelector('.pt-after');
+    var runBtn = h('<button class="btn pt-run">Run tests ▶</button>');
+    actions.appendChild(runBtn);
+    if (!mock) {
+      var hintBtn = h('<button class="btn ghost pt-hint">Hint</button>');
+      var solBtn = h('<button class="btn ghost pt-sol">Model solution</button>');
+      actions.appendChild(hintBtn); actions.appendChild(solBtn);
+      hintBtn.onclick = function () {
+        statusEl.hidden = false;
+        statusEl.className = 'pt-status pt-hint-box';
+        statusEl.textContent = '💡 ' + (t.hint || 'Work through your own example by hand first, then write down the steps you did.');
+      };
+      solBtn.onclick = function () {
+        ptMark(t.id, { peeked: 1 });
+        showSolution('You looked at the solution — read it, then close it and write it out yourself.');
+      };
+    } else {
+      var navRow = h('<div class="pt-nav"></div>');
+      ctx.ids.forEach(function (qid, i) {
+        var b = h('<button class="pt-navb' + (i === ctx.idx ? ' pt-navb-on' : '') + (ctx.code[qid] && ctx.code[qid] !== pyTest(qid).starter ? ' pt-navb-done' : '') + '" type="button">Q' + (i + 1) + '</button>');
+        b.onclick = function () { ctx.idx = i; ctx.save(); startPyProblem(qid, ctx); };
+        navRow.appendChild(b);
+      });
+      var subBtn = h('<button class="btn ghost pt-submit">Finish & submit test</button>');
+      subBtn.onclick = function () {
+        if (confirm('Submit the whole test now? Every answer will be marked.')) ctx.submit();
+      };
+      navRow.appendChild(subBtn);
+      actions.appendChild(navRow);
+    }
+
+    function showSolution(lead) {
+      afterEl.hidden = false;
+      afterEl.innerHTML = '<div class="banner"><span class="b-label">Model solution</span>' + esc(lead || '') + '</div>' +
+        '<div class="code-sol"><span class="p-label">One good answer</span><pre class="pt-solcode"></pre></div>' +
+        (t.walk ? '<p class="pt-walk"></p>' : '') +
+        (t.complexity ? '<p class="pt-cx"><b>Complexity:</b> ' + esc(t.complexity) + '</p>' : '');
+      afterEl.querySelector('.pt-solcode').textContent = t.solution;
+      if (t.walk) afterEl.querySelector('.pt-walk').textContent = t.walk;
+      afterEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function setStatus(msg, cls) {
+      statusEl.hidden = false;
+      statusEl.className = 'pt-status' + (cls ? ' ' + cls : '');
+      statusEl.textContent = msg;
+    }
+    // Self-check mode: no Python available, so show what the tests expect and let them mark it.
+    function offerSelfCheck(err) {
+      setStatus('Python could not start in this browser (' + (err && err.message ? err.message : 'no connection') +
+        '). Everything else still works — check your answer against the expected results below.', 'pt-status-warn');
+      resultsEl.hidden = false;
+      resultsEl.innerHTML = '<div class="pt-selfhead">What the tests expect</div>';
+      (t.tests || []).forEach(function (c) {
+        var row = h('<div class="pt-res pt-res-self"><pre class="pt-res-call"></pre><pre class="pt-res-exp"></pre></div>');
+        row.querySelector('.pt-res-call').textContent = c.call;
+        row.querySelector('.pt-res-exp').textContent = '→ ' + c.expect;
+        resultsEl.appendChild(row);
+      });
+      if (!mock) {
+        var b = h('<div class="next-row"><button class="btn ghost pt-selfsol">Show the model solution</button></div>');
+        b.querySelector('.pt-selfsol').onclick = function () { showSolution('Compare it against what you wrote.'); };
+        resultsEl.appendChild(b);
+      }
+    }
+
+    runBtn.onclick = function () {
+      runBtn.disabled = true;
+      afterEl.hidden = true;
+      resultsEl.hidden = true;
+      setStatus('Starting…', 'pt-status-busy');
+      var code = ta.value;
+      var cases = (t.tests || []).map(function (c) { return { call: c.call, expect: c.expect, name: c.name || '', hidden: !!c.hidden, unordered: c.unordered }; });
+      pyRunTests(t, code, cases, function (m) { setStatus(m, 'pt-status-busy'); })
+        .then(function (report) { runBtn.disabled = false; showReport(report); })
+        .catch(function (e) { runBtn.disabled = false; offerSelfCheck(e); });
+    };
+
+    function showReport(report) {
+      logActivity();
+      var prev = ptProg()[t.id] || {};
+      resultsEl.hidden = false;
+      resultsEl.innerHTML = '';
+      if (report.error) {
+        setStatus('Your code did not run.', 'pt-status-bad');
+        resultsEl.appendChild(h('<pre class="pt-traceback"></pre>')).textContent = report.error;
+      } else {
+        var passed = report.results.filter(function (r) { return r.pass; }).length;
+        var total = report.results.length;
+        var allOk = passed === total && total > 0;
+        setStatus(passed + ' of ' + total + ' tests passed' + (allOk ? ' — all green.' : '.'), allOk ? 'pt-status-good' : 'pt-status-bad');
+        report.results.forEach(function (r, i) {
+          var hide = mock && r.hidden;
+          var row = h('<div class="pt-res ' + (r.pass ? 'pt-res-ok' : 'pt-res-bad') + '">' +
+            '<span class="pt-res-mark">' + (r.pass ? '✓' : '✗') + '</span>' +
+            '<div class="pt-res-body"><pre class="pt-res-call"></pre>' +
+            '<div class="pt-res-cmp" hidden><pre class="pt-res-exp"></pre><pre class="pt-res-got"></pre></div>' +
+            '<p class="pt-res-err" hidden></p></div></div>');
+          row.querySelector('.pt-res-call').textContent = hide ? ('Hidden test ' + (i + 1)) : (r.name ? r.name + ':  ' + r.call : r.call);
+          if (!hide) {
+            var cmp = row.querySelector('.pt-res-cmp');
+            cmp.hidden = false;
+            cmp.querySelector('.pt-res-exp').textContent = 'expected  ' + r.expect;
+            cmp.querySelector('.pt-res-got').textContent = 'you gave  ' + (r.got === null ? '—' : r.got);
+            if (r.pass) cmp.hidden = true;
+          }
+          if (r.error && !hide) { var e = row.querySelector('.pt-res-err'); e.hidden = false; e.textContent = r.error; }
+          resultsEl.appendChild(row);
+        });
+        if (report.stdout) {
+          var out = h('<div class="pt-stdout"><span class="p-label">Anything you printed</span><pre></pre></div>');
+          out.querySelector('pre').textContent = report.stdout;
+          resultsEl.appendChild(out);
+        }
+        ptMark(t.id, { runs: (prev.runs || 0) + 1, best: Math.max(prev.best || 0, passed), total: total, solved: prev.solved || (allOk ? 1 : 0) });
+        if (allOk && !mock) {
+          var nb = h('<div class="next-row pt-donerow"><button class="btn pt-next">Next problem →</button>' +
+            '<button class="btn ghost pt-showsol">Compare with the model solution</button></div>');
+          nb.querySelector('.pt-showsol').onclick = function () { showSolution('Yours passes. Read this one for the shape and the complexity.'); };
+          nb.querySelector('.pt-next').onclick = function () {
+            var next = nextUnsolved(t.id);
+            if (next) startPyProblem(next.id, null); else home();
+          };
+          resultsEl.appendChild(nb);
+        }
+      }
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+    ta.focus();
+  }
+  function nextUnsolved(afterId) {
+    var list = pyTests(), p = ptProg(), start = 0;
+    list.forEach(function (t, i) { if (t.id === afterId) start = i + 1; });
+    for (var k = 0; k < list.length; k++) {
+      var t = list[(start + k) % list.length];
+      if (!(p[t.id] && p[t.id].solved)) return t;
+    }
+    return null;
+  }
+
+  /* ---- Mock test: a timed sitting, marked at the end ---- */
+  function mockState() { try { return JSON.parse(localStorage.getItem('ds_pt_mock') || 'null'); } catch (e) { return null; } }
+  function saveMockState(s) { try { s ? localStorage.setItem('ds_pt_mock', JSON.stringify(s)) : localStorage.removeItem('ds_pt_mock'); } catch (e) {} }
+  function buildMock(count, levelMix) {
+    var by = { 1: [], 2: [], 3: [] };
+    pyTests().forEach(function (t) { if (!t.noMock) by[t.lvl || 2].push(t); });
+    Object.keys(by).forEach(function (k) { by[k] = shuffle(by[k]); });
+    var out = [];
+    levelMix.forEach(function (L) { if (by[L] && by[L].length) out.push(by[L].shift()); });
+    while (out.length < count) {
+      var pool = shuffle(by[1].concat(by[2], by[3]));
+      if (!pool.length) break;
+      var pick = pool[0];
+      by[pick.lvl || 2] = by[pick.lvl || 2].filter(function (x) { return x.id !== pick.id; });
+      out.push(pick);
+    }
+    return out.slice(0, count);
+  }
+  function startMock(problems, minutes) {
+    var s = {
+      ids: problems.map(function (t) { return t.id; }),
+      code: {}, idx: 0, minutes: minutes,
+      endsAt: Date.now() + minutes * 60000, startedAt: Date.now()
+    };
+    problems.forEach(function (t) { s.code[t.id] = t.starter; });
+    saveMockState(s);
+    runMock(s);
+  }
+  function runMock(s) {
+    var ctx = {
+      ids: s.ids, code: s.code, idx: s.idx,
+      save: function () { s.idx = ctx.idx; s.code = ctx.code; saveMockState(s); },
+      submit: function () { clearInterval(timer); markMock(s); }
+    };
+    var clock = h('<span class="pt-clock"></span>');
+    ctx.clockEl = clock;
+    function tick() {
+      var left = (s.endsAt - Date.now()) / 1000;
+      clock.textContent = '⏱ ' + fmtClock(left);
+      clock.classList.toggle('pt-clock-low', left < 300);
+      if (left <= 0) { clearInterval(timer); alert('Time is up — your answers are being marked.'); markMock(s); }
+    }
+    var timer = setInterval(tick, 1000);
+    tick();
+    startPyProblem(s.ids[ctx.idx], ctx);
+  }
+  // Mark every answer, then show the report card.
+  function markMock(s) {
+    saveMockState(null);
+    app.innerHTML = '';
+    app.appendChild(ptBar('<b>Marking your test…</b>'));
+    var card = h('<article class="qcard pt-card"><div class="q-eyebrow">Results</div>' +
+      '<h2 class="pt-title">Marking…</h2><div class="pt-status pt-status-busy">Starting Python…</div>' +
+      '<div class="pt-markrows"></div></article>');
+    app.appendChild(card);
+    var statusEl = card.querySelector('.pt-status'), rows = card.querySelector('.pt-markrows');
+    var scores = [], i = 0;
+    var mins = Math.round((Date.now() - s.startedAt) / 60000);
+    function nextOne() {
+      if (i >= s.ids.length) return finish();
+      var t = pyTest(s.ids[i]);
+      statusEl.textContent = 'Marking question ' + (i + 1) + ' of ' + s.ids.length + ' — ' + t.title;
+      var cases = (t.tests || []).map(function (c) { return { call: c.call, expect: c.expect, name: c.name || '', hidden: !!c.hidden, unordered: c.unordered }; });
+      pyRunTests(t, s.code[t.id] || '', cases, function (m) { statusEl.textContent = m; })
+        .then(function (rep) {
+          var passed = rep.error ? 0 : rep.results.filter(function (r) { return r.pass; }).length;
+          scores.push({ t: t, passed: passed, total: (t.tests || []).length, error: rep.error, code: s.code[t.id] || '' });
+          if (passed === (t.tests || []).length && passed > 0) ptMark(t.id, { solved: 1 });
+          i++; nextOne();
+        })
+        .catch(function (e) {
+          scores.push({ t: t, passed: null, total: (t.tests || []).length, error: 'Python unavailable: ' + (e.message || e), code: s.code[t.id] || '' });
+          i++; nextOne();
+        });
+    }
+    function finish() {
+      var gradable = scores.filter(function (x) { return x.passed !== null; });
+      var got = gradable.reduce(function (a, x) { return a + x.passed; }, 0);
+      var tot = gradable.reduce(function (a, x) { return a + x.total; }, 0);
+      var pct = tot ? Math.round(100 * got / tot) : 0;
+      var solvedFully = scores.filter(function (x) { return x.passed === x.total && x.total; }).length;
+      if (gradable.length) {
+        var hist = ptMocks();
+        hist.push({ at: Date.now(), pct: pct, solved: solvedFully, questions: scores.length, mins: mins });
+        savePtMocks(hist);
+      }
+      app.innerHTML = '';
+      app.appendChild(ptBar('<b>Test report</b>'));
+      var head = h('<article class="qcard pt-card"><div class="q-eyebrow">Test report</div>' +
+        '<h2 class="pt-title">' + pct + '% of tests passed</h2>' +
+        '<p class="pt-p">' + solvedFully + ' of ' + scores.length + ' questions fully solved, in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '. ' +
+        (pct >= 80 ? 'That is a strong sitting.' : pct >= 50 ? 'A real pass mark is usually 70–80% — worth another round.' : 'Work back through the ones that failed; the model solutions are below.') + '</p>' +
+        '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
+        '<span class="code-intro-count"><b>' + got + '</b> / ' + tot + ' tests</span></div>' +
+        '<div class="next-row"><button class="btn pt-again">Sit another test →</button><button class="btn ghost pt-home">Back to tests</button></div></article>');
+      head.querySelector('.pt-again').onclick = function () { setTestDoor('mock'); home(); };
+      head.querySelector('.pt-home').onclick = home;
+      app.appendChild(head);
+      scores.forEach(function (x, n) {
+        var ok = x.passed === x.total && x.total;
+        var sec = h('<section class="qcard pt-card pt-report"><div class="q-eyebrow"><span class="pt-group">Question ' + (n + 1) + '</span>' + diffTag(x.t.lvl || 1) + '</div>' +
+          '<h3 class="pt-rep-title"></h3>' +
+          '<div class="banner ' + (ok ? 'good' : 'bad') + '"><span class="b-label">' +
+          (x.passed === null ? 'Not marked' : x.passed + ' / ' + x.total + ' tests') + '</span>' +
+          esc(x.error ? String(x.error).split('\n')[0] : (ok ? 'Full marks.' : 'Some cases came back wrong — compare the two answers below.')) + '</div>' +
+          '<details class="pt-rep-det"><summary>Your answer</summary><pre class="pt-rep-code"></pre></details>' +
+          '<details class="pt-rep-det" open><summary>Model solution</summary><pre class="pt-rep-sol"></pre></details>' +
+          (x.t.walk ? '<p class="pt-walk"></p>' : '') +
+          '<div class="next-row"><button class="btn ghost pt-retry">Retry this one in practice →</button></div></section>');
+        sec.querySelector('.pt-rep-title').textContent = x.t.title;
+        sec.querySelector('.pt-rep-code').textContent = x.code;
+        sec.querySelector('.pt-rep-sol').textContent = x.t.solution;
+        if (x.t.walk) sec.querySelector('.pt-walk').textContent = x.t.walk;
+        sec.querySelector('.pt-retry').onclick = function () { startPyProblem(x.t.id, null); };
+        app.appendChild(sec);
+      });
+      window.scrollTo(0, 0);
+    }
+    nextOne();
+  }
+
+  /* ---- "What does this print?" — the multiple-choice half of a real test ---- */
+  function pyQuiz() { return window.PYQUIZ || []; }
+  function startPyQuiz(list) {
+    if (!list.length) return home();
+    var i = 0, right = 0;
+    step();
+    function step() {
+      if (i >= list.length) return done();
+      var q = list[i], answered = false;
+      app.innerHTML = '';
+      app.appendChild(ptBar('<b>What does this print?</b> · ' + (i + 1) + ' of ' + list.length));
+      var card = h('<article class="qcard pt-card"><div class="q-eyebrow"><span class="pt-group"></span>' + diffTag(q.lvl || 1) + '</div>' +
+        '<h2 class="pt-title"></h2><pre class="pt-quizcode"></pre><div class="code-opts"></div><div class="code-after" hidden></div></article>');
+      card.querySelector('.pt-group').textContent = q.group;
+      card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
+      card.querySelector('.pt-quizcode').textContent = q.code;
+      var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
+      var choices = shuffle([{ c: q.correct, ok: true }].concat((q.wrong || []).map(function (w) { return { c: w, ok: false }; })));
+      choices.forEach(function (ch, ci) {
+        var b = h('<button class="code-opt" type="button"><span class="co-key"></span><pre></pre></button>');
+        b.querySelector('.co-key').textContent = LETTERS[ci] || '·';
+        b.querySelector('pre').textContent = ch.c;
+        b.onclick = function () {
+          if (answered) return;
+          answered = true; logActivity();
+          opts.querySelectorAll('.code-opt').forEach(function (o, k) {
+            o.disabled = true;
+            if (choices[k].ok) o.classList.add('co-right');
+          });
+          if (!ch.ok) b.classList.add('co-wrong'); else right++;
+          after.hidden = false;
+          after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' + esc(q.explain) + '</div>' +
+            '<div class="next-row"><button class="btn pq-next">' + (i + 1 >= list.length ? 'Finish →' : 'Next →') + '</button></div>';
+          after.querySelector('.pq-next').onclick = function () { i++; step(); };
+          after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+        opts.appendChild(b);
+      });
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+    }
+    function done() {
+      app.innerHTML = '';
+      app.appendChild(ptBar('<b>Round complete</b>'));
+      var card = h('<article class="qcard pt-card"><div class="q-eyebrow">Round complete</div>' +
+        '<h2 class="pt-title">' + right + ' of ' + list.length + ' right</h2>' +
+        '<div class="next-row"><button class="btn pq-again">Another round →</button><button class="btn ghost pq-home">Back to tests</button></div></article>');
+      card.querySelector('.pq-again').onclick = function () { startPyQuiz(shuffle(pyQuiz().slice()).slice(0, 10)); };
+      card.querySelector('.pq-home').onclick = home;
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+    }
+  }
+
+  /* ---- the Python-tests home ---- */
+  function getTestDoor() { var v = localStorage.getItem('ds_pt_door'); return (v === 'mock' || v === 'output' || v === 'results') ? v : 'practice'; }
+  function setTestDoor(v) { try { localStorage.setItem('ds_pt_door', v); } catch (e) {} }
+  function renderTestHome() {
+    var door = getTestDoor();
+    var nav = h('<nav class="home-doors doors-4" role="tablist"></nav>');
+    [{ v: 'practice', t: 'Practice', s: 'Problems, run for real' },
+     { v: 'mock', t: 'Mock test', s: 'Timed, marked at the end' },
+     { v: 'output', t: 'Output quiz', s: 'What does this print?' },
+     { v: 'results', t: 'Results', s: 'Scores & history' }].forEach(function (d) {
+      var b = h('<button class="door' + (d.v === door ? ' door-on' : '') + '" type="button" role="tab"><span class="door-t"></span><span class="door-s"></span></button>');
+      b.querySelector('.door-t').textContent = d.t;
+      b.querySelector('.door-s').textContent = d.s;
+      b.onclick = function () { setTestDoor(d.v); home(); };
+      nav.appendChild(b);
+    });
+    app.appendChild(nav);
+    // An unfinished sitting always gets offered back first.
+    var live = mockState();
+    if (live && live.endsAt > Date.now() && live.ids && live.ids.length) {
+      var res = h('<section class="code-intro pt-resume"><div class="review-eyebrow">Test in progress</div>' +
+        '<p class="code-intro-p">You have a test running with <b>' + fmtClock((live.endsAt - Date.now()) / 1000) + '</b> left.</p>' +
+        '<div class="next-row"><button class="btn pt-resume-go">Resume the test →</button><button class="btn ghost pt-resume-drop">Abandon it</button></div></section>');
+      res.querySelector('.pt-resume-go').onclick = function () { runMock(live); };
+      res.querySelector('.pt-resume-drop').onclick = function () { if (confirm('Throw this test away?')) { saveMockState(null); home(); } };
+      app.appendChild(res);
+    }
+    if (door === 'mock') return renderTestMock();
+    if (door === 'output') return renderTestQuiz();
+    if (door === 'results') return renderTestResults();
+    renderTestPractice();
+  }
+  function pyEnvNote() {
+    return '<p class="pt-envnote">Your code really runs: Python itself is downloaded into the browser the first time you press <b>Run tests</b> ' +
+      '(about 10 MB, then cached). No connection? Everything still opens — you just mark your own answer against the expected results.</p>';
+  }
+  function renderTestPractice() {
+    var all = pyTests();
+    if (!all.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">No problems loaded.</p></section>')); return; }
+    var p = ptProg(), solved = ptSolvedCount();
+    var pct = Math.round(100 * solved / all.length);
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">Python coding test · practice</div>' +
+      '<p class="code-intro-p">The kind of question a hiring test actually asks: a short brief, a function to write, and a set of test cases that either pass or do not. ' +
+      'Write your answer, press run, read the failures, fix it — exactly as you will on the day.</p>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + solved + '</b> of ' + all.length + ' solved</span></div>' + pyEnvNote() + '</section>');
+    var startRow = h('<div class="next-row"><button class="btn pt-start">Next unsolved problem →</button></div>');
+    startRow.querySelector('.pt-start').onclick = function () { var t = nextUnsolved(null); if (t) startPyProblem(t.id, null); };
+    intro.appendChild(startRow);
+    app.appendChild(intro);
+    var g = ptGroups(all);
+    g.order.forEach(function (grp) {
+      app.appendChild(h('<div class="sec-label sec-sub">' + esc(grp) + '</div>'));
+      g.by[grp].forEach(function (t) {
+        var r = p[t.id] || {};
+        var state = r.solved ? 'done' : (r.runs ? 'part' : 'new');
+        var row = h('<button class="pt-row pt-row-' + state + '" type="button">' +
+          '<span class="pt-row-mark">' + (r.solved ? '✓' : (r.runs ? '·' : '')) + '</span>' +
+          '<span class="pt-row-t"></span>' + diffTag(t.lvl || 1) +
+          '<span class="pt-row-n">' + ((t.tests || []).length) + ' tests</span></button>');
+        row.querySelector('.pt-row-t').textContent = t.title;
+        row.onclick = function () { startPyProblem(t.id, null); };
+        app.appendChild(row);
+      });
+    });
+  }
+  function renderTestMock() {
+    var all = pyTests();
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">Mock test</div>' +
+      '<p class="code-intro-p">A timed sitting, like the real thing: a mixed set of questions, a countdown, no hints and no solutions until you submit. ' +
+      'Hidden test cases stay hidden while you work — you only see pass or fail. Leave the page and the test is still there when you come back.</p>' + pyEnvNote() + '</section>');
+    app.appendChild(intro);
+    [{ n: 3, m: 45, t: 'Short screen', d: '3 questions · 45 minutes', mix: [1, 2, 2] },
+     { n: 4, m: 60, t: 'Standard test', d: '4 questions · 60 minutes', mix: [1, 2, 2, 3] },
+     { n: 6, m: 90, t: 'Full sitting', d: '6 questions · 90 minutes', mix: [1, 1, 2, 2, 3, 3] }].forEach(function (cfg) {
+      var card = h('<button class="pt-mockcard" type="button"><span class="pt-mock-t"></span><span class="pt-mock-d"></span></button>');
+      card.querySelector('.pt-mock-t').textContent = cfg.t;
+      card.querySelector('.pt-mock-d').textContent = cfg.d;
+      card.onclick = function () {
+        var problems = buildMock(cfg.n, cfg.mix);
+        if (problems.length < cfg.n) { alert('Not enough problems loaded for that sitting yet.'); return; }
+        if (confirm('Start a ' + cfg.m + '-minute test with ' + problems.length + ' questions?')) startMock(problems, cfg.m);
+      };
+      app.appendChild(card);
+    });
+    if (all.length) {
+      var hist = ptMocks();
+      if (hist.length) {
+        app.appendChild(h('<div class="sec-label sec-sub">Recent sittings</div>'));
+        hist.slice(-6).reverse().forEach(function (m) {
+          var d = new Date(m.at);
+          app.appendChild(h('<div class="pt-hist"><span class="pt-hist-d">' + d.toLocaleDateString() + '</span>' +
+            '<span class="pt-hist-s"><b>' + m.pct + '%</b></span>' +
+            '<span class="pt-hist-n">' + m.solved + '/' + m.questions + ' solved · ' + m.mins + ' min</span></div>'));
+        });
+      }
+    }
+  }
+  function renderTestQuiz() {
+    var qs = pyQuiz();
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">Output quiz</div>' +
+      '<p class="code-intro-p">Nearly every Python test opens with these: a short snippet, four plausible outputs, one right answer. ' +
+      'They are testing whether you know what the language actually does — mutable defaults, integer division, aliasing, truthiness.</p>' +
+      '<div class="next-row"><button class="btn pq-start">Start a round of 10 →</button><button class="btn ghost pq-all">Every question, in order</button></div></section>');
+    intro.querySelector('.pq-start').onclick = function () { startPyQuiz(shuffle(qs.slice()).slice(0, 10)); };
+    intro.querySelector('.pq-all').onclick = function () { startPyQuiz(qs.slice()); };
+    app.appendChild(intro);
+    var g = ptGroups(qs);
+    g.order.forEach(function (grp) {
+      var items = g.by[grp];
+      var row = h('<button class="qf-grow" type="button"><span class="qf-grow-t"></span><span class="qf-grow-n">' + items.length + '</span></button>');
+      row.querySelector('.qf-grow-t').textContent = grp;
+      row.onclick = function () { startPyQuiz(shuffle(items.slice())); };
+      app.appendChild(row);
+    });
+  }
+  function renderTestResults() {
+    var all = pyTests(), p = ptProg(), hist = ptMocks();
+    var solved = ptSolvedCount(), attempted = all.filter(function (t) { return p[t.id] && p[t.id].runs; }).length;
+    app.appendChild(h('<section class="code-intro"><div class="review-eyebrow">Your results</div>' +
+      '<div class="mast-badges cdash-badges">' +
+      '<span class="mb mb-learnt"><b>' + solved + '</b> solved</span>' +
+      '<span class="mb mb-learning"><b>' + (attempted - solved) + '</b> attempted</span>' +
+      '<span class="mb mb-new"><b>' + (all.length - attempted) + '</b> untouched</span>' +
+      '<span class="mb"><b>' + hist.length + '</b> mock sittings</span></div></section>'));
+    if (hist.length) {
+      var best = hist.reduce(function (a, m) { return Math.max(a, m.pct); }, 0);
+      var last = hist[hist.length - 1];
+      app.appendChild(h('<section class="code-intro"><p class="code-intro-p">Best sitting <b>' + best + '%</b> · most recent <b>' + last.pct + '%</b> (' + last.solved + '/' + last.questions + ' solved).</p></section>'));
+    }
+    var g = ptGroups(all);
+    g.order.forEach(function (grp) {
+      var items = g.by[grp], done = items.filter(function (t) { return p[t.id] && p[t.id].solved; }).length;
+      var gp = Math.round(100 * done / items.length);
+      var row = h('<div class="qf-grow qf-grow-flat"><span class="qf-grow-t"></span>' +
+        '<span class="qf-grow-bar"><span style="width:' + gp + '%"></span></span>' +
+        '<span class="qf-grow-n">' + done + '/' + items.length + '</span></div>');
+      row.querySelector('.qf-grow-t').textContent = grp;
+      app.appendChild(row);
+    });
+    var reset = h('<div class="next-row"><button class="btn ghost pt-clear">Clear my saved answers &amp; scores</button></div>');
+    reset.querySelector('.pt-clear').onclick = function () {
+      if (!confirm('Delete your saved code, scores and mock history for the coding tests?')) return;
+      try {
+        localStorage.removeItem('ds_pt_prog'); localStorage.removeItem('ds_pt_mocks'); localStorage.removeItem('ds_pt_mock');
+        all.forEach(function (t) { localStorage.removeItem('ds_pt_code_' + t.id); });
+      } catch (e) {}
+      home();
+    };
+    app.appendChild(reset);
+  }
+
   // Coding mode has its own doors: Quickfire (type the line), Practice (the tasks),
   // Reference (solutions, searchable), Dashboard (progress). Mirrors the main home's structure.
   function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard' || v === 'quick') ? v : 'practice'; }
@@ -2575,6 +3247,9 @@
     if (MODE === 'code') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Coding, unscrambled</b>: every task in three steps — spot the right code, build it from blocks, then write it yourself. No wall of syntax, one idea at a time.';
       mast.querySelector('.mast-foot').textContent = 'Data-science code only · progress kept in this browser';
+    } else if (MODE === 'ptest') {
+      mast.querySelector('.mast-sub').innerHTML = '<b>Python coding tests</b>: the hiring-test half of the platform. Real problems, a real interpreter running in your browser, hidden test cases and a countdown clock.';
+      mast.querySelector('.mast-foot').textContent = 'Practice · timed mocks · output quiz · progress kept in this browser';
     } else if (MODE === 'work') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Innovation vocabulary</b> for the day job: digital assets, payments & fintech, and the AWS words everyone assumes you know. Same drills — quiz, flashcards, read + recall.';
       mast.querySelector('.mast-foot').textContent = 'FCA & innovation topics · progress kept in this browser';
@@ -2583,7 +3258,7 @@
 
     // Mode switch: Data Science revision · Coding drills · FCA & Innovation vocabulary.
     var tabs = h('<nav class="mode-tabs" aria-label="App mode"></nav>');
-    [{ v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
+    [{ v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'ptest', t: 'Python tests' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
       var b = h('<button class="mode-tab' + (m.v === MODE ? ' mode-on' : '') + '" type="button"></button>');
       b.textContent = m.t;
       b.onclick = function () { if (m.v !== getMode()) { setMode(m.v); home(); } };
@@ -2592,6 +3267,7 @@
     app.appendChild(tabs);
 
     if (MODE === 'code') { renderCodeHome(); return; }
+    if (MODE === 'ptest') { renderTestHome(); return; }
 
     // Three tabs: Study (learn + practice, one picker), Reference (look things up), Dashboard (all metrics).
     var door = getHomeDoor();
