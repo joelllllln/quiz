@@ -1937,9 +1937,299 @@
     app.appendChild(card);
     window.scrollTo(0, 0);
   }
-  // Coding mode has its own three doors: Practice (the tasks), Reference (solutions,
-  // searchable), Dashboard (progress). Mirrors the main home's structure.
-  function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard') ? v : 'practice'; }
+  /* ---------------- Quickfire — one small ask, one line of code, typed from memory ----------------
+     Data lives in data_snip_*.js as window.SNIPPETS entries:
+       { id, group:'pandas · look at the data', lvl:1|2|3, ask, setup?, a, alts?[], note }
+     The whole point is small bits: "how do I check the head of a data source?" → df.head(). */
+  function snipAll() { return window.SNIPPETS || []; }
+  function snipProg() { try { return JSON.parse(localStorage.getItem('ds_snip_prog') || '{}'); } catch (e) { return {}; } }
+  function saveSnipProg(p) { try { localStorage.setItem('ds_snip_prog', JSON.stringify(p)); } catch (e) {} }
+  // A card is "solid" once typed right from cold twice running; "shaky" if the last go was wrong.
+  function snipMark(id, ok, peeked) {
+    var p = snipProg(), r = p[id] || { n: 0, ok: 0, s: 0 };
+    r.n = (r.n || 0) + 1;
+    if (ok) { r.ok = (r.ok || 0) + 1; r.s = peeked ? (r.s || 0) : (r.s || 0) + 1; }
+    else r.s = 0;
+    r.last = ok ? 1 : 0;
+    p[id] = r; saveSnipProg(p);
+  }
+  function snipState(r) {
+    if (!r || !r.n) return 'new';
+    if (r.s >= 2) return 'solid';
+    if (r.last) return 'known';
+    return 'shaky';
+  }
+  // Kind comparison: spacing, quote style, comments and a wrapping print() are all irrelevant.
+  function snipNorm(s, keepCase) {
+    var t = String(s == null ? '' : s).replace(/\r/g, '');
+    t = t.replace(/#[^\n]*/g, '');
+    t = t.replace(/["']/g, "'");
+    t = t.replace(/\s+/g, ' ').trim();
+    t = t.replace(/\s*([(),\[\]{}=:.<>+\-*/%!|&@])\s*/g, '$1');
+    t = t.replace(/[;\s]+$/, '');
+    return keepCase ? t : t.toLowerCase();
+  }
+  function snipAccepts(t, keepCase) {
+    var out = [];
+    [t.a].concat(t.alts || []).forEach(function (a) {
+      var n = snipNorm(a, keepCase);
+      if (!n) return;
+      out.push(n);
+      if (n.indexOf('print(') === 0 && /\)$/.test(n)) out.push(n.slice(6, -1));
+      else out.push('print(' + n + ')');
+    });
+    return out;
+  }
+  function editDist(a, b) {
+    if (Math.abs(a.length - b.length) > 3) return 99;
+    var prev = [], cur = [], i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+      }
+      for (j = 0; j <= b.length; j++) prev[j] = cur[j];
+    }
+    return prev[b.length];
+  }
+  // 'right' · 'case' (right but capitals off) · 'close' (a typo away) · 'wrong'
+  function snipCheck(t, input) {
+    var got = snipNorm(input);
+    if (!got) return 'empty';
+    if (snipAccepts(t).indexOf(got) >= 0) {
+      return snipAccepts(t, true).indexOf(snipNorm(input, true)) >= 0 ? 'right' : 'case';
+    }
+    var close = snipAccepts(t).some(function (a) { return editDist(a, got) <= (a.length > 24 ? 2 : 1); });
+    return close ? 'close' : 'wrong';
+  }
+  function snipCats() {
+    var order = [], by = {};
+    snipAll().forEach(function (s) {
+      var cat = (s.group || 'Other').split(' · ')[0];
+      if (!by[cat]) { by[cat] = { order: [], by: {} }; order.push(cat); }
+      var g = s.group || 'Other';
+      if (!by[cat].by[g]) { by[cat].by[g] = []; by[cat].order.push(g); }
+      by[cat].by[g].push(s);
+    });
+    return { order: order, by: by };
+  }
+  function snipStats(list) {
+    var p = snipProg(), out = { solid: 0, known: 0, shaky: 0, "new": 0, total: list.length };
+    list.forEach(function (s) { out[snipState(p[s.id])]++; });
+    out.pct = list.length ? Math.round(100 * (out.solid + out.known * 0.55) / list.length) : 0;
+    return out;
+  }
+  function getQuickSize() { var n = +(localStorage.getItem('ds_snip_size')); return (n === 8 || n === 12 || n === 20 || n === 40) ? n : 12; }
+  function setQuickSize(n) { try { localStorage.setItem('ds_snip_size', n); } catch (e) {} }
+  // Round builder: weakest first (shaky → new → known → solid), then a shuffle inside each band.
+  function buildQuickRound(list, size, only) {
+    var p = snipProg(), bands = { shaky: [], "new": [], known: [], solid: [] };
+    list.forEach(function (s) { bands[snipState(p[s.id])].push(s); });
+    var pick = [];
+    (only ? [only] : ['shaky', 'new', 'known', 'solid']).forEach(function (b) { pick = pick.concat(shuffle(bands[b])); });
+    return size ? pick.slice(0, size) : shuffle(pick);
+  }
+  function quickBar(label, meta) {
+    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').onclick = home;
+    bar.querySelector('.exmeta').innerHTML = '<b>Quickfire</b> · ' + esc(label) + (meta ? ' · ' + meta : '');
+    return bar;
+  }
+  function startQuick(list, label) {
+    if (!list || !list.length) return home();
+    var i = 0, right = 0, first = 0, missed = [];
+    step();
+    function step() {
+      if (i >= list.length) return done();
+      var t = list[i], peeked = false, tries = 0, hints = 0, settled = false;
+      app.innerHTML = '';
+      app.appendChild(quickBar(label, (i + 1) + ' of ' + list.length));
+      var card = h('<article class="qcard code-card qf-card"><div class="q-eyebrow"><span class="qf-group"></span>' + diffTag(t.lvl || 1) + '</div>' +
+        '<h2 class="qf-ask"></h2><p class="qf-setup" hidden></p>' +
+        '<textarea class="code-write qf-in" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="type the code…"></textarea>' +
+        '<div class="qf-hint" hidden></div>' +
+        '<div class="next-row qf-row"><button class="btn qf-check">Check</button><button class="btn ghost qf-hintb">Hint</button><button class="btn ghost qf-show">Show answer</button></div>' +
+        '<div class="code-after qf-after" hidden></div></article>');
+      card.querySelector('.qf-group').textContent = t.group || 'Quickfire';
+      card.querySelector('.qf-ask').textContent = t.ask;
+      if (t.setup) { var su = card.querySelector('.qf-setup'); su.hidden = false; su.textContent = t.setup; }
+      var ta = card.querySelector('.qf-in'), after = card.querySelector('.qf-after'), row = card.querySelector('.qf-row');
+      var hintEl = card.querySelector('.qf-hint');
+      ta.onkeydown = function (e) {
+        if (e.key === 'Enter' && !e.shiftKey && t.a.indexOf('\n') < 0) { e.preventDefault(); check(); }
+      };
+      card.querySelector('.qf-check').onclick = check;
+      card.querySelector('.qf-show').onclick = function () { peeked = true; reveal(false, 'Answer', 'Read it, then type it out once to make it stick.'); };
+      card.querySelector('.qf-hintb').onclick = function () {
+        hints++;
+        hintEl.hidden = false;
+        var a = t.a;
+        if (hints === 1 && t.hint) hintEl.textContent = '💡 ' + t.hint;
+        else if (hints <= 2) hintEl.textContent = '💡 Starts: ' + a.slice(0, Math.max(3, Math.ceil(a.length * 0.25))) + '…  (' + a.length + ' characters)';
+        else hintEl.textContent = '💡 ' + a.slice(0, Math.ceil(a.length * 0.6)) + '…';
+        peeked = true;
+      };
+      app.appendChild(card);
+      ta.focus();
+      window.scrollTo(0, 0);
+      function check() {
+        if (settled) return;
+        var v = snipCheck(t, ta.value);
+        if (v === 'empty') { ta.focus(); return; }
+        if (v === 'close') {
+          tries++;
+          ta.classList.add('mi-shake');
+          setTimeout(function () { ta.classList.remove('mi-shake'); }, 350);
+          hintEl.hidden = false;
+          hintEl.textContent = '👀 So close — that\'s a character or two out. Check the spelling and try again.';
+          return;
+        }
+        logActivity();
+        if (v === 'right' || v === 'case') {
+          if (!peeked && !tries) first++;
+          right++;
+          snipMark(t.id, true, peeked);
+          reveal(true, v === 'case' ? 'Right ✓ (watch the capitals)' : (peeked ? 'Correct ✓' : 'Nailed it ✓'),
+            v === 'case' ? 'Python is case-sensitive — the letters matter as much as the words.'
+              : (peeked ? 'Right, with a look. It only counts as solid when it comes cold.' : 'That is the line.'));
+        } else {
+          missed.push(t);
+          snipMark(t.id, false, peeked);
+          reveal(false, 'Not quite', 'Here is the line — read it; you can retake the ones you miss at the end of the round.');
+        }
+      }
+      function reveal(ok, label, extra) {
+        settled = true;
+        row.remove();
+        ta.disabled = true;
+        hintEl.hidden = true;
+        after.hidden = false;
+        after.innerHTML = '<div class="banner ' + (ok ? 'good' : 'bad') + '"><span class="b-label">' + esc(label) + '</span>' + esc(extra || '') + '</div>' +
+          '<div class="code-sol"><span class="p-label">The line</span><pre class="qf-ans"></pre></div>' +
+          (t.alts && t.alts.length ? '<p class="qf-alts"><b>Also fine:</b> </p>' : '') +
+          (t.note ? '<p class="qf-note"></p>' : '') +
+          '<div class="next-row"><button class="btn qf-next"></button><button class="btn ghost qf-home">Coding home</button></div>';
+        after.querySelector('.qf-ans').textContent = t.a;
+        if (t.alts && t.alts.length) {
+          var ap = after.querySelector('.qf-alts');
+          t.alts.slice(0, 4).forEach(function (a, k) {
+            var c = document.createElement('code'); c.textContent = a;
+            if (k) ap.appendChild(document.createTextNode(' · '));
+            ap.appendChild(c);
+          });
+        }
+        if (t.note) after.querySelector('.qf-note').textContent = t.note;
+        var nb = after.querySelector('.qf-next');
+        nb.textContent = (i + 1 >= list.length) ? 'Finish round →' : 'Next →';
+        nb.onclick = function () { i++; step(); };
+        after.querySelector('.qf-home').onclick = home;
+        after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        nb.focus();
+      }
+    }
+    function done() {
+      app.innerHTML = '';
+      app.appendChild(quickBar(label, 'round complete'));
+      var pct = Math.round(100 * right / list.length);
+      var card = h('<article class="qcard code-card"><div class="q-eyebrow">Round complete</div>' +
+        '<h2 class="code-ask">' + right + ' of ' + list.length + ' right<span class="qf-pct"> · ' + pct + '%</span></h2>' +
+        '<p class="code-why">' + first + ' typed correctly first go, cold.' + (missed.length ? ' ' + missed.length + ' to go again.' : ' Clean sweep.') + '</p>' +
+        '<div class="next-row"><button class="btn qf-again">Another round →</button>' +
+        (missed.length ? '<button class="btn ghost qf-redo">Redo the ' + missed.length + ' I missed</button>' : '') +
+        '<button class="btn ghost qf-home">Quickfire home</button></div></article>');
+      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed'); };
+      if (missed.length) card.querySelector('.qf-redo').onclick = function () { startQuick(shuffle(missed.slice()), label + ' · retry'); };
+      card.querySelector('.qf-home').onclick = function () { setCodeDoor('quick'); home(); };
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+    }
+  }
+  function renderCodeQuick() {
+    var all = snipAll();
+    if (!all.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">No quickfire cards loaded.</p></section>')); return; }
+    var st = snipStats(all);
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">Quickfire recall</div>' +
+      '<p class="code-intro-p">One small ask, one line of code, typed from memory — <i>“how do I check the head of a data source?”</i> → <code>df.head()</code>. ' +
+      'Spacing and quote style don\'t matter; the words do. ' + all.length + ' cards across pandas, NumPy, plain Python, plotting and scikit-learn.</p>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + st.pct + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + st.pct + '%</b> recalled</span></div>' +
+      '<div class="mast-badges cdash-badges">' +
+        '<span class="mb mb-learnt"><b>' + st.solid + '</b> solid</span>' +
+        '<span class="mb mb-learning"><b>' + st.known + '</b> getting there</span>' +
+        '<span class="mb mb-strug"><b>' + st.shaky + '</b> shaky</span>' +
+        '<span class="mb mb-new"><b>' + st["new"] + '</b> not seen</span>' +
+      '</div></section>');
+    var sizeRow = h('<div class="code-diff-row"><span class="filt-lab">Round length</span></div>');
+    [8, 12, 20, 40].forEach(function (n) {
+      var b = h('<button class="cdf-chip' + (getQuickSize() === n ? ' cdf-on' : '') + '" type="button"></button>');
+      b.textContent = n + ' cards';
+      b.onclick = function () { setQuickSize(n); home(); };
+      sizeRow.appendChild(b);
+    });
+    intro.appendChild(sizeRow);
+    var startRow = h('<div class="next-row qf-start"><button class="btn qf-mixed">Start a mixed round →</button>' +
+      '<button class="btn ghost qf-weak">Weak spots</button><button class="btn ghost qf-fresh">Cards I haven\'t seen</button></div>');
+    startRow.querySelector('.qf-mixed').onclick = function () { startQuick(buildQuickRound(all, getQuickSize()), 'mixed'); };
+    startRow.querySelector('.qf-weak').onclick = function () {
+      var r = buildQuickRound(all, getQuickSize(), 'shaky');
+      if (!r.length) r = buildQuickRound(all, getQuickSize());
+      startQuick(r, 'weak spots');
+    };
+    startRow.querySelector('.qf-fresh').onclick = function () {
+      var r = buildQuickRound(all, getQuickSize(), 'new');
+      if (!r.length) r = buildQuickRound(all, getQuickSize());
+      startQuick(r, 'new cards');
+    };
+    intro.appendChild(startRow);
+    app.appendChild(intro);
+    // Search across every card — doubles as the cheat-sheet.
+    var searchCard = h('<section class="code-intro qf-searchwrap"><input class="cref-search qf-search" type="search" placeholder="Search the cards… e.g. groupby, fillna, enumerate" autocomplete="off"><div class="qf-results" hidden></div></section>');
+    var searchIn = searchCard.querySelector('.qf-search'), results = searchCard.querySelector('.qf-results');
+    searchIn.oninput = function () {
+      var q = searchIn.value.trim().toLowerCase();
+      results.innerHTML = '';
+      results.hidden = !q;
+      if (!q) return;
+      var hits = all.filter(function (s) { return (s.ask + ' ' + s.a + ' ' + (s.note || '') + ' ' + s.group).toLowerCase().indexOf(q) >= 0; });
+      results.appendChild(h('<div class="qf-rescount">' + hits.length + ' card' + (hits.length === 1 ? '' : 's') + '</div>'));
+      hits.slice(0, 60).forEach(function (s) {
+        var r = h('<div class="qf-res"><span class="qf-res-ask"></span><pre class="qf-res-a"></pre></div>');
+        r.querySelector('.qf-res-ask').textContent = s.ask;
+        r.querySelector('.qf-res-a').textContent = s.a;
+        results.appendChild(r);
+      });
+      if (hits.length) {
+        var go = h('<div class="next-row"><button class="btn ghost qf-drill">Drill these ' + Math.min(hits.length, 40) + ' →</button></div>');
+        go.querySelector('.qf-drill').onclick = function () { startQuick(buildQuickRound(hits, 40), '“' + searchIn.value.trim() + '”'); };
+        results.appendChild(go);
+      }
+    };
+    app.appendChild(searchCard);
+    // Category → group list, each with its own progress and a start button.
+    var cats = snipCats(), p = snipProg();
+    cats.order.forEach(function (cat) {
+      var catList = [];
+      cats.by[cat].order.forEach(function (g) { catList = catList.concat(cats.by[cat].by[g]); });
+      var cs = snipStats(catList);
+      var head = h('<div class="sec-label sec-sub qf-cat"><span></span><span class="qf-cat-pct">' + cs.pct + '% · ' + catList.length + ' cards</span></div>');
+      head.querySelector('span').textContent = cat;
+      app.appendChild(head);
+      cats.by[cat].order.forEach(function (g) {
+        var items = cats.by[cat].by[g], gs = snipStats(items);
+        var sub = (g.split(' · ')[1] || g);
+        var row = h('<button class="qf-grow" type="button"><span class="qf-grow-t"></span>' +
+          '<span class="qf-grow-bar"><span style="width:' + gs.pct + '%"></span></span>' +
+          '<span class="qf-grow-n">' + gs.pct + '% · ' + items.length + '</span></button>');
+        row.querySelector('.qf-grow-t').textContent = sub;
+        row.onclick = function () { startQuick(buildQuickRound(items, getQuickSize()), sub); };
+        app.appendChild(row);
+      });
+    });
+  }
+  // Coding mode has its own doors: Quickfire (type the line), Practice (the tasks),
+  // Reference (solutions, searchable), Dashboard (progress). Mirrors the main home's structure.
+  function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard' || v === 'quick') ? v : 'practice'; }
   function setCodeDoor(v) { try { localStorage.setItem('ds_code_door', v); } catch (e) {} }
   function codeGroups(list) {
     var tasks = list || window.CODETASKS || [], order = [], by = {};
@@ -1967,8 +2257,9 @@
   function startCodeLevel(key, L) { if (L === 0) startCodeExample(key); else if (L === 1) startCodeMCQ(key); else if (L === 2) startCodeOrder(key); else startCodeWrite(key); }
   function renderCodeHome() {
     var door = getCodeDoor();
-    var nav = h('<nav class="home-doors" role="tablist"></nav>');
-    [{ v: 'practice', t: 'Practice', s: 'The tasks, four levels each' },
+    var nav = h('<nav class="home-doors doors-4" role="tablist"></nav>');
+    [{ v: 'quick', t: 'Quickfire', s: 'Type the line, from memory' },
+     { v: 'practice', t: 'Practice', s: 'The tasks, four levels each' },
      { v: 'reference', t: 'Reference', s: 'Every solution, searchable' },
      { v: 'dashboard', t: 'Dashboard', s: 'Progress & next up' }].forEach(function (d) {
       var b = h('<button class="door' + (d.v === door ? ' door-on' : '') + '" type="button" role="tab"><span class="door-t"></span><span class="door-s"></span></button>');
@@ -1978,6 +2269,7 @@
       nav.appendChild(b);
     });
     app.appendChild(nav);
+    if (door === 'quick') return renderCodeQuick();
     if (door === 'reference') return renderCodeReference();
     if (door === 'dashboard') return renderCodeDashboard();
     renderCodeTasks();

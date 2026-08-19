@@ -819,6 +819,40 @@ input[type=range]{accent-color:var(--cobalt)}
 .cdf-chip:hover{border-color:var(--ink);color:var(--ink)}
 .cdf-on{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
 .ct-meta{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+/* Four doors (coding mode) — wrap to two rows on narrow screens */
+.doors-4{flex-wrap:wrap}
+.doors-4 .door{flex:1 1 calc(50% - 4px);min-width:132px}
+@media (min-width:720px){.doors-4 .door{flex:1 1 0}}
+.mode-tabs{flex-wrap:wrap}
+.mode-tabs .mode-tab{flex:1 1 calc(50% - 4px);min-width:120px}
+@media (min-width:760px){.mode-tabs .mode-tab{flex:1 1 0}}
+/* Quickfire */
+.qf-card .q-eyebrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qf-group{font-weight:700}
+.qf-ask{font-family:var(--serif);font-size:1.2rem;line-height:1.35;margin:8px 0 6px}
+.qf-setup{font-size:.86rem;color:var(--ink-2);margin:0 0 10px;padding:7px 10px;border-left:3px solid var(--rule);background:var(--paper);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.qf-in{margin-top:6px;font-size:.95rem}
+.qf-hint{margin:2px 0 10px;font-size:.86rem;color:var(--ink-2);background:var(--hilite);display:inline-block;padding:5px 9px;border-radius:4px}
+.qf-hint[hidden]{display:none}
+.qf-alts{font-size:.84rem;color:var(--ink-2);margin:8px 0 0}
+.qf-alts code{background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:1px 5px;font-size:.82rem}
+.qf-note{font-size:.9rem;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
+.qf-pct{color:var(--ink-2);font-weight:400}
+.qf-start{margin-top:14px}
+.qf-searchwrap{padding-top:12px;padding-bottom:12px}
+.qf-results{margin-top:10px;max-height:420px;overflow:auto}
+.qf-rescount{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.qf-res{padding:7px 0;border-top:1px solid var(--grid)}
+.qf-res-ask{display:block;font-size:.88rem;color:var(--ink-2)}
+.qf-res-a{margin:3px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;color:var(--ink);white-space:pre-wrap}
+.qf-cat{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.qf-cat-pct{font-size:.74rem;color:var(--ink-3);letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.qf-grow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 13px;margin-bottom:6px;border:1px solid var(--rule);border-radius:9px;background:var(--sheet);color:var(--ink);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.qf-grow:hover{border-color:var(--ink)}
+.qf-grow-t{flex:1 1 auto;font-size:.94rem;font-weight:600}
+.qf-grow-bar{flex:0 0 76px;height:6px;border-radius:99px;background:var(--grid);overflow:hidden}
+.qf-grow-bar span{display:block;height:100%;background:var(--cobalt)}
+.qf-grow-n{flex:0 0 auto;font-size:.76rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -981,6 +1015,7 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_hard_true.js"></script>
 <script src="data_model_guide.js"></script>
 <script src="data_defs_rank.js"></script>
+<script src="data_snip_pandas1.js"></script>
 <script src="app.js"></script>
 <script>
 /* PWA: offline support + durable storage. No-ops on file:// or the bundled artifact. */
