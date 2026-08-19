@@ -1,0 +1,201 @@
+/* Python coding test — problem bank 6: parsing, dates, classes and statistics.
+   The parts of a screening test that look less like puzzles and more like the job. */
+(function () {
+  window.PYTESTS = window.PYTESTS || [];
+
+  window.PYTESTS.push(
+
+    { id: 'pt-parse-kv', group: 'Parsing & files', lvl: 2,
+      title: 'Parse key=value pairs',
+      fn: 'parse_config',
+      brief: 'Turn a config string of "key=value" lines into a dict.\n\nIgnore blank lines and lines starting with #. Strip whitespace around keys and values. A line with no = sign is ignored.',
+      sig: 'def parse_config(text: str) -> dict[str, str]',
+      starter: 'def parse_config(text):\n    # your code here\n    pass\n',
+      examples: [
+        { in: "parse_config('a = 1\\n# note\\nb=2')", out: "{'a': '1', 'b': '2'}" }],
+      tests: [
+        { call: "parse_config('a = 1\\n# note\\nb=2')", expect: "{'a': '1', 'b': '2'}" },
+        { call: "parse_config('')", expect: '{}' },
+        { call: "parse_config('nonsense')", expect: '{}', name: 'no equals sign' },
+        { call: "parse_config('url=http://x.com/a=b')", expect: "{'url': 'http://x.com/a=b'}", hidden: true, name: 'split on the FIRST equals only' },
+        { call: "parse_config('  spaced  =  out  \\n\\n')", expect: "{'spaced': 'out'}", hidden: true }],
+      hint: 'str.split("=", 1) splits once and keeps the rest of the line intact — which matters for values containing =.',
+      solution: "def parse_config(text):\n    out = {}\n    for line in text.splitlines():\n        line = line.strip()\n        if not line or line.startswith('#') or '=' not in line:\n            continue\n        key, value = line.split('=', 1)\n        out[key.strip()] = value.strip()\n    return out\n",
+      walk: "The maxsplit argument is the detail this question is built around: a URL or a base64 value contains = signs, and an unlimited split would throw the tail away or raise on unpacking. Filter the junk lines first so the parsing code stays simple.",
+      complexity: 'O(n) in the length of the text.' },
+
+    { id: 'pt-parse-csv', group: 'Parsing & files', lvl: 2,
+      title: 'Read a CSV block',
+      fn: 'read_rows',
+      brief: 'Turn a block of CSV text — a header row and then data rows — into a list of dicts keyed by the header names.\n\nAssume no quoted commas. Ignore blank lines.',
+      sig: 'def read_rows(text: str) -> list[dict]',
+      starter: 'def read_rows(text):\n    # your code here\n    pass\n',
+      examples: [
+        { in: "read_rows('a,b\\n1,2')", out: "[{'a': '1', 'b': '2'}]" }],
+      tests: [
+        { call: "read_rows('a,b\\n1,2')", expect: "[{'a': '1', 'b': '2'}]" },
+        { call: "read_rows('a,b')", expect: '[]', name: 'header only' },
+        { call: "read_rows('')", expect: '[]' },
+        { call: "read_rows('x,y\\n1,2\\n\\n3,4')", expect: "[{'x': '1', 'y': '2'}, {'x': '3', 'y': '4'}]", hidden: true, name: 'blank line in the middle' },
+        { call: "len(read_rows('a\\n' + '\\n'.join(str(i) for i in range(500))))", expect: '500', hidden: true }],
+      hint: 'Split the header once, then zip it against each row to build the dict.',
+      solution: "def read_rows(text):\n    lines = [ln for ln in text.splitlines() if ln.strip()]\n    if not lines:\n        return []\n    header = lines[0].split(',')\n    return [dict(zip(header, line.split(','))) for line in lines[1:]]\n",
+      walk: "dict(zip(header, values)) is the idiom worth remembering — it is exactly what csv.DictReader does underneath. Dropping the blank lines before you touch the header keeps the index arithmetic honest. In real work, use the csv module: it handles quoted commas, which this does not.",
+      complexity: 'O(n) in the number of cells.' },
+
+    { id: 'pt-log-parse', group: 'Parsing & files', lvl: 3,
+      title: 'Count the errors per hour',
+      fn: 'errors_by_hour',
+      brief: 'Given log lines in the form "2024-01-31 14:05:00 ERROR something went wrong", count the ERROR lines per hour.\n\nReturn a dict of hour (as an int, 0–23) → count. Ignore lines at any other level, and lines that do not match the shape.',
+      sig: 'def errors_by_hour(lines: list[str]) -> dict[int, int]',
+      starter: 'def errors_by_hour(lines):\n    # your code here\n    pass\n',
+      examples: [
+        { in: "errors_by_hour(['2024-01-31 14:05:00 ERROR x', '2024-01-31 14:59:00 ERROR y'])", out: '{14: 2}' }],
+      tests: [
+        { call: "errors_by_hour(['2024-01-31 14:05:00 ERROR x', '2024-01-31 14:59:00 ERROR y'])", expect: '{14: 2}' },
+        { call: "errors_by_hour(['2024-01-31 09:00:00 INFO fine'])", expect: '{}', name: 'other levels ignored' },
+        { call: "errors_by_hour([])", expect: '{}' },
+        { call: "errors_by_hour(['garbage', '2024-01-31 00:01:00 ERROR z'])", expect: '{0: 1}', hidden: true, name: 'junk lines survive' },
+        { call: "errors_by_hour(['2024-01-31 23:00:00 ERROR a', '2024-01-31 23:30:00 ERROR b', '2024-02-01 01:00:00 ERROR c'])", expect: '{23: 2, 1: 1}', hidden: true }],
+      hint: 'A regex with a capture group for the hour is the tidiest route: r"\\d{4}-\\d{2}-\\d{2} (\\d{2}):\\d{2}:\\d{2} ERROR".',
+      solution: "import re\n\ndef errors_by_hour(lines):\n    pattern = re.compile(r'^\\d{4}-\\d{2}-\\d{2} (\\d{2}):\\d{2}:\\d{2} ERROR\\b')\n    counts = {}\n    for line in lines:\n        m = pattern.match(line)\n        if m:\n            hour = int(m.group(1))\n            counts[hour] = counts.get(hour, 0) + 1\n    return counts\n",
+      walk: "Matching the whole shape at once means the junk lines are rejected for free — no try/except, no index errors. Compiling the pattern outside the loop matters on a real log file. int() on the captured '09' gives 9, not an octal surprise: Python 3 parses leading zeros in strings fine.",
+      complexity: 'O(n) in the number of lines.' },
+
+    { id: 'pt-days-between', group: 'Dates & times', lvl: 2,
+      title: 'Days between two dates',
+      fn: 'days_between',
+      brief: 'Given two dates as "YYYY-MM-DD" strings, return the number of whole days between them.\n\nThe answer is never negative, whichever order they come in.',
+      sig: 'def days_between(a: str, b: str) -> int',
+      starter: 'from datetime import datetime\n\ndef days_between(a, b):\n    # your code here\n    pass\n',
+      examples: [
+        { in: "days_between('2024-01-01', '2024-01-31')", out: '30' }],
+      tests: [
+        { call: "days_between('2024-01-01', '2024-01-31')", expect: '30' },
+        { call: "days_between('2024-01-31', '2024-01-01')", expect: '30', name: 'order does not matter' },
+        { call: "days_between('2024-03-01', '2024-03-01')", expect: '0' },
+        { call: "days_between('2024-02-28', '2024-03-01')", expect: '2', hidden: true, name: '2024 is a leap year' },
+        { call: "days_between('2023-02-28', '2023-03-01')", expect: '1', hidden: true, name: '2023 is not' }],
+      hint: 'Parse both with datetime.strptime, subtract, and take .days — then abs() it.',
+      solution: "from datetime import datetime\n\ndef days_between(a, b):\n    fmt = '%Y-%m-%d'\n    delta = datetime.strptime(a, fmt) - datetime.strptime(b, fmt)\n    return abs(delta.days)\n",
+      walk: 'Subtracting two datetimes gives a timedelta, and .days is the whole-day part. Letting the library handle the calendar is the whole point — the leap-year tests are there to punish anyone who multiplies months by 30. date.fromisoformat(a) is an even shorter parse for this exact format.',
+      complexity: 'O(1).' },
+
+    { id: 'pt-weekdays', group: 'Dates & times', lvl: 3,
+      title: 'Count the weekdays',
+      fn: 'count_weekdays',
+      brief: 'Given a start and end date as "YYYY-MM-DD" strings, count the weekdays (Monday to Friday) from the start up to and including the end.\n\nIf the end is before the start, return 0.',
+      sig: 'def count_weekdays(start: str, end: str) -> int',
+      starter: 'from datetime import date, timedelta\n\ndef count_weekdays(start, end):\n    # your code here\n    pass\n',
+      examples: [
+        { in: "count_weekdays('2024-01-01', '2024-01-07')", out: '5', note: 'Monday to Sunday holds five weekdays' }],
+      tests: [
+        { call: "count_weekdays('2024-01-01', '2024-01-07')", expect: '5' },
+        { call: "count_weekdays('2024-01-06', '2024-01-07')", expect: '0', name: 'a weekend' },
+        { call: "count_weekdays('2024-01-02', '2024-01-01')", expect: '0', name: 'end before start' },
+        { call: "count_weekdays('2024-01-01', '2024-01-01')", expect: '1', hidden: true, name: 'one weekday' },
+        { call: "count_weekdays('2024-01-01', '2024-12-31')", expect: '262', hidden: true }],
+      hint: 'date.weekday() is 0 for Monday and 6 for Sunday, so anything under 5 is a weekday. Step a day at a time.',
+      solution: "from datetime import date, timedelta\n\ndef count_weekdays(start, end):\n    a = date.fromisoformat(start)\n    b = date.fromisoformat(end)\n    if b < a:\n        return 0\n    days = 0\n    while a <= b:\n        if a.weekday() < 5:\n            days += 1\n        a += timedelta(days=1)\n    return days\n",
+      walk: "The inclusive end is what the <= in the loop is for; using < is the off-by-one this question is fishing for. Stepping day by day is fine for the ranges here — for years of data you would compute whole weeks arithmetically and only walk the ragged ends.",
+      complexity: 'O(d) in the number of days.' },
+
+    { id: 'pt-class-account', group: 'Classes', lvl: 2,
+      title: 'A small bank account',
+      fn: 'Account',
+      brief: 'Write a class Account with a starting balance of 0.\n\n· deposit(amount) adds to the balance\n· withdraw(amount) takes from it, but raises ValueError("insufficient funds") if there is not enough\n· balance is readable as an attribute\n\nA deposit or withdrawal of a negative amount should raise ValueError("amount must be positive").',
+      sig: 'class Account:  # .deposit(x), .withdraw(x), .balance',
+      starter: 'class Account:\n    def __init__(self):\n        # your code here\n        pass\n',
+      examples: [
+        { in: 'a = Account(); a.deposit(10); a.balance', out: '10' }],
+      tests: [
+        { call: '(lambda a: (a.deposit(10), a.balance)[1])(Account())', expect: '10' },
+        { call: 'Account().balance', expect: '0', name: 'starts empty' },
+        { call: "(lambda a: (a.deposit(10), a.withdraw(4), a.balance)[2])(Account())", expect: '6' },
+        { call: "_try(Account(), 'withdraw', 1)", expect: "'insufficient funds'", hidden: true, name: 'overdrawing raises' },
+        { call: "_try(Account(), 'deposit', -5)", expect: "'amount must be positive'", hidden: true, name: 'negative amounts rejected' }],
+      setup: "def _try(account, method, amount):\n    try:\n        getattr(account, method)(amount)\n        return 'no error'\n    except ValueError as e:\n        return str(e)\n",
+      hint: 'Set self.balance = 0 in __init__, then guard each method before changing it.',
+      solution: "class Account:\n    def __init__(self):\n        self.balance = 0\n\n    def deposit(self, amount):\n        if amount < 0:\n            raise ValueError('amount must be positive')\n        self.balance += amount\n\n    def withdraw(self, amount):\n        if amount < 0:\n            raise ValueError('amount must be positive')\n        if amount > self.balance:\n            raise ValueError('insufficient funds')\n        self.balance -= amount\n",
+      walk: 'Check before you change: validating the amount and the balance BEFORE touching self.balance means a rejected withdrawal leaves the account exactly as it was. Raising with a specific message rather than returning False is what the caller needs to distinguish the two failures.',
+      complexity: 'O(1) per operation.' },
+
+    { id: 'pt-class-stats', group: 'Classes', lvl: 3,
+      title: 'Running statistics',
+      fn: 'RunningStats',
+      brief: 'Write a class RunningStats that accepts numbers one at a time with .add(x) and can report .count, .total, .mean() and .max().\n\nOn an empty object, mean() returns 0 and max() returns None. It must not store every number it has seen.',
+      sig: 'class RunningStats:  # .add(x), .count, .total, .mean(), .max()',
+      starter: 'class RunningStats:\n    def __init__(self):\n        # your code here\n        pass\n',
+      examples: [
+        { in: 's = RunningStats(); s.add(2); s.add(4); s.mean()', out: '3.0' }],
+      tests: [
+        { call: '_feed([2, 4]).mean()', expect: '3.0' },
+        { call: 'RunningStats().mean()', expect: '0', name: 'empty mean' },
+        { call: 'RunningStats().max()', expect: 'None', name: 'empty max' },
+        { call: '_feed([1, 9, 5]).max()', expect: '9', hidden: true },
+        { call: '_feed([1, 2, 3]).count', expect: '3', hidden: true }],
+      setup: "def _feed(values):\n    s = RunningStats()\n    for v in values:\n        s.add(v)\n    return s\n",
+      hint: 'Keep three numbers — count, total and the largest so far — and update them in add().',
+      solution: "class RunningStats:\n    def __init__(self):\n        self.count = 0\n        self.total = 0\n        self._max = None\n\n    def add(self, x):\n        self.count += 1\n        self.total += x\n        if self._max is None or x > self._max:\n            self._max = x\n\n    def mean(self):\n        return self.total / self.count if self.count else 0\n\n    def max(self):\n        return self._max\n",
+      walk: "Streaming statistics: constant memory however much data arrives, which is why this shape turns up in interviews about large files. `self._max is None` rather than a starting value of 0 keeps it correct for all-negative input. Guard the division for the empty case rather than letting it raise.",
+      complexity: 'O(1) per value, O(1) memory in total.' },
+
+    { id: 'pt-median', group: 'Statistics', lvl: 2,
+      title: 'Median by hand',
+      fn: 'median',
+      brief: 'Return the median of a list of numbers, without using the statistics module.\n\nFor an even count, average the two middle values. An empty list returns None.',
+      sig: 'def median(nums: list[float]) -> float | None',
+      starter: 'def median(nums):\n    # your code here\n    pass\n',
+      examples: [
+        { in: 'median([3, 1, 2])', out: '2' },
+        { in: 'median([4, 1, 2, 3])', out: '2.5' }],
+      tests: [
+        { call: 'median([3, 1, 2])', expect: '2' },
+        { call: 'median([4, 1, 2, 3])', expect: '2.5' },
+        { call: 'median([])', expect: 'None' },
+        { call: 'median([7])', expect: '7', hidden: true },
+        { call: 'median([1, 1, 1, 100])', expect: '1.0', hidden: true, name: 'robust to an outlier' }],
+      hint: 'Sort a copy first. With an odd count take the middle; with an even count average the two either side of it.',
+      solution: 'def median(nums):\n    if not nums:\n        return None\n    s = sorted(nums)\n    mid = len(s) // 2\n    if len(s) % 2:\n        return s[mid]\n    return (s[mid - 1] + s[mid]) / 2\n',
+      walk: 'sorted() rather than .sort() so the caller\'s list is left alone — a side effect that costs people marks. Integer division gives the middle index; for an even length that index is the RIGHT of the two middles, so pair it with mid - 1.',
+      complexity: 'O(n log n) for the sort.' },
+
+    { id: 'pt-std', group: 'Statistics', lvl: 3,
+      title: 'Standard deviation by hand',
+      fn: 'stdev',
+      brief: 'Return the SAMPLE standard deviation of a list — the one that divides by n − 1.\n\nFewer than two values returns 0.',
+      sig: 'def stdev(nums: list[float]) -> float',
+      starter: 'def stdev(nums):\n    # your code here\n    pass\n',
+      examples: [
+        { in: 'stdev([2, 4, 4, 4, 5, 5, 7, 9])', out: '2.138…' }],
+      tests: [
+        { call: 'round(stdev([2, 4, 4, 4, 5, 5, 7, 9]), 4)', expect: '2.1381' },
+        { call: 'stdev([5])', expect: '0', name: 'one value has no spread' },
+        { call: 'stdev([])', expect: '0' },
+        { call: 'stdev([1, 1, 1])', expect: '0.0', hidden: true, name: 'no variation' },
+        { call: 'round(stdev([1, 3]), 4)', expect: '1.4142', hidden: true }],
+      hint: 'Mean first, then the average squared deviation with n − 1 on the bottom, then the square root.',
+      solution: 'def stdev(nums):\n    n = len(nums)\n    if n < 2:\n        return 0\n    mean = sum(nums) / n\n    variance = sum((x - mean) ** 2 for x in nums) / (n - 1)\n    return variance ** 0.5\n',
+      walk: 'Dividing by n − 1 rather than n is Bessel\'s correction — it is what makes this the SAMPLE standard deviation, and it is why pandas and NumPy disagree by default (pandas uses n − 1, NumPy uses n). The n < 2 guard also stops a division by zero.',
+      complexity: 'O(n) time, O(1) space.' },
+
+    { id: 'pt-normalise', group: 'Statistics', lvl: 2,
+      title: 'Scale to 0–1',
+      fn: 'normalise',
+      brief: 'Rescale a list of numbers so the smallest becomes 0 and the largest becomes 1.\n\nIf every value is the same, return a list of zeros. An empty list returns an empty list.',
+      sig: 'def normalise(nums: list[float]) -> list[float]',
+      starter: 'def normalise(nums):\n    # your code here\n    pass\n',
+      examples: [
+        { in: 'normalise([0, 5, 10])', out: '[0.0, 0.5, 1.0]' }],
+      tests: [
+        { call: 'normalise([0, 5, 10])', expect: '[0.0, 0.5, 1.0]' },
+        { call: 'normalise([3, 3, 3])', expect: '[0.0, 0.0, 0.0]', name: 'no range — must not divide by zero' },
+        { call: 'normalise([])', expect: '[]' },
+        { call: 'normalise([-10, 0, 10])', expect: '[0.0, 0.5, 1.0]', hidden: true, name: 'negatives' },
+        { call: 'normalise([2])', expect: '[0.0]', hidden: true }],
+      hint: '(x - min) / (max - min) — but check what happens when max equals min before you divide.',
+      solution: 'def normalise(nums):\n    if not nums:\n        return []\n    low, high = min(nums), max(nums)\n    if high == low:\n        return [0.0] * len(nums)\n    return [(x - low) / (high - low) for x in nums]\n',
+      walk: 'This is min-max scaling, the same transformation as sklearn\'s MinMaxScaler. The constant-column case is the trap: high − low is 0 and the division raises. In a real pipeline you would fit low and high on the training data only and reuse them on the test set.',
+      complexity: 'O(n) time and space.' }
+  );
+})();
