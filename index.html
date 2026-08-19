@@ -932,6 +932,49 @@ input[type=range]{accent-color:var(--cobalt)}
 .pt-quizcode{margin:8px 0 14px;padding:12px 14px;background:var(--paper);border:1px solid var(--grid);border-radius:7px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
 .pt-resume{border-left:4px solid var(--cobalt)}
 .pt-needs{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule);border-radius:99px;padding:2px 8px}
+/* ---- The course ---- */
+.course-hero .code-intro-p{margin-bottom:12px}
+.course-continue{display:flex;flex-direction:column;gap:3px;margin-top:14px;padding:13px 15px;border:1.5px solid var(--ink);border-radius:11px;background:var(--sheet)}
+.cc-label{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.cc-where{font-family:var(--serif);font-weight:700;font-size:1.06rem;line-height:1.2}
+.cc-what{font-size:.86rem;color:var(--ink-2);margin-bottom:9px}
+.cc-go{align-self:flex-start}
+.course-stage{margin:26px 0 10px}
+.cs-head{display:flex;align-items:baseline;gap:9px}
+.cs-no{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);letter-spacing:.08em}
+.cs-name{flex:1 1 auto;font-family:var(--serif);font-weight:700;font-size:1.16rem}
+.cs-pct{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.cs-blurb{font-size:.88rem;color:var(--ink-2);line-height:1.5;margin:4px 0 8px}
+.cs-bar{height:5px}
+.cu-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 13px;margin-bottom:6px;border:1px solid var(--rule);border-radius:9px;background:var(--sheet);color:var(--ink);cursor:pointer;transition:border-color .15s}
+.cu-row:hover{border-color:var(--ink)}
+.cu-mark{flex:0 0 24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--rule);font-family:var(--mono);font-size:.72rem;color:var(--ink-2)}
+.cu-done .cu-mark{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.cu-part .cu-mark{border-color:#C7A400;color:#8a7300}
+.cu-next{border-color:var(--ink);box-shadow:0 0 0 3px var(--cobalt-soft)}
+.cu-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.cu-name{font-size:.95rem;font-weight:600;line-height:1.25}
+.cu-sub{font-size:.79rem;color:var(--ink-3);line-height:1.35}
+.cu-count{flex:0 0 auto;font-family:var(--mono);font-size:.72rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.cu-title{font-family:var(--serif);font-size:1.3rem;line-height:1.2;margin:4px 0 6px}
+.cu-needs{font-size:.8rem;color:var(--ink-3);margin:8px 0 0;padding-top:8px;border-top:1px dashed var(--rule)}
+.cstep{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 13px;margin-bottom:5px;border:1px solid var(--grid);border-radius:8px;background:var(--sheet);color:var(--ink);cursor:pointer}
+.cstep:hover{border-color:var(--ink)}
+.cstep-mark{flex:0 0 18px;font-weight:700;color:var(--green)}
+.cstep-done{background:var(--paper)}
+.cstep-done .cstep-title{color:var(--ink-2)}
+.cstep-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.cstep-kind{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.cstep-title{font-size:.92rem;line-height:1.3}
+.course-foot{margin-top:14px;flex-wrap:wrap}
+.cu-alldone{font-size:.9rem;color:var(--green);font-weight:600}
+.course-read .cr-title{font-family:var(--serif);font-size:1.34rem;line-height:1.2;margin:6px 0 12px}
+.cr-p{font-size:1rem;line-height:1.65;margin:0 0 12px}
+.cr-p code,.cr-note code,.cr-aside code{background:var(--paper);border:1px solid var(--grid);border-radius:3px;padding:1px 5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+.cr-code{margin:0 0 14px}
+.cr-code pre{margin:0;padding:12px 14px;background:var(--paper);border:1px solid var(--grid);border-left:3px solid var(--cobalt);border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
+.cr-note{margin:6px 0 0;font-size:.88rem;color:var(--ink-2);line-height:1.55}
+.cr-aside{margin:0 0 14px;padding:11px 13px;background:var(--hilite);border-radius:6px;font-size:.9rem;line-height:1.55}
 </style>
 </head>
 <body>
@@ -1094,6 +1137,7 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_hard_true.js"></script>
 <script src="data_model_guide.js"></script>
 <script src="data_defs_rank.js"></script>
+<script src="data_snip_basics.js"></script>
 <script src="data_snip_pandas1.js"></script>
 <script src="data_snip_pandas2.js"></script>
 <script src="data_snip_pandas3.js"></script>
@@ -1108,6 +1152,7 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_snip_sklearn.js"></script>
 <script src="data_snip_stats.js"></script>
 <script src="data_pytest_harness.js"></script>
+<script src="data_pytest_basics.js"></script>
 <script src="data_pytest_core.js"></script>
 <script src="data_pytest_data.js"></script>
 <script src="data_pytest_debug.js"></script>
@@ -1115,8 +1160,11 @@ input[type=range]{accent-color:var(--cobalt)}
 <script src="data_pytest_algo2.js"></script>
 <script src="data_pytest_misc.js"></script>
 <script src="data_pytest_data2.js"></script>
+<script src="data_pytest_quiz3.js"></script>
 <script src="data_pytest_quiz.js"></script>
 <script src="data_pytest_quiz2.js"></script>
+<script src="data_course.js"></script>
+<script src="data_course2.js"></script>
 <script src="app.js"></script>
 <script>
 /* PWA: offline support + durable storage. No-ops on file:// or the bundled artifact. */

@@ -2,6 +2,12 @@
 
 Open `index.html` in a browser. No build, no dependencies.
 
+## Course
+
+The spine of the app: one ordered path from *what a variable is* to sitting a timed Python test. Four stages, 32 units, ~200 steps. Each unit reads you into the idea, drills the lines until you can type them cold, checks you can predict what Python does, then makes you write something that has to run.
+
+Nothing is locked — but a single Continue button always knows what comes next, and progress is tracked per step.
+
 ## Data Science
 
 Interactive exercises across k-Nearest Neighbours, Logistic Regression, Naive Bayes, Decision Trees, Support Vector Machines, ensembles, clustering, dimensionality reduction, model evaluation and performance optimisation — plus definitions, flashcards, study notes, comparison pages and order-the-steps drills.

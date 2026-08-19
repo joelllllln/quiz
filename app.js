@@ -91,7 +91,7 @@
     { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws', 'wai'], mode: 'work' }
   ];
   // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'ptest' (Python coding tests) · 'work' (FCA & innovation) ----
-  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work' || v === 'ptest') ? v : 'ds'; }
+  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work' || v === 'ptest' || v === 'course') ? v : 'ds'; }
   function setMode(v) { try { localStorage.setItem('ds_mode', v); } catch (e) {} }
   // Topics belong to 'ds' unless tagged; 'code' mode shows its own screen, so shares the ds topic set.
   function topicInMode(t) { var m = getMode() === 'work' ? 'work' : 'ds'; return (t.mode || 'ds') === m; }
@@ -1961,8 +1961,9 @@
   }
   // Kind comparison: spacing, quote style, comments and a wrapping print() are all irrelevant.
   function snipNorm(s, keepCase) {
-    var t = String(s == null ? '' : s).replace(/\r/g, '');
-    t = t.replace(/#[^\n]*/g, '');
+    var t = String(s == null ? '' : s).replace(/\r/g, '').trim();
+    // Comments are noise — except on a card whose whole answer IS a comment.
+    if (t.charAt(0) !== '#') t = t.replace(/#[^\n]*/g, '');
     t = t.replace(/["']/g, "'");
     t = t.replace(/\s+/g, ' ').trim();
     t = t.replace(/\s*([(),\[\]{}=:.<>+\-*/%!|&@])\s*/g, '$1');
@@ -2036,7 +2037,7 @@
     bar.querySelector('.exmeta').innerHTML = '<b>Quickfire</b> · ' + esc(label) + (meta ? ' · ' + meta : '');
     return bar;
   }
-  function startQuick(list, label) {
+  function startQuick(list, label, onFinish) {
     if (!list || !list.length) return home();
     var i = 0, right = 0, first = 0, missed = [];
     step();
@@ -2138,9 +2139,16 @@
         '<div class="next-row"><button class="btn qf-again">Another round →</button>' +
         (missed.length ? '<button class="btn ghost qf-redo">Redo the ' + missed.length + ' I missed</button>' : '') +
         '<button class="btn ghost qf-home">Quickfire home</button></div></article>');
-      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed'); };
-      if (missed.length) card.querySelector('.qf-redo').onclick = function () { startQuick(shuffle(missed.slice()), label + ' · retry'); };
+      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed', onFinish); };
+      if (missed.length) card.querySelector('.qf-redo').onclick = function () { startQuick(shuffle(missed.slice()), label + ' · retry', onFinish); };
       card.querySelector('.qf-home').onclick = function () { setCodeDoor('quick'); home(); };
+      if (onFinish) {
+        var cont = h('<div class="next-row course-foot"><button class="btn qf-course">Continue the course →</button></div>');
+        cont.querySelector('.qf-course').onclick = onFinish;
+        card.insertBefore(cont, card.querySelector('.next-row'));
+        card.querySelector('.qf-again').textContent = 'One more round first';
+        card.querySelector('.qf-again').classList.add('ghost');
+      }
       app.appendChild(card);
       window.scrollTo(0, 0);
     }
@@ -2230,6 +2238,291 @@
       });
     });
   }
+  /* ================= The Course — one chronological path through everything =================
+     Structure lives in data_course*.js as window.COURSE.stages:
+       stage { key, no, name, blurb, units: [ unit { key, name, blurb, steps: [...] } ] }
+     A step is one of:
+       { t:'read',    title, body:[ 'paragraph' | ['code', src, note] ] }
+       { t:'quick',   title, groups:[…] | ids:[…], size }      — quickfire recall round
+       { t:'quiz',    title, ids:[…] | groups:[…], size }      — what-does-this-print round
+       { t:'problem', id }                                     — one coding-test problem
+       { t:'task',    key }                                    — one four-level coding drill
+       { t:'mock',    n, mins, mix, pkg }                       — a timed sitting
+     Nothing is locked: you can jump anywhere. But the path is ordered, one Continue
+     button always knows what comes next, and units say what they assume you have done. */
+  function courseStages() { return (window.COURSE && window.COURSE.stages) || []; }
+  function courseUnits() {
+    var out = [];
+    courseStages().forEach(function (st) { (st.units || []).forEach(function (u) { out.push({ unit: u, stage: st }); }); });
+    return out;
+  }
+  function courseUnit(key) {
+    var found = null;
+    courseUnits().forEach(function (row) { if (row.unit.key === key) found = row; });
+    return found;
+  }
+  function courseProg() { try { return JSON.parse(localStorage.getItem('ds_course') || '{}'); } catch (e) { return {}; } }
+  function saveCourseProg(p) { try { localStorage.setItem('ds_course', JSON.stringify(p)); } catch (e) {} }
+  function courseStepId(unit, i) { return unit.key + ':' + i; }
+  // Some steps report their own completion from elsewhere in the app, so a step is done
+  // if it was ticked here OR if the thing it points at is finished.
+  function courseStepDone(unit, i) {
+    var step = unit.steps[i];
+    if (!step) return false;
+    if (courseProg()[courseStepId(unit, i)]) return true;
+    if (step.t === 'problem') { var r = ptProg()[step.id]; return !!(r && r.solved); }
+    if (step.t === 'task') { var c = codeProg()[step.key]; return !!(c && c[2]); }
+    return false;
+  }
+  function courseTick(unit, i) {
+    var p = courseProg();
+    p[courseStepId(unit, i)] = 1;
+    p._last = unit.key;
+    saveCourseProg(p);
+  }
+  function unitStats(unit) {
+    var total = (unit.steps || []).length, done = 0;
+    for (var i = 0; i < total; i++) if (courseStepDone(unit, i)) done++;
+    return { done: done, total: total, pct: total ? Math.round(100 * done / total) : 0, complete: total > 0 && done === total };
+  }
+  function stageStats(stage) {
+    var done = 0, total = 0;
+    (stage.units || []).forEach(function (u) { var s = unitStats(u); done += s.done; total += s.total; });
+    return { done: done, total: total, pct: total ? Math.round(100 * done / total) : 0, complete: total > 0 && done === total };
+  }
+  function courseStats() {
+    var done = 0, total = 0;
+    courseStages().forEach(function (st) { var s = stageStats(st); done += s.done; total += s.total; });
+    return { done: done, total: total, pct: total ? Math.round(100 * done / total) : 0 };
+  }
+  // The next unfinished step anywhere in the course — what Continue points at.
+  function courseNext() {
+    var rows = courseUnits();
+    for (var r = 0; r < rows.length; r++) {
+      var unit = rows[r].unit;
+      for (var i = 0; i < (unit.steps || []).length; i++) {
+        if (!courseStepDone(unit, i)) return { unit: unit, stage: rows[r].stage, i: i };
+      }
+    }
+    return null;
+  }
+  function stepLabel(step) {
+    if (step.t === 'read') return 'Read';
+    if (step.t === 'quick') return 'Recall';
+    if (step.t === 'quiz') return 'Predict';
+    if (step.t === 'problem') return 'Solve';
+    if (step.t === 'task') return 'Build';
+    if (step.t === 'mock') return 'Sit the test';
+    return 'Step';
+  }
+  function stepTitle(step) {
+    if (step.title) return step.title;
+    if (step.t === 'problem') { var t = pyTest(step.id); return t ? t.title : step.id; }
+    if (step.t === 'task') { var c = codeTask(step.key); return c ? c.title : step.key; }
+    if (step.t === 'mock') return 'Timed sitting · ' + step.n + ' questions, ' + step.mins + ' minutes';
+    return step.t;
+  }
+  // Content selectors — a step names groups or ids, never copies content.
+  function snipsForStep(step) {
+    var all = snipAll(), picked = [];
+    if (step.ids && step.ids.length) {
+      var want = {};
+      step.ids.forEach(function (id) { want[id] = 1; });
+      picked = all.filter(function (s) { return want[s.id]; });
+    } else if (step.groups && step.groups.length) {
+      var g = {};
+      step.groups.forEach(function (x) { g[x] = 1; });
+      picked = all.filter(function (s) { return g[s.group]; });
+    }
+    if (step.lvl) picked = picked.filter(function (s) { return (s.lvl || 1) <= step.lvl; });
+    return picked;
+  }
+  function quizForStep(step) {
+    var all = pyQuiz();
+    if (step.ids && step.ids.length) {
+      var want = {};
+      step.ids.forEach(function (id) { want[id] = 1; });
+      return all.filter(function (q) { return want[q.id]; });
+    }
+    if (step.groups && step.groups.length) {
+      var g = {};
+      step.groups.forEach(function (x) { g[x] = 1; });
+      return all.filter(function (q) { return g[q.group]; });
+    }
+    return [];
+  }
+  function courseBar(row, extra) {
+    var bar = h('<div class="exbar"><button class="back">← Course</button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').onclick = function () { renderCourseUnitPage(row.unit.key); };
+    bar.querySelector('.exmeta').innerHTML = '<b>' + esc(row.unit.name) + '</b>' + (extra ? ' · ' + extra : '');
+    return bar;
+  }
+  // Run one step, then come back to the unit page with it ticked.
+  function runCourseStep(unitKey, i) {
+    var row = courseUnit(unitKey);
+    if (!row) return home();
+    var unit = row.unit, step = (unit.steps || [])[i];
+    if (!step) return renderCourseUnitPage(unitKey);
+    var after = function () { courseTick(unit, i); renderCourseUnitPage(unitKey, i + 1); };
+    if (step.t === 'read') return runReadStep(row, i, step, after);
+    if (step.t === 'quick') {
+      var cards = snipsForStep(step);
+      if (!cards.length) { after(); return; }
+      return startQuick(buildQuickRound(cards, step.size || Math.min(cards.length, 14)), stepTitle(step), after);
+    }
+    if (step.t === 'quiz') {
+      var qs = quizForStep(step);
+      if (!qs.length) { after(); return; }
+      return startPyQuiz(shuffle(qs.slice()).slice(0, step.size || qs.length), after);
+    }
+    if (step.t === 'problem') return startPyProblem(step.id, null, { unitKey: unitKey, i: i, after: after });
+    if (step.t === 'task') { courseTick(unit, i); return startCodeExample(step.key); }
+    if (step.t === 'mock') {
+      var problems = buildMock(step.n, step.mix || [1, 2, 2], !!step.pkg);
+      if (!problems.length) { after(); return; }
+      if (!confirm('Start a ' + step.mins + '-minute sitting with ' + problems.length + ' questions?')) return renderCourseUnitPage(unitKey);
+      courseTick(unit, i);
+      return startMock(problems, step.mins);
+    }
+    after();
+  }
+  // A reading step: the teaching bit, with code samples explained line by line.
+  function runReadStep(row, i, step, after) {
+    app.innerHTML = '';
+    app.appendChild(courseBar(row, 'reading ' + (i + 1) + ' of ' + row.unit.steps.length));
+    var card = h('<article class="qcard course-read"><div class="q-eyebrow">Read</div><h2 class="cr-title"></h2><div class="cr-body"></div></article>');
+    card.querySelector('.cr-title').textContent = step.title || row.unit.name;
+    var body = card.querySelector('.cr-body');
+    (step.body || []).forEach(function (part) {
+      if (typeof part === 'string') {
+        var p = document.createElement('p');
+        p.className = 'cr-p';
+        p.innerHTML = mdLite(part);
+        body.appendChild(p);
+      } else if (part && part[0] === 'code') {
+        var block = h('<div class="cr-code"><pre></pre><p class="cr-note" hidden></p></div>');
+        block.querySelector('pre').textContent = part[1];
+        if (part[2]) { var n = block.querySelector('.cr-note'); n.hidden = false; n.innerHTML = mdLite(part[2]); }
+        body.appendChild(block);
+      } else if (part && part[0] === 'aside') {
+        var a = h('<div class="cr-aside"></div>');
+        a.innerHTML = mdLite(part[1]);
+        body.appendChild(a);
+      }
+    });
+    var row2 = h('<div class="next-row"><button class="btn cr-next">Got it — next step →</button><button class="btn ghost cr-back">Back to the unit</button></div>');
+    row2.querySelector('.cr-next').onclick = after;
+    row2.querySelector('.cr-back').onclick = function () { renderCourseUnitPage(row.unit.key); };
+    card.appendChild(row2);
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  // Tiny inline markup for lesson text: `code`, **bold**, *italic*. Everything is escaped first.
+  function mdLite(s) {
+    return esc(String(s || ''))
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[\s(])\*([^*]+)\*/g, '$1<i>$2</i>');
+  }
+  function renderCourseHome() {
+    var stages = courseStages();
+    if (!stages.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">The course has not loaded.</p></section>')); return; }
+    var cs = courseStats(), next = courseNext();
+    var intro = h('<section class="code-intro course-hero"><div class="review-eyebrow">The course</div>' +
+      '<p class="code-intro-p">One path, in order, from <i>what a variable is</i> to sitting a timed Python test. ' +
+      'Each unit reads you into the idea, drills the lines until you can type them cold, then makes you use them. ' +
+      'Nothing is locked — but the order is the point.</p>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + cs.pct + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + cs.pct + '%</b> · ' + cs.done + ' of ' + cs.total + ' steps</span></div></section>');
+    if (next) {
+      var go = h('<div class="course-continue"><span class="cc-label">Next up</span>' +
+        '<span class="cc-where"></span><span class="cc-what"></span>' +
+        '<button class="btn cc-go">Continue →</button></div>');
+      go.querySelector('.cc-where').textContent = next.stage.no + ' · ' + next.unit.name;
+      go.querySelector('.cc-what').textContent = stepLabel(next.unit.steps[next.i]) + ': ' + stepTitle(next.unit.steps[next.i]);
+      go.querySelector('.cc-go').onclick = function () { runCourseStep(next.unit.key, next.i); };
+      intro.appendChild(go);
+    } else {
+      intro.appendChild(h('<div class="course-continue"><span class="cc-label">Finished</span><span class="cc-what">Every step of the course is done. Go round again — the quickfire cards keep score of what has gone stale.</span></div>'));
+    }
+    app.appendChild(intro);
+    stages.forEach(function (stage) {
+      var ss = stageStats(stage);
+      var head = h('<section class="course-stage"><div class="cs-head"><span class="cs-no"></span><span class="cs-name"></span>' +
+        '<span class="cs-pct">' + ss.pct + '%</span></div><p class="cs-blurb"></p>' +
+        '<div class="code-progbar cs-bar"><span style="width:' + ss.pct + '%"></span></div></section>');
+      head.querySelector('.cs-no').textContent = stage.no;
+      head.querySelector('.cs-name').textContent = stage.name;
+      head.querySelector('.cs-blurb').textContent = stage.blurb || '';
+      app.appendChild(head);
+      (stage.units || []).forEach(function (u, ui) {
+        var us = unitStats(u);
+        var state = us.complete ? 'done' : (us.done ? 'part' : 'new');
+        var isNext = next && next.unit.key === u.key;
+        var b = h('<button class="cu-row cu-' + state + (isNext ? ' cu-next' : '') + '" type="button">' +
+          '<span class="cu-mark">' + (us.complete ? '✓' : (ui + 1)) + '</span>' +
+          '<span class="cu-body"><span class="cu-name"></span><span class="cu-sub"></span></span>' +
+          '<span class="cu-count">' + us.done + '/' + us.total + '</span></button>');
+        b.querySelector('.cu-name').textContent = u.name;
+        b.querySelector('.cu-sub').textContent = u.blurb || '';
+        b.onclick = function () { renderCourseUnitPage(u.key); };
+        app.appendChild(b);
+      });
+    });
+  }
+  function renderCourseUnitPage(unitKey, focus) {
+    var row = courseUnit(unitKey);
+    if (!row) return home();
+    var unit = row.unit, us = unitStats(unit);
+    app.innerHTML = '';
+    var bar = h('<div class="exbar"><button class="back">← Course</button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').onclick = function () { setMode('course'); home(); };
+    bar.querySelector('.exmeta').innerHTML = esc(row.stage.no + ' · ' + row.stage.name);
+    app.appendChild(bar);
+    var head = h('<section class="code-intro"><div class="review-eyebrow">Unit ' + esc(unit.key.toUpperCase()) + '</div>' +
+      '<h2 class="cu-title"></h2><p class="code-intro-p cu-blurb"></p>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + us.pct + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + us.done + '</b> of ' + us.total + ' steps</span></div></section>');
+    head.querySelector('.cu-title').textContent = unit.name;
+    head.querySelector('.cu-blurb').textContent = unit.blurb || '';
+    if (unit.needs) head.appendChild(h('<p class="cu-needs">Assumes: ' + esc(unit.needs) + '</p>'));
+    app.appendChild(head);
+    var firstOpen = -1;
+    (unit.steps || []).forEach(function (step, i) {
+      var done = courseStepDone(unit, i);
+      if (!done && firstOpen < 0) firstOpen = i;
+      var b = h('<button class="cstep cstep-' + (done ? 'done' : 'open') + '" type="button">' +
+        '<span class="cstep-mark">' + (done ? '✓' : '') + '</span>' +
+        '<span class="cstep-body"><span class="cstep-kind"></span><span class="cstep-title"></span></span></button>');
+      b.querySelector('.cstep-kind').textContent = stepLabel(step);
+      b.querySelector('.cstep-title').textContent = stepTitle(step);
+      b.onclick = function () { runCourseStep(unitKey, i); };
+      app.appendChild(b);
+    });
+    var target = (typeof focus === 'number' && focus < (unit.steps || []).length) ? focus : firstOpen;
+    var footer = h('<div class="next-row course-foot"></div>');
+    if (target >= 0) {
+      var go = h('<button class="btn cu-go"></button>');
+      go.textContent = (us.done ? 'Carry on' : 'Start the unit') + ': ' + stepLabel(unit.steps[target]).toLowerCase() + ' →';
+      go.onclick = function () { runCourseStep(unitKey, target); };
+      footer.appendChild(go);
+    } else {
+      var nxt = courseNext();
+      if (nxt) {
+        var nb = h('<button class="btn cu-go">Unit complete — on to ' + esc(nxt.unit.name) + ' →</button>');
+        nb.onclick = function () { renderCourseUnitPage(nxt.unit.key); };
+        footer.appendChild(nb);
+      } else {
+        footer.appendChild(h('<span class="cu-alldone">Unit complete ✓</span>'));
+      }
+    }
+    var back = h('<button class="btn ghost">Course map</button>');
+    back.onclick = function () { setMode('course'); home(); };
+    footer.appendChild(back);
+    app.appendChild(footer);
+    window.scrollTo(0, 0);
+  }
+
   /* ================= Python coding tests — the mode that emulates a real hiring test =================
      Problems live in data_pytest_*.js as window.PYTESTS:
        { id, group, lvl, title, brief, fn, sig, starter, examples[], tests[], hint, solution, walk,
@@ -2383,7 +2676,7 @@
     return bar;
   }
   // The problem screen. ctx is null in practice, or the live mock-test session.
-  function startPyProblem(id, ctx) {
+  function startPyProblem(id, ctx, course) {
     var t = pyTest(id); if (!t) return home();
     var mock = !!ctx;
     app.innerHTML = '';
@@ -2391,6 +2684,10 @@
       mock ? ctx.clockEl : null);
     if (mock) bar.querySelector('.back').textContent = '← Test menu';
     if (mock) bar.querySelector('.back').onclick = function () { if (confirm('Leave the test? Your answers are saved and you can resume.')) home(); };
+    if (course) {
+      bar.querySelector('.back').textContent = '← Course';
+      bar.querySelector('.back').onclick = function () { renderCourseUnitPage(course.unitKey); };
+    }
     app.appendChild(bar);
 
     var card = h('<article class="qcard pt-card">' +
@@ -2464,6 +2761,11 @@
         ptMark(t.id, { peeked: 1 });
         showSolution('You looked at the solution — read it, then close it and write it out yourself.');
       };
+      if (course) {
+        var skip = h('<button class="btn ghost pt-skip">Move on for now</button>');
+        skip.onclick = function () { course.after(); };
+        actions.appendChild(skip);
+      }
     } else {
       var navRow = h('<div class="pt-nav"></div>');
       ctx.ids.forEach(function (qid, i) {
@@ -2568,9 +2870,11 @@
             '<button class="btn ghost pt-showsol">Compare with the model solution</button></div>');
           nb.querySelector('.pt-showsol').onclick = function () { showSolution('Yours passes. Read this one for the shape and the complexity.'); };
           nb.querySelector('.pt-next').onclick = function () {
+            if (course) return course.after();
             var next = nextUnsolved(t.id);
             if (next) startPyProblem(next.id, null); else home();
           };
+          if (course) nb.querySelector('.pt-next').textContent = 'Continue the course →';
           resultsEl.appendChild(nb);
         }
       }
@@ -2716,7 +3020,7 @@
 
   /* ---- "What does this print?" — the multiple-choice half of a real test ---- */
   function pyQuiz() { return window.PYQUIZ || []; }
-  function startPyQuiz(list) {
+  function startPyQuiz(list, onFinish) {
     if (!list.length) return home();
     var i = 0, right = 0;
     step();
@@ -2761,8 +3065,15 @@
       var card = h('<article class="qcard pt-card"><div class="q-eyebrow">Round complete</div>' +
         '<h2 class="pt-title">' + right + ' of ' + list.length + ' right</h2>' +
         '<div class="next-row"><button class="btn pq-again">Another round →</button><button class="btn ghost pq-home">Back to tests</button></div></article>');
-      card.querySelector('.pq-again').onclick = function () { startPyQuiz(shuffle(pyQuiz().slice()).slice(0, 10)); };
+      card.querySelector('.pq-again').onclick = function () { startPyQuiz(shuffle(pyQuiz().slice()).slice(0, 10), onFinish); };
       card.querySelector('.pq-home').onclick = home;
+      if (onFinish) {
+        var cont = h('<div class="next-row course-foot"><button class="btn pq-course">Continue the course →</button></div>');
+        cont.querySelector('.pq-course').onclick = onFinish;
+        card.insertBefore(cont, card.querySelector('.next-row'));
+        card.querySelector('.pq-again').textContent = 'One more round first';
+        card.querySelector('.pq-again').classList.add('ghost');
+      }
       app.appendChild(card);
       window.scrollTo(0, 0);
     }
@@ -3290,6 +3601,9 @@
     if (MODE === 'code') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Coding, unscrambled</b>: quickfire recall — one small ask, one line typed from memory — plus every task in three steps: spot the right code, build it from blocks, then write it yourself.';
       mast.querySelector('.mast-foot').textContent = 'Data-science code only · progress kept in this browser';
+    } else if (MODE === 'course') {
+      mast.querySelector('.mast-sub').innerHTML = '<b>The course</b>: one path, in order — from what a variable is, through pandas and scikit-learn, to sitting a timed Python test. Read the idea, drill the lines, then use them on a real problem.';
+      mast.querySelector('.mast-foot').textContent = 'Take it in order · progress kept in this browser';
     } else if (MODE === 'ptest') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Python coding tests</b>: the hiring-test half of the platform. Real problems, a real interpreter running in your browser, hidden test cases and a countdown clock.';
       mast.querySelector('.mast-foot').textContent = 'Practice · timed mocks · output quiz · progress kept in this browser';
@@ -3301,7 +3615,7 @@
 
     // Mode switch: Data Science revision · Coding drills · FCA & Innovation vocabulary.
     var tabs = h('<nav class="mode-tabs" aria-label="App mode"></nav>');
-    [{ v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'ptest', t: 'Python tests' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
+    [{ v: 'course', t: 'Course' }, { v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'ptest', t: 'Python tests' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
       var b = h('<button class="mode-tab' + (m.v === MODE ? ' mode-on' : '') + '" type="button"></button>');
       b.textContent = m.t;
       b.onclick = function () { if (m.v !== getMode()) { setMode(m.v); home(); } };
@@ -3309,6 +3623,7 @@
     });
     app.appendChild(tabs);
 
+    if (MODE === 'course') { renderCourseHome(); return; }
     if (MODE === 'code') { renderCodeHome(); return; }
     if (MODE === 'ptest') { renderTestHome(); return; }
 
