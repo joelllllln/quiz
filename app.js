@@ -1754,9 +1754,27 @@
     try { localStorage.setItem('ds_code_prog', JSON.stringify(p)); } catch (e) {}
   }
   function codeTask(key) { var t = null; (window.CODETASKS || []).forEach(function (x) { if (x.key === key) t = x; }); return t; }
+  /* A coding drill can be opened from the Coding section OR from a step inside a course
+     unit. When it comes from the course, CODE_CTX remembers the way back so the learner
+     is never stranded in another mode, and the step is ticked when they carry on — not
+     the moment the screen opens. Cleared by home(). */
+  var CODE_CTX = null;
+  function codeBackLabel() { return CODE_CTX ? '← Course' : '← Coding'; }
+  function codeBackHome() { if (CODE_CTX) return renderCourseUnitPage(CODE_CTX.unitKey); return home(); }
+  // The "leave this drill" button, worded for wherever the learner came from.
+  function codeHomeBtn() { return CODE_CTX ? 'Back to the unit' : 'Coding home'; }
+  // Finish the course step this drill belongs to, and move the course on.
+  function codeCourseDone() { var ctx = CODE_CTX; CODE_CTX = null; if (ctx) ctx.after(); }
+  // Every level screen gets the same "carry on the course" offer when it came from one.
+  function codeCourseRow(after) {
+    if (!CODE_CTX) return;
+    var row = h('<div class="next-row"><button class="btn ghost code-course">Tick it off and carry on the course →</button></div>');
+    row.querySelector('.code-course').onclick = codeCourseDone;
+    after.appendChild(row);
+  }
   function codeBar(task, levelLabel) {
-    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">' + esc(task.title) + ' ' + diffTag(task.lvl || 2) + ' · <b>' + levelLabel + '</b></span></div>');
-    bar.querySelector('.back').onclick = home;
+    var bar = h('<div class="exbar"><button class="back">' + codeBackLabel() + '</button><span class="exmeta">' + esc(task.title) + ' ' + diffTag(task.lvl || 2) + ' · <b>' + levelLabel + '</b></span></div>');
+    bar.querySelector('.back').onclick = codeBackHome;
     bar.appendChild(rateCtl('t' + task.key));
     return bar;
   }
@@ -1767,7 +1785,7 @@
     app.appendChild(codeBar(t, 'See it · worked example'));
     var card = h('<article class="qcard code-card"><div class="q-eyebrow">Worked example</div>' +
       '<h2 class="code-ask"></h2><p class="code-why"></p><div class="code-walk"></div>' +
-      '<div class="next-row"><button class="btn code-next">Level 1: spot it →</button><button class="btn ghost code-home">Coding home</button></div></article>');
+      '<div class="next-row"><button class="btn code-next">Level 1: spot it →</button><button class="btn ghost code-home">' + codeHomeBtn() + '</button></div></article>');
     card.querySelector('.code-ask').textContent = t.ask;
     card.querySelector('.code-why').textContent = t.why;
     var walkEl = card.querySelector('.code-walk');
@@ -1785,7 +1803,8 @@
       walkEl.appendChild(sol);
     }
     card.querySelector('.code-next').onclick = function () { startCodeMCQ(t.key); };
-    card.querySelector('.code-home').onclick = home;
+    card.querySelector('.code-home').onclick = codeBackHome;
+    codeCourseRow(card);
     app.appendChild(card);
     window.scrollTo(0, 0);
   }
@@ -1822,11 +1841,12 @@
         if (ch.ok) setCodeDone(t.key, 1);
         after.hidden = false;
         after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' + esc(t.mcq.explain) + '</div>' +
-          '<div class="next-row"><button class="btn code-next">' + (ch.ok ? 'Level 2: build it →' : 'Try again') + '</button><button class="btn ghost code-home">Coding home</button></div>';
+          '<div class="next-row"><button class="btn code-next">' + (ch.ok ? 'Level 2: build it →' : 'Try again') + '</button><button class="btn ghost code-home">' + codeHomeBtn() + '</button></div>';
         var crp = ratePrompt('t' + t.key);
         if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
         after.querySelector('.code-next').onclick = function () { ch.ok ? startCodeOrder(t.key) : startCodeMCQ(t.key); };
-        after.querySelector('.code-home').onclick = home;
+        after.querySelector('.code-home').onclick = codeBackHome;
+      codeCourseRow(after);
         after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       };
       opts.appendChild(b);
@@ -1870,11 +1890,12 @@
             nav.remove();
             after.hidden = false;
             after.innerHTML = '<div class="banner good"><span class="b-label">' + (wrongTaps ? 'Built ✓ (' + wrongTaps + ' wrong tap' + (wrongTaps === 1 ? '' : 's') + ')' : 'Built perfectly ✓') + '</span>That\'s working code, in the right order.</div>' +
-              '<div class="next-row"><button class="btn code-next">Level 3: write it →</button><button class="btn ghost code-home">Coding home</button></div>';
+              '<div class="next-row"><button class="btn code-next">Level 3: write it →</button><button class="btn ghost code-home">' + codeHomeBtn() + '</button></div>';
             var crp = ratePrompt('t' + t.key);
             if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
             after.querySelector('.code-next').onclick = function () { startCodeWrite(t.key); };
-            after.querySelector('.code-home').onclick = home;
+            after.querySelector('.code-home').onclick = codeBackHome;
+      codeCourseRow(after);
             after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         } else {
@@ -1909,9 +1930,10 @@
     function showSolution(html) {
       after.hidden = false;
       after.innerHTML = html + '<div class="code-sol"><span class="p-label">Model solution</span><pre></pre></div>' +
-        '<div class="next-row"><button class="btn ghost code-home">Coding home</button></div>';
+        '<div class="next-row"><button class="btn ghost code-home">' + codeHomeBtn() + '</button></div>';
       after.querySelector('.code-sol pre').textContent = t.written.solution;
-      after.querySelector('.code-home').onclick = home;
+      after.querySelector('.code-home').onclick = codeBackHome;
+      codeCourseRow(after);
       after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     card.querySelector('.code-peek').onclick = function () {
@@ -2635,7 +2657,11 @@
       if (view || getStepStyle() !== 'test') return startProblemStudy(step.id, ctx);
       return startPyProblem(step.id, null, ctx);
     }
-    if (step.t === 'task') { courseTick(unit, i); return startCodeExample(step.key); }
+    if (step.t === 'task') {
+      // Ticked when the learner carries on, not the moment the drill opens.
+      CODE_CTX = { unitKey: unitKey, i: i, after: after };
+      return startCodeExample(step.key);
+    }
     if (step.t === 'mock') {
       var problems = buildMock(step.n, step.mix || [1, 2, 2], !!step.pkg);
       if (!problems.length) { after(); return; }
@@ -3756,9 +3782,10 @@
     order.sort(function (a, b) { return stageNo(a) - stageNo(b) || order.indexOf(a) - order.indexOf(b); });
     return { order: order, by: by };
   }
-  // The next unfinished level anywhere in the path, in stage order.
-  function codeNext() {
-    var g = codeGroups(), prog = codeProg(), found = null;
+  // The next unfinished level in the path, in stage order — within whatever the
+  // difficulty filter is showing, so the button never points at a hidden task.
+  function codeNext(list) {
+    var g = codeGroups(list), prog = codeProg(), found = null;
     g.order.forEach(function (grp) {
       g.by[grp].forEach(function (t) {
         if (found) return;
@@ -4025,7 +4052,7 @@
       '<button class="btn ghost code-drill">Random drill</button></div>' +
       '<p class="cc-what code-nextline"></p></section>');
     // Carry on: the first level you have not finished, in stage order.
-    var nextUp = codeNext();
+    var nextUp = codeNext(tasks);
     var goBtn = intro.querySelector('.code-go'), nextLine = intro.querySelector('.code-nextline');
     if (nextUp) {
       nextLine.textContent = nextUp.task.group + ' · ' + nextUp.task.title + '  ·  level ' + nextUp.level +
@@ -4114,6 +4141,7 @@
 
   function home() {
     stopMockTimer();
+    CODE_CTX = null;
     app.innerHTML = '';
     var mast = h(
       '<header class="masthead">' +
