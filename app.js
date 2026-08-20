@@ -3747,10 +3747,26 @@
   // Reference (solutions, searchable), Dashboard (progress). Mirrors the main home's structure.
   function getCodeDoor() { var v = localStorage.getItem('ds_code_door'); return (v === 'reference' || v === 'dashboard' || v === 'quick') ? v : 'practice'; }
   function setCodeDoor(v) { try { localStorage.setItem('ds_code_door', v); } catch (e) {} }
+  function stageNo(group) { var m = /^(\d+)/.exec(group || ''); return m ? +m[1] : 99; }
   function codeGroups(list) {
     var tasks = list || window.CODETASKS || [], order = [], by = {};
     tasks.forEach(function (t) { if (!by[t.group]) { by[t.group] = []; order.push(t.group); } by[t.group].push(t); });
+    // The coding section is one path, earliest stage first. A numbered group name decides
+    // where it sits; anything unnumbered keeps its file order at the end.
+    order.sort(function (a, b) { return stageNo(a) - stageNo(b) || order.indexOf(a) - order.indexOf(b); });
     return { order: order, by: by };
+  }
+  // The next unfinished level anywhere in the path, in stage order.
+  function codeNext() {
+    var g = codeGroups(), prog = codeProg(), found = null;
+    g.order.forEach(function (grp) {
+      g.by[grp].forEach(function (t) {
+        if (found) return;
+        var p = prog[t.key] || {};
+        for (var L = 1; L <= 3; L++) if (!p[L]) { found = { task: t, level: L }; return; }
+      });
+    });
+    return found;
   }
   function codeLevelsDone(p) { return (p[1] ? 1 : 0) + (p[2] ? 1 : 0) + (p[3] ? 1 : 0); }
   // Difficulty filter for coding mode (task.lvl 1/2/3), shared by Practice and Reference.
@@ -4005,7 +4021,25 @@
       '<p class="hiw-tip">New here? Open any task below and start with <b>See it</b>. A green ✓ means a level is done; finish levels 1–3 to complete the task.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + (tasks.length ? Math.round(100 * doneCount / tasks.length) : 0) + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + doneCount + '</b> of ' + tasks.length + ' tasks' + diffLabel + '</span></div>' +
-      '<div class="next-row"><button class="btn code-drill">Random drill →</button></div></section>');
+      '<div class="next-row"><button class="btn code-go">Carry on the path →</button>' +
+      '<button class="btn ghost code-drill">Random drill</button></div>' +
+      '<p class="cc-what code-nextline"></p></section>');
+    // Carry on: the first level you have not finished, in stage order.
+    var nextUp = codeNext();
+    var goBtn = intro.querySelector('.code-go'), nextLine = intro.querySelector('.code-nextline');
+    if (nextUp) {
+      nextLine.textContent = nextUp.task.group + ' · ' + nextUp.task.title + '  ·  level ' + nextUp.level +
+        ' (' + ['spot it', 'build it', 'write it'][nextUp.level - 1] + ')';
+      goBtn.onclick = function () {
+        if (nextUp.level === 1) startCodeMCQ(nextUp.task.key);
+        else if (nextUp.level === 2) startCodeOrder(nextUp.task.key);
+        else startCodeWrite(nextUp.task.key);
+      };
+    } else {
+      goBtn.textContent = 'Every level done ✓';
+      nextLine.textContent = 'The whole path is finished. Random drill keeps it fresh.';
+      goBtn.onclick = function () { intro.querySelector('.code-drill').click(); };
+    }
     intro.appendChild(codeDiffChips());
     // Random drill: jump straight into a level you haven't completed yet (least-done tasks first).
     intro.querySelector('.code-drill').onclick = function () {
@@ -4040,9 +4074,8 @@
       });
       app.appendChild(hpSec);
     }
-    // Bucket by group (first-seen order), so tasks added later still file under the right heading.
-    var groupOrder = [], byGroup = {};
-    tasks.forEach(function (t) { if (!byGroup[t.group]) { byGroup[t.group] = []; groupOrder.push(t.group); } byGroup[t.group].push(t); });
+    // Bucket by group, earliest stage first — the practice list IS the path.
+    var grouped = codeGroups(tasks), groupOrder = grouped.order, byGroup = grouped.by;
     var ordered = [];
     groupOrder.forEach(function (g) { byGroup[g].forEach(function (t) { ordered.push(t); }); });
     function groupDoneCount(g) {

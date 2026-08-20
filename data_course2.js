@@ -42,7 +42,14 @@
           ] },
           { t: 'quick', title: 'Loading and saving', groups: ['pandas · load & save'] },
           { t: 'quick', title: 'The first look', groups: ['pandas · look at the data'] },
-          { t: 'problem', id: 'pt-parse-csv' }
+          { t: 'problem', id: 'pt-parse-csv' },
+          { t: 'task', key: 'daload' },
+          { t: 'task', key: 'dahead' },
+          { t: 'task', key: 'dashape' },
+          { t: 'task', key: 'dainfo' },
+          { t: 'task', key: 'damissing' },
+          { t: 'task', key: 'davalues' },
+          { t: 'task', key: 'daunique' }
         ] },
 
       { key: 'd3', name: 'Selecting and filtering',
@@ -65,7 +72,14 @@
           { t: 'quick', title: 'Sorting and ranking', groups: ['pandas · sort & rank'] },
           { t: 'quiz', title: 'Views, copies and assignment', ids: ['pq-pd-copy-warning', 'pq4-pd-sort-index'] },
           { t: 'problem', id: 'pt-pd-filter' },
-          { t: 'problem', id: 'pt-pd-newcol' }
+          { t: 'problem', id: 'pt-pd-newcol' },
+          { t: 'task', key: 'dacols' },
+          { t: 'task', key: 'dafilter' },
+          { t: 'task', key: 'dafilter2' },
+          { t: 'task', key: 'daisin' },
+          { t: 'task', key: 'daloc' },
+          { t: 'task', key: 'dasort' },
+          { t: 'task', key: 'dacount' }
         ] },
 
       { key: 'd4', name: 'Cleaning',
@@ -92,7 +106,14 @@
           { t: 'problem', id: 'pt-pd-missing' },
           { t: 'problem', id: 'pt-pd-clean' },
           { t: 'problem', id: 'pt-clean-records' },
-          { t: 'problem', id: 'pt-missing-fill' }
+          { t: 'problem', id: 'pt-missing-fill' },
+          { t: 'task', key: 'daclean-names' },
+          { t: 'task', key: 'danull-drop' },
+          { t: 'task', key: 'danull-fill' },
+          { t: 'task', key: 'dadupes' },
+          { t: 'task', key: 'datypes' },
+          { t: 'task', key: 'datext' },
+          { t: 'task', key: 'daoutlier' }
         ] },
 
       { key: 'd4b', name: 'When pandas surprises you',
@@ -135,7 +156,14 @@
           { t: 'problem', id: 'pt-avg-by-key' },
           { t: 'problem', id: 'pt-top-n' },
           { t: 'problem', id: 'pt-pd-summary' },
-          { t: 'problem', id: 'pt-pd-monthly' }
+          { t: 'problem', id: 'pt-pd-monthly' },
+          { t: 'task', key: 'dagroup' },
+          { t: 'task', key: 'dagroupmulti' },
+          { t: 'task', key: 'dagroupcount' },
+          { t: 'task', key: 'dagrouptop' },
+          { t: 'task', key: 'dapivot' },
+          { t: 'task', key: 'dashare' },
+          { t: 'task', key: 'dagroupfilter' }
         ] },
 
       { key: 'd5b', name: 'The index, and grouping deeper',
@@ -178,7 +206,13 @@
           { t: 'problem', id: 'pt-pd-merge' },
           { t: 'problem', id: 'pt-join-records' },
           { t: 'problem', id: 'pt-pd-topn' },
-          { t: 'problem', id: 'pt-pd-latest' }
+          { t: 'problem', id: 'pt-pd-latest' },
+          { t: 'task', key: 'damerge' },
+          { t: 'task', key: 'damergecheck' },
+          { t: 'task', key: 'daconcat' },
+          { t: 'task', key: 'damelt' },
+          { t: 'task', key: 'dawide' },
+          { t: 'task', key: 'dalatest' }
         ] },
 
       { key: 'd6b', name: 'Asking the database instead',
@@ -275,7 +309,13 @@
           { t: 'quick', title: 'Time series', groups: ['pandas · time series'] },
           { t: 'problem', id: 'pt-days-between' },
           { t: 'problem', id: 'pt-weekdays' },
-          { t: 'problem', id: 'pt-moving-average' }
+          { t: 'problem', id: 'pt-moving-average' },
+          { t: 'task', key: 'dadates' },
+          { t: 'task', key: 'dadateparts' },
+          { t: 'task', key: 'damonthly' },
+          { t: 'task', key: 'darolling' },
+          { t: 'task', key: 'dalag' },
+          { t: 'task', key: 'dawindow' }
         ] },
 
       { key: 'd7b', name: 'Turning columns into features',
@@ -300,7 +340,13 @@
           { t: 'problem', id: 'pt-pd-features' },
           { t: 'problem', id: 'pt-pd-encode' },
           { t: 'problem', id: 'pt-pd-bin' },
-          { t: 'problem', id: 'pt-pd-lag' }
+          { t: 'problem', id: 'pt-pd-lag' },
+          { t: 'task', key: 'danewcol' },
+          { t: 'task', key: 'daratio' },
+          { t: 'task', key: 'daflag' },
+          { t: 'task', key: 'daband' },
+          { t: 'task', key: 'damap' },
+          { t: 'task', key: 'dapct' }
         ] },
 
       { key: 'd8b', name: 'Making pandas fast',
@@ -335,7 +381,13 @@
             ['code', "df['value'].plot()\ndf['city'].value_counts().plot(kind='bar')\ndf.hist(figsize=(12, 10))     # every numeric column at once", 'That last line is the fastest first look at a new dataset there is.']
           ] },
           { t: 'quick', title: 'matplotlib', groups: ['Plotting · matplotlib'] },
-          { t: 'quick', title: 'seaborn and pandas plotting', groups: ['Plotting · seaborn & pandas'] }
+          { t: 'quick', title: 'seaborn and pandas plotting', groups: ['Plotting · seaborn & pandas'] },
+          { t: 'task', key: 'daplotbar' },
+          { t: 'task', key: 'daplotline' },
+          { t: 'task', key: 'daplothist' },
+          { t: 'task', key: 'daplotgroup' },
+          { t: 'task', key: 'daplotscatter' },
+          { t: 'task', key: 'daplotsave' }
         ] },
 
       { key: 'd9', name: 'Describing it honestly',
@@ -356,7 +408,12 @@
           { t: 'quick', title: 'Random numbers and summary statistics', groups: ['NumPy · random & statistics'] },
           { t: 'problem', id: 'pt-median' },
           { t: 'problem', id: 'pt-std' },
-          { t: 'problem', id: 'pt-normalise' }
+          { t: 'problem', id: 'pt-normalise' },
+          { t: 'task', key: 'dacentre' },
+          { t: 'task', key: 'daspread' },
+          { t: 'task', key: 'daoutlier-iqr' },
+          { t: 'task', key: 'dacorr' },
+          { t: 'task', key: 'dasegment' }
         ] },
 
       { key: 'd9b', name: 'Experiments, A/B tests and p-values',
@@ -374,7 +431,9 @@
             ['aside', 'Two you will be asked to name: a confounder drives both the treatment and the outcome, and Simpson\'s paradox is when a trend in every subgroup reverses once you pool them. Always look at the result split by the obvious confounder.']
           ] },
           { t: 'quick', title: 'Experiments and inference', groups: ['Statistics · experiments & inference'] },
-          { t: 'problem', id: 'pt-ml-cost' }
+          { t: 'problem', id: 'pt-ml-cost' },
+          { t: 'task', key: 'dagroupdiff' },
+          { t: 'task', key: 'daci' }
         ] },
 
       { key: 'd10', name: 'Working like a professional',
@@ -444,7 +503,11 @@
           { t: 'problem', id: 'pt-ml-standardise' },
           { t: 'task', key: 'impute' },
           { t: 'task', key: 'encode' },
-          { t: 'task', key: 'pipeline' }
+          { t: 'task', key: 'pipeline' },
+          { t: 'task', key: 'dasplitxy' },
+          { t: 'task', key: 'dadummies' },
+          { t: 'task', key: 'datimesplit' },
+          { t: 'task', key: 'dabaseline-num' }
         ] },
 
       { key: 'm3', name: 'Judging a model',

@@ -6,7 +6,7 @@
   var T = (window.CODETASKS = window.CODETASKS || []);
   T.push(
 
-    { key: 'fixnotfit', group: 'Fix the bug', title: 'NotFittedError',
+    { key: 'fixnotfit', group: '16 · Fix the bug', title: 'NotFittedError',
       ask: "Broken code calls predict before fit and crashes with NotFittedError. Fix the order.",
       why: "The error means exactly what it says: the model has learned nothing yet.",
       walk: [
@@ -42,7 +42,7 @@
         solution: "knn = KNeighborsClassifier(n_neighbors=5)\nknn.fit(X_train, y_train)\ny_pred = knn.predict(X_test)\nprint(accuracy_score(y_test, y_pred))",
         must: ["KNeighborsClassifier", "fit(X_train, y_train)", "predict(X_test)", "accuracy_score"] } },
 
-    { key: 'fixstring', group: 'Fix the bug', title: "ValueError: could not convert string to float",
+    { key: 'fixstring', group: '16 · Fix the bug', title: "ValueError: could not convert string to float",
       ask: "Fitting crashes on 'could not convert string to float: \\'red\\''. Encode the categoricals.",
       why: "Models compute with numbers; a raw text column anywhere in X sinks the whole fit.",
       walk: [
@@ -80,7 +80,7 @@
         solution: "cat_cols = X_train.select_dtypes(include='object').columns\nct = ColumnTransformer([\n    ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)],\n    remainder='passthrough')\npipe = Pipeline([('prep', ct), ('clf', LogisticRegression(max_iter=1000))])\npipe.fit(X_train, y_train)",
         must: ["select_dtypes", "OneHotEncoder", "ColumnTransformer", "remainder='passthrough'", "fit(X_train, y_train)"] } },
 
-    { key: 'fixshape', group: 'Fix the bug', title: 'Inconsistent numbers of samples',
+    { key: 'fixshape', group: '16 · Fix the bug', title: 'Inconsistent numbers of samples',
       ask: "Fit crashes: 'Found input variables with inconsistent numbers of samples: [800, 1000]'. Realign X and y.",
       why: "Rows were dropped from X but not y — the features and labels no longer line up.",
       walk: [
@@ -116,7 +116,7 @@
         solution: "mask = X_train.notna().all(axis=1)\nX_train, y_train = X_train[mask], y_train[mask]\nclf.fit(X_train, y_train)",
         must: ["notna()", "all(axis=1)", "X_train[mask]", "y_train[mask]", "fit(X_train, y_train)"] } },
 
-    { key: 'fixleak', group: 'Fix the bug', title: 'The 100% accuracy "bug"',
+    { key: 'fixleak', group: '16 · Fix the bug', title: 'The 100% accuracy "bug"',
       ask: "The model scores 99.9% on the test set. Nothing crashed — find and remove the leak.",
       why: "Too good IS the error message. Some feature is telling the model the answer.",
       walk: [
@@ -154,7 +154,7 @@
         solution: "print(dict(zip(X_train.columns,\n    pipe.named_steps['clf'].feature_importances_)))\nX_train = X_train.drop(columns=['account_closed_date'])\nX_test = X_test.drop(columns=['account_closed_date'])\npipe.fit(X_train, y_train)\nprint(pipe.score(X_test, y_test))",
         must: ["feature_importances_", "drop(columns=['account_closed_date'])", "X_test", "fit(X_train, y_train)"] } },
 
-    { key: 'fixconverge', group: 'Fix the bug', title: 'ConvergenceWarning',
+    { key: 'fixconverge', group: '16 · Fix the bug', title: 'ConvergenceWarning',
       ask: "Logistic regression warns 'lbfgs failed to converge'. Fix it properly — scaling first, then iterations.",
       why: "Unscaled features stretch the loss surface into a canyon the optimiser can't finish crossing.",
       walk: [
@@ -188,7 +188,7 @@
         solution: "pipe = Pipeline([('scaler', StandardScaler()),\n                 ('clf', LogisticRegression(max_iter=1000))])\npipe.fit(X_train, y_train)\nprint(pipe.named_steps['clf'].n_iter_)",
         must: ["StandardScaler", "max_iter=1000", "fit(X_train, y_train)", "n_iter_"] } },
 
-    { key: 'fixproba', group: 'Fix the bug', title: 'AUC of exactly 0.5 (or a proba crash)',
+    { key: 'fixproba', group: '16 · Fix the bug', title: 'AUC of exactly 0.5 (or a proba crash)',
       ask: "roc_auc_score returns ~0.5 for a decent model — or crashes on shape. Feed it the right column.",
       why: "Passing hard labels (or the whole probability matrix) to AUC is the classic silent metric bug.",
       walk: [

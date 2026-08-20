@@ -27,7 +27,7 @@ Miss a question and you get: the answer in plain English, a hands-on lab (one sl
 
 **Quickfire** — one small ask, one line of code typed from memory: *"how do I check the head of a data source?"* → `df.head()`. Spacing, quote style and a wrapping `print()` are ignored, capitals are flagged rather than failed, and a one-character typo asks you to try again. Rounds are built weakest-first, and the search box doubles as a cheat-sheet. Cards cover pandas, NumPy, plain Python, plotting, scikit-learn, statistics and the working habits around a notebook.
 
-**Practice** — each task in four steps: read the worked example, spot the right code, build it from blocks, then write it out. **Reference** is every model solution, searchable. **Dashboard** is progress.
+**Practice** — one chronological path of 109 tasks, from `df.head()` to a tuned model. Seventeen numbered stages: first look at the data, selecting and filtering, cleaning, adding columns, grouping, joining and reshaping, dates, charts, honest statistics, getting data ready for a model, then the modelling stages — core workflow, fitting, tuning, evaluating, unsupervised, fixing bugs, and a whole project. Each task is worked in four steps: read the worked example, spot the right code out of lookalikes, build it from blocks (with decoys), then write it out. *Carry on the path* jumps to the first level you have not finished. **Reference** is every model solution, searchable. **Dashboard** is progress.
 
 ## Python tests
 

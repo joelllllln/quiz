@@ -6,7 +6,7 @@
 (function () {
   window.CODETASKS = [
 
-    { key: 'split', group: 'The core workflow', title: 'Train/test split',
+    { key: 'split', group: '11 · The core modelling workflow', title: 'Train/test split',
       ask: 'Split X and y into training and test sets (80/20), reproducibly.',
       why: 'The first move of every honest project: hold out data the model never sees.',
       mcq: {
@@ -33,7 +33,7 @@
         solution: "from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42)",
         must: ["train_test_split", "X_train", "X_test", "y_train", "y_test", "test_size", "0.2", "random_state"] } },
 
-    { key: 'scale', group: 'The core workflow', title: 'Scale features (fit on train only)',
+    { key: 'scale', group: '11 · The core modelling workflow', title: 'Scale features (fit on train only)',
       ask: 'Standardise the features — learning the scaling from the training set only.',
       why: 'Fitting the scaler on all data leaks test-set information into training.',
       mcq: {
@@ -58,7 +58,7 @@
         solution: "from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_train_s = scaler.fit_transform(X_train)\nX_test_s = scaler.transform(X_test)",
         must: ["StandardScaler", "fit_transform", "X_train", "scaler.transform", "X_test"] } },
 
-    { key: 'knn', group: 'Fitting models', title: 'Train and use a KNN classifier',
+    { key: 'knn', group: '12 · Fitting models', title: 'Train and use a KNN classifier',
       ask: 'Create a KNN classifier with k=5, train it, predict, and score it.',
       why: 'The universal sklearn rhythm: create → fit → predict → score.',
       mcq: {
@@ -85,7 +85,7 @@
         solution: "from sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.metrics import accuracy_score\nknn = KNeighborsClassifier(n_neighbors=5)\nknn.fit(X_train, y_train)\ny_pred = knn.predict(X_test)\nprint(accuracy_score(y_test, y_pred))",
         must: ["KNeighborsClassifier", "n_neighbors=5", ".fit(X_train, y_train)", ".predict(X_test)", "accuracy_score"] } },
 
-    { key: 'cv', group: 'The core workflow', title: 'Cross-validation',
+    { key: 'cv', group: '11 · The core modelling workflow', title: 'Cross-validation',
       ask: 'Score a model with 5-fold cross-validation and report the mean score.',
       why: 'One split is one dice roll — five rotating splits average away the luck.',
       mcq: {
@@ -111,7 +111,7 @@
         solution: "from sklearn.model_selection import cross_val_score\nscores = cross_val_score(model, X_train, y_train, cv=5)\nprint(scores.mean())",
         must: ["cross_val_score", "X_train", "y_train", "cv=5", "mean"] } },
 
-    { key: 'pipeline', group: 'The core workflow', title: 'Build a Pipeline',
+    { key: 'pipeline', group: '11 · The core modelling workflow', title: 'Build a Pipeline',
       ask: 'Chain scaling and a model into one Pipeline, so preprocessing can never leak.',
       why: 'The pipeline refits the scaler inside every CV fold automatically — leak-proof by construction.',
       mcq: {
@@ -139,7 +139,7 @@
         solution: "from sklearn.pipeline import Pipeline\npipe = Pipeline([('scaler', StandardScaler()),\n                 ('clf', LogisticRegression())])\npipe.fit(X_train, y_train)",
         must: ["Pipeline", "scaler", "StandardScaler", "clf", "LogisticRegression", "fit(X_train, y_train)"] } },
 
-    { key: 'grid', group: 'Tuning', title: 'Grid search with cross-validation',
+    { key: 'grid', group: '13 · Tuning', title: 'Grid search with cross-validation',
       ask: 'Search over hyperparameter values with GridSearchCV and read off the best.',
       why: 'Tuning by hand is guesswork; the grid tries every setting under proper CV.',
       mcq: {
@@ -166,7 +166,7 @@
         solution: "from sklearn.model_selection import GridSearchCV\nparams = {'n_neighbors': [3, 5, 7, 9]}\ngrid = GridSearchCV(KNeighborsClassifier(), params, cv=5)\ngrid.fit(X_train, y_train)\nprint(grid.best_params_)",
         must: ["GridSearchCV", "n_neighbors", "[3, 5, 7, 9]", "cv=5", "fit(X_train, y_train)", "best_params_"] } },
 
-    { key: 'logreg', group: 'Fitting models', title: 'Logistic regression with probabilities',
+    { key: 'logreg', group: '12 · Fitting models', title: 'Logistic regression with probabilities',
       ask: 'Fit logistic regression and get probabilities, not just labels.',
       why: 'predict gives the verdict; predict_proba gives the confidence behind it.',
       mcq: {
@@ -192,7 +192,7 @@
         solution: "from sklearn.linear_model import LogisticRegression\nclf = LogisticRegression(max_iter=1000)\nclf.fit(X_train, y_train)\nproba = clf.predict_proba(X_test)[:, 1]",
         must: ["LogisticRegression", "max_iter", "fit(X_train, y_train)", "predict_proba(X_test)", "[:, 1]"] } },
 
-    { key: 'metrics', group: 'Evaluating', title: 'Confusion matrix & report',
+    { key: 'metrics', group: '14 · Evaluating', title: 'Confusion matrix & report',
       ask: 'Evaluate predictions properly: confusion matrix plus per-class precision/recall/F1.',
       why: 'Accuracy is one number; the matrix and report show where the errors actually live.',
       mcq: {
@@ -217,7 +217,7 @@
         solution: "from sklearn.metrics import confusion_matrix, classification_report\ny_pred = clf.predict(X_test)\nprint(confusion_matrix(y_test, y_pred))\nprint(classification_report(y_test, y_pred))",
         must: ["confusion_matrix(y_test, y_pred)", "classification_report(y_test, y_pred)", "predict(X_test)"] } },
 
-    { key: 'rf', group: 'Fitting models', title: 'Random forest + feature importances',
+    { key: 'rf', group: '12 · Fitting models', title: 'Random forest + feature importances',
       ask: 'Train a random forest and read which features mattered.',
       why: 'The forest is the strong tabular baseline — and it reports importances for free.',
       mcq: {
@@ -243,7 +243,7 @@
         solution: "from sklearn.ensemble import RandomForestClassifier\nrf = RandomForestClassifier(n_estimators=200, random_state=42)\nrf.fit(X_train, y_train)\nprint(rf.score(X_test, y_test))\nprint(rf.feature_importances_)",
         must: ["RandomForestClassifier", "n_estimators=200", "fit(X_train, y_train)", "feature_importances_"] } },
 
-    { key: 'encode', group: 'Preparing data', title: 'Encode categoricals safely',
+    { key: 'encode', group: '10 · Getting data ready for a model', title: 'Encode categoricals safely',
       ask: 'One-hot encode categorical columns inside a ColumnTransformer.',
       why: 'Models need numbers; the transformer routes each column type to the right treatment.',
       mcq: {
@@ -271,7 +271,7 @@
         solution: "from sklearn.compose import ColumnTransformer\nct = ColumnTransformer([\n    ('num', StandardScaler(), num_cols),\n    ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)])\nX_train_t = ct.fit_transform(X_train)\nX_test_t = ct.transform(X_test)",
         must: ["ColumnTransformer", "StandardScaler", "num_cols", "OneHotEncoder", "cat_cols", "fit_transform(X_train)", "transform(X_test)"] } },
 
-    { key: 'kmeans', group: 'Unsupervised', title: 'K-means clustering',
+    { key: 'kmeans', group: '15 · Unsupervised', title: 'K-means clustering',
       ask: 'Cluster scaled data into 3 groups and read the labels and centroids.',
       why: 'No labels here — fit takes X only, and the output IS the cluster assignment.',
       mcq: {
@@ -297,7 +297,7 @@
         solution: "from sklearn.cluster import KMeans\nkm = KMeans(n_clusters=3, n_init=10, random_state=42)\nlabels = km.fit_predict(X_scaled)\nprint(km.cluster_centers_)",
         must: ["KMeans", "n_clusters=3", "fit_predict(X_scaled)", "cluster_centers_"] } },
 
-    { key: 'pca', group: 'Unsupervised', title: 'PCA transform',
+    { key: 'pca', group: '15 · Unsupervised', title: 'PCA transform',
       ask: 'Reduce scaled features to 2 components and check the variance kept.',
       why: 'Fit learns the directions; transform re-plots the data along them.',
       mcq: {
@@ -323,7 +323,7 @@
         solution: "from sklearn.decomposition import PCA\npca = PCA(n_components=2)\nX_2d = pca.fit_transform(X_scaled)\nprint(pca.explained_variance_ratio_)",
         must: ["PCA", "n_components=2", "fit_transform(X_scaled)", "explained_variance_ratio_"] } },
 
-    { key: 'full', group: 'Putting it together', title: 'The full workflow, end to end',
+    { key: 'full', group: '17 · Putting it together', title: 'The full workflow, end to end',
       ask: 'Assemble the whole thing: split → pipeline → cross-validate → fit → evaluate once.',
       why: 'This is the shape of every honest sklearn project, in one screen of code.',
       mcq: {

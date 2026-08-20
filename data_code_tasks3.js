@@ -6,7 +6,7 @@
   var T = (window.CODETASKS = window.CODETASKS || []);
   T.push(
 
-    { key: 'kfold', group: 'The core workflow', title: 'K-fold, made explicit',
+    { key: 'kfold', group: '11 · The core modelling workflow', title: 'K-fold, made explicit',
       ask: 'Build a KFold splitter yourself — shuffled, seeded — and hand it to cross_val_score.',
       why: 'cv=5 hides the machinery; building the splitter shows what a fold actually is.',
       walk: [
@@ -43,7 +43,7 @@
         solution: "from sklearn.model_selection import KFold, cross_val_score\nkf = KFold(n_splits=5, shuffle=True, random_state=42)\nscores = cross_val_score(model, X_train, y_train, cv=kf)\nprint(scores.mean(), '+/-', scores.std())",
         must: ["KFold", "n_splits=5", "shuffle=True", "random_state=42", "cv=kf", "mean"] } },
 
-    { key: 'skfold', group: 'The core workflow', title: 'Stratified k-fold',
+    { key: 'skfold', group: '11 · The core modelling workflow', title: 'Stratified k-fold',
       ask: 'Cross-validate an imbalanced classifier with folds that preserve the class ratio.',
       why: 'Plain folds can land with almost no positives; stratified folds keep every fold honest.',
       walk: [
@@ -77,7 +77,7 @@
         solution: "from sklearn.model_selection import StratifiedKFold\nskf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\nscores = cross_val_score(clf, X_train, y_train, cv=skf, scoring='f1')\nprint(scores.mean())",
         must: ["StratifiedKFold", "n_splits=5", "cv=skf", "scoring='f1'", "mean"] } },
 
-    { key: 'groupkfold', group: 'The core workflow', title: 'Group k-fold',
+    { key: 'groupkfold', group: '11 · The core modelling workflow', title: 'Group k-fold',
       ask: 'Cross-validate patient-level data so no patient appears in both train and test.',
       why: 'Five rows from one patient split across folds lets the model recognise the patient, not the disease.',
       walk: [
@@ -111,7 +111,7 @@
         solution: "from sklearn.model_selection import GroupKFold\ngkf = GroupKFold(n_splits=5)\nscores = cross_val_score(clf, X, y, cv=gkf, groups=patient_ids)\nprint(scores.mean())",
         must: ["GroupKFold", "n_splits=5", "cv=gkf", "groups=patient_ids", "mean"] } },
 
-    { key: 'cvmulti', group: 'Evaluating', title: 'Cross-validate several metrics at once',
+    { key: 'cvmulti', group: '14 · Evaluating', title: 'Cross-validate several metrics at once',
       ask: 'Get accuracy, F1 and ROC-AUC from one cross-validation run with cross_validate.',
       why: 'One metric is one lens; cross_validate scores them all without refitting five extra times.',
       walk: [
@@ -149,7 +149,7 @@
         solution: "from sklearn.model_selection import cross_validate\nres = cross_validate(clf, X_train, y_train, cv=5,\n                     scoring=['accuracy', 'f1', 'roc_auc'])\nprint(res['test_f1'].mean())",
         must: ["cross_validate", "cv=5", "scoring=", "roc_auc", "test_f1", "mean"] } },
 
-    { key: 'rocauc', group: 'Evaluating', title: 'ROC curve and AUC',
+    { key: 'rocauc', group: '14 · Evaluating', title: 'ROC curve and AUC',
       ask: 'Compute the test-set ROC-AUC from probabilities, and the curve points behind it.',
       why: 'AUC judges the ranking of predictions — it needs probabilities, never hard labels.',
       walk: [
@@ -186,7 +186,7 @@
         solution: "from sklearn.metrics import roc_auc_score, roc_curve\nproba = clf.predict_proba(X_test)[:, 1]\nauc = roc_auc_score(y_test, proba)\nfpr, tpr, thresholds = roc_curve(y_test, proba)",
         must: ["predict_proba(X_test)", "[:, 1]", "roc_auc_score(y_test, proba)", "roc_curve(y_test, proba)"] } },
 
-    { key: 'prf', group: 'Evaluating', title: 'Precision, recall and F1, directly',
+    { key: 'prf', group: '14 · Evaluating', title: 'Precision, recall and F1, directly',
       ask: 'Compute the three headline classification metrics as individual numbers.',
       why: 'The report prints them; computing them yourself proves you know which is which.',
       walk: [
@@ -223,7 +223,7 @@
         solution: "from sklearn.metrics import precision_score, recall_score, f1_score\ny_pred = clf.predict(X_test)\nprint(precision_score(y_test, y_pred))\nprint(recall_score(y_test, y_pred))\nprint(f1_score(y_test, y_pred))",
         must: ["precision_score(y_test, y_pred)", "recall_score(y_test, y_pred)", "f1_score(y_test, y_pred)"] } },
 
-    { key: 'regmetrics', group: 'Evaluating', title: 'Regression metrics: MAE, RMSE, R²',
+    { key: 'regmetrics', group: '14 · Evaluating', title: 'Regression metrics: MAE, RMSE, R²',
       ask: 'Score a regressor with the three standard numbers, on the original units.',
       why: 'MAE reads in pounds, RMSE punishes big misses, R² compares against guessing the mean.',
       walk: [
@@ -263,7 +263,7 @@
         solution: "from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score\ny_pred = reg.predict(X_test)\nmae = mean_absolute_error(y_test, y_pred)\nrmse = mean_squared_error(y_test, y_pred) ** 0.5\nr2 = r2_score(y_test, y_pred)\nprint(mae, rmse, r2)",
         must: ["mean_absolute_error(y_test, y_pred)", "mean_squared_error(y_test, y_pred)", "** 0.5", "r2_score(y_test, y_pred)"] } },
 
-    { key: 'logloss', group: 'Evaluating', title: 'Log loss and the Brier score',
+    { key: 'logloss', group: '14 · Evaluating', title: 'Log loss and the Brier score',
       ask: 'Score the QUALITY of predicted probabilities, not just the labels they imply.',
       why: 'Two models with equal accuracy can differ wildly in how honest their confidence is.',
       walk: [
@@ -300,7 +300,7 @@
         solution: "from sklearn.metrics import log_loss, brier_score_loss\nproba = clf.predict_proba(X_test)\nll = log_loss(y_test, proba)\nbrier = brier_score_loss(y_test, proba[:, 1])\nprint(ll, brier)",
         must: ["log_loss(y_test, proba)", "brier_score_loss(y_test, proba[:, 1])", "predict_proba"] } },
 
-    { key: 'valcurve', group: 'Tuning', title: 'Validation curve over a hyperparameter',
+    { key: 'valcurve', group: '13 · Tuning', title: 'Validation curve over a hyperparameter',
       ask: 'Sweep max_depth and watch train vs validation scores to find the overfitting point.',
       why: 'The picture of bias and variance: where the two curves part company, memorisation begins.',
       walk: [
@@ -339,7 +339,7 @@
         solution: "from sklearn.model_selection import validation_curve\ntrain_sc, val_sc = validation_curve(\n    DecisionTreeClassifier(random_state=42), X_train, y_train,\n    param_name='max_depth', param_range=[2, 4, 6, 8, 10, 12], cv=5)\nprint(val_sc.mean(axis=1))",
         must: ["validation_curve", "param_name='max_depth'", "param_range=", "cv=5", "mean(axis=1)"] } },
 
-    { key: 'baseline', group: 'Evaluating', title: 'Beat the baseline first',
+    { key: 'baseline', group: '14 · Evaluating', title: 'Beat the baseline first',
       ask: 'Score a DummyClassifier, then prove your real model beats it.',
       why: 'A score means nothing until you know what zero intelligence gets on the same data.',
       walk: [

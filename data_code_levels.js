@@ -13,5 +13,6 @@
     pipegrid: 3, calib: 3, lcurve: 3, permimp: 3, ridge: 3, nestedcv: 3, groupkfold: 3,
     valcurve: 3, logloss: 3, fixleak: 3, full: 3
   };
-  (window.CODETASKS || []).forEach(function (t) { t.lvl = L[t.key] || 2; });
+  // A task may state its own level; this map is the older, key-by-key way and still wins.
+  (window.CODETASKS || []).forEach(function (t) { t.lvl = L[t.key] || t.lvl || 2; });
 })();

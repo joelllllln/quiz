@@ -6,7 +6,7 @@
   var T = (window.CODETASKS = window.CODETASKS || []);
   T.push(
 
-    { key: 'pipegrid', group: 'Tuning', title: 'Tune straight through a pipeline',
+    { key: 'pipegrid', group: '13 · Tuning', title: 'Tune straight through a pipeline',
       ask: 'Grid-search the model\'s C inside a scaler+model pipeline, using step__param names.',
       why: 'Tuning the pipeline (not the bare model) keeps the scaling leak-free inside every fold.',
       walk: [
@@ -44,7 +44,7 @@
         solution: "params = {'clf__C': [0.01, 0.1, 1, 10]}\ngrid = GridSearchCV(pipe, params, cv=5)\ngrid.fit(X_train, y_train)\nprint(grid.best_params_)",
         must: ["clf__C", "GridSearchCV(pipe", "cv=5", "fit(X_train, y_train)", "best_params_"] } },
 
-    { key: 'histgb', group: 'Fitting models', title: 'Boosting with early stopping',
+    { key: 'histgb', group: '12 · Fitting models', title: 'Boosting with early stopping',
       ask: 'Train a HistGradientBoosting classifier that stops itself when validation stops improving.',
       why: 'Boosting overfits with too many rounds — early stopping finds the right count for you.',
       walk: [
@@ -84,7 +84,7 @@
         solution: "from sklearn.ensemble import HistGradientBoostingClassifier\ngb = HistGradientBoostingClassifier(\n    max_iter=1000, learning_rate=0.1,\n    early_stopping=True, validation_fraction=0.1, n_iter_no_change=20,\n    random_state=42)\ngb.fit(X_train, y_train)\nprint(gb.n_iter_)\nprint(gb.score(X_test, y_test))",
         must: ["HistGradientBoostingClassifier", "early_stopping=True", "validation_fraction=0.1", "n_iter_no_change=20", "n_iter_"] } },
 
-    { key: 'calib', group: 'Evaluating', title: 'Check and fix probability calibration',
+    { key: 'calib', group: '14 · Evaluating', title: 'Check and fix probability calibration',
       ask: 'Draw the calibration curve for a model, then wrap it in CalibratedClassifierCV.',
       why: 'A model can rank perfectly yet lie about confidence — calibration checks whether 0.8 means 80%.',
       walk: [
@@ -122,7 +122,7 @@
         solution: "from sklearn.calibration import calibration_curve, CalibratedClassifierCV\nproba = clf.predict_proba(X_test)[:, 1]\nfrac_pos, mean_pred = calibration_curve(y_test, proba, n_bins=10)\ncalibrated = CalibratedClassifierCV(base_clf, method='isotonic', cv=5)\ncalibrated.fit(X_train, y_train)",
         must: ["calibration_curve(y_test, proba", "n_bins=10", "CalibratedClassifierCV", "isotonic", "fit(X_train, y_train)"] } },
 
-    { key: 'lcurve', group: 'Tuning', title: 'Learning curve: is more data worth it?',
+    { key: 'lcurve', group: '13 · Tuning', title: 'Learning curve: is more data worth it?',
       ask: 'Plot score against training-set size to diagnose whether to collect data or change model.',
       why: 'A gap that narrows with data means variance (collect more); converged-but-low means bias (better model).',
       walk: [
@@ -160,7 +160,7 @@
         solution: "from sklearn.model_selection import learning_curve\nsizes, train_sc, val_sc = learning_curve(\n    model, X_train, y_train, cv=5,\n    train_sizes=np.linspace(0.1, 1.0, 8))\nprint(val_sc.mean(axis=1))",
         must: ["learning_curve", "cv=5", "train_sizes=", "linspace(0.1, 1.0, 8)", "mean(axis=1)"] } },
 
-    { key: 'silhouette', group: 'Unsupervised', title: 'Choose k with the silhouette score',
+    { key: 'silhouette', group: '15 · Unsupervised', title: 'Choose k with the silhouette score',
       ask: 'Loop over candidate k values and let the silhouette score pick the best clustering.',
       why: 'Inertia always improves with k; silhouette rewards tight AND separated clusters, so it can peak.',
       walk: [
@@ -197,7 +197,7 @@
         solution: "from sklearn.metrics import silhouette_score\nfor k in range(2, 9):\n    km = KMeans(n_clusters=k, n_init=10, random_state=42)\n    labels = km.fit_predict(X_scaled)\n    print(k, silhouette_score(X_scaled, labels))",
         must: ["silhouette_score", "range(2, 9)", "n_clusters=k", "fit_predict(X_scaled)", "silhouette_score(X_scaled, labels)"] } },
 
-    { key: 'permimp', group: 'Evaluating', title: 'Permutation importance',
+    { key: 'permimp', group: '14 · Evaluating', title: 'Permutation importance',
       ask: 'Measure each feature\'s real contribution by shuffling it and watching the score drop.',
       why: 'Impurity importances flatter high-cardinality features; permutation asks what the model actually loses.',
       walk: [
@@ -232,7 +232,7 @@
         solution: "from sklearn.inspection import permutation_importance\nresult = permutation_importance(\n    model, X_test, y_test, n_repeats=10, random_state=42)\nprint(result.importances_mean)",
         must: ["permutation_importance", "X_test, y_test", "n_repeats=10", "importances_mean"] } },
 
-    { key: 'ridge', group: 'Fitting models', title: 'Regularised regression: tune alpha',
+    { key: 'ridge', group: '12 · Fitting models', title: 'Regularised regression: tune alpha',
       ask: 'Fit Ridge regression with its penalty strength chosen by cross-validated search on a log scale.',
       why: 'Alpha is the bias-variance dial for linear models — and log-spaced values are how you search a dial.',
       walk: [
@@ -270,7 +270,7 @@
         solution: "pipe = Pipeline([('scaler', StandardScaler()), ('reg', Ridge())])\nparams = {'reg__alpha': np.logspace(-3, 3, 13)}\ngrid = GridSearchCV(pipe, params, cv=5, scoring='neg_mean_absolute_error')\ngrid.fit(X_train, y_train)\nprint(grid.best_params_)",
         must: ["Ridge", "reg__alpha", "logspace(-3, 3, 13)", "neg_mean_absolute_error", "best_params_"] } },
 
-    { key: 'nestedcv', group: 'Evaluating', title: 'Nested cross-validation',
+    { key: 'nestedcv', group: '14 · Evaluating', title: 'Nested cross-validation',
       ask: 'Estimate the performance of the WHOLE tune-then-train recipe, without optimistic bias.',
       why: 'A tuned model\'s own best CV score is a maximum over many tries — nested CV pays that bias back.',
       walk: [
