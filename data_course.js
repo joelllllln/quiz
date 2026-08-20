@@ -6,7 +6,7 @@
   window.COURSE = window.COURSE || { stages: [] };
 
   window.COURSE.stages.push({
-    key: 'py', no: '01', name: 'First steps in Python',
+    key: 'py', no: '02', name: 'First steps in Python',
     blurb: 'From "what is a variable" to writing small programs that run. No prior coding assumed.',
     units: [
 

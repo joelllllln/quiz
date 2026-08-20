@@ -4,7 +4,7 @@
   window.COURSE = window.COURSE || { stages: [] };
 
   window.COURSE.stages.push({
-    key: 'data', no: '03', name: 'Working with data',
+    key: 'data', no: '04', name: 'Working with data',
     blurb: 'NumPy and pandas: loading a file, cleaning it, grouping it, joining it, and drawing it.',
     units: [
 
@@ -399,7 +399,7 @@
   });
 
   window.COURSE.stages.push({
-    key: 'ml', no: '04', name: 'Machine learning with scikit-learn',
+    key: 'ml', no: '05', name: 'Machine learning with scikit-learn',
     blurb: 'The same four verbs for every model, and the discipline that keeps a score honest.',
     units: [
 
@@ -650,7 +650,7 @@
   });
 
   window.COURSE.stages.push({
-    key: 'test', no: '05', name: 'Sitting a Python coding test',
+    key: 'test', no: '06', name: 'Sitting a Python coding test',
     blurb: 'What these tests look like, how to work through one, and enough practice to make it dull.',
     units: [
 

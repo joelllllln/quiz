@@ -6,7 +6,7 @@
   window.COURSE = window.COURSE || { stages: [] };
 
   window.COURSE.stages.push({
-    key: 'core', no: '02', name: 'The Python you write yourself',
+    key: 'core', no: '03', name: 'The Python you write yourself',
     blurb: 'Classes, generators, regular expressions, the standard library, tests, the shell and git — the step between "it runs" and "someone else can use it".',
     units: [
 
