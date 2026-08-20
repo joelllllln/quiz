@@ -3620,10 +3620,13 @@
     var intro = h('<section class="code-intro"><div class="review-eyebrow">Python coding test · practice</div>' +
       '<p class="code-intro-p">The kind of question a hiring test actually asks: a short brief, a function to write, and a set of test cases that either pass or do not. ' +
       'Write your answer, press run, read the failures, fix it — exactly as you will on the day.</p>' +
+      '<p class="code-intro-p">Not ready to be tested on one? Every problem has a <b>View</b> button beside it: the worked solution, line by line, with the offer to solve it yourself at the end.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + solved + '</b> of ' + all.length + ' solved</span></div>' + pyEnvNote() + '</section>');
-    var startRow = h('<div class="next-row"><button class="btn pt-start">Next unsolved problem →</button></div>');
+    var startRow = h('<div class="next-row"><button class="btn pt-start">Next unsolved problem →</button>' +
+      '<button class="btn ghost pt-start-view">See one worked first, then solve it</button></div>');
     startRow.querySelector('.pt-start').onclick = function () { var t = nextUnsolved(null); if (t) startPyProblem(t.id, null); };
+    startRow.querySelector('.pt-start-view').onclick = function () { var t = nextUnsolved(null); if (t) startProblemStudy(t.id, null); };
     intro.appendChild(startRow);
     app.appendChild(intro);
     var g = ptGroups(all);
@@ -3695,10 +3698,12 @@
       var items = g.by[grp];
       var row = h('<div class="qf-grow qf-grow-split"><button class="qf-grow-main" type="button">' +
         '<span class="qf-grow-t"></span><span class="qf-grow-n">' + items.length + '</span></button>' +
+        '<button class="sv-btn sv-learn" type="button" title="See the output, then answer the same question">Learn</button>' +
         '<button class="sv-btn" type="button" title="See these snippets with their output">View</button></div>');
       row.querySelector('.qf-grow-t').textContent = grp;
       row.querySelector('.qf-grow-main').onclick = function () { startPyQuiz(shuffle(items.slice())); };
-      row.querySelector('.sv-btn').onclick = function () { startQuizStudy(items.slice()); };
+      row.querySelector('.sv-learn').onclick = function () { startPyQuiz(shuffle(items.slice()), null, null, { learn: true }); };
+      row.querySelectorAll('.sv-btn')[1].onclick = function () { startQuizStudy(items.slice()); };
       app.appendChild(row);
     });
   }
