@@ -1759,6 +1759,20 @@
      is never stranded in another mode, and the step is ticked when they carry on — not
      the moment the screen opens. Cleared by home(). */
   var CODE_CTX = null;
+  // Where a task opens by default. Some people want the worked example first; some
+  // want to be thrown straight at the keyboard. Both are one tap away either way.
+  function getCodeStart() {
+    var v = localStorage.getItem('ds_code_start');
+    return (v === 'see' || v === 'spot' || v === 'build' || v === 'write') ? v : 'see';
+  }
+  function setCodeStart(v) { try { localStorage.setItem('ds_code_start', v); } catch (e) {} }
+  function startCodeTask(key, level) {
+    var at = level || getCodeStart();
+    if (at === 'write' || at === 3) return startCodeWrite(key);
+    if (at === 'build' || at === 2) return startCodeOrder(key);
+    if (at === 'spot' || at === 1) return startCodeMCQ(key);
+    return startCodeExample(key);
+  }
   function codeBackLabel() { return CODE_CTX ? '← Course' : '← Coding'; }
   function codeBackHome() { if (CODE_CTX) return renderCourseUnitPage(CODE_CTX.unitKey); return home(); }
   // The "leave this drill" button, worded for wherever the learner came from.
@@ -1804,6 +1818,9 @@
     }
     card.querySelector('.code-next').onclick = function () { startCodeMCQ(t.key); };
     card.querySelector('.code-home').onclick = codeBackHome;
+    var jump = h('<div class="next-row code-nav"><button class="btn ghost cn-write">Skip ahead — write it now →</button></div>');
+    jump.querySelector('.cn-write').onclick = function () { startCodeWrite(t.key); };
+    card.insertBefore(jump, card.querySelector('.next-row'));
     codeCourseRow(card);
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -1819,12 +1836,19 @@
     card.querySelector('.code-ask').textContent = t.title;
     card.querySelector('.code-why').textContent = t.why;
     card.querySelector('.code-q').textContent = t.mcq.q;
-    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← See it (worked example)</button><button class="btn ghost cn-skip">Skip to build it →</button></div>');
+    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← See it (worked example)</button>' +
+      '<button class="btn ghost cn-skip">Skip to build it →</button>' +
+      '<button class="btn ghost cn-write">Write it now →</button></div>');
     nav.querySelector('.cn-back').onclick = function () { startCodeExample(t.key); };
     nav.querySelector('.cn-skip').onclick = function () { startCodeOrder(t.key); };
+    nav.querySelector('.cn-write').onclick = function () { startCodeWrite(t.key); };
     card.appendChild(nav);
     var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
-    var choices = shuffle([{ c: t.mcq.correct, ok: true }].concat(t.mcq.wrong.map(function (w) { return { c: w, ok: false }; })));
+    // Each wrong option can carry its own explanation (mcq.whyWrong, in the same order
+    // as mcq.wrong). Picking one tells you what THAT answer would actually do.
+    var choices = shuffle([{ c: t.mcq.correct, ok: true }].concat(t.mcq.wrong.map(function (w, wi) {
+      return { c: w, ok: false, why: (t.mcq.whyWrong || [])[wi] };
+    })));
     var answered = false;
     choices.forEach(function (ch, ci) {
       var b = h('<button class="code-opt" type="button"><span class="co-key"></span><pre></pre></button>');
@@ -1840,7 +1864,9 @@
         if (!ch.ok) opts.querySelectorAll('.code-opt').forEach(function (o, i) { if (choices[i].ok) o.classList.add('co-right'); });
         if (ch.ok) setCodeDone(t.key, 1);
         after.hidden = false;
-        after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' + esc(t.mcq.explain) + '</div>' +
+        after.innerHTML = '<div class="banner ' + (ch.ok ? 'good' : 'bad') + '"><span class="b-label">' + (ch.ok ? 'Right ✓' : 'Not this one') + '</span>' +
+          esc(ch.ok ? t.mcq.explain : (ch.why || t.mcq.explain)) + '</div>' +
+          (ch.ok || !ch.why ? '' : '<div class="banner cw-right-note"><span class="b-label">The right answer</span>' + esc(t.mcq.explain) + '</div>') +
           '<div class="next-row"><button class="btn code-next">' + (ch.ok ? 'Level 2: build it →' : 'Try again') + '</button><button class="btn ghost code-home">' + codeHomeBtn() + '</button></div>';
         var crp = ratePrompt('t' + t.key);
         if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
@@ -1916,17 +1942,52 @@
     app.innerHTML = '';
     app.appendChild(codeBar(t, 'Level 3 · Write it'));
     var card = h('<article class="qcard code-card"><div class="q-eyebrow">Write the code</div>' +
-      '<h2 class="code-ask"></h2>' +
+      '<h2 class="code-ask"></h2><p class="code-why"></p>' +
+      '<p class="cw-prompt"></p>' +
       '<textarea class="code-write" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type the code here…"></textarea>' +
-      '<div class="next-row"><button class="btn code-check">Check my code</button><button class="btn ghost code-peek">Show solution</button></div>' +
+      '<div class="next-row"><button class="btn code-check">Check my code</button>' +
+      '<button class="btn ghost code-hint">Hint</button>' +
+      '<button class="btn ghost code-peek">Show solution</button></div>' +
       '<div class="code-after" hidden></div></article>');
-    card.querySelector('.code-ask').textContent = t.written.prompt;
-    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-back">← Level 2: build it</button></div>');
+    // Arriving here cold — straight from the list or by skipping ahead — you still get
+    // the whole question: what the task is, why it matters, and exactly what to type.
+    card.querySelector('.code-ask').textContent = t.title;
+    card.querySelector('.code-why').textContent = t.why;
+    card.querySelector('.cw-prompt').textContent = t.written.prompt;
+    var nav = h('<div class="next-row code-nav"><button class="btn ghost cn-see">← See it worked</button>' +
+      '<button class="btn ghost cn-back">← Build it</button></div>');
+    nav.querySelector('.cn-see').onclick = function () { startCodeExample(t.key); };
     nav.querySelector('.cn-back').onclick = function () { startCodeOrder(t.key); };
     card.appendChild(nav);
     var ta = card.querySelector('.code-write'), after = card.querySelector('.code-after');
-    var peeked = false;
-    function norm(s) { return s.toLowerCase().replace(/["']/g, "'").replace(/\s+/g, ''); }
+    var peeked = false, hints = 0;
+    // Comments are stripped before marking, so a required piece pasted into a comment
+    // does not count as having written it.
+    function norm(s) {
+      return String(s).split('\n').map(function (ln) {
+        var q = null, out = '';
+        for (var i = 0; i < ln.length; i++) {
+          var ch = ln[i];
+          if (q) { out += ch; if (ch === q && ln[i - 1] !== '\\') q = null; continue; }
+          if (ch === '"' || ch === "'") { q = ch; out += ch; continue; }
+          if (ch === '#') break;
+          out += ch;
+        }
+        return out;
+      }).join('\n').toLowerCase().replace(/["']/g, "'").replace(/\s+/g, '');
+    }
+    // A hint gives away one missing piece at a time, cheapest first.
+    card.querySelector('.code-hint').onclick = function () {
+      var got = norm(ta.value);
+      var still = t.written.must.filter(function (m) { return got.indexOf(norm(m)) < 0; });
+      hints++;
+      var line = still.length
+        ? 'Next piece to get in: <code>' + esc(still[0]) + '</code>'
+        : 'Every required piece is already in there — press <b>Check my code</b>.';
+      var box = card.querySelector('.cw-hint');
+      if (!box) { box = h('<p class="cw-hint"></p>'); card.insertBefore(box, card.querySelector('.next-row')); }
+      box.innerHTML = line;
+    };
     function showSolution(html) {
       after.hidden = false;
       after.innerHTML = html + '<div class="code-sol"><span class="p-label">Model solution</span><pre></pre></div>' +
@@ -1945,17 +2006,33 @@
       if (!got) { ta.focus(); return; }
       logActivity();
       var missing = t.written.must.filter(function (m) { return got.indexOf(norm(m)) < 0; });
-      if (!missing.length) {
-        if (!peeked) setCodeDone(t.key, 3);
+      // Every required piece, ticked or not — far more useful than a single verdict.
+      var checklist = '<ul class="cw-check">' + t.written.must.map(function (m) {
+        var has = got.indexOf(norm(m)) >= 0;
+        return '<li class="' + (has ? 'cw-yes' : 'cw-no') + '"><span>' + (has ? '✓' : '·') + '</span><code>' + esc(m) + '</code></li>';
+      }).join('') + '</ul>';
+      // Known wrong turns for this task: caught even when all the pieces are present.
+      var slips = (t.written.avoid || []).filter(function (a) { return got.indexOf(norm(a[0])) >= 0; });
+      var warn = slips.length ? slips.map(function (a) {
+        return '<div class="banner bad cw-warn"><span class="b-label">Watch out</span>' + esc(a[1]) + '</div>';
+      }).join('') : '';
+      if (!missing.length && !slips.length) {
+        if (!peeked && !hints) setCodeDone(t.key, 3);
         showSolution('<div class="banner good"><span class="b-label">All the pieces are there ✓</span>' +
-          (peeked ? 'Nice — now try it again cold next time.' : 'Every essential part present and correct — compare against the model below.') + '</div>');
+          (peeked || hints ? 'Good — now try it cold next time, with no hint.' : 'Every essential part present and correct — compare against the model below.') + '</div>' + checklist);
+      } else if (!missing.length) {
+        showSolution(warn + checklist);
       } else {
-        showSolution('<div class="banner bad"><span class="b-label">Nearly — ' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + ' missing</span>' +
-          'Still needed: ' + missing.map(function (m) { return '<code>' + esc(m) + '</code>'; }).join(' · ') + '</div>');
+        showSolution('<div class="banner bad"><span class="b-label">' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + ' still to go</span>' +
+          'Keep what you have and add the ones without a tick.</div>' + warn + checklist);
       }
       var crp = ratePrompt('t' + t.key);
       if (crp) after.insertBefore(crp, after.querySelector('.next-row'));
     };
+    // Ctrl/Cmd + Enter checks, so you never have to reach for the mouse.
+    ta.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); card.querySelector('.code-check').click(); }
+    });
     app.appendChild(card);
     window.scrollTo(0, 0);
   }
@@ -4051,17 +4128,22 @@
       '<div class="next-row"><button class="btn code-go">Carry on the path →</button>' +
       '<button class="btn ghost code-drill">Random drill</button></div>' +
       '<p class="cc-what code-nextline"></p></section>');
+    // Where tasks open — including straight at the keyboard.
+    var startRow = h('<div class="code-diff-row"><span class="filt-lab">Tasks open at</span></div>');
+    [{ v: 'see', t: 'See it' }, { v: 'spot', t: 'Spot it' }, { v: 'build', t: 'Build it' }, { v: 'write', t: 'Write it' }].forEach(function (c) {
+      var b = h('<button class="cdf-chip' + (getCodeStart() === c.v ? ' cdf-on' : '') + '" type="button" title="Open every task at this level"></button>');
+      b.textContent = c.t;
+      b.onclick = function () { setCodeStart(c.v); home(); };
+      startRow.appendChild(b);
+    });
+    intro.appendChild(startRow);
     // Carry on: the first level you have not finished, in stage order.
     var nextUp = codeNext(tasks);
     var goBtn = intro.querySelector('.code-go'), nextLine = intro.querySelector('.code-nextline');
     if (nextUp) {
       nextLine.textContent = nextUp.task.group + ' · ' + nextUp.task.title + '  ·  level ' + nextUp.level +
         ' (' + ['spot it', 'build it', 'write it'][nextUp.level - 1] + ')';
-      goBtn.onclick = function () {
-        if (nextUp.level === 1) startCodeMCQ(nextUp.task.key);
-        else if (nextUp.level === 2) startCodeOrder(nextUp.task.key);
-        else startCodeWrite(nextUp.task.key);
-      };
+      goBtn.onclick = function () { startCodeTask(nextUp.task.key, nextUp.level); };
     } else {
       goBtn.textContent = 'Every level done ✓';
       nextLine.textContent = 'The whole path is finished. Random drill keeps it fresh.';
@@ -4126,7 +4208,11 @@
           '<button class="btn ghost ct-l' + (p[2] ? ' ct-ok' : '') + '" data-l="2">' + (p[2] ? '✓ ' : '') + '2 · Build it</button>' +
           '<button class="btn ghost ct-l' + (p[3] ? ' ct-ok' : '') + '" data-l="3">' + (p[3] ? '✓ ' : '') + '3 · Write it</button>' +
         '</div></section>');
-      row.querySelector('h3').textContent = t.title;
+      var titleBtn = h('<button class="ct-title-go" type="button"></button>');
+      titleBtn.textContent = t.title;
+      titleBtn.title = 'Open this task at your chosen level';
+      titleBtn.onclick = function () { startCodeTask(t.key); };
+      row.querySelector('h3').appendChild(titleBtn);
       row.querySelector('.ct-meta').appendChild(rateCtl('t' + t.key));
       row.querySelector('.ct-ask').textContent = t.ask;
       row.querySelectorAll('.ct-l').forEach(function (b) {
