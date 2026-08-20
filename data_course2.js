@@ -4,7 +4,7 @@
   window.COURSE = window.COURSE || { stages: [] };
 
   window.COURSE.stages.push({
-    key: 'data', no: '02', name: 'Working with data',
+    key: 'data', no: '03', name: 'Working with data',
     blurb: 'NumPy and pandas: loading a file, cleaning it, grouping it, joining it, and drawing it.',
     units: [
 
@@ -95,6 +95,24 @@
           { t: 'problem', id: 'pt-missing-fill' }
         ] },
 
+      { key: 'd4b', name: 'When pandas surprises you',
+        blurb: 'Copies, views, the warning everyone ignores, and the joins that quietly multiply rows.',
+        needs: 'selecting and cleaning',
+        steps: [
+          { t: 'read', title: 'The five surprises', body: [
+            '**One: SettingWithCopyWarning.** It appears when you write through something pandas cannot prove is the original frame:',
+            ['code', "df[df['age'] > 30]['band'] = 'older'    # may change nothing at all\n\ndf.loc[df['age'] > 30, 'band'] = 'older'   # one .loc call — always correct\nsmall = df[df['age'] > 30].copy()          # or take an explicit copy first", 'Chained brackets are the cause. One `.loc` that does the selecting and the assigning together is the cure.'],
+            '**Two: `and` is not `&`.** A Series has no single truth value, so Python\'s `and` raises. Use `&`, `|` and `~`, and bracket every condition.',
+            '**Three: NaN is not equal to itself.** Every missing-value test goes through `isna()` and `notna()`, never `== np.nan`.',
+            '**Four: a merge can multiply rows.** If the right-hand key is not unique, every match makes a new row:',
+            ['code', "before = len(orders)\nmerged = orders.merge(customers, on='customer_id', how='left', indicator=True)\nprint(before, len(merged))\nprint(merged['_merge'].value_counts())", '`indicator=True` adds a `_merge` column telling you which side each row came from — the fastest way to see what failed to match.'],
+            '**Five: `inplace=True` is not the saving you think it is.** It returns nothing, saves no memory and is on its way out. Reassign instead: `df = df.dropna()`.',
+            ['aside', 'A habit worth keeping: print the shape after every step that could change the row count, or assert it. Most silent data bugs are a row count nobody looked at.']
+          ] },
+          { t: 'quick', title: 'Gotchas and copies', groups: ['pandas · gotchas & copies'] },
+          { t: 'problem', id: 'pt-pd-safe-band' }
+        ] },
+
       { key: 'd5', name: 'Grouping and aggregating',
         blurb: 'Split, apply, combine — the question every stakeholder asks.',
         needs: 'cleaning',
@@ -118,6 +136,25 @@
           { t: 'problem', id: 'pt-top-n' },
           { t: 'problem', id: 'pt-pd-summary' },
           { t: 'problem', id: 'pt-pd-monthly' }
+        ] },
+
+      { key: 'd5b', name: 'The index, and grouping deeper',
+        blurb: 'loc against iloc, multi-indexes, unstack, and getting back to flat columns.',
+        needs: 'grouping',
+        steps: [
+          { t: 'read', title: 'The thing every row is filed under', body: [
+            'Every DataFrame has an **index** — the labels down the side. `.loc` works by label, `.iloc` by position, and mixing them up is behind a lot of confusion:',
+            ['code', "df.loc['C123']       # the row LABELLED C123\ndf.iloc[2]           # the THIRD row, whatever it is called\ndf.loc[df['age'] > 30, ['name', 'age']]   # mask for rows, names for columns"],
+            'Grouping by two keys gives you a **multi-index** — one level per key:',
+            ['code', "totals = df.groupby(['region', 'month'])['amount'].sum()\ntotals.loc['North']              # everything in one region\ntotals.xs('May', level='month')  # one month, across regions\ntotals.unstack()                 # months become columns", '`unstack` pivots an index level out into columns; `stack` folds them back. That pair is most of reshaping.'],
+            'Nearly always, the last step is to get back to ordinary columns:',
+            ['code', "flat = totals.reset_index()\nagg.columns = ['_'.join(c) for c in agg.columns]   # after a multi-function agg()", 'The second line is what you need after `groupby().agg()` with several functions, which produces two-level column names.'],
+            'And the one that catches everybody: pandas lines Series up **by index**, not by position:',
+            ['code', "a + b     # matched on the index — mismatched labels become NaN", 'If you meant "by position", reset both indexes first.'],
+            ['aside', 'A duplicated index makes `.loc` return a frame where you expected a row. `df.index.is_unique` is worth checking whenever a lookup behaves strangely.']
+          ] },
+          { t: 'quick', title: 'The index and multi-index', groups: ['pandas · the index & multi-index'] },
+          { t: 'problem', id: 'pt-pd-region-month' }
         ] },
 
       { key: 'd6', name: 'Joining and reshaping',
@@ -164,6 +201,58 @@
           { t: 'quick', title: 'Grouping and aggregates', groups: ['SQL · grouping & aggregates'] },
           { t: 'quick', title: 'Joins and subqueries', groups: ['SQL · joins & subqueries'] },
           { t: 'quick', title: 'Window functions', groups: ['SQL · window functions'] }
+        ] },
+
+      { key: 'd6c', name: 'SQL: dates, text and NULLs',
+        blurb: 'The functions every reporting query needs, and the three-valued logic behind NULL.',
+        needs: 'SELECT, GROUP BY, JOIN',
+        steps: [
+          { t: 'read', title: 'The parts a real query is made of', body: [
+            'Most reporting questions are a date function, a text tidy-up and a NULL decision away from being answered.',
+            ['code', "SELECT DATE_TRUNC('month', order_date) AS month,\n       SUM(amount) AS total\nFROM orders\nGROUP BY month\nORDER BY month", 'That is the single most-asked SQL question there is. `EXTRACT(YEAR FROM order_date)` pulls one part out; `DATE_TRUNC` keeps a real date you can sort.'],
+            'Filter dates by comparing the column to a computed value — never by wrapping the column in a function, which stops the index being used:',
+            ['code', "WHERE order_date >= CURRENT_DATE - INTERVAL '30 days'"],
+            'Text: `UPPER`, `LOWER`, `TRIM`, `LENGTH`, `REPLACE`, `SUBSTRING`, and `||` to join. Untrimmed keys are the usual reason a join matches nothing.',
+            '**NULL is not a value, it is the absence of one.** It is never equal to anything, including itself:',
+            ['code', "WHERE email IS NOT NULL          -- not != NULL, which matches nothing\nCOALESCE(email, 'unknown')       -- a fallback\ntotal / NULLIF(count, 0)         -- avoid dividing by zero\nCOUNT(email)  vs  COUNT(*)       -- one skips NULLs, one counts rows", 'That last pair is a favourite interview question. `COUNT(column)` ignores NULLs; `COUNT(*)` counts every row.'],
+            ['aside', 'Integer divided by integer is integer division in most engines: 3/4 gives 0. Multiply by 1.0 when you want a rate.']
+          ] },
+          { t: 'quick', title: 'Dates, text and nulls', groups: ['SQL · dates, text & nulls'] }
+        ] },
+
+      { key: 'd6d', name: 'SQL: windows in depth',
+        blurb: 'Ranking, lag and lead, running totals and the frame clause.',
+        needs: 'GROUP BY',
+        steps: [
+          { t: 'read', title: 'Keeping every row and adding an answer', body: [
+            'A `GROUP BY` collapses rows; a **window** keeps every row and adds a value calculated over a group of them. That one sentence is the whole idea:',
+            ['code', "SELECT customer_id,\n       amount,\n       COUNT(*)  OVER (PARTITION BY customer_id) AS their_orders,\n       SUM(amount) OVER (PARTITION BY customer_id ORDER BY order_date) AS running_total\nFROM orders", '`PARTITION BY` is the grouping; `ORDER BY` inside the OVER clause is what makes a running total run.'],
+            'The ranking family differs only in how it treats ties:',
+            ['code', "ROW_NUMBER()  -- 1, 2, 3, 4  — never ties\nRANK()        -- 1, 1, 3     — ties share, then it skips\nDENSE_RANK()  -- 1, 1, 2     — ties share, no gap\nNTILE(4)      -- quartiles"],
+            'The standard deduplication in SQL is ROW_NUMBER inside a subquery:',
+            ['code', "SELECT * FROM (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn\n  FROM orders\n) t\nWHERE rn = 1", 'One row per customer — their latest. Learn this shape; it answers a whole family of questions.'],
+            '`LAG` and `LEAD` reach to the row before and after, which is how you measure a gap between events. And the frame clause turns a window into a moving average:',
+            ['code', "AVG(amount) OVER (PARTITION BY customer_id ORDER BY order_date\n                  ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)"],
+            ['aside', 'You cannot filter on a window function in the same WHERE clause — the window runs after WHERE. Wrap it in a subquery or a CTE, as above.']
+          ] },
+          { t: 'quick', title: 'Windows in depth', groups: ['SQL · windows in depth'] }
+        ] },
+
+      { key: 'd6e', name: 'SQL: shaping and changing data',
+        blurb: 'CTEs, self joins, EXISTS, pivots with CASE, and the statements that write.',
+        needs: 'joins',
+        steps: [
+          { t: 'read', title: 'Building a query someone can read', body: [
+            'A **CTE** turns a nest of subqueries into a sequence of named steps, and it is the single easiest way to look competent in a SQL interview:',
+            ['code', "WITH monthly AS (\n  SELECT customer_id, DATE_TRUNC('month', order_date) AS month, SUM(amount) AS total\n  FROM orders GROUP BY 1, 2\n), ranked AS (\n  SELECT *, RANK() OVER (PARTITION BY month ORDER BY total DESC) AS r\n  FROM monthly\n)\nSELECT * FROM ranked WHERE r <= 3", 'Each CTE can use the ones before it. Read top to bottom, like a paragraph.'],
+            'Three shapes worth recognising instantly:',
+            ['code', "-- a self join: each person beside their manager\nSELECT e.name, m.name AS manager\nFROM employees e JOIN employees m ON e.manager_id = m.id;\n\n-- EXISTS: customers who have ordered at least once\nSELECT * FROM customers c\nWHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);\n\n-- conditional aggregation: a pivot without a PIVOT clause\nSELECT SUM(CASE WHEN region = 'N' THEN amount ELSE 0 END) AS north FROM orders;"],
+            'And the statements that change things. Write the `WHERE` first, every time:',
+            ['code', "INSERT INTO customers (id, name) VALUES (1, 'Ann');\nUPDATE customers SET region = 'N' WHERE id = 1;\nDELETE FROM orders WHERE amount = 0;", 'An UPDATE or DELETE without a WHERE hits every row, and there is no undo. Run it as a SELECT first and read the count.'],
+            'Finally, the order a query actually executes in — FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT. That is why a SELECT alias cannot be used in WHERE, and why HAVING filters groups while WHERE filters rows.',
+            ['aside', 'Asked to make a query faster: EXPLAIN it first. Then index what you filter and join on, and stop selecting columns you do not use.']
+          ] },
+          { t: 'quick', title: 'Shaping and writing data', groups: ['SQL · shaping & writing data'] }
         ] },
 
       { key: 'd7', name: 'Dates and time series',
@@ -214,6 +303,24 @@
           { t: 'problem', id: 'pt-pd-lag' }
         ] },
 
+      { key: 'd8b', name: 'Making pandas fast',
+        blurb: 'Vectorising, reading less, and the memory tricks that turn a crash into a run.',
+        needs: 'grouping, cleaning',
+        steps: [
+          { t: 'read', title: 'Stop looping', body: [
+            'The rule: **the loop belongs to pandas, not to you.** Anything you write as a Python loop over rows is being done one value at a time in the slowest language in the stack:',
+            ['code', "df['total'] = df['price'] * df['qty']              # vectorised — in C\ndf['band'] = np.where(df['score'] > 90, 'high', 'low')   # vectorised if/else\ndf['label'] = np.select(conditions, choices, default='other')   # many branches\ndf['name'] = df['code'].map(lookup)                # a dict translation", '`apply` with a Python function is the slow fallback, not the first choice. If you must loop, `itertuples()` beats `iterrows()` several times over.'],
+            'Then: **read less in the first place.**',
+            ['code', "pd.read_csv('sales.csv', usecols=['date', 'amount'])\npd.read_csv('sales.csv', dtype={'id': 'str'})\npd.read_csv('sales.csv', chunksize=100000)   # an iterator of frames", 'Chunking is how you aggregate a file bigger than memory: loop the chunks, aggregate each, combine at the end.'],
+            'And **store it properly**. Parquet is smaller and faster than CSV and keeps the dtypes:',
+            ['code', "df.to_parquet('sales.parquet', index=False)"],
+            'One more that often halves the memory of a real dataset: a repetitive text column becomes a `category`, and `df.memory_usage(deep=True)` shows you where the space actually went.',
+            ['aside', 'Measure before you optimise. `%timeit` on the slow cell, then change one thing. Most "pandas is slow" turns out to be one `apply` over a million rows.']
+          ] },
+          { t: 'quick', title: 'Speed and memory', groups: ['pandas · speed & memory'] },
+          { t: 'problem', id: 'pt-pd-vectorise' }
+        ] },
+
       { key: 'd8', name: 'Drawing it',
         blurb: 'matplotlib and seaborn: the four charts you will draw most.',
         needs: 'pandas basics',
@@ -252,6 +359,24 @@
           { t: 'problem', id: 'pt-normalise' }
         ] },
 
+      { key: 'd9b', name: 'Experiments, A/B tests and p-values',
+        blurb: 'Designing a test, reading a result honestly, and the traps that make one meaningless.',
+        needs: 'describing data',
+        steps: [
+          { t: 'read', title: 'What a significant result actually says', body: [
+            'A significance test starts from the **null hypothesis** — the assumption that there is no difference — and asks how surprising your data would be if that were true. The p-value is that surprise:',
+            ['code', "from scipy import stats\n\nstats.ttest_ind(a, b, equal_var=False)   # Welch's t-test: two groups, means\nstats.mannwhitneyu(a, b)                 # the same question without assuming normality\nstats.chi2_contingency(table)            # two categorical variables", 'A p-value is the probability of a result this extreme IF the null is true. It is not the probability that the null is true, and not the chance you are wrong.'],
+            'Report the **effect size** alongside it. With enough data, a difference too small to care about is still significant:',
+            ['code', "mean = s.mean()\nse = s.std() / np.sqrt(len(s))\nci = (mean - 1.96 * se, mean + 1.96 * se)", 'A 95% confidence interval says: 95 intervals built this way in 100 would contain the true value.'],
+            'Designing an A/B test is four decisions, all made **before** you look:',
+            'One — randomise, because that is the only thing that lets you claim cause. Two — fix the success metric in advance. Three — work out the sample size you need. Four — fix when you will stop.',
+            '**Peeking** breaks it. Checking every day and stopping the moment it looks significant inflates the false positive rate well past 5%. So does testing twenty metrics and reporting the one that worked — that is what the Bonferroni correction is for.',
+            ['aside', 'Two you will be asked to name: a confounder drives both the treatment and the outcome, and Simpson\'s paradox is when a trend in every subgroup reverses once you pool them. Always look at the result split by the obvious confounder.']
+          ] },
+          { t: 'quick', title: 'Experiments and inference', groups: ['Statistics · experiments & inference'] },
+          { t: 'problem', id: 'pt-ml-cost' }
+        ] },
+
       { key: 'd10', name: 'Working like a professional',
         blurb: 'Notebooks, environments, timing, debugging and reproducibility.',
         steps: [
@@ -274,7 +399,7 @@
   });
 
   window.COURSE.stages.push({
-    key: 'ml', no: '03', name: 'Machine learning with scikit-learn',
+    key: 'ml', no: '04', name: 'Machine learning with scikit-learn',
     blurb: 'The same four verbs for every model, and the discipline that keeps a score honest.',
     units: [
 
@@ -350,6 +475,25 @@
           { t: 'problem', id: 'pt-ml-crossval-folds' }
         ] },
 
+      { key: 'm3b', name: 'Choosing and reading a metric',
+        blurb: 'Which number to lead on, why, and the trade-off you say out loud.',
+        needs: 'judging a model',
+        steps: [
+          { t: 'read', title: 'The number depends on the cost of being wrong', body: [
+            'Accuracy answers "how often were we right", which is nearly useless when one class is rare. The two that matter:',
+            ['code', "precision = TP / (TP + FP)   # of everything we FLAGGED, how much was right\nrecall    = TP / (TP + FN)   # of everything that WAS positive, how much we caught", 'F1 is their harmonic mean, so one bad number drags it down — you cannot hide a terrible recall behind lovely precision.'],
+            'Then answer the actual question with a trade-off, not a number:',
+            'For **fraud**, a miss costs far more than a false alarm, so lead on recall and say the limit is how many alerts the review team can handle. For a **spam filter**, binning a real email is the worst outcome, so lead on precision. Interviewers often ask both in a row to see whether you noticed they are opposites.',
+            'The **threshold** is yours to choose, and choosing it is half the job:',
+            ['code', "y_proba = model.predict_proba(X_test)[:, 1]\ny_pred = (y_proba >= 0.3).astype(int)   # lower threshold: more recall, less precision", '0.5 is a convention, not a decision.'],
+            'ROC AUC judges the RANKING rather than the threshold — the chance a random positive is ranked above a random negative. When positives are rare, prefer the precision-recall curve: ROC looks flatteringly good because true negatives are easy and plentiful.',
+            'For regression: RMSE punishes big misses hardest because it squares the errors, MAE treats every pound the same, R-squared is the share of variance explained, and MAPE is readable for a business audience but explodes near zero.',
+            ['aside', 'Whatever you report, report the baseline beside it. "92% accurate" means nothing until you say the majority class is 90%.']
+          ] },
+          { t: 'quick', title: 'Choosing and reading a metric', groups: ['Modelling · choosing and reading a metric'] },
+          { t: 'problem', id: 'pt-ml-threshold' }
+        ] },
+
       { key: 'm4', name: 'Making it better',
         blurb: 'Baselines, tuning, imbalance and knowing when to stop.',
         needs: 'evaluation',
@@ -393,6 +537,24 @@
           { t: 'task', key: 'rf' },
           { t: 'task', key: 'histgb' },
           { t: 'task', key: 'permimp' }
+        ] },
+
+      { key: 'm5b', name: 'The ideas they ask you to explain',
+        blurb: 'Overfitting, the bias-variance trade-off, regularisation, imbalance and drift — in your own words.',
+        needs: 'the workflow',
+        steps: [
+          { t: 'read', title: 'The vocabulary of the interview', body: [
+            '**Overfitting** is high training accuracy and poor test accuracy: the model learned the noise. **Underfitting** is bad at both: too simple, or the features do not carry the signal. Between them sits the **bias-variance trade-off**, and nearly everything you tune moves along that line.',
+            '**Regularisation** is the standard cure: penalise large coefficients so the model stays simple:',
+            ['code', "from sklearn.linear_model import Ridge, Lasso\n\nRidge(alpha=1.0)     # L2 — shrinks coefficients towards zero\nLasso(alpha=0.1)     # L1 — drives some to exactly zero, so it selects features\nLogisticRegression(C=0.1)   # C is the INVERSE: smaller C, more regularisation"],
+            '**Which models need scaling?** Anything using distances or gradients — kNN, SVM, linear models, neural networks. Trees do not, because they split on thresholds and units are irrelevant.',
+            '**Class imbalance** is when 99% of rows are one class and accuracy means nothing. Answer it with precision and recall, `class_weight="balanced"`, resampling, and a deliberate threshold. If you resample, do it on the training fold only — SMOTE before the split leaks the answer straight into the test set.',
+            '**Ensembles**: bagging (a random forest) averages many trees built on bootstrap samples to cut variance; boosting builds each tree on the errors of the last and is usually the strongest thing on tabular data.',
+            'And the two that come up about deployment: **drift**, where the world changes and a live model quietly gets worse, and **explainability**, where global importances say what the model uses and SHAP says why this particular row got this answer.',
+            ['aside', 'Every one of these is a "explain it to a non-technical colleague" question in disguise. Practise saying each in two sentences with a concrete example.']
+          ] },
+          { t: 'quick', title: 'The ideas they ask about', groups: ['Modelling · the ideas they ask about'] },
+          { t: 'problem', id: 'pt-ml-precision-at-k' }
         ] },
 
       { key: 'm6', name: 'Validating properly',
@@ -488,7 +650,7 @@
   });
 
   window.COURSE.stages.push({
-    key: 'test', no: '04', name: 'Sitting a Python coding test',
+    key: 'test', no: '05', name: 'Sitting a Python coding test',
     blurb: 'What these tests look like, how to work through one, and enough practice to make it dull.',
     units: [
 
@@ -576,6 +738,83 @@
           { t: 'problem', id: 'pt-merge-sorted' },
           { t: 'problem', id: 'pt-rotate-matrix' },
           { t: 'problem', id: 'pt-group-anagrams' }
+        ] },
+
+      { key: 't4b', name: 'What it costs: complexity',
+        blurb: 'Big-O without the maths degree, and the numbers that tell you which answer they want.',
+        needs: 'loops, lists, dicts',
+        steps: [
+          { t: 'read', title: 'Counting the work, not the seconds', body: [
+            'Big-O says how the work grows as the input grows. You need six of them:',
+            ['code', "O(1)       a dict or set lookup, an append, arithmetic\nO(log n)   binary search, pushing onto a heap\nO(n)       one pass over the data, `x in my_list`, a slice\nO(n log n) sorting\nO(n^2)     a loop inside a loop, building a string with += in a loop\nO(2^n)     every subset — exponential, and a warning sign"],
+            'Constants and lower terms are dropped: 3n + 100 is O(n). What matters is the shape.',
+            'In a test, the input SIZE tells you which answer is wanted. A hidden test with 200,000 items is not decoration — it is there to fail the O(n²) solution:',
+            ['code', "# O(n^2): re-summing every window\nbest = max(sum(nums[i:i + k]) for i in range(len(nums) - k + 1))\n\n# O(n): slide it\nwindow = sum(nums[:k])\nbest = window\nfor i in range(k, len(nums)):\n    window += nums[i] - nums[i - k]\n    best = max(best, window)"],
+            'Space counts too. "O(n) time, O(1) space" is a complete answer; giving only the time is half of one. A recursion n calls deep uses O(n) space on the call stack even if it allocates nothing.',
+            ['aside', 'Say the complexity out loud when you finish, before they ask. It is the difference between "it works" and "I know why it works".']
+          ] },
+          { t: 'quick', title: 'Cost and complexity', groups: ['Algorithms · cost & complexity'] },
+          { t: 'problem', id: 'pt-dsa-first-bad' }
+        ] },
+
+      { key: 't4c', name: 'The patterns that solve most questions',
+        blurb: 'Two pointers, sliding windows, seen-sets, monotonic stacks and intervals.',
+        needs: 'complexity',
+        steps: [
+          { t: 'read', title: 'Six shapes, most of the question bank', body: [
+            'Screening questions repeat a small number of shapes. Recognising which one you are looking at is most of the work.',
+            '**A seen-set or seen-dict** turns an O(n²) scan into one pass. Two-sum, first duplicate, longest run without a repeat — all the same move:',
+            ['code', "seen = {}\nfor i, n in enumerate(nums):\n    if target - n in seen:\n        return [seen[target - n], i]\n    seen[n] = i"],
+            '**Two pointers** walk in from both ends of a sorted list — palindromes, pair sums, reversing in place:',
+            ['code', "left, right = 0, len(items) - 1\nwhile left < right:\n    ...\n    left += 1\n    right -= 1"],
+            '**A sliding window** keeps a running total instead of re-summing, and its left edge only ever moves forwards.',
+            '**A monotonic stack** holds the items still waiting for an answer — "how many days until it is warmer" and "the next larger element" are the same question.',
+            '**Sort first** when the question mentions overlaps, ranges or "in order": merging intervals is a sort followed by one pass. And **binary search** applies whenever a condition goes false, false, then true and never flips back — that includes searching for an answer, not just for a value.',
+            ['aside', 'Say which pattern you are reaching for before you type. "This is a sliding window, so it will be O(n) with constant extra space" is the sentence they are listening for.']
+          ] },
+          { t: 'quick', title: 'The patterns', groups: ['Algorithms · the patterns'] },
+          { t: 'problem', id: 'pt-dsa-longest-unique' },
+          { t: 'problem', id: 'pt-dsa-warmer' },
+          { t: 'problem', id: 'pt-dsa-intervals' }
+        ] },
+
+      { key: 't4d', name: 'Stacks, queues and graphs',
+        blurb: 'Depth-first, breadth-first, visited sets, and the grid questions in disguise.',
+        needs: 'the patterns',
+        steps: [
+          { t: 'read', title: 'Searching something with connections', body: [
+            'A graph in a coding test is almost always a dict of node to list of neighbours. Two searches cover nearly every question about one:',
+            ['code', "# depth-first: a stack. Goes deep first. Answers \"can I get there?\"\nstack, seen = [start], set()\nwhile stack:\n    node = stack.pop()\n    if node in seen:\n        continue\n    seen.add(node)\n    stack.extend(graph.get(node, []))\n\n# breadth-first: a deque. Level by level. Answers \"what is the SHORTEST way?\"\nfrom collections import deque\nqueue, seen = deque([(start, 0)]), {start}\nwhile queue:\n    node, dist = queue.popleft()\n    ...", 'The `seen` set is not optional: without it a cycle runs forever. Mark nodes when you QUEUE them, not when you pop them.'],
+            'Use BFS when the question says shortest, fewest or nearest. Use DFS when it asks whether something is reachable, or asks you to explore a whole region.',
+            'A **grid is a graph**. Counting islands, flood fill, shortest path through a maze — all the same code with the neighbours computed instead of looked up:',
+            ['code', "for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n    ny, nx = y + dy, x + dx\n    if 0 <= ny < rows and 0 <= nx < cols and grid[ny][nx] == '1':\n        ...", 'Those four offsets and the bounds check are worth memorising as one unit.'],
+            ['aside', 'A stack is a list with append and pop. A queue is a deque with append and popleft. Using `list.pop(0)` for a queue is correct but O(n) each time, and on a big input that is the difference between passing and timing out.']
+          ] },
+          { t: 'problem', id: 'pt-dsa-dfs-reach' },
+          { t: 'problem', id: 'pt-dsa-bfs-steps' },
+          { t: 'problem', id: 'pt-dsa-islands' }
+        ] },
+
+      { key: 't4e', name: 'Recursion, trees and memoisation',
+        blurb: 'Base cases, traversals, and turning an exponential answer into a linear one.',
+        needs: 'graphs',
+        steps: [
+          { t: 'read', title: 'Answer the small case, then use it', body: [
+            'Every recursive function is two lines of thinking: what is the answer when there is nothing left, and how does the whole reduce to the parts?',
+            ['code', "def depth(node):\n    if node is None:      # the base case — write it FIRST\n        return 0\n    return 1 + max(depth(node['left']), depth(node['right']))", 'Without a base case you get RecursionError — Python stops you at about a thousand frames deep.'],
+            'A tree traversal is the same three lines in a different order. In-order gives a binary search tree back in sorted order:',
+            ['code', "def in_order(node):\n    if node is None:\n        return []\n    return in_order(node['left']) + [node['value']] + in_order(node['right'])", 'Move the middle line to the front for pre-order, to the end for post-order.'],
+            'Plain recursion is often exponential because it recomputes the same sub-answers. **Memoisation** fixes that in one line:',
+            ['code', "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\n    return n if n < 2 else fib(n - 1) + fib(n - 2)", 'Or build the answers upwards with a loop and two variables — the same complexity, and no stack to overflow.'],
+            '**Dynamic programming** is that idea with a table: an answer for every smaller amount, built up to the one you want. Fewest coins, ways up the stairs, longest common subsequence — the trick is spotting that greedy is wrong and every option has to be tried.',
+            ['aside', 'For subsets and permutations, use `itertools.combinations` and `itertools.permutations` rather than writing the recursion — then say out loud that it is O(2ⁿ) or O(n!) and cannot be better.']
+          ] },
+          { t: 'quick', title: 'Recursion and trees', groups: ['Algorithms · recursion & trees'] },
+          { t: 'problem', id: 'pt-dsa-tree-depth' },
+          { t: 'problem', id: 'pt-dsa-inorder' },
+          { t: 'problem', id: 'pt-dsa-stairs' },
+          { t: 'problem', id: 'pt-dsa-coins' },
+          { t: 'problem', id: 'pt-dsa-subsets' }
         ] },
 
       { key: 't5', name: 'Debugging someone else\'s code',

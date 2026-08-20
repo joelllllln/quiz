@@ -3511,7 +3511,7 @@
       card.querySelector('.pt-group').textContent = q.group;
       card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
       card.querySelector('.pt-quizcode').textContent = q.code;
-      var opts = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
+      var optBox = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
       var choices = shuffle([{ c: q.correct, ok: true }].concat((q.wrong || []).map(function (w) { return { c: w, ok: false }; })));
       choices.forEach(function (ch, ci) {
         var b = h('<button class="code-opt" type="button"><span class="co-key"></span><pre></pre></button>');
@@ -3520,7 +3520,7 @@
         b.onclick = function () {
           if (answered) return;
           answered = true; logActivity();
-          opts.querySelectorAll('.code-opt').forEach(function (o, k) {
+          optBox.querySelectorAll('.code-opt').forEach(function (o, k) {
             o.disabled = true;
             if (choices[k].ok) o.classList.add('co-right');
           });
@@ -3531,7 +3531,7 @@
           after.querySelector('.pq-next').onclick = function () { i++; step(); };
           after.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         };
-        opts.appendChild(b);
+        optBox.appendChild(b);
       });
       app.appendChild(card);
       window.scrollTo(0, 0);

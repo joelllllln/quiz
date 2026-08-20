@@ -273,10 +273,6 @@
       a: "glob.glob('data/*.csv')",
       note: 'import glob. The classic first line of a "load every file" loop.' },
 
-    { id: 'py-re-import', group: STD, lvl: 2,
-      ask: 'Import the regular expression module',
-      a: 'import re' },
-
     { id: 'py-re-findall', group: STD, lvl: 3,
       ask: 'Find every run of digits in the string s with a regex',
       a: "re.findall(r'\\d+', s)",
