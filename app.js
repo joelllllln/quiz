@@ -2042,12 +2042,15 @@
     bar.querySelector('.exmeta').innerHTML = '<b>Quickfire</b> · ' + esc(label) + (meta ? ' · ' + meta : '');
     return bar;
   }
-  function startQuick(list, label, onFinish, onBack) {
+  function startQuick(list, label, onFinish, onBack, opts) {
     if (!list || !list.length) return home();
-    var i = 0, right = 0, first = 0, missed = [];
+    opts = opts || {};
+    var i = 0, right = 0, first = 0, missed = [], studied = {};
     step();
     function step() {
       if (i >= list.length) return done();
+      // Learn mode: read the card first, then type it — the flashcard rhythm, one card at a time.
+      if (opts.learn && !studied[i]) return studyThen(list[i], i);
       var t = list[i], peeked = false, tries = 0, hints = 0, settled = false;
       app.innerHTML = '';
       app.appendChild(quickBar(label, (i + 1) + ' of ' + list.length, onBack));
@@ -2134,17 +2137,39 @@
         nb.focus();
       }
     }
+    function studyThen(t, idx) {
+      app.innerHTML = '';
+      app.appendChild(quickBar(label, 'learn · ' + (idx + 1) + ' of ' + list.length, onBack));
+      var card = h('<article class="qcard code-card qf-card qf-learn"><div class="q-eyebrow"><span class="qf-group"></span>' + diffTag(t.lvl || 1) + '</div>' +
+        '<h2 class="qf-ask"></h2><p class="qf-setup" hidden></p>' +
+        '<div class="code-sol"><span class="p-label">The line</span><pre class="qf-ans"></pre></div>' +
+        '<p class="qf-note" hidden></p>' +
+        '<div class="next-row"><button class="btn ln-go">Now type it from memory →</button>' +
+        '<button class="btn ghost ln-skip">Skip this card</button></div></article>');
+      card.querySelector('.qf-group').textContent = t.group || '';
+      card.querySelector('.qf-ask').textContent = t.ask;
+      if (t.setup) { var su = card.querySelector('.qf-setup'); su.hidden = false; su.textContent = t.setup; }
+      card.querySelector('.qf-ans').textContent = t.a;
+      if (t.note) { var n = card.querySelector('.qf-note'); n.hidden = false; n.textContent = t.note; }
+      card.querySelector('.ln-go').onclick = function () { studied[idx] = 1; step(); };
+      card.querySelector('.ln-skip').onclick = function () { studied[idx] = 1; i++; step(); };
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+      card.querySelector('.ln-go').focus();
+    }
     function done() {
       app.innerHTML = '';
       app.appendChild(quickBar(label, 'round complete', onBack));
       var pct = Math.round(100 * right / list.length);
       var card = h('<article class="qcard code-card"><div class="q-eyebrow">Round complete</div>' +
         '<h2 class="code-ask">' + right + ' of ' + list.length + ' right<span class="qf-pct"> · ' + pct + '%</span></h2>' +
-        '<p class="code-why">' + first + ' typed correctly first go, cold.' + (missed.length ? ' ' + missed.length + ' to go again.' : ' Clean sweep.') + '</p>' +
+        '<p class="code-why">' + (opts.learn ? first + ' typed correctly straight after reading it.' : first + ' typed correctly first go, cold.') +
+        (missed.length ? ' ' + missed.length + ' to go again.' : ' Clean sweep.') +
+        (opts.learn ? ' Come back to these cold later — that is the pass that counts.' : '') + '</p>' +
         '<div class="next-row"><button class="btn qf-again">Another round →</button>' +
         (missed.length ? '<button class="btn ghost qf-redo">Redo the ' + missed.length + ' I missed</button>' : '') +
         '<button class="btn ghost qf-home">Quickfire home</button></div></article>');
-      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed', onFinish, onBack); };
+      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed', onFinish, onBack, opts); };
       if (missed.length) card.querySelector('.qf-redo').onclick = function () { startQuick(shuffle(missed.slice()), label + ' · retry', onFinish, onBack); };
       card.querySelector('.qf-home').onclick = function () { setCodeDoor('quick'); home(); };
       if (onFinish) {
@@ -2185,10 +2210,14 @@
     });
     intro.appendChild(sizeRow);
     var startRow = h('<div class="next-row qf-start"><button class="btn qf-mixed">Test me — mixed round →</button>' +
-      '<button class="btn ghost qf-weak">Weak spots</button><button class="btn ghost qf-fresh">Cards I haven\'t seen</button>' +
-      '<button class="btn ghost qf-study">View a round first</button></div>');
+      '<button class="btn ghost qf-learn">Learn: see it, then type it</button>' +
+      '<button class="btn ghost qf-study">View a round first</button>' +
+      '<button class="btn ghost qf-weak">Weak spots</button><button class="btn ghost qf-fresh">Cards I haven\'t seen</button></div>');
     startRow.querySelector('.qf-study').onclick = function () {
       startQuickStudy(buildQuickRound(all, getQuickSize()), 'mixed');
+    };
+    startRow.querySelector('.qf-learn').onclick = function () {
+      startQuick(buildQuickRound(all, getQuickSize()), 'mixed', null, null, { learn: true });
     };
     startRow.querySelector('.qf-mixed').onclick = function () { startQuick(buildQuickRound(all, getQuickSize()), 'mixed'); };
     startRow.querySelector('.qf-weak').onclick = function () {
@@ -2244,10 +2273,12 @@
           '<span class="qf-grow-t"></span>' +
           '<span class="qf-grow-bar"><span style="width:' + gs.pct + '%"></span></span>' +
           '<span class="qf-grow-n">' + gs.pct + '% · ' + items.length + '</span></button>' +
+          '<button class="sv-btn sv-learn" type="button" title="See each answer, then type it">Learn</button>' +
           '<button class="sv-btn" type="button" title="See these cards with their answers">View</button></div>');
         row.querySelector('.qf-grow-t').textContent = sub;
         row.querySelector('.qf-grow-main').onclick = function () { startQuick(buildQuickRound(items, getQuickSize()), sub); };
-        row.querySelector('.sv-btn').onclick = function () { startQuickSheet(items, sub); };
+        row.querySelector('.sv-learn').onclick = function () { startQuick(buildQuickRound(items, getQuickSize()), sub, null, null, { learn: true }); };
+        row.querySelectorAll('.sv-btn')[1].onclick = function () { startQuickSheet(items, sub); };
         app.appendChild(row);
       });
     });
@@ -2311,9 +2342,11 @@
         '<h2 class="code-ask">' + list.length + ' card' + (list.length === 1 ? '' : 's') + ' read</h2>' +
         '<p class="code-why">Reading them is the easy half. Now cover them up: type each line from the question alone and the recall is real.</p>' +
         '<div class="next-row"><button class="btn sv-test">Test me on these →</button>' +
+        '<button class="btn ghost sv-learn">Learn them one at a time</button>' +
         '<button class="btn ghost sv-again">Read them again</button>' +
         '<button class="btn ghost sv-home">Back</button></div></article>');
       card.querySelector('.sv-test').onclick = function () { startQuick(buildQuickRound(list, 0), label, onFinish, onBack); };
+      card.querySelector('.sv-learn').onclick = function () { startQuick(buildQuickRound(list, 0), label, onFinish, onBack, { learn: true }); };
       card.querySelector('.sv-again').onclick = function () { i = 0; step(); };
       card.querySelector('.sv-home').onclick = onFinish || home;
       app.appendChild(card);
@@ -2328,8 +2361,10 @@
     var head = h('<section class="code-intro"><div class="review-eyebrow">Cheat sheet</div>' +
       '<p class="code-intro-p">Every card in this set, answers showing. Read it, close it, then test yourself.</p>' +
       '<div class="next-row"><button class="btn sv-test">Test me on these →</button>' +
+      '<button class="btn ghost sv-learn">Learn: see it, then type it</button>' +
       '<button class="btn ghost sv-cards">One card at a time</button></div></section>');
     head.querySelector('.sv-test').onclick = function () { startQuick(buildQuickRound(list, 0), label); };
+    head.querySelector('.sv-learn').onclick = function () { startQuick(buildQuickRound(list, 0), label, null, null, { learn: true }); };
     head.querySelector('.sv-cards').onclick = function () { startQuickStudy(list, label); };
     app.appendChild(head);
     var lastGroup = null;
@@ -2565,6 +2600,11 @@
   // Run one step, then come back to the unit page with it ticked.
   // Can this step be viewed worked, as well as sat as a test?
   function stepHasView(step) { return step && (step.t === 'quick' || step.t === 'quiz' || step.t === 'problem'); }
+  // How the main click on a step behaves. 'test' cold, 'learn' — see the answer, then type it,
+  // card by card, the way the data-science flashcards work — or 'view' the whole thing worked.
+  function getStepStyle() { var v = localStorage.getItem('ds_step_style'); return (v === 'learn' || v === 'view') ? v : 'test'; }
+  function setStepStyle(v) { try { localStorage.setItem('ds_step_style', v); } catch (e) {} }
+  function styleWord(style) { return style === 'learn' ? 'Learn' : style === 'view' ? 'View' : 'Test'; }
   function runCourseStep(unitKey, i, view) {
     var row = courseUnit(unitKey);
     if (!row) return home();
@@ -2577,20 +2617,22 @@
       if (!cards.length) { after(); return; }
       var round = buildQuickRound(cards, step.size || Math.min(cards.length, 14));
       var back = function () { renderCourseUnitPage(unitKey); };
-      if (view) return startQuickStudy(round, stepTitle(step), after, back);
-      return startQuick(round, stepTitle(step), after, back);
+      var style = view ? 'view' : getStepStyle();
+      if (style === 'view') return startQuickStudy(round, stepTitle(step), after, back);
+      return startQuick(round, stepTitle(step), after, back, { learn: style === 'learn' });
     }
     if (step.t === 'quiz') {
       var qs = quizForStep(step);
       if (!qs.length) { after(); return; }
       var picked = shuffle(qs.slice()).slice(0, step.size || qs.length);
       var qback = function () { renderCourseUnitPage(unitKey); };
-      if (view) return startQuizStudy(picked, after, qback);
-      return startPyQuiz(picked, after, qback);
+      var qstyle = view ? 'view' : getStepStyle();
+      if (qstyle === 'view') return startQuizStudy(picked, after, qback);
+      return startPyQuiz(picked, after, qback, { learn: qstyle === 'learn' });
     }
     if (step.t === 'problem') {
       var ctx = { unitKey: unitKey, i: i, after: after };
-      if (view) return startProblemStudy(step.id, ctx);
+      if (view || getStepStyle() !== 'test') return startProblemStudy(step.id, ctx);
       return startPyProblem(step.id, null, ctx);
     }
     if (step.t === 'task') { courseTick(unit, i); return startCodeExample(step.key); }
@@ -2641,9 +2683,190 @@
       .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
       .replace(/(^|[\s(])\*([^*]+)\*/g, '$1<i>$2</i>');
   }
+  /* ---------------- The syllabus — everything, in the order the course meets it ----------------
+     Not a drill: a document. Every card, every question and every problem the app can ask you,
+     listed under the unit that introduces it, so the whole scope is visible in one scroll. */
+  function syllabusRows() {
+    var rows = [];
+    courseStages().forEach(function (stage) {
+      rows.push({ t: 'stage', stage: stage });
+      (stage.units || []).forEach(function (unit) {
+        var items = [], cards = 0, quiz = 0, probs = 0, drills = 0;
+        (unit.steps || []).forEach(function (step) {
+          if (step.t === 'read') items.push({ kind: 'read', title: step.title });
+          else if (step.t === 'quick') {
+            var cs = snipsForStep(step);
+            cards += cs.length;
+            items.push({ kind: 'quick', title: stepTitle(step), cards: cs });
+          } else if (step.t === 'quiz') {
+            var qs = quizForStep(step);
+            quiz += qs.length;
+            items.push({ kind: 'quiz', title: stepTitle(step), quiz: qs });
+          } else if (step.t === 'problem') {
+            probs++;
+            items.push({ kind: 'problem', problem: pyTest(step.id) });
+          } else if (step.t === 'task') {
+            drills++;
+            items.push({ kind: 'task', task: codeTask(step.key) });
+          } else if (step.t === 'mock') {
+            items.push({ kind: 'mock', title: stepTitle(step) });
+          }
+        });
+        rows.push({ t: 'unit', unit: unit, stage: stage, items: items, cards: cards, quiz: quiz, probs: probs, drills: drills });
+      });
+    });
+    return rows;
+  }
+  function renderSyllabus() {
+    var rows = syllabusRows();
+    var totals = { cards: 0, quiz: 0, probs: 0, drills: 0, reads: 0 };
+    rows.forEach(function (r) {
+      if (r.t !== 'unit') return;
+      totals.cards += r.cards; totals.quiz += r.quiz; totals.probs += r.probs; totals.drills += r.drills;
+      r.items.forEach(function (it) { if (it.kind === 'read') totals.reads++; });
+    });
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">The syllabus</div>' +
+      '<p class="code-intro-p">Everything the app can ask you, in the order the course meets it. ' +
+      'Open a unit to see every card, every question and every problem inside it — this is the whole scope, on one page.</p>' +
+      '<div class="mast-badges cdash-badges">' +
+        '<span class="mb"><b>' + totals.reads + '</b> lessons</span>' +
+        '<span class="mb"><b>' + totals.cards + '</b> cards</span>' +
+        '<span class="mb"><b>' + totals.quiz + '</b> predict</span>' +
+        '<span class="mb"><b>' + totals.probs + '</b> problems</span>' +
+        '<span class="mb"><b>' + totals.drills + '</b> drills</span>' +
+      '</div>' +
+      '<input class="cref-search syl-search" type="search" placeholder="Search the whole syllabus… e.g. groupby, recursion, ROC" autocomplete="off"></section>');
+    app.appendChild(intro);
+    var searchIn = intro.querySelector('.syl-search');
+    var results = h('<div class="syl-results" hidden></div>');
+    app.appendChild(results);
+    var body = h('<div class="syl-body"></div>');
+    app.appendChild(body);
+
+    rows.forEach(function (r) {
+      if (r.t === 'stage') {
+        var ss = stageStats(r.stage);
+        var head = h('<section class="course-stage"><div class="cs-head"><span class="cs-no"></span><span class="cs-name"></span>' +
+          '<span class="cs-pct">' + ss.pct + '%</span></div><p class="cs-blurb"></p></section>');
+        head.querySelector('.cs-no').textContent = r.stage.no;
+        head.querySelector('.cs-name').textContent = r.stage.name;
+        head.querySelector('.cs-blurb').textContent = r.stage.blurb || '';
+        body.appendChild(head);
+        return;
+      }
+      var us = unitStats(r.unit);
+      var det = h('<details class="syl-unit"><summary><span class="syl-u-name"></span>' +
+        '<span class="syl-u-counts">' +
+          (r.cards ? '<span>' + r.cards + ' cards</span>' : '') +
+          (r.quiz ? '<span>' + r.quiz + ' predict</span>' : '') +
+          (r.probs ? '<span>' + r.probs + ' problems</span>' : '') +
+          (r.drills ? '<span>' + r.drills + ' drills</span>' : '') +
+        '</span><span class="syl-u-pct">' + us.pct + '%</span></summary><div class="syl-inner"></div></details>');
+      det.querySelector('.syl-u-name').textContent = r.unit.name;
+      var inner = det.querySelector('.syl-inner');
+      if (r.unit.blurb) inner.appendChild(h('<p class="syl-blurb">' + esc(r.unit.blurb) + '</p>'));
+      r.items.forEach(function (it) {
+        if (it.kind === 'read') {
+          inner.appendChild(h('<div class="syl-step"><span class="syl-kind">Read</span><span class="syl-t">' + esc(it.title || '') + '</span></div>'));
+        } else if (it.kind === 'quick') {
+          inner.appendChild(h('<div class="syl-step"><span class="syl-kind">Recall</span><span class="syl-t">' + esc(it.title) + ' · ' + it.cards.length + '</span></div>'));
+          it.cards.forEach(function (c) {
+            var line = h('<div class="syl-card"><span class="syl-ask"></span><code class="syl-a"></code></div>');
+            line.querySelector('.syl-ask').textContent = c.ask;
+            line.querySelector('.syl-a').textContent = c.a;
+            inner.appendChild(line);
+          });
+        } else if (it.kind === 'quiz') {
+          inner.appendChild(h('<div class="syl-step"><span class="syl-kind">Predict</span><span class="syl-t">' + esc(it.title) + ' · ' + it.quiz.length + '</span></div>'));
+          it.quiz.forEach(function (q) {
+            var line = h('<div class="syl-card"><span class="syl-ask"></span></div>');
+            line.querySelector('.syl-ask').textContent = (q.code || '').split('\n')[0] + ((q.code || '').indexOf('\n') > 0 ? ' …' : '');
+            inner.appendChild(line);
+          });
+        } else if (it.kind === 'problem' && it.problem) {
+          var pr = h('<button class="syl-item" type="button"><span class="syl-kind">Solve</span><span class="syl-t"></span>' + diffTag(it.problem.lvl || 1) + '</button>');
+          pr.querySelector('.syl-t').textContent = it.problem.title;
+          pr.onclick = function () { startProblemStudy(it.problem.id, null); };
+          inner.appendChild(pr);
+        } else if (it.kind === 'task' && it.task) {
+          var tk = h('<button class="syl-item" type="button"><span class="syl-kind">Build</span><span class="syl-t"></span>' + diffTag(it.task.lvl || 2) + '</button>');
+          tk.querySelector('.syl-t').textContent = it.task.title;
+          tk.onclick = function () { startCodeExample(it.task.key); };
+          inner.appendChild(tk);
+        } else if (it.kind === 'mock') {
+          inner.appendChild(h('<div class="syl-step"><span class="syl-kind">Sit</span><span class="syl-t">' + esc(it.title) + '</span></div>'));
+        }
+      });
+      var go = h('<div class="next-row syl-go"><button class="btn ghost">Open this unit →</button></div>');
+      go.querySelector('button').onclick = function () { renderCourseUnitPage(r.unit.key); };
+      inner.appendChild(go);
+      body.appendChild(det);
+    });
+
+    // One search over everything, answering "is X in here, and where?"
+    searchIn.oninput = function () {
+      var q = searchIn.value.trim().toLowerCase();
+      results.innerHTML = '';
+      results.hidden = !q;
+      body.hidden = !!q;
+      if (!q) return;
+      var hits = [];
+      rows.forEach(function (r) {
+        if (r.t !== 'unit') return;
+        r.items.forEach(function (it) {
+          (it.cards || []).forEach(function (c) {
+            if ((c.ask + ' ' + c.a + ' ' + (c.note || '')).toLowerCase().indexOf(q) >= 0) {
+              hits.push({ unit: r.unit, stage: r.stage, kind: 'Recall', text: c.ask, code: c.a });
+            }
+          });
+          (it.quiz || []).forEach(function (x) {
+            if ((x.code + ' ' + x.explain).toLowerCase().indexOf(q) >= 0) {
+              hits.push({ unit: r.unit, stage: r.stage, kind: 'Predict', text: (x.q || 'What does this print?'), code: (x.code || '').split('\n')[0] });
+            }
+          });
+          if (it.problem && (it.problem.title + ' ' + it.problem.brief).toLowerCase().indexOf(q) >= 0) {
+            hits.push({ unit: r.unit, stage: r.stage, kind: 'Solve', text: it.problem.title, id: it.problem.id });
+          }
+          if (it.title && it.title.toLowerCase().indexOf(q) >= 0 && it.kind === 'read') {
+            hits.push({ unit: r.unit, stage: r.stage, kind: 'Read', text: it.title });
+          }
+        });
+      });
+      results.appendChild(h('<div class="qf-rescount">' + hits.length + ' place' + (hits.length === 1 ? '' : 's') + ' in the syllabus</div>'));
+      hits.slice(0, 120).forEach(function (hit) {
+        var row = h('<button class="syl-hit" type="button"><span class="syl-hit-where"></span>' +
+          '<span class="syl-hit-what"><span class="syl-kind"></span><span class="syl-t"></span></span>' +
+          (hit.code ? '<code class="syl-a"></code>' : '') + '</button>');
+        row.querySelector('.syl-hit-where').textContent = hit.stage.no + ' · ' + hit.unit.name;
+        row.querySelector('.syl-kind').textContent = hit.kind;
+        row.querySelector('.syl-t').textContent = hit.text;
+        if (hit.code) row.querySelector('.syl-a').textContent = hit.code;
+        row.onclick = function () {
+          if (hit.id) startProblemStudy(hit.id, null);
+          else renderCourseUnitPage(hit.unit.key);
+        };
+        results.appendChild(row);
+      });
+    };
+  }
+
+  function getCourseDoor() { var v = localStorage.getItem('ds_course_door'); return v === 'syllabus' ? v : 'path'; }
+  function setCourseDoor(v) { try { localStorage.setItem('ds_course_door', v); } catch (e) {} }
   function renderCourseHome() {
     var stages = courseStages();
     if (!stages.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">The course has not loaded.</p></section>')); return; }
+    var door = getCourseDoor();
+    var nav = h('<nav class="home-doors" role="tablist"></nav>');
+    [{ v: 'path', t: 'The path', s: 'Take it in order, step by step' },
+     { v: 'syllabus', t: 'Syllabus', s: 'Everything, in that order' }].forEach(function (d) {
+      var b = h('<button class="door' + (d.v === door ? ' door-on' : '') + '" type="button" role="tab"><span class="door-t"></span><span class="door-s"></span></button>');
+      b.querySelector('.door-t').textContent = d.t;
+      b.querySelector('.door-s').textContent = d.s;
+      b.onclick = function () { setCourseDoor(d.v); home(); };
+      nav.appendChild(b);
+    });
+    app.appendChild(nav);
+    if (door === 'syllabus') return renderSyllabus();
     var cs = courseStats(), next = courseNext();
     var intro = h('<section class="code-intro course-hero"><div class="review-eyebrow">The course</div>' +
       '<p class="code-intro-p">One path, in order, from <i>what a variable is</i> to sitting a timed Python test. ' +
@@ -2651,12 +2874,27 @@
       'Nothing is locked — but the order is the point.</p>' +
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + cs.pct + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + cs.pct + '%</b> · ' + cs.done + ' of ' + cs.total + ' steps</span></div></section>');
+    var styleRow = h('<div class="code-diff-row"><span class="filt-lab">How steps run</span></div>');
+    [{ v: 'test', t: 'Test me', d: 'straight in, nothing shown' },
+     { v: 'learn', t: 'Learn it', d: 'see the answer, then type it — card by card' },
+     { v: 'view', t: 'Just show me', d: 'read it worked, no test' }].forEach(function (c) {
+      var b = h('<button class="cdf-chip' + (getStepStyle() === c.v ? ' cdf-on' : '') + '" type="button" title="' + esc(c.d) + '"></button>');
+      b.textContent = c.t;
+      b.onclick = function () { setStepStyle(c.v); home(); };
+      styleRow.appendChild(b);
+    });
+    intro.appendChild(styleRow);
+    intro.appendChild(h('<p class="cu-needs">' + esc(getStepStyle() === 'learn'
+      ? 'Learn: every card shows you the answer first, then asks you to type it from memory — then the next card.'
+      : getStepStyle() === 'view' ? 'Just show me: steps open worked through, and you can start the test from the end of any of them.'
+      : 'Test me: steps open as questions with nothing shown. Any step can still be viewed worked with its View button.') + '</p>'));
     if (next) {
       var go = h('<div class="course-continue"><span class="cc-label">Next up</span>' +
         '<span class="cc-where"></span><span class="cc-what"></span>' +
         '<button class="btn cc-go">Continue →</button></div>');
       go.querySelector('.cc-where').textContent = next.stage.no + ' · ' + next.unit.name;
-      go.querySelector('.cc-what').textContent = stepLabel(next.unit.steps[next.i]) + ': ' + stepTitle(next.unit.steps[next.i]);
+      go.querySelector('.cc-what').textContent = stepLabel(next.unit.steps[next.i]) + ': ' + stepTitle(next.unit.steps[next.i]) +
+        (stepHasView(next.unit.steps[next.i]) ? '  ·  ' + styleWord(getStepStyle()) : '');
       go.querySelector('.cc-go').onclick = function () { runCourseStep(next.unit.key, next.i); };
       if (stepHasView(next.unit.steps[next.i])) {
         var vg = h('<button class="btn ghost cc-view">View it worked first</button>');
@@ -3257,12 +3495,14 @@
     }
     return bar;
   }
-  function startPyQuiz(list, onFinish, onBack) {
+  function startPyQuiz(list, onFinish, onBack, opts) {
     if (!list.length) return home();
-    var i = 0, right = 0;
+    opts = opts || {};
+    var i = 0, right = 0, studied = {};
     step();
     function step() {
       if (i >= list.length) return done();
+      if (opts.learn && !studied[i]) return studyThen(list[i], i);
       var q = list[i], answered = false;
       app.innerHTML = '';
       app.appendChild(quizBar('<b>What does this print?</b> · ' + (i + 1) + ' of ' + list.length, onBack));
@@ -3296,13 +3536,33 @@
       app.appendChild(card);
       window.scrollTo(0, 0);
     }
+    function studyThen(q, idx) {
+      app.innerHTML = '';
+      app.appendChild(quizBar('<b>Learn</b> · ' + (idx + 1) + ' of ' + list.length, onBack));
+      var card = h('<article class="qcard pt-card"><div class="q-eyebrow"><span class="pt-group"></span>' + diffTag(q.lvl || 1) + '</div>' +
+        '<h2 class="pt-title"></h2><pre class="pt-quizcode"></pre>' +
+        '<div class="code-sol"><span class="p-label">It prints</span><pre class="sv-out"></pre></div>' +
+        '<p class="qf-note"></p>' +
+        '<div class="next-row"><button class="btn ln-go">Now answer it →</button>' +
+        '<button class="btn ghost ln-skip">Skip this one</button></div></article>');
+      card.querySelector('.pt-group').textContent = q.group;
+      card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
+      card.querySelector('.pt-quizcode').textContent = q.code;
+      card.querySelector('.sv-out').textContent = q.correct;
+      card.querySelector('.qf-note').textContent = q.explain;
+      card.querySelector('.ln-go').onclick = function () { studied[idx] = 1; step(); };
+      card.querySelector('.ln-skip').onclick = function () { studied[idx] = 1; i++; step(); };
+      app.appendChild(card);
+      window.scrollTo(0, 0);
+      card.querySelector('.ln-go').focus();
+    }
     function done() {
       app.innerHTML = '';
       app.appendChild(quizBar('<b>Round complete</b>', onBack));
       var card = h('<article class="qcard pt-card"><div class="q-eyebrow">Round complete</div>' +
         '<h2 class="pt-title">' + right + ' of ' + list.length + ' right</h2>' +
         '<div class="next-row"><button class="btn pq-again">Another round →</button><button class="btn ghost pq-home">Back to tests</button></div></article>');
-      card.querySelector('.pq-again').onclick = function () { startPyQuiz(shuffle(pyQuiz().slice()).slice(0, 10), onFinish, onBack); };
+      card.querySelector('.pq-again').onclick = function () { startPyQuiz(shuffle(pyQuiz().slice()).slice(0, 10), onFinish, onBack, opts); };
       card.querySelector('.pq-home').onclick = home;
       if (onFinish) {
         var cont = h('<div class="next-row course-foot"><button class="btn pq-course">Continue the course →</button></div>');
@@ -3422,11 +3682,13 @@
     var intro = h('<section class="code-intro"><div class="review-eyebrow">Output quiz</div>' +
       '<p class="code-intro-p">Nearly every Python test opens with these: a short snippet, four plausible outputs, one right answer. ' +
       'They are testing whether you know what the language actually does — mutable defaults, integer division, aliasing, truthiness.</p>' +
-      '<div class="next-row"><button class="btn pq-start">Test me — a round of 10 →</button><button class="btn ghost pq-view">View 10 worked first</button>' +
+      '<div class="next-row"><button class="btn pq-start">Test me — a round of 10 →</button>' +
+      '<button class="btn ghost pq-learn">Learn: see it, then answer it</button><button class="btn ghost pq-view">View 10 worked first</button>' +
       '<button class="btn ghost pq-all">Every question, in order</button></div></section>');
     intro.querySelector('.pq-start').onclick = function () { startPyQuiz(shuffle(qs.slice()).slice(0, 10)); };
     intro.querySelector('.pq-all').onclick = function () { startPyQuiz(qs.slice()); };
     intro.querySelector('.pq-view').onclick = function () { startQuizStudy(shuffle(qs.slice()).slice(0, 10)); };
+    intro.querySelector('.pq-learn').onclick = function () { startPyQuiz(shuffle(qs.slice()).slice(0, 10), null, null, { learn: true }); };
     app.appendChild(intro);
     var g = ptGroups(qs);
     g.order.forEach(function (grp) {
