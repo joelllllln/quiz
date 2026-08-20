@@ -76,12 +76,12 @@
 
     /* ---- the four verbs ---- */
     { id: 'sk-split', group: FIT, lvl: 1,
-      ask: 'Split X and y into an 80/20 train/test split, reproducibly',
+      ask: 'Split X and y into an 80/20 train/test split, reproducibly with seed 42',
       a: 'X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)',
       note: 'The return order is X_train, X_test, y_train, y_test — X halves first.' },
 
     { id: 'sk-split-strat', group: FIT, lvl: 2,
-      ask: 'Split X and y keeping the class balance the same in both halves',
+      ask: 'Split X and y 80/20 with seed 42, keeping the class balance the same in both halves',
       a: 'X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)',
       note: 'stratify=y is essential on imbalanced data.' },
 
@@ -91,7 +91,7 @@
       note: 'Two lines, one idea: the questions and the answers.' },
 
     { id: 'sk-instantiate', group: FIT, lvl: 1,
-      ask: 'Create a random forest with 200 trees and a fixed seed',
+      ask: 'Create a random forest with 200 trees and seed 42',
       a: 'model = RandomForestClassifier(n_estimators=200, random_state=42)' },
 
     { id: 'sk-fit', group: FIT, lvl: 1,
@@ -172,7 +172,7 @@
       note: 'For the TARGET only — using it on features invents a fake ordering.' },
 
     { id: 'sk-pipeline', group: PRE, lvl: 2,
-      ask: 'Build a pipeline that scales then fits a logistic regression',
+      ask: 'Build a pipeline with a "scaler" step then a "model" step: StandardScaler, then LogisticRegression',
       a: "pipe = Pipeline([('scaler', StandardScaler()), ('model', LogisticRegression())])",
       note: 'A list of (name, step) tuples. The pipeline makes leakage almost impossible.' },
 
@@ -258,7 +258,7 @@
       note: 'scoring takes accuracy, f1, roc_auc, neg_root_mean_squared_error and many more.' },
 
     { id: 'sk-skfold', group: EVA, lvl: 3,
-      ask: 'Create a 5-fold stratified splitter, shuffled, with a fixed seed',
+      ask: 'Create a 5-fold stratified splitter, shuffled, with seed 42',
       a: 'cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)',
       note: 'Stratified keeps the class balance in every fold.' },
 

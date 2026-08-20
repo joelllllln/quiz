@@ -105,7 +105,7 @@
       note: 'Fail loudly and early — a silent wrong answer is worse than a crash.' },
 
     { id: 'py-assert', group: ERR, lvl: 2,
-      ask: 'Assert that `nums` is not empty, with a message',
+      ask: 'Assert that `nums` is not empty, with the message: nums must not be empty',
       a: "assert nums, 'nums must not be empty'",
       note: 'Great in tests and notebooks; stripped out when Python runs with -O.' },
 

@@ -129,7 +129,7 @@
       note: 'Vectorised — no loop, and it lines up on the index automatically.' },
 
     { id: 'pd-assign', group: SEL, lvl: 3,
-      ask: 'Add the column "total" using assign so the chain keeps flowing',
+      ask: 'Add a "total" column of price times quantity using assign, so the chain keeps flowing',
       a: "df.assign(total=df['price'] * df['quantity'])",
       note: 'assign returns a new frame, which keeps method chains readable and side-effect free.' },
 

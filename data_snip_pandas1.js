@@ -161,7 +161,7 @@
       note: 'Fairer than head() on sorted data — the top of a file is rarely typical.' },
 
     { id: 'pd-sample-seed', group: LOOK, lvl: 2,
-      ask: 'Take a reproducible random sample of 100 rows from df',
+      ask: 'Take a random sample of 100 rows from df, reproducibly with seed 42',
       a: 'df.sample(100, random_state=42)',
       note: 'random_state makes the same sample come back every run.' },
 

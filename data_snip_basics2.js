@@ -192,7 +192,7 @@
       note: 'That is one tuple. Unpack it at the other end: count, total = summary(rows).' },
 
     { id: 'b2-call-keyword', group: F, lvl: 2,
-      ask: 'Call greet passing the greeting by name instead of by position',
+      ask: 'Call greet with the name Ada and the greeting Hi, passing the greeting by name',
       a: "greet('Ada', greeting='Hi')",
       note: 'Keyword arguments make a call readable and stop you getting the order wrong.' },
 

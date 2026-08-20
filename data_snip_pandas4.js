@@ -62,7 +62,7 @@
       note: 'Any function that turns a Series into one number works in agg.' },
 
     { id: 'pd-gb-transform', group: GRP, lvl: 3,
-      ask: 'Add a column holding each row\'s department mean salary, aligned to the original rows',
+      ask: 'Add a "dept_mean" column holding each row\'s department mean salary, aligned to the original rows',
       a: "df['dept_mean'] = df.groupby('department')['salary'].transform('mean')",
       note: 'transform returns one value per ROW, so it lines up with df; agg returns one per group.' },
 

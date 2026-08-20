@@ -48,7 +48,7 @@
       note: 'Defaults are _x and _y, which nobody can read a week later.' },
 
     { id: 'pd-merge-indicator', group: JOIN, lvl: 3,
-      ask: 'Merge df1 and df2 on "id" adding a column showing which side each row came from',
+      ask: 'Outer-merge df1 and df2 on "id", adding a column showing which side each row came from',
       a: "df1.merge(df2, on='id', how='outer', indicator=True)",
       note: 'The _merge column (left_only / right_only / both) is the fastest join audit there is.' },
 

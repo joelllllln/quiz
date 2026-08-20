@@ -190,7 +190,7 @@
       note: 'Cheap guardrails in a pipeline catch a bad join long before the model does.' },
 
     { id: 'env-logging', group: ENV, lvl: 3,
-      ask: 'Log an informational message with the logging module',
+      ask: 'Log the informational message: starting the run',
       a: "logging.info('starting the run')",
       note: 'import logging. Better than print() in anything scheduled — it carries timestamps and levels.' },
 
@@ -200,7 +200,7 @@
       note: 'from tqdm import tqdm. Worth it the moment a loop takes more than a few seconds.' },
 
     { id: 'env-seed-all', group: ENV, lvl: 2,
-      ask: 'Set the NumPy seed so a notebook reproduces exactly',
+      ask: 'Set the NumPy seed to 0 so a notebook reproduces exactly',
       a: 'np.random.seed(0)',
       note: 'Seed everything that samples — NumPy, Python\'s random, and any random_state argument.' },
 

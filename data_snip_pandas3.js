@@ -192,12 +192,12 @@
       note: 'A boolean cast to int is the cheapest possible if/else in pandas.' },
 
     { id: 'pd-np-where3', group: DUP, lvl: 2,
-      ask: 'Label rows "high" when amount is over 100, otherwise "low"',
+      ask: 'Add a "band" column reading high when amount is over 100 and low otherwise',
       a: "df['band'] = np.where(df['amount'] > 100, 'high', 'low')",
       note: 'np.where is the vectorised ternary: condition, value if true, value if false.' },
 
     { id: 'pd-np-select', group: DUP, lvl: 3,
-      ask: 'Pick between several labels with np.select, given `conds` and `labels`',
+      ask: 'Set a "band" column from the conditions `conds` and `labels`, defaulting to other, with np.select',
       a: "df['band'] = np.select(conds, labels, default='other')",
       note: 'The clean way to write a multi-branch rule without nesting np.where.' },
 

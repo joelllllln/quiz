@@ -50,7 +50,7 @@
       note: 'A boolean cast to int is the cheapest flag there is.' },
 
     { id: 'fe-missing-flag', group: ENC, lvl: 2,
-      ask: 'Add a column marking which rows had a missing "income" before you fill it',
+      ask: 'Add an "income_missing" column marking which rows had a missing "income", before you fill it',
       a: "df['income_missing'] = df['income'].isna().astype(int)",
       note: 'Missingness is often predictive in itself — record it before you impute it away.' },
 
@@ -91,17 +91,17 @@
       note: 'Use a fixed reference date rather than "now" if the model must be reproducible.' },
 
     { id: 'fe-group-mean-feature', group: DER, lvl: 3,
-      ask: 'Add each row\'s customer average spend as a feature',
+      ask: 'Add a "customer_mean" column holding each row\'s average spend across its "customer_id"',
       a: "df['customer_mean'] = df.groupby('customer_id')['spend'].transform('mean')",
       note: 'transform keeps one value per row, so it lines up. Computed over all data, it leaks — fit it on train only.' },
 
     { id: 'fe-diff-from-mean', group: DER, lvl: 3,
-      ask: 'Add how far each row\'s spend sits above its customer average',
+      ask: 'Work out how far each row\'s spend sits above its "customer_id" average',
       a: "df['spend'] - df.groupby('customer_id')['spend'].transform('mean')",
       note: 'Deviation-from-group is one of the most reliably useful engineered features there is.' },
 
     { id: 'fe-lag-feature', group: DER, lvl: 3,
-      ask: 'Add the previous month\'s "value" for each "customer_id"',
+      ask: 'Add a "prev_value" column holding the previous "value" for each "customer_id"',
       a: "df['prev_value'] = df.groupby('customer_id')['value'].shift(1)",
       note: 'Always shift within the group, and only ever backwards — shift(-1) is the future.' },
 
@@ -111,17 +111,17 @@
       note: 'Rolling inside a group is the standard way to build a trend feature per entity.' },
 
     { id: 'fe-count-feature', group: DER, lvl: 2,
-      ask: 'Add how many rows each "customer_id" has',
+      ask: 'Add an "n_orders" column holding how many rows each "customer_id" has',
       a: "df['n_orders'] = df.groupby('customer_id')['customer_id'].transform('size')",
       note: 'Frequency features are cheap and often among the strongest a model has.' },
 
     { id: 'fe-text-length', group: DER, lvl: 1,
-      ask: 'Add the character length of "description" as a feature',
+      ask: 'Add a "desc_len" column holding the character length of "description"',
       a: "df['desc_len'] = df['description'].str.len()",
       note: 'Length, word count and "contains a digit" are the first three text features to try.' },
 
     { id: 'fe-word-count', group: DER, lvl: 2,
-      ask: 'Add the number of words in "description"',
+      ask: 'Add an "n_words" column holding the number of words in "description"',
       a: "df['n_words'] = df['description'].str.split().str.len()" },
 
     /* ---- selecting & leakage ---- */
@@ -151,10 +151,9 @@
       note: 'The rule behind every leakage question: learn from train, apply to both.' },
 
     { id: 'fe-leak-check', group: SEL, lvl: 3,
-      ask: 'Spot the leak: which column must be dropped before modelling churn — one recorded after the customer churned?',
-      a: 'the one recorded afterwards',
-      alts: ['the post-outcome column'],
-      note: 'A cancellation date, a refund flag, a closing balance: any column that could not exist at prediction time is a leak, however well it scores.' },
+      ask: 'Drop the leaky column "cancelled_date" — recorded after the churn you are predicting — from df',
+      a: "df = df.drop(columns=['cancelled_date'])",
+      note: 'A cancellation date, a refund flag, a closing balance: any column that could not exist at prediction time is a leak, however well it scores. Drop it before you are impressed by the score.' },
 
     { id: 'fe-time-split', group: SEL, lvl: 3,
       ask: 'Import the splitter that respects time order instead of shuffling',
