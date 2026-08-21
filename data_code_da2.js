@@ -2,8 +2,8 @@
    adding the columns the question actually needs. */
 (function () {
   window.CODETASKS = window.CODETASKS || [];
-  var S3 = '23 · Cleaning, all together';
-  var S4 = '24 · New columns, all together';
+  var S3 = '27 · Cleaning, all together';
+  var S4 = '28 · New columns, all together';
 
   window.CODETASKS.push(
 

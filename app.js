@@ -3536,7 +3536,7 @@
   function saveMockState(s) { try { s ? localStorage.setItem('ds_pt_mock', JSON.stringify(s)) : localStorage.removeItem('ds_pt_mock'); } catch (e) {} }
   function buildMock(count, levelMix, withPackages) {
     var by = { 1: [], 2: [], 3: [] };
-    pyTests().forEach(function (t) { if (!t.noMock || withPackages) by[t.lvl || 2].push(t); });
+    pyTests().forEach(function (t) { if ((!t.noMock || withPackages) && !t.warmup) by[t.lvl || 2].push(t); });
     Object.keys(by).forEach(function (k) { by[k] = shuffle(by[k]); });
     var out = [];
     levelMix.forEach(function (L) { if (by[L] && by[L].length) out.push(by[L].shift()); });

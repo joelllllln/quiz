@@ -2,13 +2,13 @@
 (function () {
   window.CODETASKS = window.CODETASKS || [];
   function T(o) { o.lvl = o.lvl || 1; window.CODETASKS.push(o); }
-  var S14 = '14 · Two numbers per group';
-  var S15 = '15 · Two tables';
-  var S16 = '16 · Change the shape';
-  var S17 = '17 · Dates';
-  var S18 = '18 · A first chart';
-  var S19 = '19 · Honest numbers';
-  var S20 = '20 · Ready for a model';
+  var S14 = '18 · Two numbers per group';
+  var S15 = '19 · Two tables';
+  var S16 = '20 · Change the shape';
+  var S17 = '21 · Dates';
+  var S18 = '22 · A first chart';
+  var S19 = '23 · Honest numbers';
+  var S20 = '24 · Ready for a model';
 
   /* ---- 14 · Two numbers per group ---- */
   T({ key: 's-agg-list', group: S14, lvl: 2, title: 'Several statistics at once',

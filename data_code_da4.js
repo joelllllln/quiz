@@ -1,8 +1,8 @@
 /* Coding tasks — data analytics, stage 07 and 08: time, and charts. */
 (function () {
   window.CODETASKS = window.CODETASKS || [];
-  var S7 = '27 · Dates and time series, together';
-  var S8 = '28 · Charts, all together';
+  var S7 = '31 · Dates and time series, together';
+  var S8 = '32 · Charts, all together';
 
   window.CODETASKS.push(
 

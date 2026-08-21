@@ -4,12 +4,12 @@
 (function () {
   window.CODETASKS = window.CODETASKS || [];
   function T(o) { o.lvl = o.lvl || 1; window.CODETASKS.push(o); }
-  var S1 = '01 · Open a file';
-  var S2 = '02 · Look at it';
-  var S3 = '03 · How big, and what is in it';
-  var S4 = '04 · What is missing';
-  var S5 = '05 · One column at a time';
-  var S6 = '06 · Sums on a column';
+  var S1 = '05 · Open a file';
+  var S2 = '06 · Look at it';
+  var S3 = '07 · How big, and what is in it';
+  var S4 = '08 · What is missing';
+  var S5 = '09 · One column at a time';
+  var S6 = '10 · Sums on a column';
 
   /* ---------------- 01 · Open a file ---------------- */
   T({ key: 's-import-pd', group: S1, title: 'Import pandas',

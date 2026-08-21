@@ -2,13 +2,13 @@
 (function () {
   window.CODETASKS = window.CODETASKS || [];
   function T(o) { o.lvl = o.lvl || 1; window.CODETASKS.push(o); }
-  var S7 = '07 · Keep some rows';
-  var S8 = '08 · More than one condition';
-  var S9 = '09 · Sort it and take the top';
-  var S10 = '10 · Add a column';
-  var S11 = '11 · Tidy up the text';
-  var S12 = '12 · Fix the types';
-  var S13 = '13 · Group and total';
+  var S7 = '11 · Keep some rows';
+  var S8 = '12 · More than one condition';
+  var S9 = '13 · Sort it and take the top';
+  var S10 = '14 · Add a column';
+  var S11 = '15 · Tidy up the text';
+  var S12 = '16 · Fix the types';
+  var S13 = '17 · Group and total';
 
   /* ---- 07 · Keep some rows ---- */
   T({ key: 's-mask', group: S7, title: 'The true/false column',

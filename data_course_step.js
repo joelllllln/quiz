@@ -27,7 +27,9 @@
           ] },
           { t: 'quick', title: 'Drill: printing', groups: ['Step by step · printing'], size: 12 },
           { t: 'quiz', title: 'What does it print?', ids: ['qs-print-word', 'qs-print-number', 'qs-print-two', 'qs-print-plus', 'qs-print-sep', 'qs-print-blank'] },
-          { t: 'problem', id: 'st-give-five' }
+          { t: 'problem', id: 'st-give-five' },
+          { t: 'problem', id: 'r-give-word' },
+          { t: 'problem', id: 'r-give-true' }
         ] },
 
       { key: 's2', name: 'Names for things',
@@ -48,7 +50,8 @@
           { t: 'quick', title: 'Drill: names and values', groups: ['Step by step · names & values'], size: 12 },
           { t: 'quiz', title: 'What is in the name now?', ids: ['qs-name-print', 'qs-name-quotes', 'qs-name-replace', 'qs-name-plusequals', 'qs-name-swap', 'qs-name-copy-number'] },
           { t: 'problem', id: 'st-give-back' },
-          { t: 'problem', id: 'st-add-one' }
+          { t: 'problem', id: 'st-add-one' },
+          { t: 'problem', id: 'r-add-three' }
         ] },
 
       { key: 's3', name: 'Sums',
@@ -72,7 +75,9 @@
           { t: 'problem', id: 'st-double-it' },
           { t: 'problem', id: 'st-add-two-nums' },
           { t: 'problem', id: 'st-subtract' },
-          { t: 'problem', id: 'st-multiply' }
+          { t: 'problem', id: 'st-multiply' },
+          { t: 'problem', id: 'r-half' },
+          { t: 'problem', id: 'r-tenth' }
         ] },
 
       { key: 's4', name: 'Text, one method at a time',
@@ -95,7 +100,9 @@
           { t: 'problem', id: 'st-text-length' },
           { t: 'problem', id: 'st-first-letter' },
           { t: 'problem', id: 'st-last-letter' },
-          { t: 'problem', id: 'st-initials-one' }
+          { t: 'problem', id: 'st-initials-one' },
+          { t: 'problem', id: 'r-capitalise' },
+          { t: 'problem', id: 'r-trim' }
         ] },
 
       { key: 's5', name: 'Building a sentence',
@@ -114,7 +121,9 @@
           { t: 'quiz', title: 'What does the f-string build?', ids: ['qs-txt-fstring', 'qs-txt-fstring-format'] },
           { t: 'problem', id: 'st-greet-name' },
           { t: 'problem', id: 'st-repeat-text' },
-          { t: 'problem', id: 'st-round-money' }
+          { t: 'problem', id: 'st-round-money' },
+          { t: 'problem', id: 'r-join-two' },
+          { t: 'problem', id: 'r-repeat' }
         ] },
 
       { key: 's6', name: 'True or false',
@@ -135,8 +144,11 @@
           { t: 'quick', title: 'Drill: true or false', groups: ['Step by step · true or false'], size: 12 },
           { t: 'quiz', title: 'True, or false?', ids: ['qs-txt-in', 'qs-lst-in', 'qs-dic-in'] },
           { t: 'problem', id: 'st-is-even' },
+          { t: 'problem', id: 'r-is-negative' },
+          { t: 'problem', id: 'r-is-zero' },
           { t: 'problem', id: 'st-is-positive' },
-          { t: 'problem', id: 'st-remainder' }
+          { t: 'problem', id: 'st-remainder' },
+          { t: 'problem', id: 'r-starts-with' }
         ] },
 
       { key: 's7', name: 'Choosing what to do',
@@ -181,7 +193,10 @@
           { t: 'problem', id: 'st-how-many' },
           { t: 'problem', id: 'st-total-list' },
           { t: 'problem', id: 'st-largest' },
-          { t: 'problem', id: 'st-smallest' }
+          { t: 'problem', id: 'st-smallest' },
+          { t: 'problem', id: 'r-third-item' },
+          { t: 'problem', id: 'r-first-two' },
+          { t: 'problem', id: 'r-count-x' }
         ] },
 
       { key: 's9', name: 'The loop line',
@@ -236,7 +251,9 @@
           { t: 'quick', title: 'Drill: counting and totalling', groups: ['Step by step · counting with a loop'], size: 12 },
           { t: 'quiz', title: 'Where does the total end up?', ids: ['qs-loop-total', 'qs-loop-total-inside'] },
           { t: 'problem', id: 'st-count-above' },
-          { t: 'problem', id: 'st-average-list' }
+          { t: 'problem', id: 'st-average-list' },
+          { t: 'problem', id: 'r-list-sum' },
+          { t: 'problem', id: 'r-list-max' }
         ] },
 
       { key: 's12', name: 'Collecting into a new list',
@@ -260,7 +277,10 @@
           { t: 'problem', id: 'st-only-positive' },
           { t: 'problem', id: 'st-sort-list' },
           { t: 'problem', id: 'st-reverse-list' },
-          { t: 'problem', id: 'st-has-item' }
+          { t: 'problem', id: 'st-has-item' },
+          { t: 'problem', id: 'r-evens' },
+          { t: 'problem', id: 'r-longer-than' },
+          { t: 'problem', id: 'r-add-item' }
         ] },
 
       { key: 's13', name: 'Dictionaries',
@@ -281,7 +301,9 @@
           { t: 'quiz', title: 'What does the dictionary do?', ids: ['qs-dic-get', 'qs-dic-missing', 'qs-dic-get-default', 'qs-dic-add', 'qs-dic-len', 'qs-dic-loop', 'qs-dic-items', 'qs-dic-tally', 'qs-dic-order'] },
           { t: 'problem', id: 'st-dict-lookup' },
           { t: 'problem', id: 'st-dict-total' },
-          { t: 'problem', id: 'st-tally' }
+          { t: 'problem', id: 'st-tally' },
+          { t: 'problem', id: 'r-dict-keys' },
+          { t: 'problem', id: 'r-dict-add' }
         ] },
 
       { key: 's14', name: 'Your own functions',
@@ -304,7 +326,9 @@
           { t: 'problem', id: 'st-add-vat' },
           { t: 'problem', id: 'st-join-words' },
           { t: 'problem', id: 'st-split-words' },
-          { t: 'problem', id: 'st-count-word' }
+          { t: 'problem', id: 'st-count-word' },
+          { t: 'problem', id: 'r-safe-first' },
+          { t: 'problem', id: 'r-average-safe' }
         ] },
 
       { key: 's15', name: 'Asking someone to type something',
