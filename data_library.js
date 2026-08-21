@@ -21,20 +21,16 @@
    unit, task, topic and problem lands on exactly one shelf. */
 (function () {
   window.LIBRARY = [];
-  var PART = '';
-  function part(name) { PART = name; }   // the heading the following shelves sit under
   function T(key, name, blurb, spec) {
     spec = spec || {};
     window.LIBRARY.push({
-      key: key, name: name, blurb: blurb, part: PART,
+      key: key, name: name, blurb: blurb,
       units: spec.units || [], cards: spec.cards || [], quizzes: spec.quizzes || [],
       tasks: spec.tasks || [], ds: spec.ds || [], compares: spec.compares || []
     });
   }
 
   /* ---------------- Python, from nothing ---------------- */
-
-  part('Python, from nothing');
 
   T('first-lines', 'First lines', 'print, names and arithmetic — the very first things you type.', {
     units: ['s1', 's2', 's3', 'py1', 'py2'],
@@ -125,8 +121,6 @@
 
   /* ---------------- Working with data ---------------- */
 
-  part('Working with data');
-
   T('tables-first', 'Your first table', 'pandas at walking pace — one column, one filter, one total at a time.', {
     units: ['s20', 's21', 's22', 's23'],
     cards: ['Step by step · first look at a table', 'Step by step · one column at a time', 'Step by step · picking rows',
@@ -205,8 +199,6 @@
 
   /* ---------------- Machine learning ---------------- */
 
-  part('Machine learning');
-
   T('features', 'Features', 'Turning raw columns into something a model can use — without leaking the answer.', {
     units: ['d7b', 'm2'],
     cards: ['Features · encoding & binning', 'Features · deriving columns', 'Features · selecting & leakage'],
@@ -241,8 +233,6 @@
   });
 
   /* ---------------- Sitting the test, and the day job ---------------- */
-
-  part('Sitting the test, and the day job');
 
   T('coding-test', 'Sitting a coding test', 'Algorithms under time pressure, and what a real sitting feels like.', {
     units: ['t1', 't2', 't3', 't4', 't4b', 't4c', 't4d', 't4e', 't5', 't6', 't6b', 't7'],

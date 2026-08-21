@@ -4285,23 +4285,10 @@
       paintIndex();
     }
 
-    // The index: one card per shelf, grouped under the four parts of the syllabus.
+    // The index: one card per shelf, all of them in one run, easiest first.
     function paintIndex() {
-      var parts = [], byPart = {}, shown = 0;
-      shelves.forEach(function (t) {
-        var p2 = t.part || 'Everything else';
-        if (!byPart[p2]) { byPart[p2] = []; parts.push(p2); }
-        byPart[p2].push(t);
-      });
-      parts.forEach(function (p2) { shown += paintPart(p2, byPart[p2]); });
-      if (!shown) {
-        body.innerHTML = '';
-        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing matches that filter. Try <b>Everything</b>, or untick "hide what I have finished".</p></section>'));
-      }
-    }
-    function paintPart(name, list) {
       var wrap = h('<div class="lib-grid"></div>');
-      list.forEach(function (t) {
+      shelves.forEach(function (t) {
         var items = itemsOf(t).filter(keep);
         if (!items.length) return;
         var by = libCounts(items), st = libDoneCount(items);
@@ -4324,10 +4311,13 @@
         card.onclick = function () { setLibShelf(t.key); home(); };
         wrap.appendChild(card);
       });
-      if (!wrap.children.length) return 0;
-      body.appendChild(h('<div class="sec-label sec-sub">' + esc(name) + '<span class="lib-sec-v">' + wrap.children.length + ' shelves</span></div>'));
+      if (!wrap.children.length) {
+        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing matches that filter. Try <b>Everything</b>, or untick "hide what I have finished".</p></section>'));
+        return;
+      }
+      body.appendChild(h('<div class="sec-label sec-sub">' + wrap.children.length + ' shelves' +
+        '<span class="lib-sec-v">easiest first — your first print at the top, models at the bottom</span></div>'));
       body.appendChild(wrap);
-      return wrap.children.length;
     }
 
     // One shelf, opened: everything on it, grouped by kind, in working order.
