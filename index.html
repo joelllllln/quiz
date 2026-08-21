@@ -580,6 +580,11 @@ input[type=range]{accent-color:var(--cobalt)}
 .banner.good .b-label{color:var(--green)}
 .banner.bad{border-color:var(--red);background:var(--red-soft)}
 .banner.bad .b-label{color:var(--red)}
+.banner.warn{border-color:#C7A400;background:#FDF8E3}
+.banner.warn .b-label{color:#8A7200}
+:root:not([data-theme=light]) .banner.warn{background:#2B2718}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]) .banner.warn{background:#FDF8E3}}
+:root[data-theme=dark] .banner.warn{background:#2B2718}
 .explain{margin-top:6px;color:var(--ink-2);font-size:.92rem}
 .next-row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
 .btn{font-family:var(--mono);font-size:.8rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:2px;box-shadow:3px 3px 0 rgba(31,41,51,.18);transition:transform .08s,box-shadow .08s}
@@ -1084,6 +1089,32 @@ input[type=range]{accent-color:var(--cobalt)}
 .lib-more{font-size:.78rem;color:var(--ink-3);margin:2px 0 10px}
 .lib-jump{margin-top:26px}
 @media (max-width:560px){.lib-row-s{display:none}.lib-grid{grid-template-columns:1fr}}
+/* ---- Library rungs: one format — read the answer, be asked, type it ---- */
+.lb-ruler{flex:0 0 100%;height:4px;margin-top:6px;background:var(--rule);border-radius:99px;overflow:hidden;opacity:.55}
+.lb-ruler>div{height:100%;background:var(--ink);border-radius:99px;transition:width .25s}
+.lb-card .lb-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lb-ask{font-family:var(--serif);font-size:1.28rem;line-height:1.3;margin:6px 0 0}
+.lb-code{margin-top:14px;padding:13px 15px;background:var(--grid);border-radius:7px;overflow-x:auto;font-family:var(--mono);font-size:.86rem;line-height:1.55}
+.lb-ans{font-size:.95rem}
+.lb-note{margin-top:12px;color:var(--ink-2);font-size:.9rem;line-height:1.55}
+.lb-type{margin-top:18px;display:flex;flex-direction:column;gap:6px}
+.lb-in{width:100%;box-sizing:border-box}
+.lb-out:empty{display:none}
+.read-card .rd-title{font-family:var(--serif);font-size:1.45rem;margin:4px 0 12px}
+.lib-carry{margin:16px 0 4px;padding:16px 18px;border:1.5px solid var(--ink);border-radius:2px;background:var(--sheet);box-shadow:var(--shadow)}
+.lib-carry-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.lib-carry-lab{font-family:var(--serif);font-weight:700;font-size:1.02rem}
+.lib-carry-n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.lib-carry .next-row{margin-top:13px}
+.lib-card-r{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lib-tag-read{background:var(--cobalt-soft);color:var(--cobalt)}
+.lib-tag-card{background:var(--grid);color:var(--ink-2)}
+.lib-tag-quiz{background:#FDF8E3;color:#8A7200}
+.lib-tag-task{background:#F3EAFB;color:#6B3FA0}
+.lib-tag-problem{background:var(--green-soft);color:var(--green)}
+.lib-tag-term{background:var(--red-soft);color:var(--red)}
+:root[data-theme=dark] .lib-tag-task{background:#2A2333;color:#C7A8E8}
+:root[data-theme=dark] .lib-tag-quiz{background:#2B2718;color:#D8C173}
 </style>
 </head>
 <body>

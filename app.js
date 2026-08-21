@@ -1781,18 +1781,27 @@
     if (at === 'spot' || at === 1) return startCodeMCQ(key);
     return startCodeExample(key);
   }
-  function codeBackLabel() { return CODE_CTX ? '← Course' : (inLib() ? '← Library' : '← Coding'); }
-  function codeBackHome() { if (CODE_CTX) return renderCourseUnitPage(CODE_CTX.unitKey); return home(); }
+  function codeBackLabel() { return CODE_CTX ? CODE_CTX.backLabel : (inLib() ? '← Library' : '← Coding'); }
+  function codeBackHome() { if (CODE_CTX) return CODE_CTX.back(); return home(); }
   // The "leave this drill" button, worded for wherever the learner came from.
-  function codeHomeBtn() { return CODE_CTX ? 'Back to the unit' : (inLib() ? 'Back to the shelf' : 'Coding home'); }
-  // Finish the course step this drill belongs to, and move the course on.
+  function codeHomeBtn() { return CODE_CTX ? CODE_CTX.homeLabel : (inLib() ? 'Back to the shelf' : 'Coding home'); }
+  // Finish the step this drill belongs to, and move the run it came from on.
   function codeCourseDone() { var ctx = CODE_CTX; CODE_CTX = null; if (ctx) ctx.after(); }
-  // Every level screen gets the same "carry on the course" offer when it came from one.
+  // Every level screen gets the same "carry on" offer when the drill came from a longer run.
   function codeCourseRow(after) {
     if (!CODE_CTX) return;
-    var row = h('<div class="next-row"><button class="btn ghost code-course">Tick it off and carry on the course →</button></div>');
+    var row = h('<div class="next-row"><button class="btn ghost code-course"></button></div>');
+    row.querySelector('.code-course').textContent = CODE_CTX.tickLabel;
     row.querySelector('.code-course').onclick = codeCourseDone;
     after.appendChild(row);
+  }
+  // A drill or problem opened as one step of a longer run knows how to get back, what the
+  // "carry on" buttons should say, and what to do once it is finished.
+  function courseFlow(unitKey, i, after) {
+    return { unitKey: unitKey, i: i, after: after,
+      backLabel: '← Course', homeLabel: 'Back to the unit',
+      tickLabel: 'Tick it off and carry on the course →', nextLabel: 'Continue the course →',
+      back: function () { renderCourseUnitPage(unitKey); } };
   }
   function codeBar(task, levelLabel) {
     var bar = h('<div class="exbar"><button class="back">' + codeBackLabel() + '</button><span class="exmeta">' + esc(task.title) + ' ' + diffTag(task.lvl || 2) + ' · <b>' + levelLabel + '</b></span></div>');
@@ -1828,6 +1837,14 @@
     card.querySelector('.code-home').onclick = codeBackHome;
     var jump = h('<div class="next-row code-nav"><button class="btn ghost cn-write">Skip ahead — write it now →</button></div>');
     jump.querySelector('.cn-write').onclick = function () { startCodeWrite(t.key); };
+    if (CODE_CTX && CODE_CTX.writeFirst) {
+      // Reading the code then typing it is the whole rhythm of the library run, so the
+      // spot-it and build-it levels become the optional detour rather than the main road.
+      card.querySelector('.code-next').textContent = 'Now write it from memory →';
+      card.querySelector('.code-next').onclick = function () { startCodeWrite(t.key); };
+      jump.querySelector('.cn-write').textContent = 'Take the easier levels first';
+      jump.querySelector('.cn-write').onclick = function () { startCodeMCQ(t.key); };
+    }
     card.insertBefore(jump, card.querySelector('.next-row'));
     codeCourseRow(card);
     app.appendChild(card);
@@ -2542,7 +2559,7 @@
     var t = pyTest(id); if (!t) return home();
     app.innerHTML = '';
     var bar = studyBar(t.title, 'worked example');
-    if (course) bar.querySelector('.back').onclick = function () { renderCourseUnitPage(course.unitKey); };
+    if (course) { bar.querySelector('.back').textContent = course.backLabel; bar.querySelector('.back').onclick = function () { course.back(); }; }
     else bar.querySelector('.back').onclick = function () { setTestDoor('practice'); home(); };
     app.appendChild(bar);
     var card = h('<article class="qcard pt-card"><div class="q-eyebrow"><span class="pt-group"></span>' + diffTag(t.lvl || 1) + '</div>' +
@@ -2584,7 +2601,7 @@
     }
     card.querySelector('.sv-try').onclick = function () { startPyProblem(id, null, course); };
     card.querySelector('.sv-back').onclick = function () {
-      if (course) renderCourseUnitPage(course.unitKey); else { setTestDoor('practice'); home(); }
+      if (course) course.back(); else { setTestDoor('practice'); home(); }
     };
     app.appendChild(card);
     window.scrollTo(0, 0);
@@ -2743,13 +2760,13 @@
       return startPyQuiz(picked, after, qback, { learn: qstyle === 'learn' });
     }
     if (step.t === 'problem') {
-      var ctx = { unitKey: unitKey, i: i, after: after };
+      var ctx = courseFlow(unitKey, i, after);
       if (view || getStepStyle() !== 'test') return startProblemStudy(step.id, ctx);
       return startPyProblem(step.id, null, ctx);
     }
     if (step.t === 'task') {
       // Ticked when the learner carries on, not the moment the drill opens.
-      CODE_CTX = { unitKey: unitKey, i: i, after: after };
+      CODE_CTX = courseFlow(unitKey, i, after);
       return startCodeExample(step.key);
     }
     if (step.t === 'mock') {
@@ -2767,8 +2784,18 @@
     app.appendChild(courseBar(row, 'reading ' + (i + 1) + ' of ' + row.unit.steps.length));
     var card = h('<article class="qcard course-read"><div class="q-eyebrow">Read</div><h2 class="cr-title"></h2><div class="cr-body"></div></article>');
     card.querySelector('.cr-title').textContent = step.title || row.unit.name;
-    var body = card.querySelector('.cr-body');
-    (step.body || []).forEach(function (part) {
+    renderReadBody(card.querySelector('.cr-body'), step.body || []);
+    var row2 = h('<div class="next-row"><button class="btn cr-next">Got it — next step →</button><button class="btn ghost cr-back">Back to the unit</button></div>');
+    row2.querySelector('.cr-next').onclick = after;
+    row2.querySelector('.cr-back').onclick = function () { renderCourseUnitPage(row.unit.key); };
+    card.appendChild(row2);
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  // The prose, code samples and asides of a lesson. Shared by the course's reading step
+  // and by the library's reading rungs, so the two can never drift apart.
+  function renderReadBody(body, parts) {
+    (parts || []).forEach(function (part) {
       if (typeof part === 'string') {
         var p = document.createElement('p');
         p.className = 'cr-p';
@@ -2785,12 +2812,6 @@
         body.appendChild(a);
       }
     });
-    var row2 = h('<div class="next-row"><button class="btn cr-next">Got it — next step →</button><button class="btn ghost cr-back">Back to the unit</button></div>');
-    row2.querySelector('.cr-next').onclick = after;
-    row2.querySelector('.cr-back').onclick = function () { renderCourseUnitPage(row.unit.key); };
-    card.appendChild(row2);
-    app.appendChild(card);
-    window.scrollTo(0, 0);
   }
   // Tiny inline markup for lesson text: `code`, **bold**, *italic*. Everything is escaped first.
   function mdLite(s) {
@@ -3332,8 +3353,8 @@
     if (mock) bar.querySelector('.back').textContent = '← Test menu';
     if (mock) bar.querySelector('.back').onclick = function () { if (confirm('Leave the test? Your answers are saved and you can resume.')) home(); };
     if (course) {
-      bar.querySelector('.back').textContent = '← Course';
-      bar.querySelector('.back').onclick = function () { renderCourseUnitPage(course.unitKey); };
+      bar.querySelector('.back').textContent = course.backLabel;
+      bar.querySelector('.back').onclick = function () { course.back(); };
     }
     if (!mock) bar.appendChild(rateCtl('pt' + t.id));   // star it now, meet it again later
     app.appendChild(bar);
@@ -3526,7 +3547,7 @@
             var next = nextUnsolved(t.id);
             if (next) startPyProblem(next.id, null); else home();
           };
-          if (course) nb.querySelector('.pt-next').textContent = 'Continue the course →';
+          if (course) nb.querySelector('.pt-next').textContent = course.nextLabel;
           resultsEl.appendChild(nb);
         }
       }
@@ -4081,43 +4102,139 @@
   }
   function startCodeLevel(key, L) { if (L === 0) startCodeExample(key); else if (L === 1) startCodeMCQ(key); else if (L === 2) startCodeOrder(key); else startCodeWrite(key); }
   /* ================= The Library =================
-     Every other section is organised by KIND — the course is a path, the tests are a list
-     of problems, the coding section is a ladder of drills. The library is organised by
-     SUBJECT, so everything about (say) loops sits on one shelf: the lesson that teaches
-     it, the recall drills, the what-does-it-print questions, the coding tasks and the
-     coding-test problems, in the order you would meet them.
+     One shelf per subject, and inside it one long chronological run of exercises that all
+     work the same way: read the answer, then be asked the question, then type it out.
 
-     data_library.js holds the shelves and names what belongs on each. Nothing is copied:
-     a shelf points at groups, unit keys and topic keys that already exist. */
+     Everything in the app that can be typed becomes one rung of that run — a quickfire
+     card (type the line), an output question (type what it prints), a coding task (type
+     the code), a coding-test problem (type the function and run it against its tests) —
+     with the course's own reading laid in front of the rungs it teaches.
+
+     The order is the course's order. The course is already the chronology, so the ladder
+     walks its units and steps and expands each step into its individual rungs; anything
+     the course never reaches is added to the end of the shelf it belongs to. */
   function libShelves() { return window.LIBRARY || []; }
   function libShelf(key) { var f = null; libShelves().forEach(function (t) { if (t.key === key) f = t; }); return f; }
   function getLibShelf() { try { return localStorage.getItem('ds_lib_shelf') || ''; } catch (e) { return ''; } }
   function setLibShelf(v) { try { if (v) localStorage.setItem('ds_lib_shelf', v); else localStorage.removeItem('ds_lib_shelf'); } catch (e) {} }
-  function getLibKind() { try { var v = localStorage.getItem('ds_lib_kind') || 'all'; return v; } catch (e) { return 'all'; } }
+  function getLibKind() { try { return localStorage.getItem('ds_lib_kind') || 'all'; } catch (e) { return 'all'; } }
   function setLibKind(v) { try { localStorage.setItem('ds_lib_kind', v); } catch (e) {} }
   function getLibHide() { try { return localStorage.getItem('ds_lib_hide') === '1'; } catch (e) { return false; } }
   function setLibHide(v) { try { localStorage.setItem('ds_lib_hide', v ? '1' : '0'); } catch (e) {} }
+  function libProg() { try { return JSON.parse(localStorage.getItem('ds_lib_prog') || '{}'); } catch (e) { return {}; } }
+  function saveLibProg(p) { try { localStorage.setItem('ds_lib_prog', JSON.stringify(p)); } catch (e) {} }
+  function libDone(id) { return !!libProg()[id]; }
+  function libTick(id) { var p = libProg(); p[id] = 1; saveLibProg(p); }
 
-  // The kinds of thing a shelf can hold, in the order you would work through them.
+  // The kinds of rung, and what typing one of them means.
   var LIB_KINDS = [
-    { k: 'lesson', t: 'Lessons', v: 'Read the idea, with the drills attached' },
-    { k: 'drill', t: 'Drills', v: 'Type one line from memory, over and over' },
-    { k: 'predict', t: 'Predict', v: 'What does this code print?' },
-    { k: 'build', t: 'Coding', v: 'Spot it, build it, write it' },
-    { k: 'solve', t: 'Problems', v: 'A brief, a function, and tests that must pass' },
-    { k: 'study', t: 'Study', v: 'The multiple-choice topics, with labs' },
-    { k: 'ref', t: 'Reference', v: 'Notes and side-by-side pages' }
+    { k: 'read', t: 'Read', v: 'The idea in plain English, before the rungs that drill it' },
+    { k: 'card', t: 'Line', v: 'Read the line, then type it from memory' },
+    { k: 'quiz', t: 'Output', v: 'Read what it prints, then type it from memory' },
+    { k: 'task', t: 'Code', v: 'Read the worked code, then write it yourself' },
+    { k: 'problem', t: 'Problem', v: 'Read the solution, then write it and run the tests' },
+    { k: 'term', t: 'Term', v: 'Read the definition and its term, then name it from the definition' }
   ];
   function libKindName(k) { var n = k; LIB_KINDS.forEach(function (d) { if (d.k === k) n = d.t; }); return n; }
 
-  // Which shelf each coding-test problem belongs to. Problems are never listed in
-  // data_library.js — every one is placed in the course, so it inherits the shelf of
-  // the unit that teaches it, and the two can never drift apart.
+  // Which shelf each course unit sits on.
+  var LIB_UNIT = null;
+  function libUnitShelf() {
+    if (LIB_UNIT) return LIB_UNIT;
+    LIB_UNIT = {};
+    libShelves().forEach(function (t) { t.units.forEach(function (u) { LIB_UNIT[u] = t.key; }); });
+    return LIB_UNIT;
+  }
+
+  // The whole ladder, built once: every rung in teaching order, shelf by shelf.
+  var LIB_LADDER = null;
+  function libLadder() {
+    if (LIB_LADDER) return LIB_LADDER;
+    var rungs = [], seen = {}, onShelf = libUnitShelf();
+    var units = {};
+    courseUnits().forEach(function (row) { units[row.unit.key] = row; });
+    function add(it) { if (seen[it.id]) return; seen[it.id] = 1; rungs.push(it); }
+    function cardRung(c, shelf) {
+      return { kind: 'card', id: 'c:' + c.id, shelf: shelf, card: c, lvl: c.lvl,
+        title: c.ask, sub: c.group, find: c.ask + ' ' + c.a + ' ' + c.group };
+    }
+    function quizRung(q, shelf) {
+      return { kind: 'quiz', id: 'q:' + q.id, shelf: shelf, q: q, lvl: q.lvl,
+        title: q.q || 'What does this print?', sub: q.group, find: (q.q || '') + ' ' + q.code + ' ' + q.correct };
+    }
+    function taskRung(t, shelf) {
+      return { kind: 'task', id: 't:' + t.key, shelf: shelf, key: t.key, lvl: t.lvl,
+        title: t.title, sub: t.group, find: t.title + ' ' + t.ask + ' ' + t.group };
+    }
+    function probRung(t, shelf) {
+      return { kind: 'problem', id: 'p:' + t.id, shelf: shelf, pid: t.id, lvl: t.lvl,
+        title: t.title, sub: t.group, find: t.title + ' ' + t.brief + ' ' + (t.fn || '') };
+    }
+
+    libShelves().forEach(function (shelf) {
+      // 1. the shelf's own course units, in course order, each step expanded into rungs
+      courseUnits().forEach(function (row) {
+        if (onShelf[row.unit.key] !== shelf.key) return;
+        (row.unit.steps || []).forEach(function (step, si) {
+          if (step.t === 'read') {
+            add({ kind: 'read', id: 'r:' + row.unit.key + ':' + si, shelf: shelf.key,
+              unitKey: row.unit.key, si: si, title: step.title || row.unit.name, sub: row.unit.name,
+              find: (step.title || '') + ' ' + row.unit.name + ' ' + (row.unit.blurb || '') });
+          } else if (step.t === 'quick') {
+            snipsForStep(step).forEach(function (c) { add(cardRung(c, shelf.key)); });
+          } else if (step.t === 'quiz') {
+            quizForStep(step).forEach(function (q) { add(quizRung(q, shelf.key)); });
+          } else if (step.t === 'problem') {
+            var pt = pyTest(step.id); if (pt) add(probRung(pt, shelf.key));
+          } else if (step.t === 'task') {
+            var ct = codeTask(step.key); if (ct) add(taskRung(ct, shelf.key));
+          }
+        });
+      });
+      // 2. whatever the course never reached, in the order the shelf names it
+      var bucket = libBuckets();
+      shelf.cards.forEach(function (g) { (bucket.cards[g] || []).forEach(function (c) { add(cardRung(c, shelf.key)); }); });
+      shelf.quizzes.forEach(function (g) { (bucket.quiz[g] || []).forEach(function (q) { add(quizRung(q, shelf.key)); }); });
+      shelf.tasks.forEach(function (g) { (bucket.tasks[g] || []).forEach(function (t) { add(taskRung(t, shelf.key)); }); });
+      (libProblemShelf().by[shelf.key] || []).forEach(function (t) { add(probRung(t, shelf.key)); });
+      // 3. the data-science terms of this shelf's topics: the definition is the question,
+      //    the term is the answer you type. Read from the whole deck, not the filtered
+      //    view, because the ladder is the library and holds everything.
+      if (shelf.ds.length) {
+        var want = {};
+        shelf.ds.forEach(function (k) { want[k] = 1; });
+        flashDeck();
+        (FLASH || []).forEach(function (c) {
+          if (!want[c.key] || !c.back || c.back.length < 15) return;
+          add({ kind: 'term', id: 'k:' + cid(c.front), shelf: shelf.key, term: c, lvl: c.level,
+            title: c.front, sub: c.topic, find: c.front + ' ' + c.back });
+        });
+      }
+    });
+    rungs.forEach(function (r, n) { r.n = n; });
+    LIB_LADDER = rungs;
+    return rungs;
+  }
+  // Where each shelf starts and ends in the ladder, so a shelf is just a slice of it.
+  var LIB_SPANS = null;
+  function libSpans() {
+    if (LIB_SPANS) return LIB_SPANS;
+    var by = {};
+    libLadder().forEach(function (r) {
+      if (!by[r.shelf]) by[r.shelf] = { from: r.n, to: r.n, list: [] };
+      by[r.shelf].to = r.n;
+      by[r.shelf].list.push(r);
+    });
+    LIB_SPANS = by;
+    return by;
+  }
+  function libSpan(key) { return libSpans()[key] || { from: 0, to: 0, list: [] }; }
+
+  // Which shelf each coding-test problem belongs to — through the course unit that teaches it.
   var LIB_PROB = null;
   function libProblemShelf() {
     if (LIB_PROB) return LIB_PROB;
-    var of = {}, by = {}, byUnit = {};
-    libShelves().forEach(function (t) { t.units.forEach(function (u) { byUnit[u] = t.key; }); });
+    var of = {}, by = {}, byUnit = libUnitShelf();
     courseUnits().forEach(function (row) {
       (row.unit.steps || []).forEach(function (st) {
         if (st.t === 'problem' && !of[st.id]) of[st.id] = byUnit[row.unit.key];
@@ -4127,9 +4244,7 @@
     LIB_PROB = { of: of, by: by };
     return LIB_PROB;
   }
-  function libBack() { home(); }
-  // The banks bucketed by group, built once. Without this every keystroke in the search
-  // box would re-filter 2,000 cards and 300 problems for each of the shelves.
+  // The banks bucketed by group, built once.
   var LIB_BUCKETS = null;
   function libBuckets() {
     if (LIB_BUCKETS) return LIB_BUCKETS;
@@ -4141,112 +4256,241 @@
     return b;
   }
 
-  // Everything on one shelf, as rows the list can render without knowing what they are.
-  function libItems(shelf) {
-    var out = [], p, bucket = libBuckets();
-    shelf.units.forEach(function (key) {
-      var row = courseUnit(key);
-      if (!row) return;
-      var us = unitStats(row.unit);
-      out.push({ kind: 'lesson', title: row.unit.name, sub: row.stage.no + ' · ' + row.stage.name,
-        meta: us.done + ' of ' + us.total + ' steps', done: us.complete, pct: us.pct,
-        find: row.unit.name + ' ' + (row.unit.blurb || ''),
-        open: function () { renderCourseUnitPage(key); } });
-    });
-    p = snipProg();
-    shelf.cards.forEach(function (g) {
-      var list = bucket.cards[g] || [];
-      if (!list.length) return;
-      var solid = list.filter(function (s) { return snipState(p[s.id]) === 'solid'; }).length;
-      out.push({ kind: 'drill', title: g, sub: 'Quickfire recall',
-        meta: list.length + ' cards · ' + solid + ' solid', done: solid === list.length,
-        pct: Math.round(100 * solid / list.length),
-        find: g + ' ' + list.map(function (s) { return s.ask + ' ' + s.a; }).join(' '),
-        open: function () { startQuick(buildQuickRound(list, Math.min(list.length, getQuickSize())), g, null, libBack, { pool: list }); },
-        alt: { t: 'See them all', go: function () { startQuickSheet(list, g); } } });
-    });
-    shelf.quizzes.forEach(function (g) {
-      var list = bucket.quiz[g] || [];
-      if (!list.length) return;
-      out.push({ kind: 'predict', title: g, sub: 'What does it print?', meta: list.length + ' questions',
-        find: g + ' ' + list.map(function (q) { return q.code; }).join(' '),
-        open: function () { startPyQuiz(shuffle(list.slice()), null, libBack); },
-        alt: { t: 'View worked', go: function () { startQuizStudy(list.slice(), null, libBack); } } });
-    });
-    var cprog = codeProg();
-    shelf.tasks.forEach(function (g) {
-      (bucket.tasks[g] || []).forEach(function (t) {
-        var r = cprog[t.key] || {}, levels = (r[1] ? 1 : 0) + (r[2] ? 1 : 0) + (r[3] ? 1 : 0);
-        out.push({ kind: 'build', title: t.title, sub: g, lvl: t.lvl,
-          meta: levels ? levels + ' of 3 levels' : '4 steps', done: levels === 3,
-          pct: Math.round(100 * levels / 3), find: t.title + ' ' + t.ask + ' ' + g,
-          open: function () { startCodeTask(t.key); },
-          alt: { t: 'Write it', go: function () { startCodeWrite(t.key); } } });
-      });
-    });
-    var pp = ptProg();
-    (libProblemShelf().by[shelf.key] || []).forEach(function (t) {
-      var r = pp[t.id] || {};
-      out.push({ kind: 'solve', title: t.title, sub: t.group, lvl: t.lvl,
-        meta: (t.tests || []).length + ' tests', done: !!r.solved, pct: r.solved ? 100 : 0,
-        find: t.title + ' ' + t.brief + ' ' + (t.fn || ''),
-        open: function () { startPyProblem(t.id, null); },
-        alt: { t: 'View worked', go: function () { startProblemStudy(t.id, null); } } });
-    });
-    shelf.ds.forEach(function (key) {
-      var topic = null;
-      TOPICS.forEach(function (x) { if (x.key === key) topic = x; });
-      if (!topic) return;
-      var n = 0;
-      (topic.levels || []).forEach(function (L) { n += ((window.QUESTIONS || {})[L.qk] || []).length; });
-      out.push({ kind: 'study', title: topic.name, sub: 'Topic ' + topic.no, meta: n + ' questions',
-        find: topic.name + ' ' + (topic.desc || ''),
-        open: function () { startLearn(topic.key); },
-        alt: { t: 'Quiz me', go: function () { startQuiz(topic.key, 12); } },
-        alt2: { t: 'Cards', go: function () { startFlashcards(topic.key); } } });
-      if (window.NOTES && window.NOTES[key]) {
-        out.push({ kind: 'ref', title: 'Notes · ' + topic.name, sub: 'Study notes', meta: 'read',
-          find: 'notes ' + topic.name, open: function () { showNotes(key); } });
+  /* ---- walking the ladder ---- */
+
+  // Where you are. Kept per shelf as well as overall, so "carry on" means the right thing
+  // whether you opened the library or opened one shelf.
+  function getLibPos() { var n = +(localStorage.getItem('ds_lib_pos')); return isFinite(n) && n > 0 ? n : 0; }
+  function setLibPos(n) { try { localStorage.setItem('ds_lib_pos', n); } catch (e) {} }
+  // The next rung at or after n that is not done yet.
+  function libNextUndone(from, stopAt) {
+    var lad = libLadder(), end = stopAt === undefined ? lad.length : Math.min(stopAt + 1, lad.length), p = libProg();
+    for (var i = Math.max(0, from); i < end; i++) if (!p[lad[i].id]) return i;
+    return -1;
+  }
+  function libRunFrom(n) {
+    var lad = libLadder();
+    if (n < 0 || n >= lad.length) return libLadderEnd();
+    setLibPos(n);
+    var it = lad[n];
+    var next = function () { libTick(it.id); libRunFrom(n + 1); };
+    var back = function () { home(); };
+    if (it.kind === 'read') return libReadRung(it, next, back);
+    if (it.kind === 'card') return libAskRung(it, next, back);
+    if (it.kind === 'quiz') return libAskRung(it, next, back);
+    if (it.kind === 'term') return libAskRung(it, next, back);
+    if (it.kind === 'task') { CODE_CTX = libFlow(next, back); return startCodeExample(it.key); }
+    if (it.kind === 'problem') return startProblemStudy(it.pid, libFlow(next, back));
+    return next();
+  }
+  // The context a coding drill or a problem gets when the ladder opened it.
+  function libFlow(after, back) {
+    return { after: after, back: back, unitKey: null, i: 0,
+      backLabel: '← Library', homeLabel: 'Back to the library', writeFirst: true,
+      tickLabel: 'Tick it off and carry on →', nextLabel: 'Next rung →' };
+  }
+  function libLadderEnd() {
+    var lad = libLadder(), done = libLadderDone();
+    app.innerHTML = '';
+    app.appendChild(libRungBar(null, 'the end of the run'));
+    var card = h('<article class="qcard code-card"><div class="q-eyebrow">That is the lot</div>' +
+      '<h2 class="code-ask">You have reached the end of the library</h2>' +
+      '<p class="code-why">' + done + ' of ' + lad.length + ' rungs ticked off. Nothing here ever expires — start again from the top in a few weeks and see how much is still there.</p>' +
+      '<div class="next-row"><button class="btn lb-top">Back to the shelves</button>' +
+      '<button class="btn ghost lb-again">Start again from rung 1</button></div></article>');
+    card.querySelector('.lb-top').onclick = function () { home(); };
+    card.querySelector('.lb-again').onclick = function () { setLibPos(0); libRunFrom(0); };
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+  function libLadderDone() {
+    var p = libProg(), n = 0;
+    libLadder().forEach(function (r) { if (p[r.id]) n++; });
+    return n;
+  }
+  // Every rung wears the same bar: where you are in the run, and the way out.
+  function libRungBar(it, extra) {
+    var lad = libLadder();
+    var bar = h('<div class="exbar"><button class="back">← Library</button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').onclick = function () { home(); };
+    bar.querySelector('.exmeta').innerHTML = it
+      ? '<b>' + (it.n + 1) + '</b> of ' + lad.length + ' · ' + esc(libKindName(it.kind)) + (extra ? ' · ' + extra : '')
+      : '<b>' + esc(extra || '') + '</b>';
+    if (it) bar.appendChild(h('<div class="lb-ruler"><div style="width:' + (100 * (it.n + 1) / lad.length) + '%"></div></div>'));
+    return bar;
+  }
+
+  // A reading rung: the course's own teaching, laid in front of the rungs it explains.
+  function libReadRung(it, next, back) {
+    var row = courseUnit(it.unitKey);
+    var step = row && (row.unit.steps || [])[it.si];
+    if (!step) return next();
+    app.innerHTML = '';
+    app.appendChild(libRungBar(it, esc(row.unit.name)));
+    var card = h('<article class="qcard read-card"><div class="q-eyebrow">Read this first</div>' +
+      '<h2 class="rd-title"></h2><div class="rd-body"></div>' +
+      '<div class="next-row"><button class="btn lb-next">Got it — start the rungs →</button></div></article>');
+    card.querySelector('.rd-title').textContent = step.title || row.unit.name;
+    renderReadBody(card.querySelector('.rd-body'), step.body || []);
+    card.querySelector('.lb-next').onclick = next;
+    app.appendChild(card);
+    window.scrollTo(0, 0);
+  }
+
+  /* A typing rung — the one format everything else in the library follows.
+     Beat 1: the question WITH its answer, and why. Beat 2: the question alone.
+     Beat 3: you type it, and it is marked. Cards and output questions share this
+     screen exactly; coding tasks and problems keep their own editors because they
+     need the piece-checker and the Python runtime, but follow the same three beats. */
+  function libAskRung(it, next, back) {
+    var shape = {
+      card: { src: it.card, ask: it.card && it.card.ask, answer: it.card && it.card.a,
+        note: it.card && it.card.note, code: it.card && it.card.setup,
+        seen: 'The line', type: 'Type the line', rate: null },
+      quiz: { src: it.q, ask: it.q && (it.q.q || 'What does this code print?'), answer: it.q && it.q.correct,
+        note: it.q && it.q.explain, code: it.q && it.q.code,
+        seen: 'It prints', type: 'Type what it prints', rate: it.q && ('pq' + it.q.id) },
+      term: { src: it.term, ask: it.term && it.term.back, answer: it.term && it.term.front,
+        note: '', code: it.term && it.term.formula,
+        seen: 'The term', type: 'Name the term', rate: it.term && cid(it.term.front) }
+    }[it.kind];
+    var card = shape.src, ask = shape.ask, answer = shape.answer, note = shape.note, code = shape.code;
+    var rateId = shape.rate, typeLabel = shape.type, seenLabel = shape.seen;
+    show();
+
+    function frame(beat) {
+      app.innerHTML = '';
+      app.appendChild(libRungBar(it, beat));
+      var el = h('<article class="qcard lb-card"><div class="q-eyebrow"><span class="lb-group"></span>' + diffTag(it.lvl || 1) + '</div>' +
+        '<h2 class="lb-ask"></h2><pre class="lb-code" hidden></pre></article>');
+      el.querySelector('.lb-group').textContent = it.sub || '';
+      if (rateId) el.querySelector('.q-eyebrow').appendChild(rateCtl(rateId));
+      el.querySelector('.lb-ask').textContent = ask;
+      if (code) { var pre = el.querySelector('.lb-code'); pre.hidden = false; pre.textContent = code; }
+      app.appendChild(el);
+      return el;
+    }
+    // Beat 1 — read the answer.
+    function show() {
+      var el = frame('read the answer');
+      var box = h('<div class="code-sol"><span class="p-label"></span><pre class="lb-ans"></pre></div>');
+      box.querySelector('.p-label').textContent = seenLabel;
+      box.querySelector('.lb-ans').textContent = answer;
+      el.appendChild(box);
+      if (note) { var n = h('<p class="lb-note"></p>'); n.textContent = note; el.appendChild(n); }
+      var row = h('<div class="next-row"><button class="btn lb-go">Now type it from memory →</button>' +
+        '<button class="btn ghost lb-skip">Skip this one</button></div>');
+      row.querySelector('.lb-go').onclick = function () { ask2(); };
+      row.querySelector('.lb-skip').onclick = next;
+      el.appendChild(row);
+      window.scrollTo(0, 0);
+      row.querySelector('.lb-go').focus();
+    }
+    // Beats 2 and 3 — the question on its own, and the box you type into.
+    function ask2() {
+      var el = frame('type it');
+      var wrap = h('<div class="lb-type"><span class="p-label"></span>' +
+        '<textarea class="code-write lb-in" rows="' + (it.kind === 'quiz' ? 3 : 2) + '" spellcheck="false" ' +
+        'autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="from memory…"></textarea></div>');
+      wrap.querySelector('.p-label').textContent = typeLabel;
+      el.appendChild(wrap);
+      var out = h('<div class="lb-out"></div>');
+      var row = h('<div class="next-row"><button class="btn lb-check">Check</button>' +
+        '<button class="btn ghost lb-show">Show me again</button></div>');
+      el.appendChild(row);
+      el.appendChild(out);
+      var input = wrap.querySelector('.lb-in'), peeked = false, tries = 0;
+      wireEditor(input);
+      input.focus();
+      input.onkeydown = function (e) {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); check(); }
+        if (e.key === 'Enter' && it.kind !== 'quiz' && !e.shiftKey) { e.preventDefault(); check(); }
+      };
+      row.querySelector('.lb-check').onclick = check;
+      row.querySelector('.lb-show').onclick = function () { peeked = true; show(); };
+
+      function right() {
+        // Each kind feeds the same progress store its own section uses, so the library
+        // and the section it came from always agree about what you know.
+        if (it.kind === 'card') snipMark(card.id, !peeked && tries <= 1, peeked);
+        if (it.kind === 'term') recordConcept(card.front, peeked ? 'seen' : 'right');
+        logActivity();
+        out.innerHTML = '';
+        out.appendChild(h('<div class="banner good"><span class="b-label">Right ✓</span>' +
+          (peeked ? 'You looked first — you will meet this one again.' : 'Typed from memory, first go.') + '</div>'));
+        var nr = h('<div class="next-row"><button class="btn lb-next">Next rung →</button></div>');
+        nr.querySelector('.lb-next').onclick = next;
+        out.appendChild(nr);
+        row.hidden = true;
+        input.disabled = true;
+        nr.querySelector('.lb-next').focus();
       }
-    });
-    (shelf.compares || []).forEach(function (ckey) {
-      var all = window.COMPARES || [], idx = -1;
-      all.forEach(function (c, i) { if (c.key === ckey) idx = i; });
-      if (idx < 0) return;
-      out.push({ kind: 'ref', title: all[idx].title, sub: 'Don’t confuse these', meta: 'side by side',
-        find: all[idx].title + ' ' + (all[idx].tagline || ''), open: function () { showCompare(idx); } });
-    });
-    return out;
+      function wrong() {
+        if (it.kind === 'card') snipMark(card.id, false, peeked);
+        if (it.kind === 'term') recordConcept(card.front, 'wrong');
+        out.innerHTML = '';
+        var b = h('<div class="banner bad"><span class="b-label">Not quite</span></div>');
+        b.appendChild(document.createTextNode(note || 'Look at it again, then type it out.'));
+        out.appendChild(b);
+        var sol = h('<div class="code-sol"><span class="p-label"></span><pre></pre></div>');
+        sol.querySelector('.p-label').textContent = seenLabel;
+        sol.querySelector('pre').textContent = answer;
+        out.appendChild(sol);
+        var nr = h('<div class="next-row"><button class="btn lb-retry">Try typing it again</button>' +
+          '<button class="btn ghost lb-next">Move on →</button></div>');
+        nr.querySelector('.lb-retry').onclick = function () { peeked = true; ask2(); };
+        nr.querySelector('.lb-next').onclick = next;
+        out.appendChild(nr);
+      }
+      function check() {
+        var typed = input.value;
+        if (!typed.trim()) { input.focus(); return; }
+        tries++;
+        // Cards go through quickfire's own marker, so a near miss or a capital out of
+        // place is told apart from a wrong answer, exactly as it is in the drills.
+        var verdict = it.kind === 'card' ? snipCheck(card, typed)
+          : it.kind === 'term' ? (termMatches(typed, answer) ? 'right' : 'wrong')
+          : (outputMatches(answer, typed) ? 'right' : 'wrong');
+        if (verdict === 'right') right();
+        else if (verdict === 'case') nearly('Right, but Python cares about capitals. Fix the case and check again.');
+        else if (verdict === 'close') nearly('One character out. Read it back and check again.');
+        else wrong();
+        out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      // A near miss is not a wrong answer: the answer stays hidden and you fix it.
+      function nearly(msg) {
+        out.innerHTML = '';
+        var b = h('<div class="banner warn"><span class="b-label">So close</span></div>');
+        b.appendChild(document.createTextNode(msg));
+        out.appendChild(b);
+        input.focus();
+      }
+    }
   }
-  function libCounts(items) {
-    var by = {};
-    items.forEach(function (it) { by[it.kind] = (by[it.kind] || 0) + 1; });
-    return by;
+  // Printed output: blank lines and trailing spaces do not count, the characters do.
+  function outputMatches(expected, typed) {
+    function tidy(s) {
+      return String(s == null ? '' : s).replace(/\r/g, '').split('\n')
+        .map(function (l) { return l.replace(/\s+$/, ''); }).join('\n').replace(/\n+$/, '').trim();
+    }
+    return tidy(expected) === tidy(typed);
   }
-  function libDoneCount(items) {
-    var n = 0, of = 0;
-    items.forEach(function (it) { if (it.done !== undefined) { of++; if (it.done) n++; } });
-    return { done: n, of: of, pct: of ? Math.round(100 * n / of) : 0 };
-  }
+
+  /* ---- the library's own screens ---- */
 
   function renderLibrary() {
-    var shelves = libShelves();
-    if (!shelves.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">The library is empty.</p></section>')); return; }
-    var openKey = getLibShelf();
-    var shelf = openKey ? libShelf(openKey) : null;
-    var kind = getLibKind(), hide = getLibHide(), term = '';
-    // Built once per visit: progress cannot change while the library is on screen, and
-    // rebuilding on every keystroke would re-read the progress stores 31 times over.
-    var ITEMS = {};
-    shelves.forEach(function (t) { ITEMS[t.key] = libItems(t); });
-    function itemsOf(t) { return ITEMS[t.key] || []; }
+    var shelves = libShelves(), lad = libLadder();
+    if (!shelves.length || !lad.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">The library is empty.</p></section>')); return; }
+    var openKey = getLibShelf(), shelf = openKey ? libShelf(openKey) : null;
+    var kind = getLibKind(), hide = getLibHide(), term = '', prog = libProg();
 
     var head = h('<section class="code-intro lib-head"><div class="review-eyebrow">The library</div>' +
-      '<p class="code-intro-p">One shelf per subject. Each one holds <b>everything</b> the app has on it — the lesson, the recall drills, the ' +
-      'what-does-it-print questions, the coding tasks and the coding-test problems — in the order you would meet them.</p>' +
-      '<input class="lib-search" type="search" placeholder="Search the whole library — a word, a function, a method…" autocomplete="off" spellcheck="false" aria-label="Search the library">' +
+      '<p class="code-intro-p">Everything the app can teach you, on one ladder, in the order the course teaches it. ' +
+      'Every rung works the same way: <b>read the answer, then be asked the question, then type it out</b> — ' +
+      'a line, a printed output, a piece of code, or a whole function run against its tests.</p>' +
+      '<input class="lib-search" type="search" placeholder="Search every rung — a word, a function, a method…" autocomplete="off" spellcheck="false" aria-label="Search the library">' +
       '<div class="lib-kinds"></div>' +
-      '<label class="lib-hide"><input type="checkbox" class="lib-hide-in"> Hide what I have finished</label></section>');
+      '<label class="lib-hide"><input type="checkbox" class="lib-hide-in"> Hide the rungs I have done</label></section>');
     var kindBox = head.querySelector('.lib-kinds');
     [{ k: 'all', t: 'Everything' }].concat(LIB_KINDS).forEach(function (d) {
       var b = h('<button class="lib-chip' + (d.k === kind ? ' lib-chip-on' : '') + '" type="button"></button>');
@@ -4258,11 +4502,11 @@
     head.querySelector('.lib-hide-in').checked = hide;
     head.querySelector('.lib-hide-in').onchange = function () { setLibHide(this.checked); home(); };
     app.appendChild(head);
+    app.appendChild(carryOn());
 
     var body = h('<div class="lib-body"></div>');
     app.appendChild(body);
-    var search = head.querySelector('.lib-search');
-    var timer = null;
+    var search = head.querySelector('.lib-search'), timer = null;
     search.oninput = function () {
       clearTimeout(timer);
       var v = this.value;
@@ -4272,10 +4516,37 @@
     paint();
     window.scrollTo(0, 0);
 
-    function keep(it) {
-      if (kind !== 'all' && it.kind !== kind) return false;
-      if (hide && it.done) return false;
-      if (term && (it.find || it.title || '').toLowerCase().indexOf(term) < 0) return false;
+    // The one button that matters: pick the run back up where it stopped.
+    function carryOn() {
+      var doneN = libLadderDone(), pct = Math.round(100 * doneN / lad.length);
+      var at = libNextUndone(getLibPos());
+      if (at < 0) at = libNextUndone(0);
+      var sec = h('<section class="lib-carry"><div class="lib-carry-top">' +
+        '<span class="lib-carry-lab"></span><span class="lib-carry-n"></span></div>' +
+        '<div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="next-row"><button class="btn lb-carry"></button>' +
+        '<button class="btn ghost lb-restart">Start again from rung 1</button></div></section>');
+      sec.querySelector('.lib-carry-n').textContent = doneN + ' of ' + lad.length + ' rungs · ' + pct + '%';
+      if (at < 0) {
+        sec.querySelector('.lib-carry-lab').textContent = 'You have been all the way through';
+        sec.querySelector('.lb-carry').textContent = 'Go round again →';
+        sec.querySelector('.lb-carry').onclick = function () { setLibPos(0); libRunFrom(0); };
+      } else {
+        var it = lad[at], sh = libShelf(it.shelf);
+        sec.querySelector('.lib-carry-lab').textContent = (doneN ? 'Carry on at rung ' : 'Start at rung ') + (at + 1) +
+          (sh ? ' · ' + sh.name : '');
+        sec.querySelector('.lb-carry').textContent = (doneN ? 'Carry on' : 'Start the run') + ': ' + libKindName(it.kind).toLowerCase() + ' — ' + shortTitle(it.title) + ' →';
+        sec.querySelector('.lb-carry').onclick = function () { libRunFrom(at); };
+      }
+      sec.querySelector('.lb-restart').onclick = function () { setLibPos(0); libRunFrom(0); };
+      return sec;
+    }
+    function shortTitle(t) { t = String(t || ''); return t.length > 46 ? t.slice(0, 44) + '…' : t; }
+
+    function keep(r) {
+      if (kind !== 'all' && r.kind !== kind) return false;
+      if (hide && prog[r.id]) return false;
+      if (term && (r.find || r.title || '').toLowerCase().indexOf(term) < 0) return false;
       return true;
     }
     function paint() {
@@ -4285,18 +4556,20 @@
       paintIndex();
     }
 
-    // The index: one card per shelf, all of them in one run, easiest first.
+    // The index: every shelf as a chapter of the one run, in order.
     function paintIndex() {
       var wrap = h('<div class="lib-grid"></div>');
       shelves.forEach(function (t) {
-        var items = itemsOf(t).filter(keep);
-        if (!items.length) return;
-        var by = libCounts(items), st = libDoneCount(items);
+        var span = libSpan(t.key), rungs = span.list.filter(keep);
+        if (!rungs.length) return;
+        var doneN = span.list.filter(function (r) { return prog[r.id]; }).length;
+        var by = {};
+        span.list.forEach(function (r) { by[r.kind] = (by[r.kind] || 0) + 1; });
         var card = h('<button class="lib-card" type="button">' +
-          '<span class="lib-card-t"></span><span class="lib-card-b"></span>' +
+          '<span class="lib-card-r"></span><span class="lib-card-t"></span><span class="lib-card-b"></span>' +
           '<span class="lib-card-tags"></span>' +
-          '<span class="lib-card-bar"><span></span></span>' +
-          '<span class="lib-card-n"></span></button>');
+          '<span class="lib-card-bar"><span></span></span><span class="lib-card-n"></span></button>');
+        card.querySelector('.lib-card-r').textContent = 'rungs ' + (span.from + 1) + '–' + (span.to + 1);
         card.querySelector('.lib-card-t').textContent = t.name;
         card.querySelector('.lib-card-b').textContent = t.blurb;
         var tags = card.querySelector('.lib-card-tags');
@@ -4306,42 +4579,55 @@
           tag.textContent = by[d.k] + ' ' + d.t.toLowerCase();
           tags.appendChild(tag);
         });
-        card.querySelector('.lib-card-bar span').style.width = st.pct + '%';
-        card.querySelector('.lib-card-n').textContent = st.of ? st.done + ' of ' + st.of + ' done' : items.length + ' things to read';
+        card.querySelector('.lib-card-bar span').style.width = Math.round(100 * doneN / span.list.length) + '%';
+        card.querySelector('.lib-card-n').textContent = doneN + ' of ' + span.list.length + ' done';
         card.onclick = function () { setLibShelf(t.key); home(); };
         wrap.appendChild(card);
       });
       if (!wrap.children.length) {
-        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing matches that filter. Try <b>Everything</b>, or untick "hide what I have finished".</p></section>'));
+        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing matches that filter. Try <b>Everything</b>, or untick "hide the rungs I have done".</p></section>'));
         return;
       }
-      body.appendChild(h('<div class="sec-label sec-sub">' + wrap.children.length + ' shelves' +
-        '<span class="lib-sec-v">easiest first — your first print at the top, models at the bottom</span></div>'));
+      body.appendChild(h('<div class="sec-label sec-sub">' + lad.length + ' rungs, ' + wrap.children.length + ' shelves' +
+        '<span class="lib-sec-v">in the order the course teaches them</span></div>'));
       body.appendChild(wrap);
     }
 
-    // One shelf, opened: everything on it, grouped by kind, in working order.
+    // One shelf: its slice of the ladder, rung by rung, in order.
     function paintShelf(t) {
-      var items = itemsOf(t), shown = items.filter(keep), st = libDoneCount(shown);
+      var span = libSpan(t.key), rungs = span.list.filter(keep);
+      var doneN = span.list.filter(function (r) { return prog[r.id]; }).length;
       var bar = h('<div class="exbar lib-bar"><button class="back">← All shelves</button><span class="exmeta"></span></div>');
       bar.querySelector('.back').onclick = function () { setLibShelf(''); home(); };
       bar.querySelector('.exmeta').innerHTML = '<b>' + esc(t.name) + '</b>';
       body.appendChild(bar);
+      var at = libNextUndone(Math.max(span.from, getLibPos() >= span.from && getLibPos() <= span.to ? getLibPos() : span.from), span.to);
+      if (at < 0) at = libNextUndone(span.from, span.to);
       var intro = h('<section class="code-intro"><h2 class="cu-title"></h2><p class="code-intro-p"></p>' +
-        '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + st.pct + '%"></span></div>' +
-        '<span class="code-intro-count"><b>' + st.done + '</b> of ' + st.of + ' done</span></div></section>');
+        '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + Math.round(100 * doneN / span.list.length) + '%"></span></div>' +
+        '<span class="code-intro-count"><b>' + doneN + '</b> of ' + span.list.length + ' rungs</span></div>' +
+        '<div class="next-row"><button class="btn lb-shelf-go"></button></div></section>');
       intro.querySelector('.cu-title').textContent = t.name;
       intro.querySelector('.code-intro-p').textContent = t.blurb;
+      var go = intro.querySelector('.lb-shelf-go');
+      if (at < 0) { go.textContent = 'Run this shelf again from the top →'; go.onclick = function () { libRunFrom(span.from); }; }
+      else { go.textContent = (doneN ? 'Carry on at rung ' : 'Start at rung ') + (at + 1) + ' →'; go.onclick = function () { libRunFrom(at); }; }
       body.appendChild(intro);
-      if (!shown.length) {
-        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing on this shelf matches the filter.</p></section>'));
+      if (!rungs.length) {
+        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">No rung on this shelf matches the filter.</p></section>'));
       }
-      LIB_KINDS.forEach(function (d) {
-        var group = shown.filter(function (it) { return it.kind === d.k; });
-        if (!group.length) return;
-        body.appendChild(h('<div class="sec-label sec-sub">' + esc(d.t) + ' · ' + group.length + '<span class="lib-sec-v">' + esc(d.v) + '</span></div>'));
-        group.forEach(function (it) { body.appendChild(libRow(it)); });
-      });
+      // The list is a way in, not the way through — the run itself is the Carry on button.
+      // So show a window of it around where you are rather than all several hundred rows.
+      var WINDOW = 60, start = 0;
+      if (rungs.length > WINDOW && at >= 0) {
+        rungs.forEach(function (r, k) { if (r.n <= at) start = k; });
+        start = Math.max(0, Math.min(start, rungs.length - WINDOW));
+      }
+      if (start > 0) body.appendChild(h('<div class="lib-more">' + start + ' earlier rungs on this shelf — search for one, or filter by kind, to reach it</div>'));
+      rungs.slice(start, start + WINDOW).forEach(function (r) { body.appendChild(libRow(r)); });
+      if (rungs.length > start + WINDOW) {
+        body.appendChild(h('<div class="lib-more">…and ' + (rungs.length - start - WINDOW) + ' more rungs after these</div>'));
+      }
       var jump = h('<div class="next-row lib-jump"></div>');
       var i = 0;
       shelves.forEach(function (x, n) { if (x.key === t.key) i = n; });
@@ -4352,51 +4638,45 @@
         jump.appendChild(prev);
       }
       if (i < shelves.length - 1) {
-        var next = h('<button class="btn"></button>');
-        next.textContent = shelves[i + 1].name + ' →';
-        next.onclick = function () { setLibShelf(shelves[i + 1].key); home(); };
-        jump.appendChild(next);
+        var nx = h('<button class="btn"></button>');
+        nx.textContent = shelves[i + 1].name + ' →';
+        nx.onclick = function () { setLibShelf(shelves[i + 1].key); home(); };
+        jump.appendChild(nx);
       }
       body.appendChild(jump);
     }
 
-    // Searching looks across every shelf at once, and says which shelf each hit is on.
+    // Searching runs across the whole ladder and says which shelf each rung is on.
     function paintSearch() {
-      var hits = 0, cap = 160;
+      var hits = 0;
       var note = h('<div class="sec-label sec-sub lib-hits"></div>');
       body.appendChild(note);
       shelves.forEach(function (t) {
-        var group = itemsOf(t).filter(keep);
+        var group = libSpan(t.key).list.filter(keep);
         if (!group.length) return;
         var head2 = h('<button class="lib-shelfhead" type="button"></button>');
         head2.textContent = t.name + '  ·  ' + group.length;
         head2.onclick = function () { setLibShelf(t.key); search.value = ''; term = ''; paint(); };
         body.appendChild(head2);
-        group.slice(0, 24).forEach(function (it) { body.appendChild(libRow(it)); hits++; });
+        group.slice(0, 24).forEach(function (r) { body.appendChild(libRow(r)); hits++; });
         if (group.length > 24) body.appendChild(h('<div class="lib-more">…and ' + (group.length - 24) + ' more on this shelf</div>'));
       });
-      note.textContent = hits ? hits + (hits >= cap ? '+' : '') + ' matches for “' + term + '”' : 'Nothing matches “' + term + '”';
+      note.textContent = hits ? hits + ' rungs match “' + term + '”' : 'Nothing matches “' + term + '”';
     }
 
-    function libRow(it) {
-      var row = h('<div class="lib-row lib-row-' + it.kind + (it.done ? ' lib-row-done' : '') + '">' +
+    // One rung in a list. Tapping it starts the run from there.
+    function libRow(r) {
+      var done = !!prog[r.id];
+      var row = h('<div class="lib-row lib-row-' + r.kind + (done ? ' lib-row-done' : '') + '">' +
         '<button class="lib-row-main" type="button"><span class="lib-row-mark"></span>' +
         '<span class="lib-row-text"><span class="lib-row-t"></span><span class="lib-row-s"></span></span>' +
-        '<span class="lib-row-n"></span></button><span class="lib-row-alts"></span></div>');
-      row.querySelector('.lib-row-mark').textContent = it.done ? '✓' : '';
-      row.querySelector('.lib-row-t').textContent = it.title;
-      row.querySelector('.lib-row-s').textContent = (it.sub || '') + (it.meta ? '  ·  ' + it.meta : '');
-      row.querySelector('.lib-row-n').innerHTML = '<span class="lib-kindtag lib-tag-' + it.kind + '">' + esc(libKindName(it.kind)) + '</span>' +
-        (it.lvl ? diffTag(it.lvl) : '');
-      row.querySelector('.lib-row-main').onclick = it.open;
-      var alts = row.querySelector('.lib-row-alts');
-      [it.alt, it.alt2].forEach(function (a) {
-        if (!a) return;
-        var b = h('<button class="sv-btn" type="button"></button>');
-        b.textContent = a.t;
-        b.onclick = a.go;
-        alts.appendChild(b);
-      });
+        '<span class="lib-row-n"></span></button></div>');
+      row.querySelector('.lib-row-mark').textContent = done ? '✓' : '';
+      row.querySelector('.lib-row-t').textContent = shortTitle(r.title);
+      row.querySelector('.lib-row-s').textContent = (r.n + 1) + ' · ' + (r.sub || '');
+      row.querySelector('.lib-row-n').innerHTML = '<span class="lib-kindtag lib-tag-' + r.kind + '">' + esc(libKindName(r.kind)) + '</span>' +
+        (r.lvl ? diffTag(r.lvl) : '');
+      row.querySelector('.lib-row-main').onclick = function () { libRunFrom(r.n); };
       return row;
     }
   }
@@ -4777,8 +5057,8 @@
       mast.querySelector('.mast-sub').innerHTML = '<b>Python coding tests</b>: the hiring-test half of the platform. Real problems, a real interpreter running in your browser, hidden test cases and a countdown clock.';
       mast.querySelector('.mast-foot').textContent = 'Practice · timed mocks · output quiz · progress kept in this browser';
     } else if (MODE === 'lib') {
-      mast.querySelector('.mast-sub').innerHTML = '<b>The library</b>: everything in one place, shelved by subject rather than by section. Every shelf holds the lesson, the recall drills, the what-does-it-print questions, the coding tasks and the test problems on that one subject, side by side.';
-      mast.querySelector('.mast-foot').textContent = 'Search it, filter it, open anything · progress kept in this browser';
+      mast.querySelector('.mast-sub').innerHTML = '<b>The library</b>: everything the app can teach you, on one ladder, in the order the course teaches it. Every rung works the same way: <b>read the answer, then be asked the question, then type it out</b> — a line, a printed output, a piece of code, a whole function, or a term.';
+      mast.querySelector('.mast-foot').textContent = 'One format, start to finish · your place is kept in this browser';
     } else if (MODE === 'work') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Innovation vocabulary</b> for the day job: digital assets, payments & fintech, and the AWS words everyone assumes you know. Same drills — quiz, flashcards, read + recall.';
       mast.querySelector('.mast-foot').textContent = 'FCA & innovation topics · progress kept in this browser';
