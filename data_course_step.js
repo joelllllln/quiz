@@ -51,7 +51,9 @@
           { t: 'quiz', title: 'What is in the name now?', ids: ['qs-name-print', 'qs-name-quotes', 'qs-name-replace', 'qs-name-plusequals', 'qs-name-swap', 'qs-name-copy-number'] },
           { t: 'problem', id: 'st-give-back' },
           { t: 'problem', id: 'st-add-one' },
-          { t: 'problem', id: 'r-add-three' }
+          { t: 'problem', id: 'r-add-three' },
+          { t: 'problem', id: 'st-triple' },
+          { t: 'problem', id: 'st-square' }
         ] },
 
       { key: 's3', name: 'Sums',
@@ -77,7 +79,9 @@
           { t: 'problem', id: 'st-subtract' },
           { t: 'problem', id: 'st-multiply' },
           { t: 'problem', id: 'r-half' },
-          { t: 'problem', id: 'r-tenth' }
+          { t: 'problem', id: 'r-tenth' },
+          { t: 'problem', id: 'st-abs' },
+          { t: 'problem', id: 'st-round-whole' }
         ] },
 
       { key: 's4', name: 'Text, one method at a time',
@@ -102,7 +106,10 @@
           { t: 'problem', id: 'st-last-letter' },
           { t: 'problem', id: 'st-initials-one' },
           { t: 'problem', id: 'r-capitalise' },
-          { t: 'problem', id: 'r-trim' }
+          { t: 'problem', id: 'r-trim' },
+          { t: 'problem', id: 'st-last-two' },
+          { t: 'problem', id: 'st-ends-with' },
+          { t: 'problem', id: 'st-contains' }
         ] },
 
       { key: 's5', name: 'Building a sentence',
@@ -122,8 +129,12 @@
           { t: 'problem', id: 'st-greet-name' },
           { t: 'problem', id: 'st-repeat-text' },
           { t: 'problem', id: 'st-round-money' },
+          { t: 'problem', id: 'st-pad-number' },
+          { t: 'problem', id: 'st-money-text' },
           { t: 'problem', id: 'r-join-two' },
-          { t: 'problem', id: 'r-repeat' }
+          { t: 'problem', id: 'r-repeat' },
+          { t: 'problem', id: 'st-swap-words' },
+          { t: 'problem', id: 'st-initials-two' }
         ] },
 
       { key: 's6', name: 'True or false',
@@ -146,6 +157,8 @@
           { t: 'problem', id: 'st-is-even' },
           { t: 'problem', id: 'r-is-negative' },
           { t: 'problem', id: 'r-is-zero' },
+          { t: 'problem', id: 'st-divisible' },
+          { t: 'problem', id: 'st-last-digit' },
           { t: 'problem', id: 'st-is-positive' },
           { t: 'problem', id: 'st-remainder' },
           { t: 'problem', id: 'r-starts-with' }
@@ -169,7 +182,10 @@
           { t: 'quick', title: 'Drill: if', groups: ['Step by step · if'], size: 12 },
           { t: 'quiz', title: 'Which branch runs?', ids: ['qs-if-else', 'qs-if-elif', 'qs-if-empty-list'] },
           { t: 'problem', id: 'st-bigger-of-two' },
-          { t: 'problem', id: 'st-average-two' }
+          { t: 'problem', id: 'st-average-two' },
+          { t: 'problem', id: 'st-smaller' },
+          { t: 'problem', id: 'st-biggest-three' },
+          { t: 'problem', id: 'st-safe-divide-two' }
         ] },
 
       { key: 's8', name: 'Lists',
@@ -196,7 +212,9 @@
           { t: 'problem', id: 'st-smallest' },
           { t: 'problem', id: 'r-third-item' },
           { t: 'problem', id: 'r-first-two' },
-          { t: 'problem', id: 'r-count-x' }
+          { t: 'problem', id: 'r-count-x' },
+          { t: 'problem', id: 'st-second' },
+          { t: 'problem', id: 'st-index-of' }
         ] },
 
       { key: 's9', name: 'The loop line',
@@ -253,7 +271,9 @@
           { t: 'problem', id: 'st-count-above' },
           { t: 'problem', id: 'st-average-list' },
           { t: 'problem', id: 'r-list-sum' },
-          { t: 'problem', id: 'r-list-max' }
+          { t: 'problem', id: 'r-list-max' },
+          { t: 'problem', id: 'st-sum-slice' },
+          { t: 'problem', id: 'st-running' }
         ] },
 
       { key: 's12', name: 'Collecting into a new list',
@@ -280,7 +300,10 @@
           { t: 'problem', id: 'st-has-item' },
           { t: 'problem', id: 'r-evens' },
           { t: 'problem', id: 'r-longer-than' },
-          { t: 'problem', id: 'r-add-item' }
+          { t: 'problem', id: 'r-add-item' },
+          { t: 'problem', id: 'st-without' },
+          { t: 'problem', id: 'st-dedupe' },
+          { t: 'problem', id: 'st-pairs' }
         ] },
 
       { key: 's13', name: 'Dictionaries',
@@ -303,7 +326,10 @@
           { t: 'problem', id: 'st-dict-total' },
           { t: 'problem', id: 'st-tally' },
           { t: 'problem', id: 'r-dict-keys' },
-          { t: 'problem', id: 'r-dict-add' }
+          { t: 'problem', id: 'r-dict-add' },
+          { t: 'problem', id: 'st-invert' },
+          { t: 'problem', id: 'st-merge-dicts' },
+          { t: 'problem', id: 'st-group-by-letter' }
         ] },
 
       { key: 's14', name: 'Your own functions',
@@ -328,7 +354,9 @@
           { t: 'problem', id: 'st-split-words' },
           { t: 'problem', id: 'st-count-word' },
           { t: 'problem', id: 'r-safe-first' },
-          { t: 'problem', id: 'r-average-safe' }
+          { t: 'problem', id: 'r-average-safe' },
+          { t: 'problem', id: 'st-shares' },
+          { t: 'problem', id: 'st-text-to-number' }
         ] },
 
       { key: 's15', name: 'Asking someone to type something',
@@ -380,7 +408,11 @@
           { t: 'quick', title: 'Drill: a recipe', groups: ['Step by step · again, with a recipe'], size: 10 },
           { t: 'problem', id: 'st-names-list' },
           { t: 'problem', id: 'st-filter-records' },
-          { t: 'problem', id: 'st-sum-field' }
+          { t: 'problem', id: 'st-sum-field' },
+          { t: 'problem', id: 'st-sort-records' },
+          { t: 'problem', id: 'st-count-field' },
+          { t: 'problem', id: 'st-field-average' },
+          { t: 'problem', id: 'st-field-values' }
         ] },
 
       { key: 's18', name: 'And again',
