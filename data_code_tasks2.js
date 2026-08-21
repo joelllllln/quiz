@@ -5,7 +5,7 @@
   var T = (window.CODETASKS = window.CODETASKS || []);
   T.push(
 
-    { key: 'impute', group: '10 · Getting data ready for a model', title: 'Impute missing values',
+    { key: 'impute', group: '30 · Getting data ready for a model', title: 'Impute missing values',
       ask: 'Fill missing numeric values with the median — learned from training data only.',
       why: 'Models reject NaNs; the imputer patches them with a value learned honestly.',
       mcq: {
@@ -30,7 +30,7 @@
         solution: "from sklearn.impute import SimpleImputer\nimp = SimpleImputer(strategy='median')\nX_train_i = imp.fit_transform(X_train)\nX_test_i = imp.transform(X_test)",
         must: ["SimpleImputer", "strategy='median'", "fit_transform(X_train)", "imp.transform(X_test)"] } },
 
-    { key: 'fsel', group: '10 · Getting data ready for a model', title: 'Select the k best features',
+    { key: 'fsel', group: '30 · Getting data ready for a model', title: 'Select the k best features',
       ask: 'Keep the 10 most informative features — selected inside a pipeline so CV stays honest.',
       why: 'Selection is a learned step: outside the pipeline, it peeks at the validation folds.',
       mcq: {
@@ -56,7 +56,7 @@
         solution: "from sklearn.feature_selection import SelectKBest, f_classif\npipe = Pipeline([('select', SelectKBest(f_classif, k=10)),\n                 ('clf', LogisticRegression())])\nscores = cross_val_score(pipe, X_train, y_train, cv=5)\nprint(scores.mean())",
         must: ["SelectKBest", "f_classif", "k=10", "Pipeline", "cross_val_score", "cv=5"] } },
 
-    { key: 'rsearch', group: '13 · Tuning', title: 'Randomised search',
+    { key: 'rsearch', group: '33 · Tuning', title: 'Randomised search',
       ask: 'Search a large hyperparameter space with a fixed budget of random trials.',
       why: 'Grids explode combinatorially; random search spends a fixed budget where it counts.',
       mcq: {
@@ -85,7 +85,7 @@
         solution: "from sklearn.model_selection import RandomizedSearchCV\nfrom scipy.stats import randint\ndist = {'n_estimators': randint(100, 500),\n        'max_depth': randint(3, 15)}\nsearch = RandomizedSearchCV(RandomForestClassifier(), dist,\n                            n_iter=20, cv=5, random_state=42)\nsearch.fit(X_train, y_train)\nprint(search.best_params_)",
         must: ["RandomizedSearchCV", "randint", "n_iter=20", "cv=5", "fit(X_train, y_train)", "best_params_"] } },
 
-    { key: 'threshold', group: '14 · Evaluating', title: 'Tune the decision threshold',
+    { key: 'threshold', group: '34 · Evaluating', title: 'Tune the decision threshold',
       ask: 'Move the classification cutoff to trade precision against recall deliberately.',
       why: '0.5 assumes both errors cost the same — real problems rarely do.',
       mcq: {
@@ -111,7 +111,7 @@
         solution: "proba = clf.predict_proba(X_test)[:, 1]\ny_pred = (proba >= 0.3).astype(int)\nprint(classification_report(y_test, y_pred))",
         must: ["predict_proba(X_test)", "[:, 1]", "0.3", "astype(int)", "classification_report"] } },
 
-    { key: 'imbal', group: '14 · Evaluating', title: 'Handle class imbalance',
+    { key: 'imbal', group: '34 · Evaluating', title: 'Handle class imbalance',
       ask: 'Split with stratification, weight the classes, and score with PR-AUC — not accuracy.',
       why: 'At 99:1, accuracy applauds a useless model; weights and the right metric fix the incentives.',
       mcq: {
@@ -139,7 +139,7 @@
         solution: "X_tr, X_te, y_tr, y_te = train_test_split(\n    X, y, stratify=y, random_state=42)\nclf = LogisticRegression(class_weight='balanced', max_iter=1000)\nclf.fit(X_tr, y_tr)\nprint(average_precision_score(y_te, clf.predict_proba(X_te)[:, 1]))",
         must: ["stratify=y", "class_weight='balanced'", "average_precision_score", "predict_proba"] } },
 
-    { key: 'tssplit', group: '14 · Evaluating', title: 'Time-series cross-validation',
+    { key: 'tssplit', group: '34 · Evaluating', title: 'Time-series cross-validation',
       ask: 'Validate a forecaster with time-ordered splits — always train on the past, test on the future.',
       why: 'Shuffled CV on time data lets the model study next week to predict yesterday.',
       mcq: {
@@ -165,7 +165,7 @@
         solution: "from sklearn.model_selection import TimeSeriesSplit\ntscv = TimeSeriesSplit(n_splits=5)\nscores = cross_val_score(model, X, y, cv=tscv)\nprint(scores.mean())",
         must: ["TimeSeriesSplit", "n_splits=5", "cross_val_score", "cv=tscv", "mean"] } },
 
-    { key: 'dbscan', group: '15 · Unsupervised', title: 'DBSCAN clustering',
+    { key: 'dbscan', group: '35 · Unsupervised', title: 'DBSCAN clustering',
       ask: 'Cluster scaled data by density; count the clusters and the noise points.',
       why: 'No k to declare — but eps and min_samples decide what counts as "dense".',
       mcq: {
@@ -192,7 +192,7 @@
         solution: "from sklearn.cluster import DBSCAN\ndb = DBSCAN(eps=0.5, min_samples=5)\nlabels = db.fit_predict(X_scaled)\nn_clusters = len(set(labels)) - (1 if -1 in labels else 0)\nn_noise = (labels == -1).sum()",
         must: ["DBSCAN", "eps=0.5", "min_samples=5", "fit_predict(X_scaled)", "-1"] } },
 
-    { key: 'hier', group: '15 · Unsupervised', title: 'Hierarchical clustering',
+    { key: 'hier', group: '35 · Unsupervised', title: 'Hierarchical clustering',
       ask: 'Agglomeratively cluster scaled data with Ward linkage into 3 flat clusters.',
       why: 'Bottom-up merging — the dendrogram is there if you want it, flat labels if you don\'t.',
       mcq: {
@@ -217,7 +217,7 @@
         solution: "from sklearn.cluster import AgglomerativeClustering\nagg = AgglomerativeClustering(n_clusters=3, linkage='ward')\nlabels = agg.fit_predict(X_scaled)",
         must: ["AgglomerativeClustering", "n_clusters=3", "linkage='ward'", "fit_predict(X_scaled)"] } },
 
-    { key: 'save', group: '17 · Putting it together', title: 'Save and load a trained model',
+    { key: 'save', group: '37 · A whole project', title: 'Save and load a trained model',
       ask: 'Persist the fitted pipeline to disk and load it back for predictions.',
       why: 'Training is a one-off; the saved artifact is what production actually runs.',
       mcq: {

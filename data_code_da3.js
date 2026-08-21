@@ -2,8 +2,8 @@
    putting two tables together. */
 (function () {
   window.CODETASKS = window.CODETASKS || [];
-  var S5 = '05 · Grouping and summarising';
-  var S6 = '06 · Joining and reshaping';
+  var S5 = '25 · Grouping, all together';
+  var S6 = '26 · Joining and reshaping, together';
 
   window.CODETASKS.push(
 

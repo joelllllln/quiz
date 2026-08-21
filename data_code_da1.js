@@ -3,8 +3,8 @@
    see it, spot it, build it, write it. Loads before the ML task files. */
 (function () {
   window.CODETASKS = window.CODETASKS || [];
-  var S1 = '01 · First look at the data';
-  var S2 = '02 · Selecting and filtering';
+  var S1 = '21 · The first look, all together';
+  var S2 = '22 · Selecting and filtering, together';
 
   window.CODETASKS.push(
 

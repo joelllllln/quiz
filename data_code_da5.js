@@ -2,8 +2,8 @@
    and turning a tidy table into something a model can be fitted to. */
 (function () {
   window.CODETASKS = window.CODETASKS || [];
-  var S9 = '09 · Describing it honestly';
-  var S10 = '10 · Getting data ready for a model';
+  var S9 = '29 · Describing it honestly';
+  var S10 = '30 · Getting data ready for a model';
 
   window.CODETASKS.push(
 
