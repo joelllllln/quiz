@@ -2496,6 +2496,7 @@
         '<div class="next-row"><button class="btn sv-next"></button><button class="btn ghost sv-prev">← Back</button>' +
         '<button class="btn ghost sv-test">Test me on these →</button></div></article>');
       card.querySelector('.pt-group').textContent = q.group;
+      card.querySelector('.q-eyebrow').appendChild(rateCtl('pq' + q.id));
       card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
       card.querySelector('.pt-quizcode').textContent = q.code;
       card.querySelector('.sv-out').textContent = q.correct;
@@ -3181,8 +3182,69 @@
   function savePtProg(p) { try { localStorage.setItem('ds_pt_prog', JSON.stringify(p)); } catch (e) {} }
   function ptMark(id, patch) {
     var p = ptProg(), r = p[id] || { runs: 0 };
+    var wasSolved = !!r.solved;
     Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+    // Every solve stamps the date and bumps the count, so revision can be spaced out.
+    if (patch.solved && !wasSolved) { r.solvedAt = Date.now(); r.solves = (r.solves || 0) + 1; }
+    else if (patch.solved && wasSolved && patch.resolve) { r.solvedAt = Date.now(); r.solves = (r.solves || 0) + 1; }
     p[id] = r; savePtProg(p);
+  }
+  /* ---- Revision: what to come back to, and when ----
+     Solve something once and it comes back in a few days; solve it again and the gap
+     grows. Nothing here is clever — the point is only that "done" stops meaning
+     "done for ever", so a problem you solved in March is offered again in April. */
+  var PT_GAPS = [3, 10, 28, 90, 180];       // days before a solved problem is due again
+  function ptGapDays(solves) { return PT_GAPS[Math.min((solves || 1) - 1, PT_GAPS.length - 1)]; }
+  function ptDaysSince(r) {
+    if (!r || !r.solvedAt) return null;
+    return Math.floor((Date.now() - r.solvedAt) / 86400000);
+  }
+  function ptIsDue(r) {
+    var days = ptDaysSince(r);
+    if (days === null) return false;
+    return days >= ptGapDays(r.solves);
+  }
+  // The five pools you can draw a random problem from.
+  function ptPool(kind) {
+    var p = ptProg();
+    return pyTests().filter(function (t) {
+      var r = p[t.id] || {};
+      if (isDisId('pt' + t.id)) return false;             // hidden problems sit every round out
+      if (kind === 'unsolved') return !r.solved;
+      if (kind === 'solved') return !!r.solved;
+      if (kind === 'fav') return isFavId('pt' + t.id);
+      if (kind === 'due') return !!r.solved && ptIsDue(r);
+      return true;                                        // 'all'
+    });
+  }
+  function ptPoolLabel(kind) {
+    return { all: 'anything', unsolved: 'not solved yet', solved: 'already solved',
+      fav: 'your favourites', due: 'due for revision' }[kind] || 'anything';
+  }
+  function getPtPool() {
+    var v = localStorage.getItem('ds_pt_pool');
+    return (v === 'unsolved' || v === 'solved' || v === 'fav' || v === 'due') ? v : 'all';
+  }
+  function setPtPool(v) { try { localStorage.setItem('ds_pt_pool', v); } catch (e) {} }
+  // Set while a random run is going, so "another one" keeps drawing from the same pool.
+  var PT_RANDOM = null;
+  function startRandomProblem(kind, avoidId) {
+    var pool = ptPool(kind).filter(function (t) { return t.id !== avoidId; });
+    if (!pool.length) pool = ptPool(kind);
+    if (!pool.length) return renderTestReviseEmpty(kind);
+    PT_RANDOM = kind;
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    startPyProblem(pick.id, null);
+  }
+  // Forget one problem, or all of them — "start fresh and try again in a few weeks".
+  function ptForget(id) {
+    var p = ptProg();
+    if (p[id]) { delete p[id].solved; delete p[id].solvedAt; delete p[id].solves; savePtProg(p); }
+  }
+  function ptForgetAll() {
+    var p = ptProg();
+    Object.keys(p).forEach(function (id) { delete p[id].solved; delete p[id].solvedAt; delete p[id].solves; });
+    savePtProg(p);
   }
   function ptCode(id) { try { return localStorage.getItem('ds_pt_code_' + id) || ''; } catch (e) { return ''; } }
   function savePtCode(id, code) { try { localStorage.setItem('ds_pt_code_' + id, code); } catch (e) {} }
@@ -3258,6 +3320,7 @@
       bar.querySelector('.back').textContent = '← Course';
       bar.querySelector('.back').onclick = function () { renderCourseUnitPage(course.unitKey); };
     }
+    if (!mock) bar.appendChild(rateCtl('pt' + t.id));   // star it now, meet it again later
     app.appendChild(bar);
 
     var card = h('<article class="qcard pt-card">' +
@@ -3436,10 +3499,14 @@
         }
         ptMark(t.id, { runs: (prev.runs || 0) + 1, best: Math.max(prev.best || 0, passed), total: total, solved: prev.solved || (allOk ? 1 : 0) });
         if (allOk && !mock) {
-          var nb = h('<div class="next-row pt-donerow"><button class="btn pt-next">Next problem →</button>' +
-            '<button class="btn ghost pt-showsol">Compare with the model solution</button></div>');
+          var nb = h('<div class="next-row pt-donerow">' +
+            (PT_RANDOM ? '<button class="btn pt-another">Another random one →</button>' : '<button class="btn pt-next">Next problem →</button>') +
+            '<button class="btn ghost pt-showsol">Compare with the model solution</button>' +
+            '<button class="btn ghost pt-forget" title="Clear the tick so it comes back as new">Forget this solve</button></div>');
+          if (PT_RANDOM) nb.querySelector('.pt-another').onclick = function () { startRandomProblem(PT_RANDOM, t.id); };
+          nb.querySelector('.pt-forget').onclick = function () { ptForget(t.id); nb.querySelector('.pt-forget').textContent = 'Forgotten — it counts as new again'; };
           nb.querySelector('.pt-showsol').onclick = function () { showSolution('Yours passes. Read this one for the shape and the complexity.'); };
-          nb.querySelector('.pt-next').onclick = function () {
+          if (nb.querySelector('.pt-next')) nb.querySelector('.pt-next').onclick = function () {
             if (course) return course.after();
             var next = nextUnsolved(t.id);
             if (next) startPyProblem(next.id, null); else home();
@@ -3612,6 +3679,7 @@
       var card = h('<article class="qcard pt-card"><div class="q-eyebrow"><span class="pt-group"></span>' + diffTag(q.lvl || 1) + '</div>' +
         '<h2 class="pt-title"></h2><pre class="pt-quizcode"></pre><div class="code-opts"></div><div class="code-after" hidden></div></article>');
       card.querySelector('.pt-group').textContent = q.group;
+      card.querySelector('.q-eyebrow').appendChild(rateCtl('pq' + q.id));
       card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
       card.querySelector('.pt-quizcode').textContent = q.code;
       var optBox = card.querySelector('.code-opts'), after = card.querySelector('.code-after');
@@ -3649,6 +3717,7 @@
         '<div class="next-row"><button class="btn ln-go">Now answer it →</button>' +
         '<button class="btn ghost ln-skip">Skip this one</button></div></article>');
       card.querySelector('.pt-group').textContent = q.group;
+      card.querySelector('.q-eyebrow').appendChild(rateCtl('pq' + q.id));
       card.querySelector('.pt-title').textContent = q.q || 'What does this code print?';
       card.querySelector('.pt-quizcode').textContent = q.code;
       card.querySelector('.sv-out').textContent = q.correct;
@@ -3680,12 +3749,13 @@
   }
 
   /* ---- the Python-tests home ---- */
-  function getTestDoor() { var v = localStorage.getItem('ds_pt_door'); return (v === 'mock' || v === 'output' || v === 'results') ? v : 'practice'; }
+  function getTestDoor() { var v = localStorage.getItem('ds_pt_door'); return (v === 'mock' || v === 'output' || v === 'results' || v === 'revise') ? v : 'practice'; }
   function setTestDoor(v) { try { localStorage.setItem('ds_pt_door', v); } catch (e) {} }
   function renderTestHome() {
     var door = getTestDoor();
     var nav = h('<nav class="home-doors doors-4" role="tablist"></nav>');
     [{ v: 'practice', t: 'Practice', s: 'Problems, run for real' },
+     { v: 'revise', t: 'Revise', s: 'Random, spaced out' },
      { v: 'mock', t: 'Mock test', s: 'Timed, marked at the end' },
      { v: 'output', t: 'Output quiz', s: 'What does this print?' },
      { v: 'results', t: 'Results', s: 'Scores & history' }].forEach(function (d) {
@@ -3706,6 +3776,7 @@
       res.querySelector('.pt-resume-drop').onclick = function () { if (confirm('Throw this test away?')) { saveMockState(null); home(); } };
       app.appendChild(res);
     }
+    if (door === 'revise') return renderTestRevise();
     if (door === 'mock') return renderTestMock();
     if (door === 'output') return renderTestQuiz();
     if (door === 'results') return renderTestResults();
@@ -3727,9 +3798,11 @@
       '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + pct + '%"></span></div>' +
       '<span class="code-intro-count"><b>' + solved + '</b> of ' + all.length + ' solved</span></div>' + pyEnvNote() + '</section>');
     var startRow = h('<div class="next-row"><button class="btn pt-start">Next unsolved problem →</button>' +
+      '<button class="btn ghost pt-start-random">Random one instead</button>' +
       '<button class="btn ghost pt-start-view">See one worked first, then solve it</button></div>');
     startRow.querySelector('.pt-start').onclick = function () { var t = nextUnsolved(null); if (t) startPyProblem(t.id, null); };
     startRow.querySelector('.pt-start-view').onclick = function () { var t = nextUnsolved(null); if (t) startProblemStudy(t.id, null); };
+    startRow.querySelector('.pt-start-random').onclick = function () { startRandomProblem(getPtPool()); };
     intro.appendChild(startRow);
     app.appendChild(intro);
     var g = ptGroups(all);
@@ -3746,9 +3819,99 @@
         row.querySelector('.pt-row-t').textContent = t.title;
         row.querySelector('.pt-row-main').onclick = function () { startPyProblem(t.id, null); };
         row.querySelector('.sv-btn').onclick = function () { startProblemStudy(t.id, null); };
+        row.appendChild(rateCtl('pt' + t.id, { noDis: false }));
+        if (r.solved && r.solvedAt) {
+          var d = ptDaysSince(r);
+          row.querySelector('.pt-row-n').textContent = d === 0 ? 'solved today' : 'solved ' + d + 'd ago';
+          if (ptIsDue(r)) row.querySelector('.pt-row-mark').textContent = '↻';
+        }
         app.appendChild(row);
       });
     });
+  }
+  function renderTestReviseEmpty(kind) {
+    home();
+    var note = h('<section class="code-intro"><div class="review-eyebrow">Nothing in that pile</div>' +
+      '<p class="code-intro-p">There is nothing ' + esc(ptPoolLabel(kind)) + ' right now. Try another pile — or solve a few more problems and come back in a week.</p></section>');
+    app.appendChild(note);
+  }
+  // The Revise door: draw a random problem from whichever pile you choose, including
+  // ones you have already solved — because the whole point is to meet them again later.
+  function renderTestRevise() {
+    var all = pyTests(), p = ptProg();
+    var counts = { all: ptPool('all').length, unsolved: ptPool('unsolved').length,
+      solved: ptPool('solved').length, fav: ptPool('fav').length, due: ptPool('due').length };
+    var pool = getPtPool();
+    var intro = h('<section class="code-intro"><div class="review-eyebrow">Revise</div>' +
+      '<p class="code-intro-p">Pick a pile and get a random problem out of it. Solved ones count: something you got right in March is worth meeting again in April, ' +
+      'and the gap between sightings grows each time you solve it again — 3 days, then 10, then 28, then three months.</p>' +
+      '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + (all.length ? Math.round(100 * counts.solved / all.length) : 0) + '%"></span></div>' +
+      '<span class="code-intro-count"><b>' + counts.solved + '</b> of ' + all.length + ' solved · <b>' + counts.due + '</b> due for another go</span></div></section>');
+    var chips = h('<div class="code-diff-row"><span class="filt-lab">Draw from</span></div>');
+    [{ v: 'all', t: 'Anything' }, { v: 'unsolved', t: 'Not solved yet' }, { v: 'solved', t: 'Already solved' },
+     { v: 'due', t: 'Due for revision' }, { v: 'fav', t: '★ Favourites' }].forEach(function (c) {
+      var b = h('<button class="cdf-chip' + (pool === c.v ? ' cdf-on' : '') + '" type="button"></button>');
+      b.textContent = c.t + ' · ' + counts[c.v];
+      b.onclick = function () { setPtPool(c.v); home(); };
+      chips.appendChild(b);
+    });
+    intro.appendChild(chips);
+    var go = h('<div class="next-row"><button class="btn pt-random">Random problem →</button>' +
+      '<button class="btn ghost pt-random-view">See one worked instead</button></div>');
+    go.querySelector('.pt-random').onclick = function () { startRandomProblem(getPtPool()); };
+    go.querySelector('.pt-random-view').onclick = function () {
+      var list = ptPool(getPtPool());
+      if (!list.length) return renderTestReviseEmpty(getPtPool());
+      startProblemStudy(list[Math.floor(Math.random() * list.length)].id, null);
+    };
+    intro.appendChild(go);
+    if (!counts[pool]) intro.appendChild(h('<p class="cu-needs">Nothing ' + esc(ptPoolLabel(pool)) + ' at the moment — pick another pile.</p>'));
+    app.appendChild(intro);
+
+    // What is due, oldest first, so you can pick deliberately rather than at random.
+    var due = ptPool('due').map(function (t) { return { t: t, r: p[t.id] || {} }; })
+      .sort(function (a, b) { return (a.r.solvedAt || 0) - (b.r.solvedAt || 0); });
+    if (due.length) {
+      app.appendChild(h('<div class="sec-label sec-sub">Due for another go</div>'));
+      due.slice(0, 25).forEach(function (row) {
+        var days = ptDaysSince(row.r);
+        var el = h('<div class="pt-row pt-row-done pt-row-split"><button class="pt-row-main" type="button">' +
+          '<span class="pt-row-mark">↻</span><span class="pt-row-t"></span>' + diffTag(row.t.lvl || 1) +
+          '<span class="pt-row-n">' + days + ' day' + (days === 1 ? '' : 's') + ' ago</span></button>' +
+          '<button class="sv-btn" type="button" title="Forget my solve, so it counts as new again">Reset</button></div>');
+        el.querySelector('.pt-row-t').textContent = row.t.title;
+        el.querySelector('.pt-row-main').onclick = function () { PT_RANDOM = 'due'; startPyProblem(row.t.id, null); };
+        el.querySelector('.sv-btn').onclick = function () { ptForget(row.t.id); home(); };
+        app.appendChild(el);
+      });
+    }
+
+    // Favourites, listed, because a starred problem is one you asked to see again.
+    var favs = ptPool('fav');
+    if (favs.length) {
+      app.appendChild(h('<div class="sec-label sec-sub">★ Your favourites</div>'));
+      favs.slice(0, 25).forEach(function (t) {
+        var r = p[t.id] || {}, days = ptDaysSince(r);
+        var el = h('<div class="pt-row pt-row-' + (r.solved ? 'done' : 'new') + ' pt-row-split"><button class="pt-row-main" type="button">' +
+          '<span class="pt-row-mark">★</span><span class="pt-row-t"></span>' + diffTag(t.lvl || 1) +
+          '<span class="pt-row-n">' + (r.solved ? (days === null ? 'solved' : days + ' days ago') : 'not solved') + '</span></button>' +
+          '<button class="sv-btn" type="button" title="See it worked through">View</button></div>');
+        el.querySelector('.pt-row-t').textContent = t.title;
+        el.querySelector('.pt-row-main').onclick = function () { PT_RANDOM = 'fav'; startPyProblem(t.id, null); };
+        el.querySelector('.sv-btn').onclick = function () { startProblemStudy(t.id, null); };
+        app.appendChild(el);
+      });
+    }
+
+    // Start fresh — the whole point of coming back in a few weeks.
+    var reset = h('<section class="code-intro"><div class="review-eyebrow">Start fresh</div>' +
+      '<p class="code-intro-p">Coming back after a break? Mark everything unsolved and walk the whole set again. Your saved code stays where it is — only the ticks go.</p>' +
+      '<div class="next-row"><button class="btn ghost pt-forget-all">Mark all ' + counts.solved + ' solved problems unsolved</button></div></section>');
+    reset.querySelector('.pt-forget-all').onclick = function () {
+      if (!confirm('Clear every solved tick so the whole set counts as new again? Your code is kept.')) return;
+      ptForgetAll(); home();
+    };
+    app.appendChild(reset);
   }
   function renderTestMock() {
     var all = pyTests();
@@ -3790,11 +3953,22 @@
       'They are testing whether you know what the language actually does — mutable defaults, integer division, aliasing, truthiness.</p>' +
       '<div class="next-row"><button class="btn pq-start">Test me — a round of 10 →</button>' +
       '<button class="btn ghost pq-learn">Learn: see it, then answer it</button><button class="btn ghost pq-view">View 10 worked first</button>' +
-      '<button class="btn ghost pq-all">Every question, in order</button></div></section>');
+      '<button class="btn ghost pq-all">Every question, in order</button>' +
+      '<button class="btn ghost pq-favs">★ Just my favourites</button></div></section>');
     intro.querySelector('.pq-start').onclick = function () { startPyQuiz(shuffle(qs.slice()).slice(0, 10)); };
     intro.querySelector('.pq-all').onclick = function () { startPyQuiz(qs.slice()); };
     intro.querySelector('.pq-view').onclick = function () { startQuizStudy(shuffle(qs.slice()).slice(0, 10)); };
     intro.querySelector('.pq-learn').onclick = function () { startPyQuiz(shuffle(qs.slice()).slice(0, 10), null, null, { learn: true }); };
+    intro.querySelector('.pq-favs').onclick = function () {
+      var favs = qs.filter(function (q) { return isFavId('pq' + q.id); });
+      if (!favs.length) {
+        var b = intro.querySelector('.pq-favs');
+        b.textContent = 'Tap ☆ on a question first';
+        setTimeout(function () { b.textContent = '★ Just my favourites'; }, 1800);
+        return;
+      }
+      startPyQuiz(shuffle(favs));
+    };
     app.appendChild(intro);
     var g = ptGroups(qs);
     g.order.forEach(function (grp) {
@@ -4228,6 +4402,7 @@
   function home() {
     stopMockTimer();
     CODE_CTX = null;
+    PT_RANDOM = null;
     app.innerHTML = '';
     var mast = h(
       '<header class="masthead">' +
