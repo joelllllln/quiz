@@ -91,13 +91,20 @@
     { label: 'Innovation & the FCA', keys: ['wcrypto', 'wpay', 'waws', 'wai'], mode: 'work' }
   ];
   // ---- App mode: 'ds' (data science revision) · 'code' (coding drills) · 'ptest' (Python coding tests) · 'work' (FCA & innovation) ----
-  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work' || v === 'ptest' || v === 'course') ? v : 'ds'; }
+  function getMode() { var v = localStorage.getItem('ds_mode'); return (v === 'code' || v === 'work' || v === 'ptest' || v === 'course' || v === 'lib') ? v : 'ds'; }
+  // Anything can be opened from the Library as well as from its own section, so the
+  // back button says where you actually came from rather than assuming the course.
+  function inLib() { return getMode() === 'lib'; }
+  function backWord() { return inLib() ? '← Library' : '← Course'; }
+  // Same idea for the screens whose back button normally returns to their own contents.
+  function homeWord(usual) { return inLib() ? '← Library' : usual; }
   function setMode(v) { try { localStorage.setItem('ds_mode', v); } catch (e) {} }
   // Topics belong to 'ds' unless tagged; 'code' mode shows its own screen, so shares the ds topic set.
-  function topicInMode(t) { var m = getMode() === 'work' ? 'work' : 'ds'; return (t.mode || 'ds') === m; }
+  // The Library is a superset of every section, so nothing is out of mode inside it.
+  function topicInMode(t) { if (inLib()) return true; var m = getMode() === 'work' ? 'work' : 'ds'; return (t.mode || 'ds') === m; }
   var KEYMODE = {};
   TOPICS.forEach(function (t) { KEYMODE[t.key] = t.mode || 'ds'; });
-  function keyInMode(k) { var m = getMode() === 'work' ? 'work' : 'ds'; return (KEYMODE[k] || 'ds') === m; }
+  function keyInMode(k) { if (inLib()) return true; var m = getMode() === 'work' ? 'work' : 'ds'; return (KEYMODE[k] || 'ds') === m; }
   var UPCOMING = [
     { name: 'Regression', desc: 'Predicting quantities, done properly.' },
     { name: 'Neural Networks', desc: 'Layers of learned features.' }
@@ -542,7 +549,7 @@
   // Friendly stop when a topic+difficulty combination has nothing to study.
   function noContent(label) {
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">' + esc(label) + '</span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">' + esc(label) + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     app.appendChild(h('<article class="qcard"><h2 class="qtext">Nothing here yet</h2>' +
@@ -557,7 +564,7 @@
     var i = 0, flipped = false;
     function draw() {
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
         '<div class="ruler"><div style="width:' + (100 * i / deck.length) + '%"></div></div>' +
         '<span class="exmeta">Card <b>' + (i + 1) + '</b> of ' + deck.length + '</span></div>');
       bar.querySelector('.back').onclick = home;
@@ -645,7 +652,7 @@
     function drawReview() {
       var c = deck[viewIdx];
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Type the term · reviewing <b>' + (viewIdx + 1) + '</b> of ' + deck.length + '</span></div>');
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Type the term · reviewing <b>' + (viewIdx + 1) + '</b> of ' + deck.length + '</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var card = h('<article class="qcard type-card">' +
@@ -671,7 +678,7 @@
       }
       var c = deck[i];
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Type the term · <b>' + (i + 1) + '</b> of ' + deck.length + ' · <b>' + score + '</b> right</span></div>');
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Type the term · <b>' + (i + 1) + '</b> of ' + deck.length + ' · <b>' + score + '</b> right</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var card = h('<article class="qcard type-card">' +
@@ -745,7 +752,7 @@
     function drawMatch() {
       var cards = pool.slice(round * PAIRS, round * PAIRS + PAIRS);
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Match · round <b>' + (round + 1) + '</b> of ' + (ROUNDS + (orders.length ? orders.length : 0)) + '</span></div>');
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Match · round <b>' + (round + 1) + '</b> of ' + (ROUNDS + (orders.length ? orders.length : 0)) + '</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var sec = h('<article class="qcard match-card"><div class="q-eyebrow">Match each term to its definition</div>' +
@@ -816,7 +823,7 @@
     function drawOrder() {
       var o = orders[orderIdx];
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Order the steps · ' + esc(o.title) + '</span></div>');
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Order the steps · ' + esc(o.title) + '</span></div>');
       bar.querySelector('.back').onclick = home;
       app.appendChild(bar);
       var sec = h('<article class="qcard order-card"><div class="q-top"><div class="q-eyebrow">Put the steps in order ' + diffTag(o.level || 1) + '</div></div>' +
@@ -1045,7 +1052,7 @@
     // Skip this note AND its attached test (if any), jumping to the next note.
     function skipPair() { i += (seq[i + 1] && seq[i + 1].type !== 'read') ? 2 : 1; if (i >= seq.length) return finish(); draw(); }
     function bar() {
-      var b = h('<div class="exbar"><button class="back">← Contents</button>' +
+      var b = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
         '<div class="ruler"><div style="width:' + (100 * i / seq.length) + '%"></div></div>' +
         '<span class="exmeta">Read + recall · <b>' + (i + 1) + '</b> of ' + seq.length + '</span></div>');
       b.querySelector('.back').onclick = home;
@@ -1201,7 +1208,8 @@
   function startQuiz(topicKey, n) {
     var pool = newFilterQ(buildIndex().filter(function (e) { return (!topicKey || e.key === topicKey) && diffOk(e.level) && qVoteOk(e.q); }));
     if (!pool.length) return noContent('Questions');
-    pool = shuffle(pool).slice(0, Math.min(n, pool.length));
+    // No count asked for means "a normal round" — slicing to NaN would empty the pool.
+    pool = shuffle(pool).slice(0, Math.min(n || 12, pool.length));
     begin({ name: 'Study', no: '✎', key: '__study__' },
       { qk: '__study__', part: 'Study', name: todayLabel() },
       { qs: pool.map(function (e) { return e.q; }), origins: pool.map(function (e) { return e.topic; }), mixed: true, modeLabel: 'Study', more: true });
@@ -1239,7 +1247,7 @@
   // Reference view for a single concept: the answer, plain English, the lab, and a practice button.
   function showConcept(q, topic, level) {
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Lookup · ' + esc(topic) + '</span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Lookup · ' + esc(topic) + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     var isDef = !!(window.DEFS && window.DEFS[q.q]);
@@ -1347,7 +1355,7 @@
     var i = 0;
     function draw() {
       app.innerHTML = '';
-      var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+      var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
         '<div class="ruler"><div style="width:' + (100 * i / deck.length) + '%"></div></div>' +
         '<span class="exmeta">Prompt <b>' + (i + 1) + '</b> of ' + deck.length + '</span></div>');
       bar.querySelector('.back').onclick = home;
@@ -1661,7 +1669,7 @@
     var all = window.COMPARES || [];
     var c = all[idx]; if (!c) return;
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Don’t confuse these · ' + (idx + 1) + ' of ' + all.length + '</span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Don’t confuse these · ' + (idx + 1) + ' of ' + all.length + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     var card = h('<article class="qcard compare-card">' +
@@ -1703,7 +1711,7 @@
     var idx = 0; list.forEach(function (t, i) { if (t.key === topicKey) idx = i; });
     var t = list[idx], n = window.NOTES[t.key];
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button><span class="exmeta">Study notes · ' + (idx + 1) + ' of ' + list.length + '</span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button><span class="exmeta">Study notes · ' + (idx + 1) + ' of ' + list.length + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     var jump = '<select class="notes-jump">' + list.map(function (x, i) {
@@ -1773,10 +1781,10 @@
     if (at === 'spot' || at === 1) return startCodeMCQ(key);
     return startCodeExample(key);
   }
-  function codeBackLabel() { return CODE_CTX ? '← Course' : '← Coding'; }
+  function codeBackLabel() { return CODE_CTX ? '← Course' : (inLib() ? '← Library' : '← Coding'); }
   function codeBackHome() { if (CODE_CTX) return renderCourseUnitPage(CODE_CTX.unitKey); return home(); }
   // The "leave this drill" button, worded for wherever the learner came from.
-  function codeHomeBtn() { return CODE_CTX ? 'Back to the unit' : 'Coding home'; }
+  function codeHomeBtn() { return CODE_CTX ? 'Back to the unit' : (inLib() ? 'Back to the shelf' : 'Coding home'); }
   // Finish the course step this drill belongs to, and move the course on.
   function codeCourseDone() { var ctx = CODE_CTX; CODE_CTX = null; if (ctx) ctx.after(); }
   // Every level screen gets the same "carry on the course" offer when it came from one.
@@ -2135,9 +2143,9 @@
     return size ? pick.slice(0, size) : shuffle(pick);
   }
   function quickBar(label, meta, onBack) {
-    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta"></span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Coding') + '</button><span class="exmeta"></span></div>');
     bar.querySelector('.back').onclick = onBack || home;
-    if (onBack) bar.querySelector('.back').textContent = '← Course';
+    if (onBack) bar.querySelector('.back').textContent = backWord();
     bar.querySelector('.exmeta').innerHTML = '<b>Quickfire</b> · ' + esc(label) + (meta ? ' · ' + meta : '');
     return bar;
   }
@@ -2267,10 +2275,14 @@
         (opts.learn ? ' Come back to these cold later — that is the pass that counts.' : '') + '</p>' +
         '<div class="next-row"><button class="btn qf-again">Another round →</button>' +
         (missed.length ? '<button class="btn ghost qf-redo">Redo the ' + missed.length + ' I missed</button>' : '') +
-        '<button class="btn ghost qf-home">Quickfire home</button></div></article>');
-      card.querySelector('.qf-again').onclick = function () { startQuick(buildQuickRound(snipAll(), getQuickSize()), 'mixed', onFinish, onBack, opts); };
+        '<button class="btn ghost qf-home">' + (inLib() ? 'Back to the shelf' : 'Quickfire home') + '</button></div></article>');
+      // opts.pool keeps "another round" inside the set you chose; without one it mixes everything.
+      card.querySelector('.qf-again').onclick = function () {
+        var pool = opts.pool && opts.pool.length ? opts.pool : snipAll();
+        startQuick(buildQuickRound(pool, getQuickSize()), opts.pool ? label : 'mixed', onFinish, onBack, opts);
+      };
       if (missed.length) card.querySelector('.qf-redo').onclick = function () { startQuick(shuffle(missed.slice()), label + ' · retry', onFinish, onBack); };
-      card.querySelector('.qf-home').onclick = function () { setCodeDoor('quick'); home(); };
+      card.querySelector('.qf-home').onclick = function () { if (!inLib()) setCodeDoor('quick'); home(); };
       if (onFinish) {
         var cont = h('<div class="next-row course-foot"><button class="btn qf-course">Continue the course →</button></div>');
         cont.querySelector('.qf-course').onclick = onFinish;
@@ -2390,7 +2402,7 @@
   function studyBar(label, right, onBack) {
     var bar = h('<div class="exbar"><button class="back">← Back</button><span class="exmeta"></span></div>');
     bar.querySelector('.back').onclick = onBack || home;
-    if (onBack) bar.querySelector('.back').textContent = '← Course';
+    if (onBack) bar.querySelector('.back').textContent = backWord();
     bar.querySelector('.exmeta').innerHTML = '<b>View</b> · ' + esc(label) + (right ? ' · ' + right : '');
     return bar;
   }
@@ -3039,8 +3051,9 @@
     if (!row) return home();
     var unit = row.unit, us = unitStats(unit);
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Course</button><span class="exmeta"></span></div>');
-    bar.querySelector('.back').onclick = function () { setMode('course'); home(); };
+    var bar = h('<div class="exbar"><button class="back"></button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').textContent = backWord();
+    bar.querySelector('.back').onclick = function () { if (!inLib()) setMode('course'); home(); };
     bar.querySelector('.exmeta').innerHTML = esc(row.stage.no + ' · ' + row.stage.name);
     app.appendChild(bar);
     var head = h('<section class="code-intro"><div class="review-eyebrow">Unit ' + esc(unit.key.toUpperCase()) + '</div>' +
@@ -3087,8 +3100,9 @@
         footer.appendChild(h('<span class="cu-alldone">Unit complete ✓</span>'));
       }
     }
-    var back = h('<button class="btn ghost">Course map</button>');
-    back.onclick = function () { setMode('course'); home(); };
+    var back = h('<button class="btn ghost"></button>');
+    back.textContent = inLib() ? 'Back to the shelf' : 'Course map';
+    back.onclick = function () { if (!inLib()) setMode('course'); home(); };
     footer.appendChild(back);
     app.appendChild(footer);
     window.scrollTo(0, 0);
@@ -3301,7 +3315,8 @@
     };
   }
   function ptBar(label, right) {
-    var bar = h('<div class="exbar"><button class="back">← Tests</button><span class="exmeta"></span></div>');
+    var bar = h('<div class="exbar"><button class="back"></button><span class="exmeta"></span></div>');
+    bar.querySelector('.back').textContent = inLib() ? '← Library' : '← Tests';
     bar.querySelector('.back').onclick = home;
     bar.querySelector('.exmeta').innerHTML = label;
     if (right) bar.appendChild(right);
@@ -3660,7 +3675,7 @@
   function quizBar(label, onBack) {
     var bar = ptBar(label);
     if (onBack) {
-      bar.querySelector('.back').textContent = '← Course';
+      bar.querySelector('.back').textContent = backWord();
       bar.querySelector('.back').onclick = onBack;
     }
     return bar;
@@ -4065,6 +4080,337 @@
     return (window.CODETASKS || []).filter(function (t) { return !d || (t.lvl || 2) === d; });
   }
   function startCodeLevel(key, L) { if (L === 0) startCodeExample(key); else if (L === 1) startCodeMCQ(key); else if (L === 2) startCodeOrder(key); else startCodeWrite(key); }
+  /* ================= The Library =================
+     Every other section is organised by KIND — the course is a path, the tests are a list
+     of problems, the coding section is a ladder of drills. The library is organised by
+     SUBJECT, so everything about (say) loops sits on one shelf: the lesson that teaches
+     it, the recall drills, the what-does-it-print questions, the coding tasks and the
+     coding-test problems, in the order you would meet them.
+
+     data_library.js holds the shelves and names what belongs on each. Nothing is copied:
+     a shelf points at groups, unit keys and topic keys that already exist. */
+  function libShelves() { return window.LIBRARY || []; }
+  function libShelf(key) { var f = null; libShelves().forEach(function (t) { if (t.key === key) f = t; }); return f; }
+  function getLibShelf() { try { return localStorage.getItem('ds_lib_shelf') || ''; } catch (e) { return ''; } }
+  function setLibShelf(v) { try { if (v) localStorage.setItem('ds_lib_shelf', v); else localStorage.removeItem('ds_lib_shelf'); } catch (e) {} }
+  function getLibKind() { try { var v = localStorage.getItem('ds_lib_kind') || 'all'; return v; } catch (e) { return 'all'; } }
+  function setLibKind(v) { try { localStorage.setItem('ds_lib_kind', v); } catch (e) {} }
+  function getLibHide() { try { return localStorage.getItem('ds_lib_hide') === '1'; } catch (e) { return false; } }
+  function setLibHide(v) { try { localStorage.setItem('ds_lib_hide', v ? '1' : '0'); } catch (e) {} }
+
+  // The kinds of thing a shelf can hold, in the order you would work through them.
+  var LIB_KINDS = [
+    { k: 'lesson', t: 'Lessons', v: 'Read the idea, with the drills attached' },
+    { k: 'drill', t: 'Drills', v: 'Type one line from memory, over and over' },
+    { k: 'predict', t: 'Predict', v: 'What does this code print?' },
+    { k: 'build', t: 'Coding', v: 'Spot it, build it, write it' },
+    { k: 'solve', t: 'Problems', v: 'A brief, a function, and tests that must pass' },
+    { k: 'study', t: 'Study', v: 'The multiple-choice topics, with labs' },
+    { k: 'ref', t: 'Reference', v: 'Notes and side-by-side pages' }
+  ];
+  function libKindName(k) { var n = k; LIB_KINDS.forEach(function (d) { if (d.k === k) n = d.t; }); return n; }
+
+  // Which shelf each coding-test problem belongs to. Problems are never listed in
+  // data_library.js — every one is placed in the course, so it inherits the shelf of
+  // the unit that teaches it, and the two can never drift apart.
+  var LIB_PROB = null;
+  function libProblemShelf() {
+    if (LIB_PROB) return LIB_PROB;
+    var of = {}, by = {}, byUnit = {};
+    libShelves().forEach(function (t) { t.units.forEach(function (u) { byUnit[u] = t.key; }); });
+    courseUnits().forEach(function (row) {
+      (row.unit.steps || []).forEach(function (st) {
+        if (st.t === 'problem' && !of[st.id]) of[st.id] = byUnit[row.unit.key];
+      });
+    });
+    pyTests().forEach(function (t) { var k = of[t.id]; if (k) (by[k] = by[k] || []).push(t); });
+    LIB_PROB = { of: of, by: by };
+    return LIB_PROB;
+  }
+  function libBack() { home(); }
+  // The banks bucketed by group, built once. Without this every keystroke in the search
+  // box would re-filter 2,000 cards and 300 problems for each of the shelves.
+  var LIB_BUCKETS = null;
+  function libBuckets() {
+    if (LIB_BUCKETS) return LIB_BUCKETS;
+    var b = { cards: {}, quiz: {}, tasks: {} };
+    snipAll().forEach(function (s2) { (b.cards[s2.group] = b.cards[s2.group] || []).push(s2); });
+    pyQuiz().forEach(function (q) { (b.quiz[q.group] = b.quiz[q.group] || []).push(q); });
+    (window.CODETASKS || []).forEach(function (t) { (b.tasks[t.group] = b.tasks[t.group] || []).push(t); });
+    LIB_BUCKETS = b;
+    return b;
+  }
+
+  // Everything on one shelf, as rows the list can render without knowing what they are.
+  function libItems(shelf) {
+    var out = [], p, bucket = libBuckets();
+    shelf.units.forEach(function (key) {
+      var row = courseUnit(key);
+      if (!row) return;
+      var us = unitStats(row.unit);
+      out.push({ kind: 'lesson', title: row.unit.name, sub: row.stage.no + ' · ' + row.stage.name,
+        meta: us.done + ' of ' + us.total + ' steps', done: us.complete, pct: us.pct,
+        find: row.unit.name + ' ' + (row.unit.blurb || ''),
+        open: function () { renderCourseUnitPage(key); } });
+    });
+    p = snipProg();
+    shelf.cards.forEach(function (g) {
+      var list = bucket.cards[g] || [];
+      if (!list.length) return;
+      var solid = list.filter(function (s) { return snipState(p[s.id]) === 'solid'; }).length;
+      out.push({ kind: 'drill', title: g, sub: 'Quickfire recall',
+        meta: list.length + ' cards · ' + solid + ' solid', done: solid === list.length,
+        pct: Math.round(100 * solid / list.length),
+        find: g + ' ' + list.map(function (s) { return s.ask + ' ' + s.a; }).join(' '),
+        open: function () { startQuick(buildQuickRound(list, Math.min(list.length, getQuickSize())), g, null, libBack, { pool: list }); },
+        alt: { t: 'See them all', go: function () { startQuickSheet(list, g); } } });
+    });
+    shelf.quizzes.forEach(function (g) {
+      var list = bucket.quiz[g] || [];
+      if (!list.length) return;
+      out.push({ kind: 'predict', title: g, sub: 'What does it print?', meta: list.length + ' questions',
+        find: g + ' ' + list.map(function (q) { return q.code; }).join(' '),
+        open: function () { startPyQuiz(shuffle(list.slice()), null, libBack); },
+        alt: { t: 'View worked', go: function () { startQuizStudy(list.slice(), null, libBack); } } });
+    });
+    var cprog = codeProg();
+    shelf.tasks.forEach(function (g) {
+      (bucket.tasks[g] || []).forEach(function (t) {
+        var r = cprog[t.key] || {}, levels = (r[1] ? 1 : 0) + (r[2] ? 1 : 0) + (r[3] ? 1 : 0);
+        out.push({ kind: 'build', title: t.title, sub: g, lvl: t.lvl,
+          meta: levels ? levels + ' of 3 levels' : '4 steps', done: levels === 3,
+          pct: Math.round(100 * levels / 3), find: t.title + ' ' + t.ask + ' ' + g,
+          open: function () { startCodeTask(t.key); },
+          alt: { t: 'Write it', go: function () { startCodeWrite(t.key); } } });
+      });
+    });
+    var pp = ptProg();
+    (libProblemShelf().by[shelf.key] || []).forEach(function (t) {
+      var r = pp[t.id] || {};
+      out.push({ kind: 'solve', title: t.title, sub: t.group, lvl: t.lvl,
+        meta: (t.tests || []).length + ' tests', done: !!r.solved, pct: r.solved ? 100 : 0,
+        find: t.title + ' ' + t.brief + ' ' + (t.fn || ''),
+        open: function () { startPyProblem(t.id, null); },
+        alt: { t: 'View worked', go: function () { startProblemStudy(t.id, null); } } });
+    });
+    shelf.ds.forEach(function (key) {
+      var topic = null;
+      TOPICS.forEach(function (x) { if (x.key === key) topic = x; });
+      if (!topic) return;
+      var n = 0;
+      (topic.levels || []).forEach(function (L) { n += ((window.QUESTIONS || {})[L.qk] || []).length; });
+      out.push({ kind: 'study', title: topic.name, sub: 'Topic ' + topic.no, meta: n + ' questions',
+        find: topic.name + ' ' + (topic.desc || ''),
+        open: function () { startLearn(topic.key); },
+        alt: { t: 'Quiz me', go: function () { startQuiz(topic.key, 12); } },
+        alt2: { t: 'Cards', go: function () { startFlashcards(topic.key); } } });
+      if (window.NOTES && window.NOTES[key]) {
+        out.push({ kind: 'ref', title: 'Notes · ' + topic.name, sub: 'Study notes', meta: 'read',
+          find: 'notes ' + topic.name, open: function () { showNotes(key); } });
+      }
+    });
+    (shelf.compares || []).forEach(function (ckey) {
+      var all = window.COMPARES || [], idx = -1;
+      all.forEach(function (c, i) { if (c.key === ckey) idx = i; });
+      if (idx < 0) return;
+      out.push({ kind: 'ref', title: all[idx].title, sub: 'Don’t confuse these', meta: 'side by side',
+        find: all[idx].title + ' ' + (all[idx].tagline || ''), open: function () { showCompare(idx); } });
+    });
+    return out;
+  }
+  function libCounts(items) {
+    var by = {};
+    items.forEach(function (it) { by[it.kind] = (by[it.kind] || 0) + 1; });
+    return by;
+  }
+  function libDoneCount(items) {
+    var n = 0, of = 0;
+    items.forEach(function (it) { if (it.done !== undefined) { of++; if (it.done) n++; } });
+    return { done: n, of: of, pct: of ? Math.round(100 * n / of) : 0 };
+  }
+
+  function renderLibrary() {
+    var shelves = libShelves();
+    if (!shelves.length) { app.appendChild(h('<section class="code-intro"><p class="code-intro-p">The library is empty.</p></section>')); return; }
+    var openKey = getLibShelf();
+    var shelf = openKey ? libShelf(openKey) : null;
+    var kind = getLibKind(), hide = getLibHide(), term = '';
+    // Built once per visit: progress cannot change while the library is on screen, and
+    // rebuilding on every keystroke would re-read the progress stores 31 times over.
+    var ITEMS = {};
+    shelves.forEach(function (t) { ITEMS[t.key] = libItems(t); });
+    function itemsOf(t) { return ITEMS[t.key] || []; }
+
+    var head = h('<section class="code-intro lib-head"><div class="review-eyebrow">The library</div>' +
+      '<p class="code-intro-p">One shelf per subject. Each one holds <b>everything</b> the app has on it — the lesson, the recall drills, the ' +
+      'what-does-it-print questions, the coding tasks and the coding-test problems — in the order you would meet them.</p>' +
+      '<input class="lib-search" type="search" placeholder="Search the whole library — a word, a function, a method…" autocomplete="off" spellcheck="false" aria-label="Search the library">' +
+      '<div class="lib-kinds"></div>' +
+      '<label class="lib-hide"><input type="checkbox" class="lib-hide-in"> Hide what I have finished</label></section>');
+    var kindBox = head.querySelector('.lib-kinds');
+    [{ k: 'all', t: 'Everything' }].concat(LIB_KINDS).forEach(function (d) {
+      var b = h('<button class="lib-chip' + (d.k === kind ? ' lib-chip-on' : '') + '" type="button"></button>');
+      b.textContent = d.t;
+      if (d.v) b.title = d.v;
+      b.onclick = function () { setLibKind(d.k); home(); };
+      kindBox.appendChild(b);
+    });
+    head.querySelector('.lib-hide-in').checked = hide;
+    head.querySelector('.lib-hide-in').onchange = function () { setLibHide(this.checked); home(); };
+    app.appendChild(head);
+
+    var body = h('<div class="lib-body"></div>');
+    app.appendChild(body);
+    var search = head.querySelector('.lib-search');
+    var timer = null;
+    search.oninput = function () {
+      clearTimeout(timer);
+      var v = this.value;
+      timer = setTimeout(function () { term = v.trim().toLowerCase(); paint(); }, 140);
+    };
+    search.onkeydown = function (e) { if (e.key === 'Escape') { this.value = ''; term = ''; paint(); } };
+    paint();
+    window.scrollTo(0, 0);
+
+    function keep(it) {
+      if (kind !== 'all' && it.kind !== kind) return false;
+      if (hide && it.done) return false;
+      if (term && (it.find || it.title || '').toLowerCase().indexOf(term) < 0) return false;
+      return true;
+    }
+    function paint() {
+      body.innerHTML = '';
+      if (term) return paintSearch();
+      if (shelf) return paintShelf(shelf);
+      paintIndex();
+    }
+
+    // The index: one card per shelf, grouped under the four parts of the syllabus.
+    function paintIndex() {
+      var parts = [], byPart = {}, shown = 0;
+      shelves.forEach(function (t) {
+        var p2 = t.part || 'Everything else';
+        if (!byPart[p2]) { byPart[p2] = []; parts.push(p2); }
+        byPart[p2].push(t);
+      });
+      parts.forEach(function (p2) { shown += paintPart(p2, byPart[p2]); });
+      if (!shown) {
+        body.innerHTML = '';
+        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing matches that filter. Try <b>Everything</b>, or untick "hide what I have finished".</p></section>'));
+      }
+    }
+    function paintPart(name, list) {
+      var wrap = h('<div class="lib-grid"></div>');
+      list.forEach(function (t) {
+        var items = itemsOf(t).filter(keep);
+        if (!items.length) return;
+        var by = libCounts(items), st = libDoneCount(items);
+        var card = h('<button class="lib-card" type="button">' +
+          '<span class="lib-card-t"></span><span class="lib-card-b"></span>' +
+          '<span class="lib-card-tags"></span>' +
+          '<span class="lib-card-bar"><span></span></span>' +
+          '<span class="lib-card-n"></span></button>');
+        card.querySelector('.lib-card-t').textContent = t.name;
+        card.querySelector('.lib-card-b').textContent = t.blurb;
+        var tags = card.querySelector('.lib-card-tags');
+        LIB_KINDS.forEach(function (d) {
+          if (!by[d.k]) return;
+          var tag = h('<span class="lib-tag lib-tag-' + d.k + '"></span>');
+          tag.textContent = by[d.k] + ' ' + d.t.toLowerCase();
+          tags.appendChild(tag);
+        });
+        card.querySelector('.lib-card-bar span').style.width = st.pct + '%';
+        card.querySelector('.lib-card-n').textContent = st.of ? st.done + ' of ' + st.of + ' done' : items.length + ' things to read';
+        card.onclick = function () { setLibShelf(t.key); home(); };
+        wrap.appendChild(card);
+      });
+      if (!wrap.children.length) return 0;
+      body.appendChild(h('<div class="sec-label sec-sub">' + esc(name) + '<span class="lib-sec-v">' + wrap.children.length + ' shelves</span></div>'));
+      body.appendChild(wrap);
+      return wrap.children.length;
+    }
+
+    // One shelf, opened: everything on it, grouped by kind, in working order.
+    function paintShelf(t) {
+      var items = itemsOf(t), shown = items.filter(keep), st = libDoneCount(shown);
+      var bar = h('<div class="exbar lib-bar"><button class="back">← All shelves</button><span class="exmeta"></span></div>');
+      bar.querySelector('.back').onclick = function () { setLibShelf(''); home(); };
+      bar.querySelector('.exmeta').innerHTML = '<b>' + esc(t.name) + '</b>';
+      body.appendChild(bar);
+      var intro = h('<section class="code-intro"><h2 class="cu-title"></h2><p class="code-intro-p"></p>' +
+        '<div class="code-progwrap"><div class="code-progbar"><span style="width:' + st.pct + '%"></span></div>' +
+        '<span class="code-intro-count"><b>' + st.done + '</b> of ' + st.of + ' done</span></div></section>');
+      intro.querySelector('.cu-title').textContent = t.name;
+      intro.querySelector('.code-intro-p').textContent = t.blurb;
+      body.appendChild(intro);
+      if (!shown.length) {
+        body.appendChild(h('<section class="code-intro"><p class="code-intro-p">Nothing on this shelf matches the filter.</p></section>'));
+      }
+      LIB_KINDS.forEach(function (d) {
+        var group = shown.filter(function (it) { return it.kind === d.k; });
+        if (!group.length) return;
+        body.appendChild(h('<div class="sec-label sec-sub">' + esc(d.t) + ' · ' + group.length + '<span class="lib-sec-v">' + esc(d.v) + '</span></div>'));
+        group.forEach(function (it) { body.appendChild(libRow(it)); });
+      });
+      var jump = h('<div class="next-row lib-jump"></div>');
+      var i = 0;
+      shelves.forEach(function (x, n) { if (x.key === t.key) i = n; });
+      if (i > 0) {
+        var prev = h('<button class="btn ghost"></button>');
+        prev.textContent = '← ' + shelves[i - 1].name;
+        prev.onclick = function () { setLibShelf(shelves[i - 1].key); home(); };
+        jump.appendChild(prev);
+      }
+      if (i < shelves.length - 1) {
+        var next = h('<button class="btn"></button>');
+        next.textContent = shelves[i + 1].name + ' →';
+        next.onclick = function () { setLibShelf(shelves[i + 1].key); home(); };
+        jump.appendChild(next);
+      }
+      body.appendChild(jump);
+    }
+
+    // Searching looks across every shelf at once, and says which shelf each hit is on.
+    function paintSearch() {
+      var hits = 0, cap = 160;
+      var note = h('<div class="sec-label sec-sub lib-hits"></div>');
+      body.appendChild(note);
+      shelves.forEach(function (t) {
+        var group = itemsOf(t).filter(keep);
+        if (!group.length) return;
+        var head2 = h('<button class="lib-shelfhead" type="button"></button>');
+        head2.textContent = t.name + '  ·  ' + group.length;
+        head2.onclick = function () { setLibShelf(t.key); search.value = ''; term = ''; paint(); };
+        body.appendChild(head2);
+        group.slice(0, 24).forEach(function (it) { body.appendChild(libRow(it)); hits++; });
+        if (group.length > 24) body.appendChild(h('<div class="lib-more">…and ' + (group.length - 24) + ' more on this shelf</div>'));
+      });
+      note.textContent = hits ? hits + (hits >= cap ? '+' : '') + ' matches for “' + term + '”' : 'Nothing matches “' + term + '”';
+    }
+
+    function libRow(it) {
+      var row = h('<div class="lib-row lib-row-' + it.kind + (it.done ? ' lib-row-done' : '') + '">' +
+        '<button class="lib-row-main" type="button"><span class="lib-row-mark"></span>' +
+        '<span class="lib-row-text"><span class="lib-row-t"></span><span class="lib-row-s"></span></span>' +
+        '<span class="lib-row-n"></span></button><span class="lib-row-alts"></span></div>');
+      row.querySelector('.lib-row-mark').textContent = it.done ? '✓' : '';
+      row.querySelector('.lib-row-t').textContent = it.title;
+      row.querySelector('.lib-row-s').textContent = (it.sub || '') + (it.meta ? '  ·  ' + it.meta : '');
+      row.querySelector('.lib-row-n').innerHTML = '<span class="lib-kindtag lib-tag-' + it.kind + '">' + esc(libKindName(it.kind)) + '</span>' +
+        (it.lvl ? diffTag(it.lvl) : '');
+      row.querySelector('.lib-row-main').onclick = it.open;
+      var alts = row.querySelector('.lib-row-alts');
+      [it.alt, it.alt2].forEach(function (a) {
+        if (!a) return;
+        var b = h('<button class="sv-btn" type="button"></button>');
+        b.textContent = a.t;
+        b.onclick = a.go;
+        alts.appendChild(b);
+      });
+      return row;
+    }
+  }
+
   function renderCodeHome() {
     var door = getCodeDoor();
     var nav = h('<nav class="home-doors doors-4" role="tablist"></nav>');
@@ -4246,7 +4592,7 @@
     var all = window.CODE_HPARAMS || [];
     var m = all[idx]; if (!m) return;
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Coding</button><span class="exmeta">Know the knobs · <b>' + (idx + 1) + '</b> of ' + all.length + '</span></div>');
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Coding') + '</button><span class="exmeta">Know the knobs · <b>' + (idx + 1) + '</b> of ' + all.length + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
     var card = h('<article class="qcard hparam-card">' +
@@ -4440,6 +4786,9 @@
     } else if (MODE === 'ptest') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Python coding tests</b>: the hiring-test half of the platform. Real problems, a real interpreter running in your browser, hidden test cases and a countdown clock.';
       mast.querySelector('.mast-foot').textContent = 'Practice · timed mocks · output quiz · progress kept in this browser';
+    } else if (MODE === 'lib') {
+      mast.querySelector('.mast-sub').innerHTML = '<b>The library</b>: everything in one place, shelved by subject rather than by section. Every shelf holds the lesson, the recall drills, the what-does-it-print questions, the coding tasks and the test problems on that one subject, side by side.';
+      mast.querySelector('.mast-foot').textContent = 'Search it, filter it, open anything · progress kept in this browser';
     } else if (MODE === 'work') {
       mast.querySelector('.mast-sub').innerHTML = '<b>Innovation vocabulary</b> for the day job: digital assets, payments & fintech, and the AWS words everyone assumes you know. Same drills — quiz, flashcards, read + recall.';
       mast.querySelector('.mast-foot').textContent = 'FCA & innovation topics · progress kept in this browser';
@@ -4448,7 +4797,7 @@
 
     // Mode switch: Data Science revision · Coding drills · FCA & Innovation vocabulary.
     var tabs = h('<nav class="mode-tabs" aria-label="App mode"></nav>');
-    [{ v: 'course', t: 'Course' }, { v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'ptest', t: 'Python tests' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
+    [{ v: 'lib', t: 'Library' }, { v: 'course', t: 'Course' }, { v: 'ds', t: 'Data Science' }, { v: 'code', t: 'Coding' }, { v: 'ptest', t: 'Python tests' }, { v: 'work', t: 'FCA & Innovation' }].forEach(function (m) {
       var b = h('<button class="mode-tab' + (m.v === MODE ? ' mode-on' : '') + '" type="button"></button>');
       b.textContent = m.t;
       b.onclick = function () { if (m.v !== getMode()) { setMode(m.v); home(); } };
@@ -4456,6 +4805,7 @@
     });
     app.appendChild(tabs);
 
+    if (MODE === 'lib') { renderLibrary(); return; }
     if (MODE === 'course') { renderCourseHome(); return; }
     if (MODE === 'code') { renderCodeHome(); return; }
     if (MODE === 'ptest') { renderTestHome(); return; }
@@ -5068,7 +5418,7 @@
     var P = window.PRIMERS && window.PRIMERS[topic.key];
     if (!P) return begin(topic, level);
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
       '<span class="exmeta">§ Topic ' + topic.no + ' · ' + esc(topic.name) + '</span></div>');
     bar.querySelector('.back').onclick = home;
     app.appendChild(bar);
@@ -5116,7 +5466,7 @@
     var q = S.qs[S.i];
     var L = S.level;
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
       '<div class="ruler" role="progressbar" aria-valuemin="0" aria-valuemax="' + S.qs.length + '" aria-valuenow="' + S.i + '"><div style="width:' + (100 * S.i / S.qs.length) + '%"></div></div>' +
       '<span class="exmeta">Exercise <b>' + (S.i + 1) + '</b> of ' + S.qs.length + ' · <b>' + S.correct + '</b> correct</span></div>');
     bar.querySelector('.back').onclick = home;
@@ -5175,7 +5525,7 @@
   function reviewQuestion() {
     var v = S.view, q = S.qs[v];
     app.innerHTML = '';
-    var bar = h('<div class="exbar"><button class="back">← Contents</button>' +
+    var bar = h('<div class="exbar"><button class="back">' + homeWord('← Contents') + '</button>' +
       '<div class="ruler" role="progressbar" aria-valuemin="0" aria-valuemax="' + S.qs.length + '" aria-valuenow="' + S.i + '"><div style="width:' + (100 * S.i / S.qs.length) + '%"></div></div>' +
       '<span class="exmeta">Reviewing <b>' + (v + 1) + '</b> of ' + S.qs.length + '</span></div>');
     bar.querySelector('.back').onclick = home;
