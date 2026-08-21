@@ -231,7 +231,13 @@
             ['code', 'for i, n in enumerate(nums):        # position and item\nfor a, b in zip(names, scores):    # two lists side by side\nfor key, value in prices.items():  # a dictionary, both halves']
           ] },
           { t: 'quick', title: 'Drill: the loop line', groups: ['Step by step · the loop line'], size: 12 },
-          { t: 'quiz', title: 'What does the loop walk over?', ids: ['qs-loop-range', 'qs-loop-range-two', 'qs-loop-list', 'qs-loop-enumerate'] }
+          { t: 'quiz', title: 'What does the loop walk over?', ids: ['qs-loop-range', 'qs-loop-range-two', 'qs-loop-list', 'qs-loop-enumerate'] },
+          { t: 'problem', id: 'lp-copy' },
+          { t: 'problem', id: 'lp-shout-each' },
+          { t: 'problem', id: 'lp-add-one-each' },
+          { t: 'problem', id: 'lp-double-each' },
+          { t: 'problem', id: 'lp-lengths' },
+          { t: 'problem', id: 'lp-greet-each' }
         ] },
 
       { key: 's10', name: 'Inside the loop',
@@ -249,7 +255,19 @@
             ['code', 'for row in rows:\n    for item in row:\n        print(item)']
           ] },
           { t: 'quick', title: 'Drill: inside the loop', groups: ['Step by step · inside the loop'], size: 12 },
-          { t: 'quiz', title: 'What does the loop print?', ids: ['qs-loop-break', 'qs-loop-continue', 'qs-while'] }
+          { t: 'quiz', title: 'What does the loop print?', ids: ['qs-loop-break', 'qs-loop-continue', 'qs-while'] },
+          { t: 'problem', id: 'lp-count-positives' },
+          { t: 'problem', id: 'lp-keep-positives' },
+          { t: 'problem', id: 'lp-count-over' },
+          { t: 'problem', id: 'lp-long-words' },
+          { t: 'problem', id: 'lp-total-positive' },
+          { t: 'problem', id: 'lp-drop-blanks' },
+          { t: 'problem', id: 'lp-first-over' },
+          { t: 'problem', id: 'lp-any-over' },
+          { t: 'problem', id: 'lp-all-positive' },
+          { t: 'problem', id: 'lp-stop-at-negative' },
+          { t: 'problem', id: 'lp-skip-negatives' },
+          { t: 'problem', id: 'lp-count-until' }
         ] },
 
       { key: 's11', name: 'Counting and totalling',
@@ -273,7 +291,17 @@
           { t: 'problem', id: 'r-list-sum' },
           { t: 'problem', id: 'r-list-max' },
           { t: 'problem', id: 'st-sum-slice' },
-          { t: 'problem', id: 'st-running' }
+          { t: 'problem', id: 'st-running' },
+          { t: 'problem', id: 'lp-count' },
+          { t: 'problem', id: 'lp-total' },
+          { t: 'problem', id: 'lp-product' },
+          { t: 'problem', id: 'lp-total-letters' },
+          { t: 'problem', id: 'lp-join-all' },
+          { t: 'problem', id: 'lp-average' },
+          { t: 'problem', id: 'lp-biggest' },
+          { t: 'problem', id: 'lp-smallest' },
+          { t: 'problem', id: 'lp-longest' },
+          { t: 'problem', id: 'lp-where-biggest' }
         ] },
 
       { key: 's12', name: 'Collecting into a new list',
@@ -306,6 +334,93 @@
           { t: 'problem', id: 'st-pairs' }
         ] },
 
+      { key: 'sl1', name: 'Looping a fixed number of times',
+        blurb: 'range() makes the numbers for you, so you can loop with no list at all.',
+        needs: 'collecting',
+        steps: [
+          { t: 'read', title: 'A loop with nothing to walk', body: [
+            'Every loop so far needed something that already existed. `range` makes the numbers as it goes:',
+            ['code', 'for i in range(3):       # 0, 1, 2\nfor i in range(1, 4):    # 1, 2, 3\nfor i in range(2, 9, 2): # 2, 4, 6, 8\nfor i in range(3, 0, -1) # 3, 2, 1'],
+            'The rule that catches everyone: **range stops BEFORE the stop value**. To finish on n you have to write n + 1:',
+            ['code', 'for i in range(1, n + 1):\n    print(i)         # 1 to n, n included'],
+            'A negative n is not an error — the range is simply empty and the loop body never runs:',
+            ['code', 'for i in range(1, 0):\n    print(i)         # prints nothing at all'],
+            'And when you only want the loop to happen n times, name the variable `_` to say you are not using it:',
+            ['code', "for _ in range(3):\n    print('again')   # three identical lines"],
+            ['aside', 'The next seven problems are the same range written seven ways. Type the range out every time — the off-by-one only stops biting once your fingers know it.']
+          ] },
+          { t: 'problem', id: 'lp-numbers-to' },
+          { t: 'problem', id: 'lp-sum-to' },
+          { t: 'problem', id: 'lp-times-table' },
+          { t: 'problem', id: 'lp-evens-to' },
+          { t: 'problem', id: 'lp-countdown' },
+          { t: 'problem', id: 'lp-repeat-lines' },
+          { t: 'problem', id: 'lp-squares-to' }
+        ] },
+
+      { key: 'sl2', name: 'The position, not just the item',
+        blurb: 'When you need to know WHERE you are as well as what you are looking at.',
+        needs: 'looping with range',
+        steps: [
+          { t: 'read', title: 'enumerate, zip, and indexing by hand', body: [
+            'Most of the time you only want the item. When you want its position too, `enumerate` hands you both:',
+            ['code', "for i, item in enumerate(items):\n    print(i, item)          # 0 first, then 1, then 2"],
+            'Humans count from one, so reports usually want `start=1`:',
+            ['code', "for i, item in enumerate(items, start=1):\n    print(f'{i}. {item}')   # 1. first line"],
+            'To walk two lists side by side, `zip` steps through both at once:',
+            ['code', "for name, score in zip(names, scores):\n    print(name, score)", 'zip stops at the shorter list — a feature when they match, a silent bug when they do not.'],
+            'And when the pattern is about positions themselves — every other one, or comparing neighbours — loop over the positions and index in:',
+            ['code', 'for i in range(0, len(items), 2):   # positions 0, 2, 4 …\n    print(items[i])\n\nfor i in range(1, len(nums)):       # start at 1 so i - 1 exists\n    print(nums[i] - nums[i - 1])'],
+            ['aside', 'If you ever write `for i in range(len(items))` just to say `items[i]`, enumerate is the shorter, safer version of the same loop.']
+          ] },
+          { t: 'quiz', title: 'What does enumerate give you?', ids: ['qs-loop-enumerate'] },
+          { t: 'problem', id: 'lp-numbered' },
+          { t: 'problem', id: 'lp-every-other' },
+          { t: 'problem', id: 'lp-positions' },
+          { t: 'problem', id: 'lp-pair-names' },
+          { t: 'problem', id: 'lp-is-rising' }
+        ] },
+
+      { key: 'sl3', name: 'Looping over a string',
+        blurb: 'A string hands out its characters one at a time, just like a list.',
+        needs: 'the position',
+        steps: [
+          { t: 'read', title: 'One character at a time', body: [
+            'You do not need a list to loop. A string gives you its characters, spaces and punctuation included:',
+            ['code', "for ch in 'cat':\n    print(ch)      # c, then a, then t"],
+            'Everything you already know about loops still applies — count them, keep some, build something new:',
+            ['code', "n = 0\nfor ch in word:\n    if ch.lower() in 'aeiou':\n        n += 1          # count the vowels"],
+            'Building a string works exactly like building a list, but you start from an empty string:',
+            ['code', "out = ''\nfor ch in word:\n    out = out + ch      # forwards\n\nout = ''\nfor ch in word:\n    out = ch + out      # backwards — the new one goes in FRONT"],
+            ['aside', "`ch.lower() in 'aeiou'` is a one-line way to ask \"is this one of these five characters\". `in` works on any string, not just lists."]
+          ] },
+          { t: 'problem', id: 'lp-letters' },
+          { t: 'problem', id: 'lp-count-vowels' },
+          { t: 'problem', id: 'lp-strip-vowels' },
+          { t: 'problem', id: 'lp-backwards' }
+        ] },
+
+      { key: 'sl4', name: 'A loop inside a loop',
+        blurb: 'Rows of a table, and lists inside lists — the last shape you need.',
+        needs: 'looping a string',
+        steps: [
+          { t: 'read', title: 'Two levels, and what each one means', body: [
+            'A table in plain Python is a list of dictionaries — one dictionary per row:',
+            ['code', "rows = [{'name': 'Ana', 'spend': 10},\n        {'name': 'Bo',  'spend': 5}]\n\nfor row in rows:\n    print(row['name'], row['spend'])"],
+            'The column name can come from a variable, which is what turns a one-off script into a tool:',
+            ['code', "for row in rows:\n    total += row[field]     # whichever column the caller named"],
+            'When the items are themselves lists, you need a loop inside the loop. Read the indentation as a sentence:',
+            ['code', 'for inner in lists:          # for each inner list …\n    for item in inner:       # … for each item in it …\n        out.append(item)     # … keep it'],
+            'Where you put the running total decides what you are totalling:',
+            ['code', 'total = 0                # outside both: the whole grid\nfor row in grid:\n    for value in row:\n        total += value'],
+            ['aside', 'Two levels is as deep as most real code ever goes. If you find yourself at four, there is usually a function waiting to be pulled out of the middle.']
+          ] },
+          { t: 'problem', id: 'lp-row-names' },
+          { t: 'problem', id: 'lp-row-total' },
+          { t: 'problem', id: 'lp-flatten' },
+          { t: 'problem', id: 'lp-grid-total' }
+        ] },
+
       { key: 's13', name: 'Dictionaries',
         blurb: 'Labels instead of positions — one move per card.',
         needs: 'lists',
@@ -329,7 +444,13 @@
           { t: 'problem', id: 'r-dict-add' },
           { t: 'problem', id: 'st-invert' },
           { t: 'problem', id: 'st-merge-dicts' },
-          { t: 'problem', id: 'st-group-by-letter' }
+          { t: 'problem', id: 'st-group-by-letter' },
+          { t: 'problem', id: 'lp-key-list' },
+          { t: 'problem', id: 'lp-total-values' },
+          { t: 'problem', id: 'lp-lines-of' },
+          { t: 'problem', id: 'lp-over-price' },
+          { t: 'problem', id: 'lp-count-each' },
+          { t: 'problem', id: 'lp-top-key' }
         ] },
 
       { key: 's14', name: 'Your own functions',
